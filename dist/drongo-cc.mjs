@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, gfx, RenderComponent, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, EventTarget, Graphics, misc, Sprite, Mask, math, sys, View, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, EventMouse, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, gfx, RenderComponent, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -4793,384 +4793,6 @@ class GearXY extends GearBase {
     }
 }
 
-class GGroup extends GObject {
-    _layout = 0;
-    _lineGap = 0;
-    _columnGap = 0;
-    _excludeInvisibles;
-    _autoSizeDisabled;
-    _mainGridIndex = -1;
-    _mainGridMinSize = 50;
-    _boundsChanged;
-    _percentReady;
-    _mainChildIndex = -1;
-    _totalSize = 0;
-    _numChildren = 0;
-    _updating = 0;
-    constructor() {
-        super();
-        this._node.name = "GGroup";
-        this._touchDisabled = true;
-    }
-    dispose() {
-        this._boundsChanged = false;
-        super.dispose();
-    }
-    get layout() {
-        return this._layout;
-    }
-    set layout(value) {
-        if (this._layout != value) {
-            this._layout = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get lineGap() {
-        return this._lineGap;
-    }
-    set lineGap(value) {
-        if (this._lineGap != value) {
-            this._lineGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get columnGap() {
-        return this._columnGap;
-    }
-    set columnGap(value) {
-        if (this._columnGap != value) {
-            this._columnGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get excludeInvisibles() {
-        return this._excludeInvisibles;
-    }
-    set excludeInvisibles(value) {
-        if (this._excludeInvisibles != value) {
-            this._excludeInvisibles = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get autoSizeDisabled() {
-        return this._autoSizeDisabled;
-    }
-    set autoSizeDisabled(value) {
-        this._autoSizeDisabled = value;
-    }
-    get mainGridMinSize() {
-        return this._mainGridMinSize;
-    }
-    set mainGridMinSize(value) {
-        if (this._mainGridMinSize != value) {
-            this._mainGridMinSize = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get mainGridIndex() {
-        return this._mainGridIndex;
-    }
-    set mainGridIndex(value) {
-        if (this._mainGridIndex != value) {
-            this._mainGridIndex = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    setBoundsChangedFlag(positionChangedOnly = false) {
-        if (this._updating == 0 && this._parent) {
-            if (!positionChangedOnly)
-                this._percentReady = false;
-            if (!this._boundsChanged) {
-                this._boundsChanged = true;
-                if (this._layout != GroupLayoutType.None)
-                    this._partner.callLater(this._ensureBoundsCorrect);
-            }
-        }
-    }
-    _ensureBoundsCorrect() {
-        let _t = GObject.cast(this.node);
-        _t.ensureBoundsCorrect();
-    }
-    ensureSizeCorrect() {
-        if (this._parent == null || !this._boundsChanged || this._layout == 0)
-            return;
-        this._boundsChanged = false;
-        if (this._autoSizeDisabled)
-            this.resizeChildren(0, 0);
-        else {
-            this.handleLayout();
-            this.updateBounds();
-        }
-    }
-    ensureBoundsCorrect() {
-        if (this._parent == null || !this._boundsChanged)
-            return;
-        this._boundsChanged = false;
-        if (this._layout == 0)
-            this.updateBounds();
-        else {
-            if (this._autoSizeDisabled)
-                this.resizeChildren(0, 0);
-            else {
-                this.handleLayout();
-                this.updateBounds();
-            }
-        }
-    }
-    updateBounds() {
-        this._partner.unschedule(this._ensureBoundsCorrect);
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
-        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
-        var tmp;
-        var empty = true;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
-                continue;
-            tmp = child.xMin;
-            if (tmp < ax)
-                ax = tmp;
-            tmp = child.yMin;
-            if (tmp < ay)
-                ay = tmp;
-            tmp = child.xMin + child.width;
-            if (tmp > ar)
-                ar = tmp;
-            tmp = child.yMin + child.height;
-            if (tmp > ab)
-                ab = tmp;
-            empty = false;
-        }
-        var w = 0, h = 0;
-        if (!empty) {
-            this._updating |= 1;
-            this.setPosition(ax, ay);
-            this._updating &= 2;
-            w = ar - ax;
-            h = ab - ay;
-        }
-        if ((this._updating & 2) == 0) {
-            this._updating |= 2;
-            this.setSize(w, h);
-            this._updating &= 1;
-        }
-        else {
-            this._updating &= 1;
-            this.resizeChildren(this._width - w, this._height - h);
-        }
-    }
-    handleLayout() {
-        this._updating |= 1;
-        var child;
-        var i;
-        var cnt;
-        if (this._layout == GroupLayoutType.Horizontal) {
-            var curX = this.x;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else if (this._layout == GroupLayoutType.Vertical) {
-            var curY = this.y;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 2;
-    }
-    moveChildren(dx, dy) {
-        if ((this._updating & 1) != 0 || this._parent == null)
-            return;
-        this._updating |= 1;
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group == this) {
-                child.setPosition(child.x + dx, child.y + dy);
-            }
-        }
-        this._updating &= 2;
-    }
-    resizeChildren(dw, dh) {
-        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
-            return;
-        this._updating |= 2;
-        if (this._boundsChanged) {
-            this._boundsChanged = false;
-            if (!this._autoSizeDisabled) {
-                this.updateBounds();
-                return;
-            }
-        }
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        if (!this._percentReady) {
-            this._percentReady = true;
-            this._numChildren = 0;
-            this._totalSize = 0;
-            this._mainChildIndex = -1;
-            var j = 0;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (!this._excludeInvisibles || child.internalVisible3) {
-                    if (j == this._mainGridIndex)
-                        this._mainChildIndex = i;
-                    this._numChildren++;
-                    if (this._layout == 1)
-                        this._totalSize += child.width;
-                    else
-                        this._totalSize += child.height;
-                }
-                j++;
-            }
-            if (this._mainChildIndex != -1) {
-                if (this._layout == 1) {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.width;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-                else {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.height;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-            }
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (i == this._mainChildIndex)
-                    continue;
-                if (this._totalSize > 0)
-                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
-                else
-                    child._sizePercentInGroup = 0;
-            }
-        }
-        var remainSize = 0;
-        var remainPercent = 1;
-        var priorHandled = false;
-        if (this._layout == 1) {
-            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
-                remainSize -= child.width;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curX = this.x;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.width;
-                }
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else {
-            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
-                remainSize -= child.height;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curY = this.y;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.height;
-                }
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 1;
-    }
-    handleAlphaChanged() {
-        if (this._underConstruct)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.alpha = this.alpha;
-        }
-    }
-    handleVisibleChanged() {
-        if (!this._parent)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.handleVisibleChanged();
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._layout = buffer.readByte();
-        this._lineGap = buffer.readInt();
-        this._columnGap = buffer.readInt();
-        if (buffer.version >= 2) {
-            this._excludeInvisibles = buffer.readBool();
-            this._autoSizeDisabled = buffer.readBool();
-            this._mainGridIndex = buffer.readShort();
-        }
-    }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        if (!this.visible)
-            this.handleVisibleChanged();
-    }
-}
-
 class RelationItem {
     _owner;
     _target;
@@ -6885,6 +6507,1178 @@ var s_dragQuery;
 var Decls$1 = {};
 var constructingDepth = { n: 0 };
 
+class GGroup extends GObject {
+    _layout = 0;
+    _lineGap = 0;
+    _columnGap = 0;
+    _excludeInvisibles;
+    _autoSizeDisabled;
+    _mainGridIndex = -1;
+    _mainGridMinSize = 50;
+    _boundsChanged;
+    _percentReady;
+    _mainChildIndex = -1;
+    _totalSize = 0;
+    _numChildren = 0;
+    _updating = 0;
+    constructor() {
+        super();
+        this._node.name = "GGroup";
+        this._touchDisabled = true;
+    }
+    dispose() {
+        this._boundsChanged = false;
+        super.dispose();
+    }
+    get layout() {
+        return this._layout;
+    }
+    set layout(value) {
+        if (this._layout != value) {
+            this._layout = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get lineGap() {
+        return this._lineGap;
+    }
+    set lineGap(value) {
+        if (this._lineGap != value) {
+            this._lineGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get columnGap() {
+        return this._columnGap;
+    }
+    set columnGap(value) {
+        if (this._columnGap != value) {
+            this._columnGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get excludeInvisibles() {
+        return this._excludeInvisibles;
+    }
+    set excludeInvisibles(value) {
+        if (this._excludeInvisibles != value) {
+            this._excludeInvisibles = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get autoSizeDisabled() {
+        return this._autoSizeDisabled;
+    }
+    set autoSizeDisabled(value) {
+        this._autoSizeDisabled = value;
+    }
+    get mainGridMinSize() {
+        return this._mainGridMinSize;
+    }
+    set mainGridMinSize(value) {
+        if (this._mainGridMinSize != value) {
+            this._mainGridMinSize = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get mainGridIndex() {
+        return this._mainGridIndex;
+    }
+    set mainGridIndex(value) {
+        if (this._mainGridIndex != value) {
+            this._mainGridIndex = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    setBoundsChangedFlag(positionChangedOnly = false) {
+        if (this._updating == 0 && this._parent) {
+            if (!positionChangedOnly)
+                this._percentReady = false;
+            if (!this._boundsChanged) {
+                this._boundsChanged = true;
+                if (this._layout != GroupLayoutType.None)
+                    this._partner.callLater(this._ensureBoundsCorrect);
+            }
+        }
+    }
+    _ensureBoundsCorrect() {
+        let _t = GObject.cast(this.node);
+        _t.ensureBoundsCorrect();
+    }
+    ensureSizeCorrect() {
+        if (this._parent == null || !this._boundsChanged || this._layout == 0)
+            return;
+        this._boundsChanged = false;
+        if (this._autoSizeDisabled)
+            this.resizeChildren(0, 0);
+        else {
+            this.handleLayout();
+            this.updateBounds();
+        }
+    }
+    ensureBoundsCorrect() {
+        if (this._parent == null || !this._boundsChanged)
+            return;
+        this._boundsChanged = false;
+        if (this._layout == 0)
+            this.updateBounds();
+        else {
+            if (this._autoSizeDisabled)
+                this.resizeChildren(0, 0);
+            else {
+                this.handleLayout();
+                this.updateBounds();
+            }
+        }
+    }
+    updateBounds() {
+        this._partner.unschedule(this._ensureBoundsCorrect);
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
+        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
+        var tmp;
+        var empty = true;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
+                continue;
+            tmp = child.xMin;
+            if (tmp < ax)
+                ax = tmp;
+            tmp = child.yMin;
+            if (tmp < ay)
+                ay = tmp;
+            tmp = child.xMin + child.width;
+            if (tmp > ar)
+                ar = tmp;
+            tmp = child.yMin + child.height;
+            if (tmp > ab)
+                ab = tmp;
+            empty = false;
+        }
+        var w = 0, h = 0;
+        if (!empty) {
+            this._updating |= 1;
+            this.setPosition(ax, ay);
+            this._updating &= 2;
+            w = ar - ax;
+            h = ab - ay;
+        }
+        if ((this._updating & 2) == 0) {
+            this._updating |= 2;
+            this.setSize(w, h);
+            this._updating &= 1;
+        }
+        else {
+            this._updating &= 1;
+            this.resizeChildren(this._width - w, this._height - h);
+        }
+    }
+    handleLayout() {
+        this._updating |= 1;
+        var child;
+        var i;
+        var cnt;
+        if (this._layout == GroupLayoutType.Horizontal) {
+            var curX = this.x;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else if (this._layout == GroupLayoutType.Vertical) {
+            var curY = this.y;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 2;
+    }
+    moveChildren(dx, dy) {
+        if ((this._updating & 1) != 0 || this._parent == null)
+            return;
+        this._updating |= 1;
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group == this) {
+                child.setPosition(child.x + dx, child.y + dy);
+            }
+        }
+        this._updating &= 2;
+    }
+    resizeChildren(dw, dh) {
+        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
+            return;
+        this._updating |= 2;
+        if (this._boundsChanged) {
+            this._boundsChanged = false;
+            if (!this._autoSizeDisabled) {
+                this.updateBounds();
+                return;
+            }
+        }
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        if (!this._percentReady) {
+            this._percentReady = true;
+            this._numChildren = 0;
+            this._totalSize = 0;
+            this._mainChildIndex = -1;
+            var j = 0;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (!this._excludeInvisibles || child.internalVisible3) {
+                    if (j == this._mainGridIndex)
+                        this._mainChildIndex = i;
+                    this._numChildren++;
+                    if (this._layout == 1)
+                        this._totalSize += child.width;
+                    else
+                        this._totalSize += child.height;
+                }
+                j++;
+            }
+            if (this._mainChildIndex != -1) {
+                if (this._layout == 1) {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.width;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+                else {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.height;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+            }
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (i == this._mainChildIndex)
+                    continue;
+                if (this._totalSize > 0)
+                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
+                else
+                    child._sizePercentInGroup = 0;
+            }
+        }
+        var remainSize = 0;
+        var remainPercent = 1;
+        var priorHandled = false;
+        if (this._layout == 1) {
+            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
+                remainSize -= child.width;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curX = this.x;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.width;
+                }
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else {
+            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
+                remainSize -= child.height;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curY = this.y;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.height;
+                }
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 1;
+    }
+    handleAlphaChanged() {
+        if (this._underConstruct)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.alpha = this.alpha;
+        }
+    }
+    handleVisibleChanged() {
+        if (!this._parent)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.handleVisibleChanged();
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._layout = buffer.readByte();
+        this._lineGap = buffer.readInt();
+        this._columnGap = buffer.readInt();
+        if (buffer.version >= 2) {
+            this._excludeInvisibles = buffer.readBool();
+            this._autoSizeDisabled = buffer.readBool();
+            this._mainGridIndex = buffer.readShort();
+        }
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        if (!this.visible)
+            this.handleVisibleChanged();
+    }
+}
+
+class GGraph extends GObject {
+    _content;
+    _type = 0;
+    _lineSize = 0;
+    _lineColor;
+    _fillColor;
+    _cornerRadius;
+    _sides;
+    _startAngle;
+    _polygonPoints;
+    _distances;
+    _hasContent;
+    constructor() {
+        super();
+        this._node.name = "GGraph";
+        this._lineSize = 1;
+        this._lineColor = new Color();
+        this._fillColor = new Color(255, 255, 255, 255);
+        this._content = this._node.addComponent(Graphics);
+    }
+    drawRect(lineSize, lineColor, fillColor, corner) {
+        this._type = 1;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._cornerRadius = corner;
+        this.updateGraph();
+    }
+    drawEllipse(lineSize, lineColor, fillColor) {
+        this._type = 2;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this.updateGraph();
+    }
+    drawRegularPolygon(lineSize, lineColor, fillColor, sides, startAngle, distances) {
+        this._type = 4;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._sides = sides;
+        this._startAngle = startAngle || 0;
+        this._distances = distances;
+        this.updateGraph();
+    }
+    drawPolygon(lineSize, lineColor, fillColor, points) {
+        this._type = 3;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._polygonPoints = points;
+        this.updateGraph();
+    }
+    get distances() {
+        return this._distances;
+    }
+    set distances(value) {
+        this._distances = value;
+        if (this._type == 3)
+            this.updateGraph();
+    }
+    clearGraphics() {
+        this._type = 0;
+        if (this._hasContent) {
+            this._content.clear();
+            this._hasContent = false;
+        }
+    }
+    get type() {
+        return this._type;
+    }
+    get color() {
+        return this._fillColor;
+    }
+    set color(value) {
+        this._fillColor.set(value);
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    updateGraph() {
+        let ctx = this._content;
+        if (this._hasContent) {
+            this._hasContent = false;
+            ctx.clear();
+        }
+        var w = this._width;
+        var h = this._height;
+        if (w == 0 || h == 0)
+            return;
+        var px = -this.pivotX * this._width;
+        var py = this.pivotY * this._height;
+        let ls = this._lineSize / 2;
+        ctx.lineWidth = this._lineSize;
+        ctx.strokeColor = this._lineColor;
+        ctx.fillColor = this._fillColor;
+        if (this._type == 1) {
+            if (this._cornerRadius) {
+                ctx.roundRect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize, this._cornerRadius[0]);
+            }
+            else
+                ctx.rect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize);
+        }
+        else if (this._type == 2) {
+            ctx.ellipse(w / 2 + px, -h / 2 + py, w / 2 - ls, h / 2 - ls);
+        }
+        else if (this._type == 3) {
+            this.drawPath(ctx, this._polygonPoints, px, py);
+        }
+        else if (this._type == 4) {
+            if (!this._polygonPoints)
+                this._polygonPoints = [];
+            var radius = Math.min(w, h) / 2 - ls;
+            this._polygonPoints.length = 0;
+            var angle = misc.degreesToRadians(this._startAngle);
+            var deltaAngle = 2 * Math.PI / this._sides;
+            var dist;
+            for (var i = 0; i < this._sides; i++) {
+                if (this._distances) {
+                    dist = this._distances[i];
+                    if (isNaN(dist))
+                        dist = 1;
+                }
+                else
+                    dist = 1;
+                var xv = radius + radius * dist * Math.cos(angle);
+                var yv = radius + radius * dist * Math.sin(angle);
+                this._polygonPoints.push(xv, yv);
+                angle += deltaAngle;
+            }
+            this.drawPath(ctx, this._polygonPoints, px, py);
+        }
+        if (ls != 0)
+            ctx.stroke();
+        if (this._fillColor.a != 0)
+            ctx.fill();
+        this._hasContent = true;
+    }
+    drawPath(ctx, points, px, py) {
+        var cnt = points.length;
+        ctx.moveTo(points[0] + px, -points[1] + py);
+        for (var i = 2; i < cnt; i += 2)
+            ctx.lineTo(points[i] + px, -points[i + 1] + py);
+        ctx.lineTo(points[0] + px, -points[1] + py);
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    getProp(index) {
+        if (index == ObjectPropID.Color)
+            return this.color;
+        else
+            return super.getProp(index);
+    }
+    setProp(index, value) {
+        if (index == ObjectPropID.Color)
+            this.color = value;
+        else
+            super.setProp(index, value);
+    }
+    _hitTest(pt) {
+        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height) {
+            if (this._type == 3) {
+                let points = this._polygonPoints;
+                let len = points.length / 2;
+                let i;
+                let j = len - 1;
+                let oddNodes = false;
+                this._width;
+                this._height;
+                for (i = 0; i < len; ++i) {
+                    let ix = points[i * 2];
+                    let iy = points[i * 2 + 1];
+                    let jx = points[j * 2];
+                    let jy = points[j * 2 + 1];
+                    if ((iy < pt.y && jy >= pt.y || jy < pt.y && iy >= pt.y) && (ix <= pt.x || jx <= pt.x)) {
+                        if (ix + (pt.y - iy) / (jy - iy) * (jx - ix) < pt.x)
+                            oddNodes = !oddNodes;
+                    }
+                    j = i;
+                }
+                return oddNodes ? this : null;
+            }
+            else
+                return this;
+        }
+        else
+            return null;
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._type = buffer.readByte();
+        if (this._type != 0) {
+            var i;
+            var cnt;
+            this._lineSize = buffer.readInt();
+            this._lineColor.set(buffer.readColor(true));
+            this._fillColor.set(buffer.readColor(true));
+            if (buffer.readBool()) {
+                this._cornerRadius = new Array(4);
+                for (i = 0; i < 4; i++)
+                    this._cornerRadius[i] = buffer.readFloat();
+            }
+            if (this._type == 3) {
+                cnt = buffer.readShort();
+                this._polygonPoints = [];
+                this._polygonPoints.length = cnt;
+                for (i = 0; i < cnt; i++)
+                    this._polygonPoints[i] = buffer.readFloat();
+            }
+            else if (this._type == 4) {
+                this._sides = buffer.readShort();
+                this._startAngle = buffer.readFloat();
+                cnt = buffer.readShort();
+                if (cnt > 0) {
+                    this._distances = [];
+                    for (i = 0; i < cnt; i++)
+                        this._distances[i] = buffer.readFloat();
+                }
+            }
+            this.updateGraph();
+        }
+    }
+}
+
+class Image extends Sprite {
+    _flip = FlipType.None;
+    _fillMethod = FillMethod.None;
+    _fillOrigin = FillOrigin.Left;
+    _fillAmount = 0;
+    _fillClockwise;
+    constructor() {
+        super();
+    }
+    get flip() {
+        return this._flip;
+    }
+    set flip(value) {
+        if (this._flip != value) {
+            this._flip = value;
+            let sx = 1, sy = 1;
+            if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both)
+                sx = -1;
+            if (this._flip == FlipType.Vertical || this._flip == FlipType.Both)
+                sy = -1;
+            if (sx != 1 || sy != 1) {
+                let uiTrans = this.node.getComponent(UITransform);
+                uiTrans.setAnchorPoint(0.5, 0.5);
+            }
+            this.node.setScale(sx, sy);
+        }
+    }
+    get fillMethod() {
+        return this._fillMethod;
+    }
+    set fillMethod(value) {
+        if (this._fillMethod != value) {
+            this._fillMethod = value;
+            if (this._fillMethod != 0) {
+                this.type = Sprite.Type.FILLED;
+                if (this._fillMethod <= 3)
+                    this.fillType = this._fillMethod - 1;
+                else
+                    this.fillType = Sprite.FillType.RADIAL;
+                this.fillCenter = new Vec2(0.5, 0.5);
+                this.setupFill();
+            }
+            else {
+                this.type = Sprite.Type.SIMPLE;
+            }
+        }
+    }
+    get fillOrigin() {
+        return this._fillOrigin;
+    }
+    set fillOrigin(value) {
+        if (this._fillOrigin != value) {
+            this._fillOrigin = value;
+            if (this._fillMethod != 0)
+                this.setupFill();
+        }
+    }
+    get fillClockwise() {
+        return this._fillClockwise;
+    }
+    set fillClockwise(value) {
+        if (this._fillClockwise != value) {
+            this._fillClockwise = value;
+            if (this._fillMethod != 0)
+                this.setupFill();
+        }
+    }
+    get fillAmount() {
+        return this._fillAmount;
+    }
+    set fillAmount(value) {
+        if (this._fillAmount != value) {
+            this._fillAmount = value;
+            if (this._fillMethod != 0) {
+                if (this._fillClockwise)
+                    this.fillRange = -this._fillAmount;
+                else
+                    this.fillRange = this._fillAmount;
+            }
+        }
+    }
+    setupFill() {
+        if (this._fillMethod == FillMethod.Horizontal) {
+            this._fillClockwise = this._fillOrigin == FillOrigin.Right || this._fillOrigin == FillOrigin.Bottom;
+            this.fillStart = this._fillClockwise ? 1 : 0;
+        }
+        else if (this._fillMethod == FillMethod.Vertical) {
+            this._fillClockwise = this._fillOrigin == FillOrigin.Left || this._fillOrigin == FillOrigin.Top;
+            this.fillStart = this._fillClockwise ? 1 : 0;
+        }
+        else {
+            switch (this._fillOrigin) {
+                case FillOrigin.Right:
+                    this.fillOrigin = 0;
+                    break;
+                case FillOrigin.Top:
+                    this.fillStart = 0.25;
+                    break;
+                case FillOrigin.Left:
+                    this.fillStart = 0.5;
+                    break;
+                case FillOrigin.Bottom:
+                    this.fillStart = 0.75;
+                    break;
+            }
+        }
+    }
+}
+
+class GImage extends GObject {
+    _content;
+    constructor() {
+        super();
+        this._node.name = "GImage";
+        this._touchDisabled = true;
+        this._content = this._node.addComponent(Image);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+    }
+    get color() {
+        return this._content.color;
+    }
+    set color(value) {
+        this._content.color = value;
+        this.updateGear(4);
+    }
+    get flip() {
+        return this._content.flip;
+    }
+    set flip(value) {
+        this._content.flip = value;
+    }
+    get fillMethod() {
+        return this._content.fillMethod;
+    }
+    set fillMethod(value) {
+        this._content.fillMethod = value;
+    }
+    get fillOrigin() {
+        return this._content.fillOrigin;
+    }
+    set fillOrigin(value) {
+        this._content.fillOrigin = value;
+    }
+    get fillClockwise() {
+        return this._content.fillClockwise;
+    }
+    set fillClockwise(value) {
+        this._content.fillClockwise = value;
+    }
+    get fillAmount() {
+        return this._content.fillAmount;
+    }
+    set fillAmount(value) {
+        this._content.fillAmount = value;
+    }
+    constructFromResource() {
+        var contentItem = this.packageItem.getBranch();
+        this.sourceWidth = contentItem.width;
+        this.sourceHeight = contentItem.height;
+        this.initWidth = this.sourceWidth;
+        this.initHeight = this.sourceHeight;
+        this.setSize(this.sourceWidth, this.sourceHeight);
+        contentItem = contentItem.getHighResolution();
+        contentItem.load();
+        if (contentItem.scale9Grid)
+            this._content.type = Sprite.Type.SLICED;
+        else if (contentItem.scaleByTile)
+            this._content.type = Sprite.Type.TILED;
+        this._content.spriteFrame = contentItem.asset;
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    getProp(index) {
+        if (index == ObjectPropID.Color)
+            return this.color;
+        else
+            return super.getProp(index);
+    }
+    setProp(index, value) {
+        if (index == ObjectPropID.Color)
+            this.color = value;
+        else
+            super.setProp(index, value);
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        this._content.flip = buffer.readByte();
+        this._content.fillMethod = buffer.readByte();
+        if (this._content.fillMethod != 0) {
+            this._content.fillOrigin = buffer.readByte();
+            this._content.fillClockwise = buffer.readBool();
+            this._content.fillAmount = buffer.readFloat();
+        }
+    }
+}
+
+class MovieClip extends Image {
+    interval = 0;
+    swing = false;
+    repeatDelay = 0;
+    timeScale = 1;
+    _playing = true;
+    _frameCount = 0;
+    _frames;
+    _frame = 0;
+    _start = 0;
+    _end = 0;
+    _times = 0;
+    _endAt = 0;
+    _status = 0; //0-none, 1-next loop, 2-ending, 3-ended
+    _callback;
+    _smoothing = true;
+    _frameElapsed = 0; //当前帧延迟
+    _reversed = false;
+    _repeatedCount = 0;
+    constructor() {
+        super();
+    }
+    get frames() {
+        return this._frames;
+    }
+    set frames(value) {
+        this._frames = value;
+        if (this._frames) {
+            this._frameCount = this._frames.length;
+            if (this._end == -1 || this._end > this._frameCount - 1)
+                this._end = this._frameCount - 1;
+            if (this._endAt == -1 || this._endAt > this._frameCount - 1)
+                this._endAt = this._frameCount - 1;
+            if (this._frame < 0 || this._frame > this._frameCount - 1)
+                this._frame = this._frameCount - 1;
+            this.type = Sprite.Type.SIMPLE;
+            this.drawFrame();
+            this._frameElapsed = 0;
+            this._repeatedCount = 0;
+            this._reversed = false;
+        }
+        else {
+            this._frameCount = 0;
+        }
+    }
+    get frameCount() {
+        return this._frameCount;
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            if (this._frames && value >= this._frameCount)
+                value = this._frameCount - 1;
+            this._frame = value;
+            this._frameElapsed = 0;
+            this.drawFrame();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+        }
+    }
+    get smoothing() {
+        return this._smoothing;
+    }
+    set smoothing(value) {
+        this._smoothing = value;
+    }
+    rewind() {
+        this._frame = 0;
+        this._frameElapsed = 0;
+        this._reversed = false;
+        this._repeatedCount = 0;
+        this.drawFrame();
+    }
+    syncStatus(anotherMc) {
+        this._frame = anotherMc._frame;
+        this._frameElapsed = anotherMc._frameElapsed;
+        this._reversed = anotherMc._reversed;
+        this._repeatedCount = anotherMc._repeatedCount;
+        this.drawFrame();
+    }
+    advance(timeInSeconds) {
+        var beginFrame = this._frame;
+        var beginReversed = this._reversed;
+        var backupTime = timeInSeconds;
+        while (true) {
+            var tt = this.interval + this._frames[this._frame].addDelay;
+            if (this._frame == 0 && this._repeatedCount > 0)
+                tt += this.repeatDelay;
+            if (timeInSeconds < tt) {
+                this._frameElapsed = 0;
+                break;
+            }
+            timeInSeconds -= tt;
+            if (this.swing) {
+                if (this._reversed) {
+                    this._frame--;
+                    if (this._frame <= 0) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = Math.max(0, this._frameCount - 2);
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
+                }
+            }
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                }
+            }
+            if (this._frame == beginFrame && this._reversed == beginReversed) //走了一轮了
+             {
+                var roundTime = backupTime - timeInSeconds; //这就是一轮需要的时间
+                timeInSeconds -= Math.floor(timeInSeconds / roundTime) * roundTime; //跳过
+            }
+        }
+        this.drawFrame();
+    }
+    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
+    setPlaySettings(start, end, times, endAt, endCallback) {
+        if (start == undefined)
+            start = 0;
+        if (end == undefined)
+            end = -1;
+        if (times == undefined)
+            times = 0;
+        if (endAt == undefined)
+            endAt = -1;
+        this._start = start;
+        this._end = end;
+        if (this._end == -1 || this._end > this._frameCount - 1)
+            this._end = this._frameCount - 1;
+        this._times = times;
+        this._endAt = endAt;
+        if (this._endAt == -1)
+            this._endAt = this._end;
+        this._status = 0;
+        this._callback = endCallback;
+        this.frame = start;
+    }
+    update(dt) {
+        if (!this._playing || this._frameCount == 0 || this._status == 3)
+            return;
+        if (this.timeScale != 1)
+            dt *= this.timeScale;
+        this._frameElapsed += dt;
+        var tt = this.interval + this._frames[this._frame].addDelay;
+        if (this._frame == 0 && this._repeatedCount > 0)
+            tt += this.repeatDelay;
+        if (this._frameElapsed < tt)
+            return;
+        this._frameElapsed -= tt;
+        if (this._frameElapsed > this.interval)
+            this._frameElapsed = this.interval;
+        if (this.swing) {
+            if (this._reversed) {
+                this._frame--;
+                if (this._frame <= 0) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                    this._reversed = !this._reversed;
+                }
+            }
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = Math.max(0, this._frameCount - 2);
+                    this._repeatedCount++;
+                    this._reversed = !this._reversed;
+                }
+            }
+        }
+        else {
+            this._frame++;
+            if (this._frame > this._frameCount - 1) {
+                this._frame = 0;
+                this._repeatedCount++;
+            }
+        }
+        if (this._status == 1) //new loop
+         {
+            this._frame = this._start;
+            this._frameElapsed = 0;
+            this._status = 0;
+        }
+        else if (this._status == 2) //ending
+         {
+            this._frame = this._endAt;
+            this._frameElapsed = 0;
+            this._status = 3; //ended
+            //play end
+            if (this._callback != null) {
+                let callback = this._callback;
+                this._callback = null;
+                callback();
+            }
+        }
+        else {
+            if (this._frame == this._end) {
+                if (this._times > 0) {
+                    this._times--;
+                    if (this._times == 0)
+                        this._status = 2; //ending
+                    else
+                        this._status = 1; //new loop
+                }
+                else if (this._start != 0)
+                    this._status = 1; //new loop
+            }
+        }
+        this.drawFrame();
+    }
+    drawFrame() {
+        if (this._frameCount > 0 && this._frame < this._frames.length) {
+            var frame = this._frames[this._frame];
+            this.spriteFrame = frame.texture;
+        }
+    }
+}
+
+class GMovieClip extends GObject {
+    _content;
+    constructor() {
+        super();
+        this._node.name = "GMovieClip";
+        this._touchDisabled = true;
+        this._content = this._node.addComponent(MovieClip);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+        this._content.setPlaySettings();
+    }
+    get color() {
+        return this._content.color;
+    }
+    set color(value) {
+        this._content.color = value;
+        this.updateGear(4);
+    }
+    get playing() {
+        return this._content.playing;
+    }
+    set playing(value) {
+        if (this._content.playing != value) {
+            this._content.playing = value;
+            this.updateGear(5);
+        }
+    }
+    get frame() {
+        return this._content.frame;
+    }
+    set frame(value) {
+        if (this._content.frame != value) {
+            this._content.frame = value;
+            this.updateGear(5);
+        }
+    }
+    get timeScale() {
+        return this._content.timeScale;
+    }
+    set timeScale(value) {
+        this._content.timeScale = value;
+    }
+    rewind() {
+        this._content.rewind();
+    }
+    syncStatus(anotherMc) {
+        this._content.syncStatus(anotherMc._content);
+    }
+    advance(timeInSeconds) {
+        this._content.advance(timeInSeconds);
+    }
+    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
+    setPlaySettings(start, end, times, endAt, endCallback) {
+        this._content.setPlaySettings(start, end, times, endAt, endCallback);
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        //不知道原因，尺寸改变必须调用一次这个，否则大小不对
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return this.timeScale;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                this.timeScale = value;
+                break;
+            case ObjectPropID.DeltaTime:
+                this.advance(value);
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    constructFromResource() {
+        var contentItem = this.packageItem.getBranch();
+        this.sourceWidth = contentItem.width;
+        this.sourceHeight = contentItem.height;
+        this.initWidth = this.sourceWidth;
+        this.initHeight = this.sourceHeight;
+        this.setSize(this.sourceWidth, this.sourceHeight);
+        contentItem = contentItem.getHighResolution();
+        contentItem.load();
+        this._content.interval = contentItem.interval;
+        this._content.swing = contentItem.swing;
+        this._content.repeatDelay = contentItem.repeatDelay;
+        this._content.frames = contentItem.frames;
+        this._content.smoothing = contentItem.smoothing;
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        buffer.readByte(); //flip
+        this._content.frame = buffer.readInt();
+        this._content.playing = buffer.readBool();
+    }
+}
+
 class UIContentScaler {
     static scaleFactor = 1;
     static scaleLevel = 0;
@@ -8086,6 +8880,1204 @@ var _branch = "";
 var _vars = {};
 var Decls = {};
 
+function toGrayedColor(c) {
+    let v = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+    return new Color(v, v, v, c.a);
+}
+
+class UBBParser {
+    _text;
+    _readPos = 0;
+    _handlers;
+    lastColor;
+    lastSize;
+    linkUnderline;
+    linkColor;
+    constructor() {
+        this._handlers = {};
+        this._handlers["url"] = this.onTag_URL;
+        this._handlers["img"] = this.onTag_IMG;
+        this._handlers["b"] = this.onTag_Simple;
+        this._handlers["i"] = this.onTag_Simple;
+        this._handlers["u"] = this.onTag_Simple;
+        //this._handlers["sup"] = this.onTag_Simple;
+        //this._handlers["sub"] = this.onTag_Simple;
+        this._handlers["color"] = this.onTag_COLOR;
+        //this._handlers["font"] = this.onTag_FONT;
+        this._handlers["size"] = this.onTag_SIZE;
+    }
+    onTag_URL(tagName, end, attr) {
+        if (!end) {
+            let ret;
+            if (attr != null)
+                ret = "<on click=\"onClickLink\" param=\"" + attr + "\">";
+            else {
+                var href = this.getTagText();
+                ret = "<on click=\"onClickLink\" param=\"" + href + "\">";
+            }
+            if (this.linkUnderline)
+                ret += "<u>";
+            if (this.linkColor)
+                ret += "<color=" + this.linkColor + ">";
+            return ret;
+        }
+        else {
+            let ret = "";
+            if (this.linkColor)
+                ret += "</color>";
+            if (this.linkUnderline)
+                ret += "</u>";
+            ret += "</on>";
+            return ret;
+        }
+    }
+    onTag_IMG(tagName, end, attr) {
+        if (!end) {
+            var src = this.getTagText(true);
+            if (!src)
+                return null;
+            return "<img src=\"" + src + "\"/>";
+        }
+        else
+            return null;
+    }
+    onTag_Simple(tagName, end, attr) {
+        return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
+    }
+    onTag_COLOR(tagName, end, attr) {
+        if (!end) {
+            this.lastColor = attr;
+            return "<color=" + attr + ">";
+        }
+        else
+            return "</color>";
+    }
+    onTag_FONT(tagName, end, attr) {
+        if (!end)
+            return "<font face=\"" + attr + "\">";
+        else
+            return "</font>";
+    }
+    onTag_SIZE(tagName, end, attr) {
+        if (!end) {
+            this.lastSize = attr;
+            return "<size=" + attr + ">";
+        }
+        else
+            return "</size>";
+    }
+    getTagText(remove) {
+        var pos1 = this._readPos;
+        var pos2;
+        var result = "";
+        while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+            if (this._text.charCodeAt(pos2 - 1) == 92) //\
+             {
+                result += this._text.substring(pos1, pos2 - 1);
+                result += "[";
+                pos1 = pos2 + 1;
+            }
+            else {
+                result += this._text.substring(pos1, pos2);
+                break;
+            }
+        }
+        if (pos2 == -1)
+            return null;
+        if (remove)
+            this._readPos = pos2;
+        return result;
+    }
+    parse(text, remove) {
+        this._text = text;
+        this.lastColor = null;
+        this.lastSize = null;
+        var pos1 = 0, pos2, pos3;
+        var end;
+        var tag, attr;
+        var repl;
+        var func;
+        var result = "";
+        while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
+            if (pos2 > 0 && this._text.charCodeAt(pos2 - 1) == 92) //\
+             {
+                result += this._text.substring(pos1, pos2 - 1);
+                result += "[";
+                pos1 = pos2 + 1;
+                continue;
+            }
+            result += this._text.substring(pos1, pos2);
+            pos1 = pos2;
+            pos2 = this._text.indexOf("]", pos1);
+            if (pos2 == -1)
+                break;
+            end = this._text.charAt(pos1 + 1) == '/';
+            tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
+            this._readPos = pos2 + 1;
+            attr = null;
+            repl = null;
+            pos3 = tag.indexOf("=");
+            if (pos3 != -1) {
+                attr = tag.substring(pos3 + 1);
+                tag = tag.substring(0, pos3);
+            }
+            tag = tag.toLowerCase();
+            func = this._handlers[tag];
+            if (func != null) {
+                repl = func.call(this, tag, end, attr);
+                if (repl != null && !remove)
+                    result += repl;
+            }
+            else
+                result += this._text.substring(pos1, this._readPos);
+            pos1 = this._readPos;
+        }
+        if (pos1 < this._text.length)
+            result += this._text.substr(pos1);
+        this._text = null;
+        return result;
+    }
+}
+var defaultParser = new UBBParser();
+
+class GTextField extends GObject {
+    _label;
+    _font;
+    _realFont;
+    _fontSize = 0;
+    _color;
+    _strokeColor;
+    _shadowOffset;
+    _shadowColor;
+    _leading = 0;
+    _text;
+    _ubbEnabled;
+    _templateVars;
+    _autoSize;
+    _updatingSize;
+    _sizeDirty;
+    _outline;
+    _shadow;
+    constructor() {
+        super();
+        this._node.name = "GTextField";
+        this._touchDisabled = true;
+        this._text = "";
+        this._color = new Color(255, 255, 255, 255);
+        this.createRenderer();
+        this.fontSize = 12;
+        this.leading = 3;
+        this.singleLine = false;
+        this._sizeDirty = false;
+        this._node.on(Node.EventType.SIZE_CHANGED, this.onLabelSizeChanged, this);
+    }
+    createRenderer() {
+        this._label = this._node.addComponent(Label);
+        this._label.string = "";
+        this.autoSize = AutoSizeType.Both;
+    }
+    set text(value) {
+        this._text = value;
+        if (this._text == null)
+            this._text = "";
+        this.updateGear(6);
+        this.markSizeChanged();
+        this.updateText();
+    }
+    get text() {
+        return this._text;
+    }
+    get font() {
+        return this._font;
+    }
+    set font(value) {
+        if (this._font != value || !value) {
+            this._font = value;
+            this.markSizeChanged();
+            let newFont = value ? value : UIConfig.defaultFont;
+            if (newFont.startsWith("ui://")) {
+                var pi = UIPackage.getItemByURL(newFont);
+                if (pi)
+                    newFont = pi.owner.getItemAsset(pi);
+                else
+                    newFont = UIConfig.defaultFont;
+            }
+            this._realFont = newFont;
+            this.updateFont();
+        }
+    }
+    get fontSize() {
+        return this._fontSize;
+    }
+    set fontSize(value) {
+        if (value < 0)
+            return;
+        if (this._fontSize != value) {
+            this._fontSize = value;
+            this.markSizeChanged();
+            this.updateFontSize();
+        }
+    }
+    get color() {
+        return this._color;
+    }
+    set color(value) {
+        this._color.set(value);
+        this.updateGear(4);
+        this.updateFontColor();
+    }
+    get align() {
+        return this._label ? this._label.horizontalAlign : 0;
+    }
+    set align(value) {
+        if (this._label)
+            this._label.horizontalAlign = value;
+    }
+    get verticalAlign() {
+        return this._label ? this._label.verticalAlign : 0;
+    }
+    set verticalAlign(value) {
+        if (this._label)
+            this._label.verticalAlign = value;
+    }
+    get leading() {
+        return this._leading;
+    }
+    set leading(value) {
+        if (this._leading != value) {
+            this._leading = value;
+            this.markSizeChanged();
+            this.updateFontSize();
+        }
+    }
+    get letterSpacing() {
+        return this._label ? this._label.spacingX : 0;
+    }
+    set letterSpacing(value) {
+        if (this._label && this._label.spacingX != value) {
+            this.markSizeChanged();
+            this._label.spacingX = value;
+        }
+    }
+    get underline() {
+        return this._label ? this._label.isUnderline : false;
+    }
+    set underline(value) {
+        if (this._label)
+            this._label.isUnderline = value;
+    }
+    get bold() {
+        return this._label ? this._label.isBold : false;
+    }
+    set bold(value) {
+        if (this._label)
+            this._label.isBold = value;
+    }
+    get italic() {
+        return this._label ? this._label.isItalic : false;
+    }
+    set italic(value) {
+        if (this._label)
+            this._label.isItalic = value;
+    }
+    get singleLine() {
+        return this._label ? !this._label.enableWrapText : false;
+    }
+    set singleLine(value) {
+        if (this._label)
+            this._label.enableWrapText = !value;
+    }
+    get stroke() {
+        return (this._outline && this._outline.enabled) ? this._outline.width : 0;
+    }
+    set stroke(value) {
+        if (value == 0) {
+            if (this._outline)
+                this._outline.enabled = false;
+        }
+        else {
+            if (!this._outline) {
+                this._outline = this._node.addComponent(LabelOutline);
+                this.updateStrokeColor();
+            }
+            else
+                this._outline.enabled = true;
+            this._outline.width = value;
+        }
+    }
+    get strokeColor() {
+        return this._strokeColor;
+    }
+    set strokeColor(value) {
+        if (!this._strokeColor)
+            this._strokeColor = new Color();
+        this._strokeColor.set(value);
+        this.updateGear(4);
+        this.updateStrokeColor();
+    }
+    get shadowOffset() {
+        return this._shadowOffset;
+    }
+    set shadowOffset(value) {
+        if (!this._shadowOffset)
+            this._shadowOffset = new Vec2();
+        this._shadowOffset.set(value);
+        if (this._shadowOffset.x != 0 || this._shadowOffset.y != 0) {
+            if (!this._shadow) {
+                this._shadow = this._node.addComponent(LabelShadow);
+                this.updateShadowColor();
+            }
+            else
+                this._shadow.enabled = true;
+            this._shadow.offset.x = value.x;
+            this._shadow.offset.y = -value.y;
+        }
+        else if (this._shadow)
+            this._shadow.enabled = false;
+    }
+    get shadowColor() {
+        return this._shadowColor;
+    }
+    set shadowColor(value) {
+        if (!this._shadowColor)
+            this._shadowColor = new Color();
+        this._shadowColor.set(value);
+        this.updateShadowColor();
+    }
+    set ubbEnabled(value) {
+        if (this._ubbEnabled != value) {
+            this._ubbEnabled = value;
+            this.markSizeChanged();
+            this.updateText();
+        }
+    }
+    get ubbEnabled() {
+        return this._ubbEnabled;
+    }
+    set autoSize(value) {
+        if (this._autoSize != value) {
+            this._autoSize = value;
+            this.markSizeChanged();
+            this.updateOverflow();
+        }
+    }
+    get autoSize() {
+        return this._autoSize;
+    }
+    parseTemplate(template) {
+        var pos1 = 0, pos2, pos3;
+        var tag;
+        var value;
+        var result = "";
+        while ((pos2 = template.indexOf("{", pos1)) != -1) {
+            if (pos2 > 0 && template.charCodeAt(pos2 - 1) == 92) //\
+             {
+                result += template.substring(pos1, pos2 - 1);
+                result += "{";
+                pos1 = pos2 + 1;
+                continue;
+            }
+            result += template.substring(pos1, pos2);
+            pos1 = pos2;
+            pos2 = template.indexOf("}", pos1);
+            if (pos2 == -1)
+                break;
+            if (pos2 == pos1 + 1) {
+                result += template.substr(pos1, 2);
+                pos1 = pos2 + 1;
+                continue;
+            }
+            tag = template.substring(pos1 + 1, pos2);
+            pos3 = tag.indexOf("=");
+            if (pos3 != -1) {
+                value = this._templateVars[tag.substring(0, pos3)];
+                if (value == null)
+                    result += tag.substring(pos3 + 1);
+                else
+                    result += value;
+            }
+            else {
+                value = this._templateVars[tag];
+                if (value != null)
+                    result += value;
+            }
+            pos1 = pos2 + 1;
+        }
+        if (pos1 < template.length)
+            result += template.substr(pos1);
+        return result;
+    }
+    get templateVars() {
+        return this._templateVars;
+    }
+    set templateVars(value) {
+        if (this._templateVars == null && value == null)
+            return;
+        this._templateVars = value;
+        this.flushVars();
+    }
+    setVar(name, value) {
+        if (!this._templateVars)
+            this._templateVars = {};
+        this._templateVars[name] = value;
+        return this;
+    }
+    flushVars() {
+        this.markSizeChanged();
+        this.updateText();
+    }
+    get textWidth() {
+        this.ensureSizeCorrect();
+        return this._node._uiProps.uiTransformComp.width;
+    }
+    ensureSizeCorrect() {
+        if (this._sizeDirty) {
+            this._label.updateRenderData(true);
+            this._sizeDirty = false;
+        }
+    }
+    updateText() {
+        var text2 = this._text;
+        if (this._templateVars)
+            text2 = this.parseTemplate(text2);
+        if (this._ubbEnabled) //不支持同一个文本不同样式
+            text2 = defaultParser.parse(text2, true);
+        this._label.string = text2;
+    }
+    assignFont(label, value) {
+        if (value instanceof Font)
+            label.font = value;
+        else {
+            let font = getFontByName(value);
+            if (!font) {
+                label.fontFamily = value;
+                label.useSystemFont = true;
+            }
+            else
+                label.font = font;
+        }
+    }
+    assignFontColor(label, value) {
+        let font = label.font;
+        if ((font instanceof BitmapFont) && !(font.fntConfig.canTint))
+            value = Color.WHITE;
+        if (this._grayed)
+            value = toGrayedColor(value);
+        label.color = value;
+    }
+    updateFont() {
+        this.assignFont(this._label, this._realFont);
+    }
+    updateFontColor() {
+        this.assignFontColor(this._label, this._color);
+    }
+    updateStrokeColor() {
+        if (!this._outline)
+            return;
+        if (!this._strokeColor)
+            this._strokeColor = new Color();
+        if (this._grayed)
+            this._outline.color = toGrayedColor(this._strokeColor);
+        else
+            this._outline.color = this._strokeColor;
+    }
+    updateShadowColor() {
+        if (!this._shadow)
+            return;
+        if (!this._shadowColor)
+            this._shadowColor = new Color();
+        if (this._grayed)
+            this._shadow.color = toGrayedColor(this._shadowColor);
+        else
+            this._shadow.color = this._shadowColor;
+    }
+    updateFontSize() {
+        let font = this._label.font;
+        if (font instanceof BitmapFont) {
+            let fntConfig = font.fntConfig;
+            if (fntConfig.resizable)
+                this._label.fontSize = this._fontSize;
+            else
+                this._label.fontSize = fntConfig.fontSize;
+            this._label.lineHeight = fntConfig.fontSize + (this._leading + 4) * fntConfig.fontSize / this._label.fontSize;
+        }
+        else {
+            this._label.fontSize = this._fontSize;
+            this._label.lineHeight = this._fontSize + this._leading;
+        }
+    }
+    updateOverflow() {
+        if (this._autoSize == AutoSizeType.Both)
+            this._label.overflow = Label.Overflow.NONE;
+        else if (this._autoSize == AutoSizeType.Height) {
+            this._label.overflow = Label.Overflow.RESIZE_HEIGHT;
+            this._node._uiProps.uiTransformComp.width = this._width;
+        }
+        else if (this._autoSize == AutoSizeType.Shrink) {
+            this._label.overflow = Label.Overflow.SHRINK;
+            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+        }
+        else {
+            this._label.overflow = Label.Overflow.CLAMP;
+            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+        }
+    }
+    markSizeChanged() {
+        if (this._underConstruct)
+            return;
+        if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
+            if (!this._sizeDirty) {
+                this._node.emit(FGUIEvent.SIZE_DELAY_CHANGE);
+                this._sizeDirty = true;
+            }
+        }
+    }
+    onLabelSizeChanged() {
+        this._sizeDirty = false;
+        if (this._underConstruct)
+            return;
+        if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
+            this._updatingSize = true;
+            this.setSize(this._node._uiProps.uiTransformComp.width, this._node._uiProps.uiTransformComp.height);
+            this._updatingSize = false;
+        }
+    }
+    handleSizeChanged() {
+        if (this._updatingSize)
+            return;
+        if (this._autoSize == AutoSizeType.None || this._autoSize == AutoSizeType.Shrink) {
+            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+        }
+        else if (this._autoSize == AutoSizeType.Height)
+            this._node._uiProps.uiTransformComp.width = this._width;
+    }
+    handleGrayedChanged() {
+        this.updateFontColor();
+        this.updateStrokeColor();
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.OutlineColor:
+                return this.strokeColor;
+            case ObjectPropID.FontSize:
+                return this.fontSize;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.OutlineColor:
+                this.strokeColor = value;
+                break;
+            case ObjectPropID.FontSize:
+                this.fontSize = value;
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this.font = buffer.readS();
+        this.fontSize = buffer.readShort();
+        this.color = buffer.readColor();
+        this.align = buffer.readByte();
+        this.verticalAlign = buffer.readByte();
+        this.leading = buffer.readShort();
+        this.letterSpacing = buffer.readShort();
+        this._ubbEnabled = buffer.readBool();
+        this.autoSize = buffer.readByte();
+        this.underline = buffer.readBool();
+        this.italic = buffer.readBool();
+        this.bold = buffer.readBool();
+        this.singleLine = buffer.readBool();
+        if (buffer.readBool()) {
+            this.strokeColor = buffer.readColor();
+            this.stroke = buffer.readFloat();
+        }
+        if (buffer.readBool()) {
+            this.shadowColor = buffer.readColor();
+            let f1 = buffer.readFloat();
+            let f2 = buffer.readFloat();
+            this.shadowOffset = new Vec2(f1, f2);
+        }
+        if (buffer.readBool())
+            this._templateVars = {};
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        buffer.seek(beginPos, 6);
+        var str = buffer.readS();
+        if (str != null)
+            this.text = str;
+    }
+}
+
+class RichTextImageAtlas extends SpriteAtlas {
+    getSpriteFrame(key) {
+        let pi = UIPackage.getItemByURL(key);
+        if (pi) {
+            pi.load();
+            if (pi.type == PackageItemType.Image)
+                return pi.asset;
+            else if (pi.type == PackageItemType.MovieClip)
+                return pi.frames[0].texture;
+        }
+        return super.getSpriteFrame(key);
+    }
+}
+const imageAtlas = new RichTextImageAtlas();
+class GRichTextField extends GTextField {
+    _richText;
+    _bold;
+    _italics;
+    _underline;
+    linkUnderline;
+    linkColor;
+    constructor() {
+        super();
+        this._node.name = "GRichTextField";
+        this._touchDisabled = false;
+        this.linkUnderline = UIConfig.linkUnderline;
+    }
+    createRenderer() {
+        this._richText = this._node.addComponent(RichText);
+        this._richText.handleTouchEvent = false;
+        this.autoSize = AutoSizeType.None;
+        this._richText.imageAtlas = imageAtlas;
+    }
+    get align() {
+        return this._richText.horizontalAlign;
+    }
+    set align(value) {
+        this._richText.horizontalAlign = value;
+    }
+    get underline() {
+        return this._underline;
+    }
+    set underline(value) {
+        if (this._underline != value) {
+            this._underline = value;
+            this.updateText();
+        }
+    }
+    get bold() {
+        return this._bold;
+    }
+    set bold(value) {
+        if (this._bold != value) {
+            this._bold = value;
+            this.updateText();
+        }
+    }
+    get italic() {
+        return this._italics;
+    }
+    set italic(value) {
+        if (this._italics != value) {
+            this._italics = value;
+            this.updateText();
+        }
+    }
+    markSizeChanged() {
+        //RichText貌似没有延迟重建文本，所以这里不需要
+    }
+    updateText() {
+        var text2 = this._text;
+        if (this._templateVars)
+            text2 = this.parseTemplate(text2);
+        if (this._ubbEnabled) {
+            defaultParser.linkUnderline = this.linkUnderline;
+            defaultParser.linkColor = this.linkColor;
+            text2 = defaultParser.parse(text2);
+        }
+        if (this._bold)
+            text2 = "<b>" + text2 + "</b>";
+        if (this._italics)
+            text2 = "<i>" + text2 + "</i>";
+        if (this._underline)
+            text2 = "<u>" + text2 + "</u>";
+        let c = this._color;
+        if (this._grayed)
+            c = toGrayedColor(c);
+        text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
+        if (this._autoSize == AutoSizeType.Both) {
+            if (this._richText.maxWidth != 0)
+                this._richText["_maxWidth"] = 0;
+            this._richText.string = text2;
+            if (this.maxWidth != 0 && this._node._uiProps.uiTransformComp.contentSize.width > this.maxWidth)
+                this._richText.maxWidth = this.maxWidth;
+        }
+        else
+            this._richText.string = text2;
+    }
+    updateFont() {
+        this.assignFont(this._richText, this._realFont);
+    }
+    updateFontColor() {
+        this.assignFontColor(this._richText, this._color);
+    }
+    updateFontSize() {
+        let fontSize = this._fontSize;
+        let font = this._richText.font;
+        if (font instanceof BitmapFont) {
+            if (!font.fntConfig.resizable)
+                fontSize = font.fntConfig.fontSize;
+        }
+        this._richText.fontSize = fontSize;
+        this._richText.lineHeight = fontSize + this._leading * 2;
+    }
+    updateOverflow() {
+        if (this._autoSize == AutoSizeType.Both)
+            this._richText.maxWidth = 0;
+        else
+            this._richText.maxWidth = this._width;
+    }
+    handleSizeChanged() {
+        if (this._updatingSize)
+            return;
+        if (this._autoSize != AutoSizeType.Both)
+            this._richText.maxWidth = this._width;
+    }
+}
+
+class InputProcessor extends Component {
+    _owner;
+    _touchListener;
+    _touchPos;
+    _touches;
+    _rollOutChain;
+    _rollOverChain;
+    _captureCallback;
+    constructor() {
+        super();
+        this._touches = new Array();
+        this._rollOutChain = new Array();
+        this._rollOverChain = new Array();
+        this._touchPos = new Vec2();
+    }
+    onLoad() {
+        this._owner = GObject.cast(this.node);
+    }
+    onEnable() {
+        let node = this.node;
+        node.on(Node.EventType.TOUCH_START, this.touchBeginHandler, this);
+        node.on(Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
+        node.on(Node.EventType.TOUCH_END, this.touchEndHandler, this);
+        node.on(Node.EventType.TOUCH_CANCEL, this.touchCancelHandler, this);
+        node.on(Node.EventType.MOUSE_DOWN, this.mouseDownHandler, this);
+        node.on(Node.EventType.MOUSE_MOVE, this.mouseMoveHandler, this);
+        node.on(Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
+        node.on(Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
+        this._touchListener = this.node.eventProcessor.touchListener;
+    }
+    onDisable() {
+        let node = this.node;
+        node.off(Node.EventType.TOUCH_START, this.touchBeginHandler, this);
+        node.off(Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
+        node.off(Node.EventType.TOUCH_END, this.touchEndHandler, this);
+        node.off(Node.EventType.TOUCH_CANCEL, this.touchCancelHandler, this);
+        node.off(Node.EventType.MOUSE_DOWN, this.mouseDownHandler, this);
+        node.off(Node.EventType.MOUSE_MOVE, this.mouseMoveHandler, this);
+        node.off(Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
+        node.off(Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
+        this._touchListener = null;
+    }
+    getAllTouches(touchIds) {
+        touchIds = touchIds || new Array();
+        let cnt = this._touches.length;
+        for (let i = 0; i < cnt; i++) {
+            let ti = this._touches[i];
+            if (ti.touchId != -1)
+                touchIds.push(ti.touchId);
+        }
+        return touchIds;
+    }
+    getTouchPosition(touchId) {
+        if (touchId === undefined)
+            touchId = -1;
+        let cnt = this._touches.length;
+        for (let i = 0; i < cnt; i++) {
+            let ti = this._touches[i];
+            if (ti.touchId != -1 && (touchId == -1 || ti.touchId == touchId))
+                return ti.pos;
+        }
+        return Vec2.ZERO;
+    }
+    getTouchTarget() {
+        let cnt = this._touches.length;
+        for (let i = 0; i < cnt; i++) {
+            let ti = this._touches[i];
+            if (ti.touchId != -1)
+                return ti.target;
+        }
+        return null;
+    }
+    addTouchMonitor(touchId, target) {
+        let ti = this.getInfo(touchId, false);
+        if (!ti)
+            return;
+        let index = ti.touchMonitors.indexOf(target);
+        if (index == -1)
+            ti.touchMonitors.push(target);
+    }
+    removeTouchMonitor(target) {
+        let cnt = this._touches.length;
+        for (let i = 0; i < cnt; i++) {
+            let ti = this._touches[i];
+            let index = ti.touchMonitors.indexOf(target);
+            if (index != -1)
+                ti.touchMonitors.splice(index, 1);
+        }
+    }
+    cancelClick(touchId) {
+        let ti = this.getInfo(touchId, false);
+        if (ti)
+            ti.clickCancelled = true;
+    }
+    simulateClick(target) {
+        let evt;
+        evt = borrowEvent(FGUIEvent.TOUCH_BEGIN, true);
+        evt.initiator = target;
+        evt.pos.set(target.localToGlobal());
+        evt.touchId = 0;
+        evt.clickCount = 1;
+        evt.button = 0;
+        evt._processor = this;
+        if (this._captureCallback)
+            this._captureCallback.call(this._owner, evt);
+        target.node.dispatchEvent(evt);
+        evt.unuse();
+        evt.type = FGUIEvent.TOUCH_END;
+        evt.bubbles = true;
+        target.node.dispatchEvent(evt);
+        evt.unuse();
+        evt.type = FGUIEvent.CLICK;
+        evt.bubbles = true;
+        target.node.dispatchEvent(evt);
+        returnEvent(evt);
+    }
+    touchBeginHandler(evt) {
+        let ti = this.updateInfo(evt.getID(), evt.getLocation());
+        this.setBegin(ti);
+        if (this._touchListener) {
+            this._touchListener.setSwallowTouches(ti.target != this._owner);
+        }
+        else {
+            // since cc3.4.0, setSwallowTouches removed
+            let e = evt;
+            e.preventSwallow = (ti.target == this._owner);
+        }
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_BEGIN, true);
+        if (this._captureCallback)
+            this._captureCallback.call(this._owner, evt2);
+        ti.target.node.dispatchEvent(evt2);
+        this.handleRollOver(ti, ti.target);
+        return true;
+    }
+    touchMoveHandler(evt) {
+        let ti = this.updateInfo(evt.getID(), evt.getLocation());
+        if (!this._touchListener) {
+            let e = evt;
+            e.preventSwallow = (ti.target == this._owner);
+        }
+        this.handleRollOver(ti, ti.target);
+        if (ti.began) {
+            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
+            let done = false;
+            let cnt = ti.touchMonitors.length;
+            for (let i = 0; i < cnt; i++) {
+                let mm = ti.touchMonitors[i];
+                if (mm.node == null || !mm.node.activeInHierarchy)
+                    continue;
+                evt2.unuse();
+                evt2.type = FGUIEvent.TOUCH_MOVE;
+                mm.node.dispatchEvent(evt2);
+                if (mm == this._owner)
+                    done = true;
+            }
+            if (!done && this.node) {
+                evt2.unuse();
+                evt2.type = FGUIEvent.TOUCH_MOVE;
+                this.node.dispatchEvent(evt2);
+            }
+            returnEvent(evt2);
+        }
+    }
+    touchEndHandler(evt) {
+        let ti = this.updateInfo(evt.getID(), evt.getLocation());
+        if (!this._touchListener) {
+            let e = evt;
+            e.preventSwallow = (ti.target == this._owner);
+        }
+        this.setEnd(ti);
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
+        let cnt = ti.touchMonitors.length;
+        for (let i = 0; i < cnt; i++) {
+            let mm = ti.touchMonitors[i];
+            if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
+                || ('isAncestorOf' in mm) && mm.isAncestorOf(ti.target))
+                continue;
+            evt2.unuse();
+            evt2.type = FGUIEvent.TOUCH_END;
+            mm.node.dispatchEvent(evt2);
+        }
+        ti.touchMonitors.length = 0;
+        if (ti.target && ti.target.node) {
+            if (ti.target instanceof GRichTextField)
+                ti.target.node.getComponent(RichText)["_onTouchEnded"](evt);
+            evt2.unuse();
+            evt2.type = FGUIEvent.TOUCH_END;
+            evt2.bubbles = true;
+            ti.target.node.dispatchEvent(evt2);
+        }
+        returnEvent(evt2);
+        ti.target = this.clickTest(ti);
+        if (ti.target) {
+            evt2 = this.getEvent(ti, ti.target, FGUIEvent.CLICK, true);
+            ti.target.node.dispatchEvent(evt2);
+            returnEvent(evt2);
+        }
+        if (sys.isMobile) //on mobile platform, trigger RollOut on up event, but not on PC
+            this.handleRollOver(ti, null);
+        else
+            this.handleRollOver(ti, ti.target);
+        ti.target = null;
+        ti.touchId = -1;
+        ti.button = -1;
+    }
+    touchCancelHandler(evt) {
+        let ti = this.updateInfo(evt.getID(), evt.getLocation());
+        if (!this._touchListener) {
+            let e = evt;
+            e.preventSwallow = (ti.target == this._owner);
+        }
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
+        let cnt = ti.touchMonitors.length;
+        for (let i = 0; i < cnt; i++) {
+            let mm = ti.touchMonitors[i];
+            if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
+                || ('isAncestorOf' in mm) && mm.isAncestorOf(ti.target))
+                continue;
+            evt2.initiator = mm;
+            mm.node.dispatchEvent(evt2);
+        }
+        ti.touchMonitors.length = 0;
+        if (ti.target && ti.target.node) {
+            evt2.bubbles = true;
+            ti.target.node.dispatchEvent(evt2);
+        }
+        returnEvent(evt2);
+        this.handleRollOver(ti, null);
+        ti.target = null;
+        ti.touchId = -1;
+        ti.button = -1;
+    }
+    mouseDownHandler(evt) {
+        let ti = this.getInfo(0, true);
+        ti.button = evt.getButton();
+    }
+    mouseUpHandler(evt) {
+        let ti = this.getInfo(0, true);
+        ti.button = evt.getButton();
+    }
+    mouseMoveHandler(evt) {
+        let ti = this.getInfo(0, false);
+        if (ti
+            && Math.abs(ti.pos.x - evt.getLocationX()) < 1
+            && Math.abs(ti.pos.y - (UIContentScaler.rootSize.height - evt.getLocationY())) < 1)
+            return;
+        ti = this.updateInfo(0, evt.getLocation());
+        this.handleRollOver(ti, ti.target);
+        if (ti.began) {
+            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
+            let done = false;
+            let cnt = ti.touchMonitors.length;
+            for (let i = 0; i < cnt; i++) {
+                let mm = ti.touchMonitors[i];
+                if (mm.node == null || !mm.node.activeInHierarchy)
+                    continue;
+                evt2.initiator = mm;
+                mm.node.dispatchEvent(evt2);
+                if (mm == this._owner)
+                    done = true;
+            }
+            if (!done && this.node) {
+                evt2.initiator = this._owner;
+                this.node.dispatchEvent(evt2);
+                returnEvent(evt2);
+            }
+            returnEvent(evt2);
+        }
+    }
+    mouseWheelHandler(evt) {
+        let ti = this.updateInfo(0, evt.getLocation());
+        ti.mouseWheelDelta = Math.max(evt.getScrollX(), evt.getScrollY());
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.MOUSE_WHEEL, true);
+        ti.target.node.dispatchEvent(evt2);
+        returnEvent(evt2);
+    }
+    updateInfo(touchId, pos) {
+        const camera = director.root.batcher2D.getFirstRenderCamera(this.node);
+        if (camera) {
+            s_vec3.set(pos.x, pos.y);
+            camera.screenToWorld(s_vec3_2, s_vec3);
+            this._touchPos.set(s_vec3_2.x, s_vec3_2.y);
+        }
+        else
+            this._touchPos.set(pos);
+        this._touchPos.y = UIContentScaler.rootSize.height - this._touchPos.y;
+        let target = this._owner.hitTest(this._touchPos);
+        if (!target)
+            target = this._owner;
+        let ti = this.getInfo(touchId);
+        ti.target = target;
+        ti.pos.set(this._touchPos);
+        ti.button = EventMouse.BUTTON_LEFT;
+        ti.touchId = touchId;
+        return ti;
+    }
+    getInfo(touchId, createIfNotExisits) {
+        if (createIfNotExisits === undefined)
+            createIfNotExisits = true;
+        let ret = null;
+        let cnt = this._touches.length;
+        for (let i = 0; i < cnt; i++) {
+            let ti = this._touches[i];
+            if (ti.touchId == touchId)
+                return ti;
+            else if (ti.touchId == -1)
+                ret = ti;
+        }
+        if (!ret) {
+            if (!createIfNotExisits)
+                return null;
+            ret = new TouchInfo();
+            this._touches.push(ret);
+        }
+        ret.touchId = touchId;
+        return ret;
+    }
+    setBegin(ti) {
+        ti.began = true;
+        ti.clickCancelled = false;
+        ti.downPos.set(ti.pos);
+        ti.downTargets.length = 0;
+        let obj = ti.target;
+        while (obj) {
+            ti.downTargets.push(obj);
+            obj = obj.findParent();
+        }
+    }
+    setEnd(ti) {
+        ti.began = false;
+        let now = director.getTotalTime() / 1000;
+        let elapsed = now - ti.lastClickTime;
+        if (elapsed < 0.45) {
+            if (ti.clickCount == 2)
+                ti.clickCount = 1;
+            else
+                ti.clickCount++;
+        }
+        else
+            ti.clickCount = 1;
+        ti.lastClickTime = now;
+    }
+    clickTest(ti) {
+        if (ti.downTargets.length == 0
+            || ti.clickCancelled
+            || Math.abs(ti.pos.x - ti.downPos.x) > 50 || Math.abs(ti.pos.y - ti.downPos.y) > 50)
+            return null;
+        let obj = ti.downTargets[0];
+        if (obj && obj.node && obj.node.activeInHierarchy)
+            return obj;
+        obj = ti.target;
+        while (obj) {
+            let index = ti.downTargets.indexOf(obj);
+            if (index != -1 && obj.node && obj.node.activeInHierarchy)
+                break;
+            obj = obj.findParent();
+        }
+        return obj;
+    }
+    handleRollOver(ti, target) {
+        if (ti.lastRollOver == target)
+            return;
+        let element = ti.lastRollOver;
+        while (element && element.node) {
+            this._rollOutChain.push(element);
+            element = element.findParent();
+        }
+        element = target;
+        while (element && element.node) {
+            let i = this._rollOutChain.indexOf(element);
+            if (i != -1) {
+                this._rollOutChain.length = i;
+                break;
+            }
+            this._rollOverChain.push(element);
+            element = element.findParent();
+        }
+        ti.lastRollOver = target;
+        let cnt = this._rollOutChain.length;
+        for (let i = 0; i < cnt; i++) {
+            element = this._rollOutChain[i];
+            if (element.node && element.node.activeInHierarchy) {
+                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OUT, false);
+                element.node.dispatchEvent(evt);
+                returnEvent(evt);
+            }
+        }
+        cnt = this._rollOverChain.length;
+        for (let i = 0; i < cnt; i++) {
+            element = this._rollOverChain[i];
+            if (element.node && element.node.activeInHierarchy) {
+                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OVER, false);
+                element.node.dispatchEvent(evt);
+                returnEvent(evt);
+            }
+        }
+        this._rollOutChain.length = 0;
+        this._rollOverChain.length = 0;
+    }
+    getEvent(ti, target, type, bubbles) {
+        let evt = borrowEvent(type, bubbles);
+        evt.initiator = target;
+        evt.pos.set(ti.pos);
+        evt.touchId = ti.touchId;
+        evt.clickCount = ti.clickCount;
+        evt.button = ti.button;
+        evt.mouseWheelDelta = ti.mouseWheelDelta;
+        evt._processor = this;
+        return evt;
+    }
+}
+class TouchInfo {
+    target;
+    pos = new Vec2();
+    touchId = 0;
+    clickCount = 0;
+    mouseWheelDelta = 0;
+    button = -1;
+    downPos = new Vec2();
+    began = false;
+    clickCancelled = false;
+    lastClickTime = 0;
+    lastRollOver;
+    downTargets = new Array();
+    touchMonitors = new Array();
+}
+var s_vec3 = new Vec3();
+var s_vec3_2 = new Vec3();
+
 class ControllerAction {
     fromPage;
     toPage;
@@ -8432,439 +10424,6 @@ function createAction(type) {
             return new ChangePageAction();
     }
     return null;
-}
-
-class GGraph extends GObject {
-    _content;
-    _type = 0;
-    _lineSize = 0;
-    _lineColor;
-    _fillColor;
-    _cornerRadius;
-    _sides;
-    _startAngle;
-    _polygonPoints;
-    _distances;
-    _hasContent;
-    constructor() {
-        super();
-        this._node.name = "GGraph";
-        this._lineSize = 1;
-        this._lineColor = new Color();
-        this._fillColor = new Color(255, 255, 255, 255);
-        this._content = this._node.addComponent(Graphics);
-    }
-    drawRect(lineSize, lineColor, fillColor, corner) {
-        this._type = 1;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._cornerRadius = corner;
-        this.updateGraph();
-    }
-    drawEllipse(lineSize, lineColor, fillColor) {
-        this._type = 2;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this.updateGraph();
-    }
-    drawRegularPolygon(lineSize, lineColor, fillColor, sides, startAngle, distances) {
-        this._type = 4;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._sides = sides;
-        this._startAngle = startAngle || 0;
-        this._distances = distances;
-        this.updateGraph();
-    }
-    drawPolygon(lineSize, lineColor, fillColor, points) {
-        this._type = 3;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._polygonPoints = points;
-        this.updateGraph();
-    }
-    get distances() {
-        return this._distances;
-    }
-    set distances(value) {
-        this._distances = value;
-        if (this._type == 3)
-            this.updateGraph();
-    }
-    clearGraphics() {
-        this._type = 0;
-        if (this._hasContent) {
-            this._content.clear();
-            this._hasContent = false;
-        }
-    }
-    get type() {
-        return this._type;
-    }
-    get color() {
-        return this._fillColor;
-    }
-    set color(value) {
-        this._fillColor.set(value);
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    updateGraph() {
-        let ctx = this._content;
-        if (this._hasContent) {
-            this._hasContent = false;
-            ctx.clear();
-        }
-        var w = this._width;
-        var h = this._height;
-        if (w == 0 || h == 0)
-            return;
-        var px = -this.pivotX * this._width;
-        var py = this.pivotY * this._height;
-        let ls = this._lineSize / 2;
-        ctx.lineWidth = this._lineSize;
-        ctx.strokeColor = this._lineColor;
-        ctx.fillColor = this._fillColor;
-        if (this._type == 1) {
-            if (this._cornerRadius) {
-                ctx.roundRect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize, this._cornerRadius[0]);
-            }
-            else
-                ctx.rect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize);
-        }
-        else if (this._type == 2) {
-            ctx.ellipse(w / 2 + px, -h / 2 + py, w / 2 - ls, h / 2 - ls);
-        }
-        else if (this._type == 3) {
-            this.drawPath(ctx, this._polygonPoints, px, py);
-        }
-        else if (this._type == 4) {
-            if (!this._polygonPoints)
-                this._polygonPoints = [];
-            var radius = Math.min(w, h) / 2 - ls;
-            this._polygonPoints.length = 0;
-            var angle = misc.degreesToRadians(this._startAngle);
-            var deltaAngle = 2 * Math.PI / this._sides;
-            var dist;
-            for (var i = 0; i < this._sides; i++) {
-                if (this._distances) {
-                    dist = this._distances[i];
-                    if (isNaN(dist))
-                        dist = 1;
-                }
-                else
-                    dist = 1;
-                var xv = radius + radius * dist * Math.cos(angle);
-                var yv = radius + radius * dist * Math.sin(angle);
-                this._polygonPoints.push(xv, yv);
-                angle += deltaAngle;
-            }
-            this.drawPath(ctx, this._polygonPoints, px, py);
-        }
-        if (ls != 0)
-            ctx.stroke();
-        if (this._fillColor.a != 0)
-            ctx.fill();
-        this._hasContent = true;
-    }
-    drawPath(ctx, points, px, py) {
-        var cnt = points.length;
-        ctx.moveTo(points[0] + px, -points[1] + py);
-        for (var i = 2; i < cnt; i += 2)
-            ctx.lineTo(points[i] + px, -points[i + 1] + py);
-        ctx.lineTo(points[0] + px, -points[1] + py);
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    getProp(index) {
-        if (index == ObjectPropID.Color)
-            return this.color;
-        else
-            return super.getProp(index);
-    }
-    setProp(index, value) {
-        if (index == ObjectPropID.Color)
-            this.color = value;
-        else
-            super.setProp(index, value);
-    }
-    _hitTest(pt) {
-        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height) {
-            if (this._type == 3) {
-                let points = this._polygonPoints;
-                let len = points.length / 2;
-                let i;
-                let j = len - 1;
-                let oddNodes = false;
-                this._width;
-                this._height;
-                for (i = 0; i < len; ++i) {
-                    let ix = points[i * 2];
-                    let iy = points[i * 2 + 1];
-                    let jx = points[j * 2];
-                    let jy = points[j * 2 + 1];
-                    if ((iy < pt.y && jy >= pt.y || jy < pt.y && iy >= pt.y) && (ix <= pt.x || jx <= pt.x)) {
-                        if (ix + (pt.y - iy) / (jy - iy) * (jx - ix) < pt.x)
-                            oddNodes = !oddNodes;
-                    }
-                    j = i;
-                }
-                return oddNodes ? this : null;
-            }
-            else
-                return this;
-        }
-        else
-            return null;
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._type = buffer.readByte();
-        if (this._type != 0) {
-            var i;
-            var cnt;
-            this._lineSize = buffer.readInt();
-            this._lineColor.set(buffer.readColor(true));
-            this._fillColor.set(buffer.readColor(true));
-            if (buffer.readBool()) {
-                this._cornerRadius = new Array(4);
-                for (i = 0; i < 4; i++)
-                    this._cornerRadius[i] = buffer.readFloat();
-            }
-            if (this._type == 3) {
-                cnt = buffer.readShort();
-                this._polygonPoints = [];
-                this._polygonPoints.length = cnt;
-                for (i = 0; i < cnt; i++)
-                    this._polygonPoints[i] = buffer.readFloat();
-            }
-            else if (this._type == 4) {
-                this._sides = buffer.readShort();
-                this._startAngle = buffer.readFloat();
-                cnt = buffer.readShort();
-                if (cnt > 0) {
-                    this._distances = [];
-                    for (i = 0; i < cnt; i++)
-                        this._distances[i] = buffer.readFloat();
-                }
-            }
-            this.updateGraph();
-        }
-    }
-}
-
-class Image extends Sprite {
-    _flip = FlipType.None;
-    _fillMethod = FillMethod.None;
-    _fillOrigin = FillOrigin.Left;
-    _fillAmount = 0;
-    _fillClockwise;
-    constructor() {
-        super();
-    }
-    get flip() {
-        return this._flip;
-    }
-    set flip(value) {
-        if (this._flip != value) {
-            this._flip = value;
-            let sx = 1, sy = 1;
-            if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both)
-                sx = -1;
-            if (this._flip == FlipType.Vertical || this._flip == FlipType.Both)
-                sy = -1;
-            if (sx != 1 || sy != 1) {
-                let uiTrans = this.node.getComponent(UITransform);
-                uiTrans.setAnchorPoint(0.5, 0.5);
-            }
-            this.node.setScale(sx, sy);
-        }
-    }
-    get fillMethod() {
-        return this._fillMethod;
-    }
-    set fillMethod(value) {
-        if (this._fillMethod != value) {
-            this._fillMethod = value;
-            if (this._fillMethod != 0) {
-                this.type = Sprite.Type.FILLED;
-                if (this._fillMethod <= 3)
-                    this.fillType = this._fillMethod - 1;
-                else
-                    this.fillType = Sprite.FillType.RADIAL;
-                this.fillCenter = new Vec2(0.5, 0.5);
-                this.setupFill();
-            }
-            else {
-                this.type = Sprite.Type.SIMPLE;
-            }
-        }
-    }
-    get fillOrigin() {
-        return this._fillOrigin;
-    }
-    set fillOrigin(value) {
-        if (this._fillOrigin != value) {
-            this._fillOrigin = value;
-            if (this._fillMethod != 0)
-                this.setupFill();
-        }
-    }
-    get fillClockwise() {
-        return this._fillClockwise;
-    }
-    set fillClockwise(value) {
-        if (this._fillClockwise != value) {
-            this._fillClockwise = value;
-            if (this._fillMethod != 0)
-                this.setupFill();
-        }
-    }
-    get fillAmount() {
-        return this._fillAmount;
-    }
-    set fillAmount(value) {
-        if (this._fillAmount != value) {
-            this._fillAmount = value;
-            if (this._fillMethod != 0) {
-                if (this._fillClockwise)
-                    this.fillRange = -this._fillAmount;
-                else
-                    this.fillRange = this._fillAmount;
-            }
-        }
-    }
-    setupFill() {
-        if (this._fillMethod == FillMethod.Horizontal) {
-            this._fillClockwise = this._fillOrigin == FillOrigin.Right || this._fillOrigin == FillOrigin.Bottom;
-            this.fillStart = this._fillClockwise ? 1 : 0;
-        }
-        else if (this._fillMethod == FillMethod.Vertical) {
-            this._fillClockwise = this._fillOrigin == FillOrigin.Left || this._fillOrigin == FillOrigin.Top;
-            this.fillStart = this._fillClockwise ? 1 : 0;
-        }
-        else {
-            switch (this._fillOrigin) {
-                case FillOrigin.Right:
-                    this.fillOrigin = 0;
-                    break;
-                case FillOrigin.Top:
-                    this.fillStart = 0.25;
-                    break;
-                case FillOrigin.Left:
-                    this.fillStart = 0.5;
-                    break;
-                case FillOrigin.Bottom:
-                    this.fillStart = 0.75;
-                    break;
-            }
-        }
-    }
-}
-
-class GImage extends GObject {
-    _content;
-    constructor() {
-        super();
-        this._node.name = "GImage";
-        this._touchDisabled = true;
-        this._content = this._node.addComponent(Image);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-    }
-    get color() {
-        return this._content.color;
-    }
-    set color(value) {
-        this._content.color = value;
-        this.updateGear(4);
-    }
-    get flip() {
-        return this._content.flip;
-    }
-    set flip(value) {
-        this._content.flip = value;
-    }
-    get fillMethod() {
-        return this._content.fillMethod;
-    }
-    set fillMethod(value) {
-        this._content.fillMethod = value;
-    }
-    get fillOrigin() {
-        return this._content.fillOrigin;
-    }
-    set fillOrigin(value) {
-        this._content.fillOrigin = value;
-    }
-    get fillClockwise() {
-        return this._content.fillClockwise;
-    }
-    set fillClockwise(value) {
-        this._content.fillClockwise = value;
-    }
-    get fillAmount() {
-        return this._content.fillAmount;
-    }
-    set fillAmount(value) {
-        this._content.fillAmount = value;
-    }
-    constructFromResource() {
-        var contentItem = this.packageItem.getBranch();
-        this.sourceWidth = contentItem.width;
-        this.sourceHeight = contentItem.height;
-        this.initWidth = this.sourceWidth;
-        this.initHeight = this.sourceHeight;
-        this.setSize(this.sourceWidth, this.sourceHeight);
-        contentItem = contentItem.getHighResolution();
-        contentItem.load();
-        if (contentItem.scale9Grid)
-            this._content.type = Sprite.Type.SLICED;
-        else if (contentItem.scaleByTile)
-            this._content.type = Sprite.Type.TILED;
-        this._content.spriteFrame = contentItem.asset;
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    getProp(index) {
-        if (index == ObjectPropID.Color)
-            return this.color;
-        else
-            return super.getProp(index);
-    }
-    setProp(index, value) {
-        if (index == ObjectPropID.Color)
-            this.color = value;
-        else
-            super.setProp(index, value);
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        this._content.flip = buffer.readByte();
-        this._content.fillMethod = buffer.readByte();
-        if (this._content.fillMethod != 0) {
-            this._content.fillOrigin = buffer.readByte();
-            this._content.fillClockwise = buffer.readBool();
-            this._content.fillAmount = buffer.readFloat();
-        }
-    }
 }
 
 class Margin {
@@ -12834,1204 +14393,6 @@ class GComponent extends GObject {
 }
 var s_vec2$2 = new Vec2();
 
-function toGrayedColor(c) {
-    let v = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-    return new Color(v, v, v, c.a);
-}
-
-class UBBParser {
-    _text;
-    _readPos = 0;
-    _handlers;
-    lastColor;
-    lastSize;
-    linkUnderline;
-    linkColor;
-    constructor() {
-        this._handlers = {};
-        this._handlers["url"] = this.onTag_URL;
-        this._handlers["img"] = this.onTag_IMG;
-        this._handlers["b"] = this.onTag_Simple;
-        this._handlers["i"] = this.onTag_Simple;
-        this._handlers["u"] = this.onTag_Simple;
-        //this._handlers["sup"] = this.onTag_Simple;
-        //this._handlers["sub"] = this.onTag_Simple;
-        this._handlers["color"] = this.onTag_COLOR;
-        //this._handlers["font"] = this.onTag_FONT;
-        this._handlers["size"] = this.onTag_SIZE;
-    }
-    onTag_URL(tagName, end, attr) {
-        if (!end) {
-            let ret;
-            if (attr != null)
-                ret = "<on click=\"onClickLink\" param=\"" + attr + "\">";
-            else {
-                var href = this.getTagText();
-                ret = "<on click=\"onClickLink\" param=\"" + href + "\">";
-            }
-            if (this.linkUnderline)
-                ret += "<u>";
-            if (this.linkColor)
-                ret += "<color=" + this.linkColor + ">";
-            return ret;
-        }
-        else {
-            let ret = "";
-            if (this.linkColor)
-                ret += "</color>";
-            if (this.linkUnderline)
-                ret += "</u>";
-            ret += "</on>";
-            return ret;
-        }
-    }
-    onTag_IMG(tagName, end, attr) {
-        if (!end) {
-            var src = this.getTagText(true);
-            if (!src)
-                return null;
-            return "<img src=\"" + src + "\"/>";
-        }
-        else
-            return null;
-    }
-    onTag_Simple(tagName, end, attr) {
-        return end ? ("</" + tagName + ">") : ("<" + tagName + ">");
-    }
-    onTag_COLOR(tagName, end, attr) {
-        if (!end) {
-            this.lastColor = attr;
-            return "<color=" + attr + ">";
-        }
-        else
-            return "</color>";
-    }
-    onTag_FONT(tagName, end, attr) {
-        if (!end)
-            return "<font face=\"" + attr + "\">";
-        else
-            return "</font>";
-    }
-    onTag_SIZE(tagName, end, attr) {
-        if (!end) {
-            this.lastSize = attr;
-            return "<size=" + attr + ">";
-        }
-        else
-            return "</size>";
-    }
-    getTagText(remove) {
-        var pos1 = this._readPos;
-        var pos2;
-        var result = "";
-        while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
-            if (this._text.charCodeAt(pos2 - 1) == 92) //\
-             {
-                result += this._text.substring(pos1, pos2 - 1);
-                result += "[";
-                pos1 = pos2 + 1;
-            }
-            else {
-                result += this._text.substring(pos1, pos2);
-                break;
-            }
-        }
-        if (pos2 == -1)
-            return null;
-        if (remove)
-            this._readPos = pos2;
-        return result;
-    }
-    parse(text, remove) {
-        this._text = text;
-        this.lastColor = null;
-        this.lastSize = null;
-        var pos1 = 0, pos2, pos3;
-        var end;
-        var tag, attr;
-        var repl;
-        var func;
-        var result = "";
-        while ((pos2 = this._text.indexOf("[", pos1)) != -1) {
-            if (pos2 > 0 && this._text.charCodeAt(pos2 - 1) == 92) //\
-             {
-                result += this._text.substring(pos1, pos2 - 1);
-                result += "[";
-                pos1 = pos2 + 1;
-                continue;
-            }
-            result += this._text.substring(pos1, pos2);
-            pos1 = pos2;
-            pos2 = this._text.indexOf("]", pos1);
-            if (pos2 == -1)
-                break;
-            end = this._text.charAt(pos1 + 1) == '/';
-            tag = this._text.substring(end ? pos1 + 2 : pos1 + 1, pos2);
-            this._readPos = pos2 + 1;
-            attr = null;
-            repl = null;
-            pos3 = tag.indexOf("=");
-            if (pos3 != -1) {
-                attr = tag.substring(pos3 + 1);
-                tag = tag.substring(0, pos3);
-            }
-            tag = tag.toLowerCase();
-            func = this._handlers[tag];
-            if (func != null) {
-                repl = func.call(this, tag, end, attr);
-                if (repl != null && !remove)
-                    result += repl;
-            }
-            else
-                result += this._text.substring(pos1, this._readPos);
-            pos1 = this._readPos;
-        }
-        if (pos1 < this._text.length)
-            result += this._text.substr(pos1);
-        this._text = null;
-        return result;
-    }
-}
-var defaultParser = new UBBParser();
-
-class GTextField extends GObject {
-    _label;
-    _font;
-    _realFont;
-    _fontSize = 0;
-    _color;
-    _strokeColor;
-    _shadowOffset;
-    _shadowColor;
-    _leading = 0;
-    _text;
-    _ubbEnabled;
-    _templateVars;
-    _autoSize;
-    _updatingSize;
-    _sizeDirty;
-    _outline;
-    _shadow;
-    constructor() {
-        super();
-        this._node.name = "GTextField";
-        this._touchDisabled = true;
-        this._text = "";
-        this._color = new Color(255, 255, 255, 255);
-        this.createRenderer();
-        this.fontSize = 12;
-        this.leading = 3;
-        this.singleLine = false;
-        this._sizeDirty = false;
-        this._node.on(Node.EventType.SIZE_CHANGED, this.onLabelSizeChanged, this);
-    }
-    createRenderer() {
-        this._label = this._node.addComponent(Label);
-        this._label.string = "";
-        this.autoSize = AutoSizeType.Both;
-    }
-    set text(value) {
-        this._text = value;
-        if (this._text == null)
-            this._text = "";
-        this.updateGear(6);
-        this.markSizeChanged();
-        this.updateText();
-    }
-    get text() {
-        return this._text;
-    }
-    get font() {
-        return this._font;
-    }
-    set font(value) {
-        if (this._font != value || !value) {
-            this._font = value;
-            this.markSizeChanged();
-            let newFont = value ? value : UIConfig.defaultFont;
-            if (newFont.startsWith("ui://")) {
-                var pi = UIPackage.getItemByURL(newFont);
-                if (pi)
-                    newFont = pi.owner.getItemAsset(pi);
-                else
-                    newFont = UIConfig.defaultFont;
-            }
-            this._realFont = newFont;
-            this.updateFont();
-        }
-    }
-    get fontSize() {
-        return this._fontSize;
-    }
-    set fontSize(value) {
-        if (value < 0)
-            return;
-        if (this._fontSize != value) {
-            this._fontSize = value;
-            this.markSizeChanged();
-            this.updateFontSize();
-        }
-    }
-    get color() {
-        return this._color;
-    }
-    set color(value) {
-        this._color.set(value);
-        this.updateGear(4);
-        this.updateFontColor();
-    }
-    get align() {
-        return this._label ? this._label.horizontalAlign : 0;
-    }
-    set align(value) {
-        if (this._label)
-            this._label.horizontalAlign = value;
-    }
-    get verticalAlign() {
-        return this._label ? this._label.verticalAlign : 0;
-    }
-    set verticalAlign(value) {
-        if (this._label)
-            this._label.verticalAlign = value;
-    }
-    get leading() {
-        return this._leading;
-    }
-    set leading(value) {
-        if (this._leading != value) {
-            this._leading = value;
-            this.markSizeChanged();
-            this.updateFontSize();
-        }
-    }
-    get letterSpacing() {
-        return this._label ? this._label.spacingX : 0;
-    }
-    set letterSpacing(value) {
-        if (this._label && this._label.spacingX != value) {
-            this.markSizeChanged();
-            this._label.spacingX = value;
-        }
-    }
-    get underline() {
-        return this._label ? this._label.isUnderline : false;
-    }
-    set underline(value) {
-        if (this._label)
-            this._label.isUnderline = value;
-    }
-    get bold() {
-        return this._label ? this._label.isBold : false;
-    }
-    set bold(value) {
-        if (this._label)
-            this._label.isBold = value;
-    }
-    get italic() {
-        return this._label ? this._label.isItalic : false;
-    }
-    set italic(value) {
-        if (this._label)
-            this._label.isItalic = value;
-    }
-    get singleLine() {
-        return this._label ? !this._label.enableWrapText : false;
-    }
-    set singleLine(value) {
-        if (this._label)
-            this._label.enableWrapText = !value;
-    }
-    get stroke() {
-        return (this._outline && this._outline.enabled) ? this._outline.width : 0;
-    }
-    set stroke(value) {
-        if (value == 0) {
-            if (this._outline)
-                this._outline.enabled = false;
-        }
-        else {
-            if (!this._outline) {
-                this._outline = this._node.addComponent(LabelOutline);
-                this.updateStrokeColor();
-            }
-            else
-                this._outline.enabled = true;
-            this._outline.width = value;
-        }
-    }
-    get strokeColor() {
-        return this._strokeColor;
-    }
-    set strokeColor(value) {
-        if (!this._strokeColor)
-            this._strokeColor = new Color();
-        this._strokeColor.set(value);
-        this.updateGear(4);
-        this.updateStrokeColor();
-    }
-    get shadowOffset() {
-        return this._shadowOffset;
-    }
-    set shadowOffset(value) {
-        if (!this._shadowOffset)
-            this._shadowOffset = new Vec2();
-        this._shadowOffset.set(value);
-        if (this._shadowOffset.x != 0 || this._shadowOffset.y != 0) {
-            if (!this._shadow) {
-                this._shadow = this._node.addComponent(LabelShadow);
-                this.updateShadowColor();
-            }
-            else
-                this._shadow.enabled = true;
-            this._shadow.offset.x = value.x;
-            this._shadow.offset.y = -value.y;
-        }
-        else if (this._shadow)
-            this._shadow.enabled = false;
-    }
-    get shadowColor() {
-        return this._shadowColor;
-    }
-    set shadowColor(value) {
-        if (!this._shadowColor)
-            this._shadowColor = new Color();
-        this._shadowColor.set(value);
-        this.updateShadowColor();
-    }
-    set ubbEnabled(value) {
-        if (this._ubbEnabled != value) {
-            this._ubbEnabled = value;
-            this.markSizeChanged();
-            this.updateText();
-        }
-    }
-    get ubbEnabled() {
-        return this._ubbEnabled;
-    }
-    set autoSize(value) {
-        if (this._autoSize != value) {
-            this._autoSize = value;
-            this.markSizeChanged();
-            this.updateOverflow();
-        }
-    }
-    get autoSize() {
-        return this._autoSize;
-    }
-    parseTemplate(template) {
-        var pos1 = 0, pos2, pos3;
-        var tag;
-        var value;
-        var result = "";
-        while ((pos2 = template.indexOf("{", pos1)) != -1) {
-            if (pos2 > 0 && template.charCodeAt(pos2 - 1) == 92) //\
-             {
-                result += template.substring(pos1, pos2 - 1);
-                result += "{";
-                pos1 = pos2 + 1;
-                continue;
-            }
-            result += template.substring(pos1, pos2);
-            pos1 = pos2;
-            pos2 = template.indexOf("}", pos1);
-            if (pos2 == -1)
-                break;
-            if (pos2 == pos1 + 1) {
-                result += template.substr(pos1, 2);
-                pos1 = pos2 + 1;
-                continue;
-            }
-            tag = template.substring(pos1 + 1, pos2);
-            pos3 = tag.indexOf("=");
-            if (pos3 != -1) {
-                value = this._templateVars[tag.substring(0, pos3)];
-                if (value == null)
-                    result += tag.substring(pos3 + 1);
-                else
-                    result += value;
-            }
-            else {
-                value = this._templateVars[tag];
-                if (value != null)
-                    result += value;
-            }
-            pos1 = pos2 + 1;
-        }
-        if (pos1 < template.length)
-            result += template.substr(pos1);
-        return result;
-    }
-    get templateVars() {
-        return this._templateVars;
-    }
-    set templateVars(value) {
-        if (this._templateVars == null && value == null)
-            return;
-        this._templateVars = value;
-        this.flushVars();
-    }
-    setVar(name, value) {
-        if (!this._templateVars)
-            this._templateVars = {};
-        this._templateVars[name] = value;
-        return this;
-    }
-    flushVars() {
-        this.markSizeChanged();
-        this.updateText();
-    }
-    get textWidth() {
-        this.ensureSizeCorrect();
-        return this._node._uiProps.uiTransformComp.width;
-    }
-    ensureSizeCorrect() {
-        if (this._sizeDirty) {
-            this._label.updateRenderData(true);
-            this._sizeDirty = false;
-        }
-    }
-    updateText() {
-        var text2 = this._text;
-        if (this._templateVars)
-            text2 = this.parseTemplate(text2);
-        if (this._ubbEnabled) //不支持同一个文本不同样式
-            text2 = defaultParser.parse(text2, true);
-        this._label.string = text2;
-    }
-    assignFont(label, value) {
-        if (value instanceof Font)
-            label.font = value;
-        else {
-            let font = getFontByName(value);
-            if (!font) {
-                label.fontFamily = value;
-                label.useSystemFont = true;
-            }
-            else
-                label.font = font;
-        }
-    }
-    assignFontColor(label, value) {
-        let font = label.font;
-        if ((font instanceof BitmapFont) && !(font.fntConfig.canTint))
-            value = Color.WHITE;
-        if (this._grayed)
-            value = toGrayedColor(value);
-        label.color = value;
-    }
-    updateFont() {
-        this.assignFont(this._label, this._realFont);
-    }
-    updateFontColor() {
-        this.assignFontColor(this._label, this._color);
-    }
-    updateStrokeColor() {
-        if (!this._outline)
-            return;
-        if (!this._strokeColor)
-            this._strokeColor = new Color();
-        if (this._grayed)
-            this._outline.color = toGrayedColor(this._strokeColor);
-        else
-            this._outline.color = this._strokeColor;
-    }
-    updateShadowColor() {
-        if (!this._shadow)
-            return;
-        if (!this._shadowColor)
-            this._shadowColor = new Color();
-        if (this._grayed)
-            this._shadow.color = toGrayedColor(this._shadowColor);
-        else
-            this._shadow.color = this._shadowColor;
-    }
-    updateFontSize() {
-        let font = this._label.font;
-        if (font instanceof BitmapFont) {
-            let fntConfig = font.fntConfig;
-            if (fntConfig.resizable)
-                this._label.fontSize = this._fontSize;
-            else
-                this._label.fontSize = fntConfig.fontSize;
-            this._label.lineHeight = fntConfig.fontSize + (this._leading + 4) * fntConfig.fontSize / this._label.fontSize;
-        }
-        else {
-            this._label.fontSize = this._fontSize;
-            this._label.lineHeight = this._fontSize + this._leading;
-        }
-    }
-    updateOverflow() {
-        if (this._autoSize == AutoSizeType.Both)
-            this._label.overflow = Label.Overflow.NONE;
-        else if (this._autoSize == AutoSizeType.Height) {
-            this._label.overflow = Label.Overflow.RESIZE_HEIGHT;
-            this._node._uiProps.uiTransformComp.width = this._width;
-        }
-        else if (this._autoSize == AutoSizeType.Shrink) {
-            this._label.overflow = Label.Overflow.SHRINK;
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
-        }
-        else {
-            this._label.overflow = Label.Overflow.CLAMP;
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
-        }
-    }
-    markSizeChanged() {
-        if (this._underConstruct)
-            return;
-        if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
-            if (!this._sizeDirty) {
-                this._node.emit(FGUIEvent.SIZE_DELAY_CHANGE);
-                this._sizeDirty = true;
-            }
-        }
-    }
-    onLabelSizeChanged() {
-        this._sizeDirty = false;
-        if (this._underConstruct)
-            return;
-        if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
-            this._updatingSize = true;
-            this.setSize(this._node._uiProps.uiTransformComp.width, this._node._uiProps.uiTransformComp.height);
-            this._updatingSize = false;
-        }
-    }
-    handleSizeChanged() {
-        if (this._updatingSize)
-            return;
-        if (this._autoSize == AutoSizeType.None || this._autoSize == AutoSizeType.Shrink) {
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
-        }
-        else if (this._autoSize == AutoSizeType.Height)
-            this._node._uiProps.uiTransformComp.width = this._width;
-    }
-    handleGrayedChanged() {
-        this.updateFontColor();
-        this.updateStrokeColor();
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.OutlineColor:
-                return this.strokeColor;
-            case ObjectPropID.FontSize:
-                return this.fontSize;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.OutlineColor:
-                this.strokeColor = value;
-                break;
-            case ObjectPropID.FontSize:
-                this.fontSize = value;
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this.font = buffer.readS();
-        this.fontSize = buffer.readShort();
-        this.color = buffer.readColor();
-        this.align = buffer.readByte();
-        this.verticalAlign = buffer.readByte();
-        this.leading = buffer.readShort();
-        this.letterSpacing = buffer.readShort();
-        this._ubbEnabled = buffer.readBool();
-        this.autoSize = buffer.readByte();
-        this.underline = buffer.readBool();
-        this.italic = buffer.readBool();
-        this.bold = buffer.readBool();
-        this.singleLine = buffer.readBool();
-        if (buffer.readBool()) {
-            this.strokeColor = buffer.readColor();
-            this.stroke = buffer.readFloat();
-        }
-        if (buffer.readBool()) {
-            this.shadowColor = buffer.readColor();
-            let f1 = buffer.readFloat();
-            let f2 = buffer.readFloat();
-            this.shadowOffset = new Vec2(f1, f2);
-        }
-        if (buffer.readBool())
-            this._templateVars = {};
-    }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        buffer.seek(beginPos, 6);
-        var str = buffer.readS();
-        if (str != null)
-            this.text = str;
-    }
-}
-
-class RichTextImageAtlas extends SpriteAtlas {
-    getSpriteFrame(key) {
-        let pi = UIPackage.getItemByURL(key);
-        if (pi) {
-            pi.load();
-            if (pi.type == PackageItemType.Image)
-                return pi.asset;
-            else if (pi.type == PackageItemType.MovieClip)
-                return pi.frames[0].texture;
-        }
-        return super.getSpriteFrame(key);
-    }
-}
-const imageAtlas = new RichTextImageAtlas();
-class GRichTextField extends GTextField {
-    _richText;
-    _bold;
-    _italics;
-    _underline;
-    linkUnderline;
-    linkColor;
-    constructor() {
-        super();
-        this._node.name = "GRichTextField";
-        this._touchDisabled = false;
-        this.linkUnderline = UIConfig.linkUnderline;
-    }
-    createRenderer() {
-        this._richText = this._node.addComponent(RichText);
-        this._richText.handleTouchEvent = false;
-        this.autoSize = AutoSizeType.None;
-        this._richText.imageAtlas = imageAtlas;
-    }
-    get align() {
-        return this._richText.horizontalAlign;
-    }
-    set align(value) {
-        this._richText.horizontalAlign = value;
-    }
-    get underline() {
-        return this._underline;
-    }
-    set underline(value) {
-        if (this._underline != value) {
-            this._underline = value;
-            this.updateText();
-        }
-    }
-    get bold() {
-        return this._bold;
-    }
-    set bold(value) {
-        if (this._bold != value) {
-            this._bold = value;
-            this.updateText();
-        }
-    }
-    get italic() {
-        return this._italics;
-    }
-    set italic(value) {
-        if (this._italics != value) {
-            this._italics = value;
-            this.updateText();
-        }
-    }
-    markSizeChanged() {
-        //RichText貌似没有延迟重建文本，所以这里不需要
-    }
-    updateText() {
-        var text2 = this._text;
-        if (this._templateVars)
-            text2 = this.parseTemplate(text2);
-        if (this._ubbEnabled) {
-            defaultParser.linkUnderline = this.linkUnderline;
-            defaultParser.linkColor = this.linkColor;
-            text2 = defaultParser.parse(text2);
-        }
-        if (this._bold)
-            text2 = "<b>" + text2 + "</b>";
-        if (this._italics)
-            text2 = "<i>" + text2 + "</i>";
-        if (this._underline)
-            text2 = "<u>" + text2 + "</u>";
-        let c = this._color;
-        if (this._grayed)
-            c = toGrayedColor(c);
-        text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
-        if (this._autoSize == AutoSizeType.Both) {
-            if (this._richText.maxWidth != 0)
-                this._richText["_maxWidth"] = 0;
-            this._richText.string = text2;
-            if (this.maxWidth != 0 && this._node._uiProps.uiTransformComp.contentSize.width > this.maxWidth)
-                this._richText.maxWidth = this.maxWidth;
-        }
-        else
-            this._richText.string = text2;
-    }
-    updateFont() {
-        this.assignFont(this._richText, this._realFont);
-    }
-    updateFontColor() {
-        this.assignFontColor(this._richText, this._color);
-    }
-    updateFontSize() {
-        let fontSize = this._fontSize;
-        let font = this._richText.font;
-        if (font instanceof BitmapFont) {
-            if (!font.fntConfig.resizable)
-                fontSize = font.fntConfig.fontSize;
-        }
-        this._richText.fontSize = fontSize;
-        this._richText.lineHeight = fontSize + this._leading * 2;
-    }
-    updateOverflow() {
-        if (this._autoSize == AutoSizeType.Both)
-            this._richText.maxWidth = 0;
-        else
-            this._richText.maxWidth = this._width;
-    }
-    handleSizeChanged() {
-        if (this._updatingSize)
-            return;
-        if (this._autoSize != AutoSizeType.Both)
-            this._richText.maxWidth = this._width;
-    }
-}
-
-class InputProcessor extends Component {
-    _owner;
-    _touchListener;
-    _touchPos;
-    _touches;
-    _rollOutChain;
-    _rollOverChain;
-    _captureCallback;
-    constructor() {
-        super();
-        this._touches = new Array();
-        this._rollOutChain = new Array();
-        this._rollOverChain = new Array();
-        this._touchPos = new Vec2();
-    }
-    onLoad() {
-        this._owner = GObject.cast(this.node);
-    }
-    onEnable() {
-        let node = this.node;
-        node.on(Node.EventType.TOUCH_START, this.touchBeginHandler, this);
-        node.on(Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
-        node.on(Node.EventType.TOUCH_END, this.touchEndHandler, this);
-        node.on(Node.EventType.TOUCH_CANCEL, this.touchCancelHandler, this);
-        node.on(Node.EventType.MOUSE_DOWN, this.mouseDownHandler, this);
-        node.on(Node.EventType.MOUSE_MOVE, this.mouseMoveHandler, this);
-        node.on(Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
-        node.on(Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
-        this._touchListener = this.node.eventProcessor.touchListener;
-    }
-    onDisable() {
-        let node = this.node;
-        node.off(Node.EventType.TOUCH_START, this.touchBeginHandler, this);
-        node.off(Node.EventType.TOUCH_MOVE, this.touchMoveHandler, this);
-        node.off(Node.EventType.TOUCH_END, this.touchEndHandler, this);
-        node.off(Node.EventType.TOUCH_CANCEL, this.touchCancelHandler, this);
-        node.off(Node.EventType.MOUSE_DOWN, this.mouseDownHandler, this);
-        node.off(Node.EventType.MOUSE_MOVE, this.mouseMoveHandler, this);
-        node.off(Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
-        node.off(Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
-        this._touchListener = null;
-    }
-    getAllTouches(touchIds) {
-        touchIds = touchIds || new Array();
-        let cnt = this._touches.length;
-        for (let i = 0; i < cnt; i++) {
-            let ti = this._touches[i];
-            if (ti.touchId != -1)
-                touchIds.push(ti.touchId);
-        }
-        return touchIds;
-    }
-    getTouchPosition(touchId) {
-        if (touchId === undefined)
-            touchId = -1;
-        let cnt = this._touches.length;
-        for (let i = 0; i < cnt; i++) {
-            let ti = this._touches[i];
-            if (ti.touchId != -1 && (touchId == -1 || ti.touchId == touchId))
-                return ti.pos;
-        }
-        return Vec2.ZERO;
-    }
-    getTouchTarget() {
-        let cnt = this._touches.length;
-        for (let i = 0; i < cnt; i++) {
-            let ti = this._touches[i];
-            if (ti.touchId != -1)
-                return ti.target;
-        }
-        return null;
-    }
-    addTouchMonitor(touchId, target) {
-        let ti = this.getInfo(touchId, false);
-        if (!ti)
-            return;
-        let index = ti.touchMonitors.indexOf(target);
-        if (index == -1)
-            ti.touchMonitors.push(target);
-    }
-    removeTouchMonitor(target) {
-        let cnt = this._touches.length;
-        for (let i = 0; i < cnt; i++) {
-            let ti = this._touches[i];
-            let index = ti.touchMonitors.indexOf(target);
-            if (index != -1)
-                ti.touchMonitors.splice(index, 1);
-        }
-    }
-    cancelClick(touchId) {
-        let ti = this.getInfo(touchId, false);
-        if (ti)
-            ti.clickCancelled = true;
-    }
-    simulateClick(target) {
-        let evt;
-        evt = borrowEvent(FGUIEvent.TOUCH_BEGIN, true);
-        evt.initiator = target;
-        evt.pos.set(target.localToGlobal());
-        evt.touchId = 0;
-        evt.clickCount = 1;
-        evt.button = 0;
-        evt._processor = this;
-        if (this._captureCallback)
-            this._captureCallback.call(this._owner, evt);
-        target.node.dispatchEvent(evt);
-        evt.unuse();
-        evt.type = FGUIEvent.TOUCH_END;
-        evt.bubbles = true;
-        target.node.dispatchEvent(evt);
-        evt.unuse();
-        evt.type = FGUIEvent.CLICK;
-        evt.bubbles = true;
-        target.node.dispatchEvent(evt);
-        returnEvent(evt);
-    }
-    touchBeginHandler(evt) {
-        let ti = this.updateInfo(evt.getID(), evt.getLocation());
-        this.setBegin(ti);
-        if (this._touchListener) {
-            this._touchListener.setSwallowTouches(ti.target != this._owner);
-        }
-        else {
-            // since cc3.4.0, setSwallowTouches removed
-            let e = evt;
-            e.preventSwallow = (ti.target == this._owner);
-        }
-        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_BEGIN, true);
-        if (this._captureCallback)
-            this._captureCallback.call(this._owner, evt2);
-        ti.target.node.dispatchEvent(evt2);
-        this.handleRollOver(ti, ti.target);
-        return true;
-    }
-    touchMoveHandler(evt) {
-        let ti = this.updateInfo(evt.getID(), evt.getLocation());
-        if (!this._touchListener) {
-            let e = evt;
-            e.preventSwallow = (ti.target == this._owner);
-        }
-        this.handleRollOver(ti, ti.target);
-        if (ti.began) {
-            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
-            let done = false;
-            let cnt = ti.touchMonitors.length;
-            for (let i = 0; i < cnt; i++) {
-                let mm = ti.touchMonitors[i];
-                if (mm.node == null || !mm.node.activeInHierarchy)
-                    continue;
-                evt2.unuse();
-                evt2.type = FGUIEvent.TOUCH_MOVE;
-                mm.node.dispatchEvent(evt2);
-                if (mm == this._owner)
-                    done = true;
-            }
-            if (!done && this.node) {
-                evt2.unuse();
-                evt2.type = FGUIEvent.TOUCH_MOVE;
-                this.node.dispatchEvent(evt2);
-            }
-            returnEvent(evt2);
-        }
-    }
-    touchEndHandler(evt) {
-        let ti = this.updateInfo(evt.getID(), evt.getLocation());
-        if (!this._touchListener) {
-            let e = evt;
-            e.preventSwallow = (ti.target == this._owner);
-        }
-        this.setEnd(ti);
-        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
-        let cnt = ti.touchMonitors.length;
-        for (let i = 0; i < cnt; i++) {
-            let mm = ti.touchMonitors[i];
-            if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
-                || ('isAncestorOf' in mm) && mm.isAncestorOf(ti.target))
-                continue;
-            evt2.unuse();
-            evt2.type = FGUIEvent.TOUCH_END;
-            mm.node.dispatchEvent(evt2);
-        }
-        ti.touchMonitors.length = 0;
-        if (ti.target && ti.target.node) {
-            if (ti.target instanceof GRichTextField)
-                ti.target.node.getComponent(RichText)["_onTouchEnded"](evt);
-            evt2.unuse();
-            evt2.type = FGUIEvent.TOUCH_END;
-            evt2.bubbles = true;
-            ti.target.node.dispatchEvent(evt2);
-        }
-        returnEvent(evt2);
-        ti.target = this.clickTest(ti);
-        if (ti.target) {
-            evt2 = this.getEvent(ti, ti.target, FGUIEvent.CLICK, true);
-            ti.target.node.dispatchEvent(evt2);
-            returnEvent(evt2);
-        }
-        if (sys.isMobile) //on mobile platform, trigger RollOut on up event, but not on PC
-            this.handleRollOver(ti, null);
-        else
-            this.handleRollOver(ti, ti.target);
-        ti.target = null;
-        ti.touchId = -1;
-        ti.button = -1;
-    }
-    touchCancelHandler(evt) {
-        let ti = this.updateInfo(evt.getID(), evt.getLocation());
-        if (!this._touchListener) {
-            let e = evt;
-            e.preventSwallow = (ti.target == this._owner);
-        }
-        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
-        let cnt = ti.touchMonitors.length;
-        for (let i = 0; i < cnt; i++) {
-            let mm = ti.touchMonitors[i];
-            if (mm == ti.target || mm.node == null || !mm.node.activeInHierarchy
-                || ('isAncestorOf' in mm) && mm.isAncestorOf(ti.target))
-                continue;
-            evt2.initiator = mm;
-            mm.node.dispatchEvent(evt2);
-        }
-        ti.touchMonitors.length = 0;
-        if (ti.target && ti.target.node) {
-            evt2.bubbles = true;
-            ti.target.node.dispatchEvent(evt2);
-        }
-        returnEvent(evt2);
-        this.handleRollOver(ti, null);
-        ti.target = null;
-        ti.touchId = -1;
-        ti.button = -1;
-    }
-    mouseDownHandler(evt) {
-        let ti = this.getInfo(0, true);
-        ti.button = evt.getButton();
-    }
-    mouseUpHandler(evt) {
-        let ti = this.getInfo(0, true);
-        ti.button = evt.getButton();
-    }
-    mouseMoveHandler(evt) {
-        let ti = this.getInfo(0, false);
-        if (ti
-            && Math.abs(ti.pos.x - evt.getLocationX()) < 1
-            && Math.abs(ti.pos.y - (UIContentScaler.rootSize.height - evt.getLocationY())) < 1)
-            return;
-        ti = this.updateInfo(0, evt.getLocation());
-        this.handleRollOver(ti, ti.target);
-        if (ti.began) {
-            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
-            let done = false;
-            let cnt = ti.touchMonitors.length;
-            for (let i = 0; i < cnt; i++) {
-                let mm = ti.touchMonitors[i];
-                if (mm.node == null || !mm.node.activeInHierarchy)
-                    continue;
-                evt2.initiator = mm;
-                mm.node.dispatchEvent(evt2);
-                if (mm == this._owner)
-                    done = true;
-            }
-            if (!done && this.node) {
-                evt2.initiator = this._owner;
-                this.node.dispatchEvent(evt2);
-                returnEvent(evt2);
-            }
-            returnEvent(evt2);
-        }
-    }
-    mouseWheelHandler(evt) {
-        let ti = this.updateInfo(0, evt.getLocation());
-        ti.mouseWheelDelta = Math.max(evt.getScrollX(), evt.getScrollY());
-        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.MOUSE_WHEEL, true);
-        ti.target.node.dispatchEvent(evt2);
-        returnEvent(evt2);
-    }
-    updateInfo(touchId, pos) {
-        const camera = director.root.batcher2D.getFirstRenderCamera(this.node);
-        if (camera) {
-            s_vec3.set(pos.x, pos.y);
-            camera.screenToWorld(s_vec3_2, s_vec3);
-            this._touchPos.set(s_vec3_2.x, s_vec3_2.y);
-        }
-        else
-            this._touchPos.set(pos);
-        this._touchPos.y = UIContentScaler.rootSize.height - this._touchPos.y;
-        let target = this._owner.hitTest(this._touchPos);
-        if (!target)
-            target = this._owner;
-        let ti = this.getInfo(touchId);
-        ti.target = target;
-        ti.pos.set(this._touchPos);
-        ti.button = EventMouse.BUTTON_LEFT;
-        ti.touchId = touchId;
-        return ti;
-    }
-    getInfo(touchId, createIfNotExisits) {
-        if (createIfNotExisits === undefined)
-            createIfNotExisits = true;
-        let ret = null;
-        let cnt = this._touches.length;
-        for (let i = 0; i < cnt; i++) {
-            let ti = this._touches[i];
-            if (ti.touchId == touchId)
-                return ti;
-            else if (ti.touchId == -1)
-                ret = ti;
-        }
-        if (!ret) {
-            if (!createIfNotExisits)
-                return null;
-            ret = new TouchInfo();
-            this._touches.push(ret);
-        }
-        ret.touchId = touchId;
-        return ret;
-    }
-    setBegin(ti) {
-        ti.began = true;
-        ti.clickCancelled = false;
-        ti.downPos.set(ti.pos);
-        ti.downTargets.length = 0;
-        let obj = ti.target;
-        while (obj) {
-            ti.downTargets.push(obj);
-            obj = obj.findParent();
-        }
-    }
-    setEnd(ti) {
-        ti.began = false;
-        let now = director.getTotalTime() / 1000;
-        let elapsed = now - ti.lastClickTime;
-        if (elapsed < 0.45) {
-            if (ti.clickCount == 2)
-                ti.clickCount = 1;
-            else
-                ti.clickCount++;
-        }
-        else
-            ti.clickCount = 1;
-        ti.lastClickTime = now;
-    }
-    clickTest(ti) {
-        if (ti.downTargets.length == 0
-            || ti.clickCancelled
-            || Math.abs(ti.pos.x - ti.downPos.x) > 50 || Math.abs(ti.pos.y - ti.downPos.y) > 50)
-            return null;
-        let obj = ti.downTargets[0];
-        if (obj && obj.node && obj.node.activeInHierarchy)
-            return obj;
-        obj = ti.target;
-        while (obj) {
-            let index = ti.downTargets.indexOf(obj);
-            if (index != -1 && obj.node && obj.node.activeInHierarchy)
-                break;
-            obj = obj.findParent();
-        }
-        return obj;
-    }
-    handleRollOver(ti, target) {
-        if (ti.lastRollOver == target)
-            return;
-        let element = ti.lastRollOver;
-        while (element && element.node) {
-            this._rollOutChain.push(element);
-            element = element.findParent();
-        }
-        element = target;
-        while (element && element.node) {
-            let i = this._rollOutChain.indexOf(element);
-            if (i != -1) {
-                this._rollOutChain.length = i;
-                break;
-            }
-            this._rollOverChain.push(element);
-            element = element.findParent();
-        }
-        ti.lastRollOver = target;
-        let cnt = this._rollOutChain.length;
-        for (let i = 0; i < cnt; i++) {
-            element = this._rollOutChain[i];
-            if (element.node && element.node.activeInHierarchy) {
-                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OUT, false);
-                element.node.dispatchEvent(evt);
-                returnEvent(evt);
-            }
-        }
-        cnt = this._rollOverChain.length;
-        for (let i = 0; i < cnt; i++) {
-            element = this._rollOverChain[i];
-            if (element.node && element.node.activeInHierarchy) {
-                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OVER, false);
-                element.node.dispatchEvent(evt);
-                returnEvent(evt);
-            }
-        }
-        this._rollOutChain.length = 0;
-        this._rollOverChain.length = 0;
-    }
-    getEvent(ti, target, type, bubbles) {
-        let evt = borrowEvent(type, bubbles);
-        evt.initiator = target;
-        evt.pos.set(ti.pos);
-        evt.touchId = ti.touchId;
-        evt.clickCount = ti.clickCount;
-        evt.button = ti.button;
-        evt.mouseWheelDelta = ti.mouseWheelDelta;
-        evt._processor = this;
-        return evt;
-    }
-}
-class TouchInfo {
-    target;
-    pos = new Vec2();
-    touchId = 0;
-    clickCount = 0;
-    mouseWheelDelta = 0;
-    button = -1;
-    downPos = new Vec2();
-    began = false;
-    clickCancelled = false;
-    lastClickTime = 0;
-    lastRollOver;
-    downTargets = new Array();
-    touchMonitors = new Array();
-}
-var s_vec3 = new Vec3();
-var s_vec3_2 = new Vec3();
-
 class Window extends GComponent {
     _contentPane;
     _modalWaitPane;
@@ -14617,6 +14978,1332 @@ class GRoot extends GComponent {
 }
 Decls$1.GRoot = GRoot;
 
+class GTextInput extends GTextField {
+    _editBox;
+    _promptText;
+    constructor() {
+        super();
+        this._node.name = "GTextInput";
+        this._touchDisabled = false;
+    }
+    createRenderer() {
+        this._editBox = this._node.addComponent(MyEditBox);
+        this._editBox.maxLength = -1;
+        this._editBox["_updateTextLabel"]();
+        this._node.on('text-changed', this.onTextChanged, this);
+        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd1, this);
+        this.autoSize = AutoSizeType.None;
+    }
+    set editable(val) {
+        this._editBox.enabled = val;
+    }
+    get editable() {
+        return this._editBox.enabled;
+    }
+    set maxLength(val) {
+        if (val == 0)
+            val = -1;
+        this._editBox.maxLength = val;
+    }
+    get maxLength() {
+        return this._editBox.maxLength;
+    }
+    set promptText(val) {
+        this._promptText = val;
+        let newCreate = !this._editBox.placeholderLabel;
+        this._editBox["_updatePlaceholderLabel"]();
+        if (newCreate)
+            this.assignFont(this._editBox.placeholderLabel, this._realFont);
+        this._editBox.placeholderLabel.string = defaultParser.parse(this._promptText, true);
+        if (defaultParser.lastColor) {
+            let c = this._editBox.placeholderLabel.color;
+            if (!c)
+                c = new Color();
+            c.fromHEX(defaultParser.lastColor);
+            this.assignFontColor(this._editBox.placeholderLabel, c);
+        }
+        else
+            this.assignFontColor(this._editBox.placeholderLabel, this._color);
+        if (defaultParser.lastSize)
+            this._editBox.placeholderLabel.fontSize = parseInt(defaultParser.lastSize);
+        else
+            this._editBox.placeholderLabel.fontSize = this._fontSize;
+    }
+    get promptText() {
+        return this._promptText;
+    }
+    set restrict(value) {
+        //not supported
+    }
+    get restrict() {
+        return "";
+    }
+    get password() {
+        return this._editBox.inputFlag == EditBox.InputFlag.PASSWORD;
+    }
+    set password(val) {
+        this._editBox.inputFlag = val ? EditBox.InputFlag.PASSWORD : EditBox.InputFlag.DEFAULT;
+    }
+    get align() {
+        return this._editBox.textLabel.horizontalAlign;
+    }
+    set align(value) {
+        this._editBox.textLabel.horizontalAlign = value;
+        if (this._editBox.placeholderLabel) {
+            this._editBox.placeholderLabel.horizontalAlign = value;
+        }
+    }
+    get verticalAlign() {
+        return this._editBox.textLabel.verticalAlign;
+    }
+    set verticalAlign(value) {
+        this._editBox.textLabel.verticalAlign = value;
+        if (this._editBox.placeholderLabel) {
+            this._editBox.placeholderLabel.verticalAlign = value;
+        }
+    }
+    get singleLine() {
+        return this._editBox.inputMode != EditBox.InputMode.ANY;
+    }
+    set singleLine(value) {
+        this._editBox.inputMode = value ? EditBox.InputMode.SINGLE_LINE : EditBox.InputMode.ANY;
+    }
+    requestFocus() {
+        this._editBox.focus();
+    }
+    markSizeChanged() {
+        //不支持自动大小，所以这里空
+    }
+    updateText() {
+        var text2 = this._text;
+        if (this._templateVars)
+            text2 = this.parseTemplate(text2);
+        if (this._ubbEnabled) //不支持同一个文本不同样式
+            text2 = defaultParser.parse(text2, true);
+        this._editBox.string = text2;
+    }
+    updateFont() {
+        this.assignFont(this._editBox.textLabel, this._realFont);
+        if (this._editBox.placeholderLabel)
+            this.assignFont(this._editBox.placeholderLabel, this._realFont);
+    }
+    updateFontColor() {
+        this.assignFontColor(this._editBox.textLabel, this._color);
+    }
+    updateFontSize() {
+        this._editBox.textLabel.fontSize = this._fontSize;
+        this._editBox.textLabel.lineHeight = this._fontSize + this._leading;
+        if (this._editBox.placeholderLabel)
+            this._editBox.placeholderLabel.fontSize = this._editBox.textLabel.fontSize;
+    }
+    updateOverflow() {
+        //not supported
+    }
+    onTextChanged() {
+        this._text = this._editBox.string;
+    }
+    onTouchEnd1(evt) {
+        this._editBox.openKeyboard();
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 4);
+        var str = buffer.readS();
+        if (str != null)
+            this.promptText = str;
+        else if (this._editBox.placeholderLabel)
+            this._editBox.placeholderLabel.string = "";
+        str = buffer.readS();
+        if (str != null)
+            this.restrict = str;
+        var iv = buffer.readInt();
+        if (iv != 0)
+            this.maxLength = iv;
+        iv = buffer.readInt();
+        if (buffer.readBool())
+            this.password = true;
+        //同步一下对齐方式
+        if (this._editBox.placeholderLabel) {
+            let hAlign = this._editBox.textLabel.horizontalAlign;
+            this._editBox.placeholderLabel.horizontalAlign = hAlign;
+            let vAlign = this._editBox.textLabel.verticalAlign;
+            this._editBox.placeholderLabel.verticalAlign = vAlign;
+        }
+    }
+}
+class MyEditBox extends EditBox {
+    _registerEvent() {
+        //取消掉原来的事件处理
+    }
+    // _syncSize() {
+    //     let size = this.node._uiProps.uiTransformComp.contentSize;
+    //     let impl = this["_impl"];
+    //     impl.setSize(size.width, size.height);
+    //     if (this.textLabel)
+    //         this.textLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
+    //     if (this.placeholderLabel)
+    //         this.placeholderLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
+    // }
+    openKeyboard() {
+        let impl = this["_impl"];
+        if (impl) {
+            impl.beginEditing();
+        }
+    }
+}
+
+class GObjectPool {
+    _pool;
+    _count = 0;
+    constructor() {
+        this._pool = {};
+    }
+    clear() {
+        for (var i1 in this._pool) {
+            var arr = this._pool[i1];
+            var cnt = arr.length;
+            for (var i = 0; i < cnt; i++)
+                arr[i].dispose();
+        }
+        this._pool = {};
+        this._count = 0;
+    }
+    get count() {
+        return this._count;
+    }
+    getObject(url) {
+        url = UIPackage.normalizeURL(url);
+        if (url == null)
+            return null;
+        var arr = this._pool[url];
+        if (arr && arr.length) {
+            this._count--;
+            return arr.shift();
+        }
+        var child = UIPackage.createObjectFromURL(url);
+        return child;
+    }
+    returnObject(obj) {
+        var url = obj.resourceURL;
+        if (!url)
+            return;
+        var arr = this._pool[url];
+        if (arr == null) {
+            arr = new Array();
+            this._pool[url] = arr;
+        }
+        this._count++;
+        arr.push(obj);
+    }
+}
+
+class GLoader extends GObject {
+    _content;
+    _url;
+    _align;
+    _verticalAlign;
+    _autoSize;
+    _fill;
+    _shrinkOnly;
+    _showErrorSign;
+    _playing;
+    _frame = 0;
+    _color;
+    _contentItem;
+    _container;
+    _errorSign;
+    _content2;
+    _updatingLayout;
+    static _errorSignPool = new GObjectPool();
+    constructor() {
+        super();
+        this._node.name = "GLoader";
+        this._playing = true;
+        this._url = "";
+        this._fill = LoaderFillType.None;
+        this._align = AlignType.Left;
+        this._verticalAlign = VertAlignType.Top;
+        this._showErrorSign = true;
+        this._color = new Color(255, 255, 255, 255);
+        this._container = new Node("Image");
+        this._container.layer = UIConfig.defaultUILayer;
+        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._node.addChild(this._container);
+        this._content = this._container.addComponent(MovieClip);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+        this._content.setPlaySettings();
+    }
+    dispose() {
+        if (this._contentItem == null) {
+            if (this._content.spriteFrame)
+                this.freeExternal(this._content.spriteFrame);
+        }
+        if (this._content2)
+            this._content2.dispose();
+        super.dispose();
+    }
+    get url() {
+        return this._url;
+    }
+    set url(value) {
+        if (this._url == value)
+            return;
+        this._url = value;
+        this.loadContent();
+        this.updateGear(7);
+    }
+    get icon() {
+        return this._url;
+    }
+    set icon(value) {
+        this.url = value;
+    }
+    get align() {
+        return this._align;
+    }
+    set align(value) {
+        if (this._align != value) {
+            this._align = value;
+            this.updateLayout();
+        }
+    }
+    get verticalAlign() {
+        return this._verticalAlign;
+    }
+    set verticalAlign(value) {
+        if (this._verticalAlign != value) {
+            this._verticalAlign = value;
+            this.updateLayout();
+        }
+    }
+    get fill() {
+        return this._fill;
+    }
+    set fill(value) {
+        if (this._fill != value) {
+            this._fill = value;
+            this.updateLayout();
+        }
+    }
+    get shrinkOnly() {
+        return this._shrinkOnly;
+    }
+    set shrinkOnly(value) {
+        if (this._shrinkOnly != value) {
+            this._shrinkOnly = value;
+            this.updateLayout();
+        }
+    }
+    get autoSize() {
+        return this._autoSize;
+    }
+    set autoSize(value) {
+        if (this._autoSize != value) {
+            this._autoSize = value;
+            this.updateLayout();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+            if (this._content instanceof MovieClip)
+                this._content.playing = value;
+            this.updateGear(5);
+        }
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            this._frame = value;
+            if (this._content instanceof MovieClip)
+                this._content.frame = value;
+            this.updateGear(5);
+        }
+    }
+    get color() {
+        return this._color;
+    }
+    set color(value) {
+        this._color.set(value);
+        this.updateGear(4);
+        this._content.color = value;
+    }
+    get fillMethod() {
+        return this._content.fillMethod;
+    }
+    set fillMethod(value) {
+        this._content.fillMethod = value;
+    }
+    get fillOrigin() {
+        return this._content.fillOrigin;
+    }
+    set fillOrigin(value) {
+        this._content.fillOrigin = value;
+    }
+    get fillClockwise() {
+        return this._content.fillClockwise;
+    }
+    set fillClockwise(value) {
+        this._content.fillClockwise = value;
+    }
+    get fillAmount() {
+        return this._content.fillAmount;
+    }
+    set fillAmount(value) {
+        this._content.fillAmount = value;
+    }
+    get showErrorSign() {
+        return this._showErrorSign;
+    }
+    set showErrorSign(value) {
+        this._showErrorSign = value;
+    }
+    get component() {
+        return this._content2;
+    }
+    get texture() {
+        return this._content.spriteFrame;
+    }
+    set texture(value) {
+        this.url = null;
+        this._content.spriteFrame = value;
+        this._content.type = Sprite.Type.SIMPLE;
+        if (value != null) {
+            this.sourceWidth = value.getRect().width;
+            this.sourceHeight = value.getRect().height;
+        }
+        else {
+            this.sourceWidth = this.sourceHeight = 0;
+        }
+        this.updateLayout();
+    }
+    loadContent() {
+        this.clearContent();
+        if (!this._url)
+            return;
+        if (typeof this._url == "string" && this._url.startsWith("ui://"))
+            this.loadFromPackage(this._url);
+        else
+            this.loadExternal();
+    }
+    loadFromPackage(itemURL) {
+        this._contentItem = UIPackage.getItemByURL(itemURL);
+        if (this._contentItem) {
+            this._contentItem = this._contentItem.getBranch();
+            this.sourceWidth = this._contentItem.width;
+            this.sourceHeight = this._contentItem.height;
+            this._contentItem = this._contentItem.getHighResolution();
+            this._contentItem.load();
+            if (this._autoSize)
+                this.setSize(this.sourceWidth, this.sourceHeight);
+            if (this._contentItem.type == PackageItemType.Image) {
+                if (!this._contentItem.asset) {
+                    this.setErrorState();
+                }
+                else {
+                    this._content.spriteFrame = this._contentItem.asset;
+                    if (this._content.fillMethod == 0) {
+                        if (this._contentItem.scale9Grid)
+                            this._content.type = Sprite.Type.SLICED;
+                        else if (this._contentItem.scaleByTile)
+                            this._content.type = Sprite.Type.TILED;
+                        else
+                            this._content.type = Sprite.Type.SIMPLE;
+                    }
+                    this.updateLayout();
+                }
+            }
+            else if (this._contentItem.type == PackageItemType.MovieClip) {
+                this._content.interval = this._contentItem.interval;
+                this._content.swing = this._contentItem.swing;
+                this._content.repeatDelay = this._contentItem.repeatDelay;
+                this._content.frames = this._contentItem.frames;
+                this.updateLayout();
+            }
+            else if (this._contentItem.type == PackageItemType.Component) {
+                var obj = UIPackage.createObjectFromURL(itemURL);
+                if (!obj)
+                    this.setErrorState();
+                else if (!(obj instanceof GComponent)) {
+                    obj.dispose();
+                    this.setErrorState();
+                }
+                else {
+                    this._content2 = obj;
+                    this._container.addChild(this._content2.node);
+                    this.updateLayout();
+                }
+            }
+            else
+                this.setErrorState();
+        }
+        else
+            this.setErrorState();
+    }
+    loadExternal() {
+        let url = this.url;
+        let callback = (err, asset) => {
+            //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
+            if (this._url != url || !isValid(this._node))
+                return;
+            if (err)
+                console.warn(err);
+            if (asset instanceof SpriteFrame)
+                this.onExternalLoadSuccess(asset);
+            else if (asset instanceof Texture2D) {
+                let sf = new SpriteFrame();
+                sf.texture = asset;
+                this.onExternalLoadSuccess(sf);
+            }
+            else if (asset instanceof ImageAsset) {
+                let sf = new SpriteFrame();
+                let texture = new Texture2D();
+                texture.image = asset;
+                sf.texture = texture;
+                this.onExternalLoadSuccess(sf);
+            }
+        };
+        if (typeof this._url == "string") {
+            if (this._url.startsWith("http://")
+                || this._url.startsWith("https://")
+                || this._url.startsWith('/'))
+                assetManager.loadRemote(this._url, callback);
+            else
+                resources.load(this._url + "/spriteFrame", Asset, callback);
+        }
+        else {
+            throw new Error("fgui底层未实现CCURL的非string资源加载！");
+        }
+    }
+    freeExternal(texture) {
+    }
+    onExternalLoadSuccess(texture) {
+        this._content.spriteFrame = texture;
+        this._content.type = Sprite.Type.SIMPLE;
+        this.sourceWidth = texture.getRect().width;
+        this.sourceHeight = texture.getRect().height;
+        if (this._autoSize)
+            this.setSize(this.sourceWidth, this.sourceHeight);
+        this.updateLayout();
+    }
+    onExternalLoadFailed() {
+        this.setErrorState();
+    }
+    setErrorState() {
+        if (!this._showErrorSign)
+            return;
+        if (this._errorSign == null) {
+            if (UIConfig.loaderErrorSign != null) {
+                this._errorSign = GLoader._errorSignPool.getObject(UIConfig.loaderErrorSign);
+            }
+        }
+        if (this._errorSign) {
+            this._errorSign.setSize(this.width, this.height);
+            this._container.addChild(this._errorSign.node);
+        }
+    }
+    clearErrorState() {
+        if (this._errorSign) {
+            this._container.removeChild(this._errorSign.node);
+            GLoader._errorSignPool.returnObject(this._errorSign);
+            this._errorSign = null;
+        }
+    }
+    updateLayout() {
+        if (this._content2 == null && this._content == null) {
+            if (this._autoSize) {
+                this._updatingLayout = true;
+                this.setSize(50, 30);
+                this._updatingLayout = false;
+            }
+            return;
+        }
+        let cw = this.sourceWidth;
+        let ch = this.sourceHeight;
+        let pivotCorrectX = -this.pivotX * this._width;
+        let pivotCorrectY = this.pivotY * this._height;
+        if (this._autoSize) {
+            this._updatingLayout = true;
+            if (cw == 0)
+                cw = 50;
+            if (ch == 0)
+                ch = 30;
+            this.setSize(cw, ch);
+            this._updatingLayout = false;
+            this._container._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            this._container.setPosition(pivotCorrectX, pivotCorrectY);
+            if (this._content2) {
+                this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
+                this._content2.setScale(1, 1);
+            }
+            if (cw == this._width && ch == this._height)
+                return;
+        }
+        var sx = 1, sy = 1;
+        if (this._fill != LoaderFillType.None) {
+            sx = this.width / this.sourceWidth;
+            sy = this.height / this.sourceHeight;
+            if (sx != 1 || sy != 1) {
+                if (this._fill == LoaderFillType.ScaleMatchHeight)
+                    sx = sy;
+                else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                    sy = sx;
+                else if (this._fill == LoaderFillType.Scale) {
+                    if (sx > sy)
+                        sx = sy;
+                    else
+                        sy = sx;
+                }
+                else if (this._fill == LoaderFillType.ScaleNoBorder) {
+                    if (sx > sy)
+                        sy = sx;
+                    else
+                        sx = sy;
+                }
+                if (this._shrinkOnly) {
+                    if (sx > 1)
+                        sx = 1;
+                    if (sy > 1)
+                        sy = 1;
+                }
+                cw = this.sourceWidth * sx;
+                ch = this.sourceHeight * sy;
+            }
+        }
+        this._container._uiProps.uiTransformComp.setContentSize(cw, ch);
+        if (this._content2) {
+            this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
+            this._content2.setScale(sx, sy);
+        }
+        var nx, ny;
+        if (this._align == AlignType.Left)
+            nx = 0;
+        else if (this._align == AlignType.Center)
+            nx = Math.floor((this._width - cw) / 2);
+        else
+            nx = this._width - cw;
+        if (this._verticalAlign == VertAlignType.Top)
+            ny = 0;
+        else if (this._verticalAlign == VertAlignType.Middle)
+            ny = Math.floor((this._height - ch) / 2);
+        else
+            ny = this._height - ch;
+        ny = -ny;
+        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
+    }
+    clearContent() {
+        this.clearErrorState();
+        if (!this._contentItem) {
+            var texture = this._content.spriteFrame;
+            if (texture)
+                this.freeExternal(texture);
+        }
+        if (this._content2) {
+            this._container.removeChild(this._content2.node);
+            this._content2.dispose();
+            this._content2 = null;
+        }
+        this._content.frames = null;
+        this._content.spriteFrame = null;
+        this._contentItem = null;
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    _hitTest(pt, globalPt) {
+        if (this._content2) {
+            let obj = this._content2.hitTest(globalPt);
+            if (obj)
+                return obj;
+        }
+        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height)
+            return this;
+        else
+            return null;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return this._content.timeScale;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                this._content.timeScale = value;
+                break;
+            case ObjectPropID.DeltaTime:
+                this._content.advance(value);
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._url = buffer.readS();
+        this._align = buffer.readByte();
+        this._verticalAlign = buffer.readByte();
+        this._fill = buffer.readByte();
+        this._shrinkOnly = buffer.readBool();
+        this._autoSize = buffer.readBool();
+        this._showErrorSign = buffer.readBool();
+        this._playing = buffer.readBool();
+        this._frame = buffer.readInt();
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        this._content.fillMethod = buffer.readByte();
+        if (this._content.fillMethod != 0) {
+            this._content.fillOrigin = buffer.readByte();
+            this._content.fillClockwise = buffer.readBool();
+            this._content.fillAmount = buffer.readFloat();
+        }
+        if (this._url)
+            this.loadContent();
+    }
+}
+
+class GLoader3D extends GObject {
+    _url;
+    _align;
+    _verticalAlign;
+    _autoSize;
+    _fill;
+    _shrinkOnly;
+    _playing;
+    _frame = 0;
+    _loop;
+    _animationName;
+    _skinName;
+    _color;
+    _contentItem;
+    _container;
+    _content;
+    _updatingLayout;
+    constructor() {
+        super();
+        this._node.name = "GLoader3D";
+        this._playing = true;
+        this._url = "";
+        this._fill = LoaderFillType.None;
+        this._align = AlignType.Left;
+        this._verticalAlign = VertAlignType.Top;
+        this._color = new Color(255, 255, 255, 255);
+        this._container = new Node("Wrapper");
+        this._container.layer = UIConfig.defaultUILayer;
+        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._node.addChild(this._container);
+    }
+    dispose() {
+        super.dispose();
+    }
+    get url() {
+        return this._url;
+    }
+    set url(value) {
+        if (this._url == value)
+            return;
+        this._url = value;
+        this.loadContent();
+        this.updateGear(7);
+    }
+    get icon() {
+        return this._url;
+    }
+    set icon(value) {
+        this.url = value;
+    }
+    get align() {
+        return this._align;
+    }
+    set align(value) {
+        if (this._align != value) {
+            this._align = value;
+            this.updateLayout();
+        }
+    }
+    get verticalAlign() {
+        return this._verticalAlign;
+    }
+    set verticalAlign(value) {
+        if (this._verticalAlign != value) {
+            this._verticalAlign = value;
+            this.updateLayout();
+        }
+    }
+    get fill() {
+        return this._fill;
+    }
+    set fill(value) {
+        if (this._fill != value) {
+            this._fill = value;
+            this.updateLayout();
+        }
+    }
+    get shrinkOnly() {
+        return this._shrinkOnly;
+    }
+    set shrinkOnly(value) {
+        if (this._shrinkOnly != value) {
+            this._shrinkOnly = value;
+            this.updateLayout();
+        }
+    }
+    get autoSize() {
+        return this._autoSize;
+    }
+    set autoSize(value) {
+        if (this._autoSize != value) {
+            this._autoSize = value;
+            this.updateLayout();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+            this.updateGear(5);
+            this.onChange();
+        }
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            this._frame = value;
+            this.updateGear(5);
+            this.onChange();
+        }
+    }
+    get animationName() {
+        return this._animationName;
+    }
+    set animationName(value) {
+        if (this._animationName != value) {
+            this._animationName = value;
+            this.onChange();
+        }
+    }
+    get skinName() {
+        return this._skinName;
+    }
+    set skinName(value) {
+        if (this._skinName != value) {
+            this._skinName = value;
+            this.onChange();
+        }
+    }
+    get loop() {
+        return this._loop;
+    }
+    set loop(value) {
+        if (this._loop != value) {
+            this._loop = value;
+            this.onChange();
+        }
+    }
+    get color() {
+        return this._color;
+    }
+    set color(value) {
+        this._color.set(value);
+        this.updateGear(4);
+        if (this._content)
+            this._content.color = value;
+    }
+    get content() {
+        return this._content;
+    }
+    loadContent() {
+        this.clearContent();
+        if (!this._url)
+            return;
+        if (this._url.startsWith("ui://"))
+            this.loadFromPackage(this._url);
+        else
+            this.loadExternal();
+    }
+    loadFromPackage(itemURL) {
+        this._contentItem = UIPackage.getItemByURL(itemURL);
+        if (this._contentItem) {
+            this._contentItem = this._contentItem.getBranch();
+            this.sourceWidth = this._contentItem.width;
+            this.sourceHeight = this._contentItem.height;
+            this._contentItem = this._contentItem.getHighResolution();
+            if (this._autoSize)
+                this.setSize(this.sourceWidth, this.sourceHeight);
+            if (this._contentItem.type == PackageItemType.Spine || this._contentItem.type == PackageItemType.DragonBones)
+                this._contentItem.owner.getItemAssetAsync(this._contentItem, this.onLoaded.bind(this));
+        }
+    }
+    onLoaded(err, item) {
+        if (this._contentItem != item)
+            return;
+        if (err)
+            console.warn(err);
+        if (!this._contentItem.asset)
+            return;
+        if (this._contentItem.type == PackageItemType.Spine)
+            this.setSpine(this._contentItem.asset, this._contentItem.skeletonAnchor);
+        else if (this._contentItem.type == PackageItemType.DragonBones)
+            this.setDragonBones(this._contentItem.asset, this._contentItem.atlasAsset, this._contentItem.skeletonAnchor);
+    }
+    setSpine(asset, anchor, pma) {
+        this.freeSpine();
+        let node = new Node();
+        this._container.addChild(node);
+        node.layer = UIConfig.defaultUILayer;
+        node.setPosition(anchor.x, -anchor.y);
+        this._content = node.addComponent(sp.Skeleton);
+        this._content.premultipliedAlpha = pma;
+        this._content.skeletonData = asset;
+        this._content.color = this._color;
+        this.onChangeSpine();
+        this.updateLayout();
+    }
+    freeSpine() {
+        if (this._content) {
+            this._content.destroy();
+        }
+    }
+    setDragonBones(asset, atlasAsset, anchor, pma) {
+        this.freeDragonBones();
+        let node = new Node();
+        node.layer = UIConfig.defaultUILayer;
+        this._container.addChild(node);
+        node.setPosition(anchor.x, -anchor.y);
+        this._content = node.addComponent(dragonBones.ArmatureDisplay);
+        this._content.premultipliedAlpha = pma;
+        this._content.dragonAsset = asset;
+        this._content.dragonAtlasAsset = atlasAsset;
+        this._content.color = this._color;
+        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
+        let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
+        this._content.armatureName = dragonBonesData.armatureNames[0];
+        this.onChangeDragonBones();
+        this.updateLayout();
+    }
+    freeDragonBones() {
+        if (this._content) {
+            this._content.destroy();
+        }
+    }
+    onChange() {
+        if (this._contentItem == null)
+            return;
+        if (this._contentItem.type == PackageItemType.Spine) {
+            this.onChangeSpine();
+        }
+        if (this._contentItem.type == PackageItemType.DragonBones) {
+            this.onChangeDragonBones();
+        }
+    }
+    onChangeSpine() {
+        if (!(this._content instanceof sp.Skeleton))
+            return;
+        if (this._animationName) {
+            let trackEntry = this._content.getCurrent(0);
+            if (!trackEntry || trackEntry.animation.name != this._animationName || trackEntry.isComplete() && !trackEntry.loop) {
+                this._content.animation = this._animationName;
+                trackEntry = this._content.setAnimation(0, this._animationName, this._loop);
+            }
+            if (this._playing)
+                this._content.paused = false;
+            else {
+                this._content.paused = true;
+                trackEntry.trackTime = math.lerp(0, trackEntry.animationEnd - trackEntry.animationStart, this._frame / 100);
+            }
+        }
+        else
+            this._content.clearTrack(0);
+        let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
+        if (this._content["_skeleton"].skin != skin)
+            this._content.setSkin(skin);
+    }
+    onChangeDragonBones() {
+        if (!(this._content instanceof dragonBones.ArmatureDisplay))
+            return;
+        if (this._animationName) {
+            if (this._playing)
+                this._content.playAnimation(this._animationName, this._loop ? 0 : 1);
+            else
+                this._content.armature().animation.gotoAndStopByFrame(this._animationName, this._frame);
+        }
+        else
+            this._content.armature().animation.reset();
+    }
+    loadExternal() {
+        if (this._url.startsWith("http://")
+            || this._url.startsWith("https://")
+            || this._url.startsWith('/'))
+            assetManager.loadRemote(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
+        else
+            resources.load(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
+    }
+    onLoaded2(err, asset) {
+        //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
+        if (!this._url || !isValid(this._node))
+            return;
+        if (err)
+            console.warn(err);
+    }
+    updateLayout() {
+        let cw = this.sourceWidth;
+        let ch = this.sourceHeight;
+        let pivotCorrectX = -this.pivotX * this._width;
+        let pivotCorrectY = this.pivotY * this._height;
+        if (this._autoSize) {
+            this._updatingLayout = true;
+            if (cw == 0)
+                cw = 50;
+            if (ch == 0)
+                ch = 30;
+            this.setSize(cw, ch);
+            this._updatingLayout = false;
+            if (cw == this._width && ch == this._height) {
+                this._container.setScale(1, 1);
+                this._container.setPosition(pivotCorrectX, pivotCorrectY);
+                return;
+            }
+        }
+        var sx = 1, sy = 1;
+        if (this._fill != LoaderFillType.None) {
+            sx = this.width / this.sourceWidth;
+            sy = this.height / this.sourceHeight;
+            if (sx != 1 || sy != 1) {
+                if (this._fill == LoaderFillType.ScaleMatchHeight)
+                    sx = sy;
+                else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                    sy = sx;
+                else if (this._fill == LoaderFillType.Scale) {
+                    if (sx > sy)
+                        sx = sy;
+                    else
+                        sy = sx;
+                }
+                else if (this._fill == LoaderFillType.ScaleNoBorder) {
+                    if (sx > sy)
+                        sy = sx;
+                    else
+                        sx = sy;
+                }
+                if (this._shrinkOnly) {
+                    if (sx > 1)
+                        sx = 1;
+                    if (sy > 1)
+                        sy = 1;
+                }
+                cw = this.sourceWidth * sx;
+                ch = this.sourceHeight * sy;
+            }
+        }
+        this._container.setScale(sx, sy);
+        var nx, ny;
+        if (this._align == AlignType.Left)
+            nx = 0;
+        else if (this._align == AlignType.Center)
+            nx = Math.floor((this._width - cw) / 2);
+        else
+            nx = this._width - cw;
+        if (this._verticalAlign == VertAlignType.Top)
+            ny = 0;
+        else if (this._verticalAlign == VertAlignType.Middle)
+            ny = Math.floor((this._height - ch) / 2);
+        else
+            ny = this._height - ch;
+        ny = -ny;
+        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
+    }
+    clearContent() {
+        this._contentItem = null;
+        if (this._content) {
+            this._content.node.destroy();
+            this._content = null;
+        }
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleGrayedChanged() {
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return 1;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                break;
+            case ObjectPropID.DeltaTime:
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._url = buffer.readS();
+        this._align = buffer.readByte();
+        this._verticalAlign = buffer.readByte();
+        this._fill = buffer.readByte();
+        this._shrinkOnly = buffer.readBool();
+        this._autoSize = buffer.readBool();
+        this._animationName = buffer.readS();
+        this._skinName = buffer.readS();
+        this._playing = buffer.readBool();
+        this._frame = buffer.readInt();
+        this._loop = buffer.readBool();
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        if (this._url)
+            this.loadContent();
+    }
+}
+
+class GLabel extends GComponent {
+    _titleObject;
+    _iconObject;
+    _sound;
+    _soundVolumeScale;
+    constructor() {
+        super();
+        this._node.name = "GLabel";
+    }
+    get icon() {
+        if (this._iconObject)
+            return this._iconObject.icon;
+    }
+    set icon(value) {
+        if (this._iconObject)
+            this._iconObject.icon = value;
+        this.updateGear(7);
+    }
+    get title() {
+        if (this._titleObject)
+            return this._titleObject.text;
+        else
+            return null;
+    }
+    set title(value) {
+        if (this._titleObject)
+            this._titleObject.text = value;
+        this.updateGear(6);
+    }
+    get text() {
+        return this.title;
+    }
+    set text(value) {
+        this.title = value;
+    }
+    get titleColor() {
+        var tf = this.getTextField();
+        if (tf)
+            return tf.color;
+        else
+            return Color.WHITE;
+    }
+    set titleColor(value) {
+        var tf = this.getTextField();
+        if (tf)
+            tf.color = value;
+        this.updateGear(4);
+    }
+    get titleFontSize() {
+        var tf = this.getTextField();
+        if (tf)
+            return tf.fontSize;
+        else
+            return 0;
+    }
+    set titleFontSize(value) {
+        var tf = this.getTextField();
+        if (tf)
+            tf.fontSize = value;
+    }
+    set editable(val) {
+        if (this._titleObject && (this._titleObject instanceof GTextInput))
+            this._titleObject.editable = val;
+    }
+    get editable() {
+        if (this._titleObject && (this._titleObject instanceof GTextInput))
+            return this._titleObject.editable;
+        else
+            return false;
+    }
+    getTextField() {
+        if (this._titleObject instanceof GTextField)
+            return this._titleObject;
+        else if ('getTextField' in this._titleObject)
+            return this._titleObject.getTextField();
+        else
+            return null;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.titleColor;
+            case ObjectPropID.OutlineColor:
+                {
+                    var tf = this.getTextField();
+                    if (tf)
+                        return tf.strokeColor;
+                    else
+                        return 0;
+                }
+            case ObjectPropID.FontSize:
+                return this.titleFontSize;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.titleColor = value;
+                break;
+            case ObjectPropID.OutlineColor:
+                {
+                    var tf = this.getTextField();
+                    if (tf)
+                        tf.strokeColor = value;
+                }
+                break;
+            case ObjectPropID.FontSize:
+                this.titleFontSize = value;
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    constructExtension(buffer) {
+        this._titleObject = this.getChild("title");
+        this._iconObject = this.getChild("icon");
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        if (!buffer.seek(beginPos, 6))
+            return;
+        if (buffer.readByte() != this.packageItem.objectType)
+            return;
+        var str;
+        str = buffer.readS();
+        if (str != null)
+            this.title = str;
+        str = buffer.readS();
+        if (str != null)
+            this.icon = str;
+        if (buffer.readBool())
+            this.titleColor = buffer.readColor();
+        var iv = buffer.readInt();
+        if (iv != 0)
+            this.titleFontSize = iv;
+        if (buffer.readBool()) {
+            var input = this.getTextField();
+            if (input instanceof GTextInput) {
+                str = buffer.readS();
+                if (str != null)
+                    input.promptText = str;
+                str = buffer.readS();
+                if (str != null)
+                    input.restrict = str;
+                iv = buffer.readInt();
+                if (iv != 0)
+                    input.maxLength = iv;
+                iv = buffer.readInt();
+                if (buffer.readBool())
+                    input.password = true;
+            }
+            else
+                buffer.skip(13);
+        }
+        str = buffer.readS();
+        if (str != null) {
+            this._sound = str;
+            if (buffer.readBool()) {
+                this._soundVolumeScale = buffer.readFloat();
+            }
+            this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
+        }
+    }
+    onClick_1() {
+        if (this._sound) {
+            var pi = UIPackage.getItemByURL(this._sound);
+            if (pi) {
+                var sound = pi.owner.getItemAsset(pi);
+                if (sound)
+                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
+            }
+        }
+    }
+}
+
 class GButton extends GComponent {
     _titleObject;
     _iconObject;
@@ -15076,51 +16763,6 @@ class GButton extends GComponent {
             if (this._relatedController)
                 this._relatedController.selectedPageId = this._relatedPageId;
         }
-    }
-}
-
-class GObjectPool {
-    _pool;
-    _count = 0;
-    constructor() {
-        this._pool = {};
-    }
-    clear() {
-        for (var i1 in this._pool) {
-            var arr = this._pool[i1];
-            var cnt = arr.length;
-            for (var i = 0; i < cnt; i++)
-                arr[i].dispose();
-        }
-        this._pool = {};
-        this._count = 0;
-    }
-    get count() {
-        return this._count;
-    }
-    getObject(url) {
-        url = UIPackage.normalizeURL(url);
-        if (url == null)
-            return null;
-        var arr = this._pool[url];
-        if (arr && arr.length) {
-            this._count--;
-            return arr.shift();
-        }
-        var child = UIPackage.createObjectFromURL(url);
-        return child;
-    }
-    returnObject(obj) {
-        var url = obj.resourceURL;
-        if (!url)
-            return;
-        var arr = this._pool[url];
-        if (arr == null) {
-            arr = new Array();
-            this._pool[url] = arr;
-        }
-        this._count++;
-        arr.push(obj);
     }
 }
 
@@ -17188,180 +18830,6 @@ class GList extends GComponent {
 }
 var s_n = 0;
 
-class GTextInput extends GTextField {
-    _editBox;
-    _promptText;
-    constructor() {
-        super();
-        this._node.name = "GTextInput";
-        this._touchDisabled = false;
-    }
-    createRenderer() {
-        this._editBox = this._node.addComponent(MyEditBox);
-        this._editBox.maxLength = -1;
-        this._editBox["_updateTextLabel"]();
-        this._node.on('text-changed', this.onTextChanged, this);
-        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd1, this);
-        this.autoSize = AutoSizeType.None;
-    }
-    set editable(val) {
-        this._editBox.enabled = val;
-    }
-    get editable() {
-        return this._editBox.enabled;
-    }
-    set maxLength(val) {
-        if (val == 0)
-            val = -1;
-        this._editBox.maxLength = val;
-    }
-    get maxLength() {
-        return this._editBox.maxLength;
-    }
-    set promptText(val) {
-        this._promptText = val;
-        let newCreate = !this._editBox.placeholderLabel;
-        this._editBox["_updatePlaceholderLabel"]();
-        if (newCreate)
-            this.assignFont(this._editBox.placeholderLabel, this._realFont);
-        this._editBox.placeholderLabel.string = defaultParser.parse(this._promptText, true);
-        if (defaultParser.lastColor) {
-            let c = this._editBox.placeholderLabel.color;
-            if (!c)
-                c = new Color();
-            c.fromHEX(defaultParser.lastColor);
-            this.assignFontColor(this._editBox.placeholderLabel, c);
-        }
-        else
-            this.assignFontColor(this._editBox.placeholderLabel, this._color);
-        if (defaultParser.lastSize)
-            this._editBox.placeholderLabel.fontSize = parseInt(defaultParser.lastSize);
-        else
-            this._editBox.placeholderLabel.fontSize = this._fontSize;
-    }
-    get promptText() {
-        return this._promptText;
-    }
-    set restrict(value) {
-        //not supported
-    }
-    get restrict() {
-        return "";
-    }
-    get password() {
-        return this._editBox.inputFlag == EditBox.InputFlag.PASSWORD;
-    }
-    set password(val) {
-        this._editBox.inputFlag = val ? EditBox.InputFlag.PASSWORD : EditBox.InputFlag.DEFAULT;
-    }
-    get align() {
-        return this._editBox.textLabel.horizontalAlign;
-    }
-    set align(value) {
-        this._editBox.textLabel.horizontalAlign = value;
-        if (this._editBox.placeholderLabel) {
-            this._editBox.placeholderLabel.horizontalAlign = value;
-        }
-    }
-    get verticalAlign() {
-        return this._editBox.textLabel.verticalAlign;
-    }
-    set verticalAlign(value) {
-        this._editBox.textLabel.verticalAlign = value;
-        if (this._editBox.placeholderLabel) {
-            this._editBox.placeholderLabel.verticalAlign = value;
-        }
-    }
-    get singleLine() {
-        return this._editBox.inputMode != EditBox.InputMode.ANY;
-    }
-    set singleLine(value) {
-        this._editBox.inputMode = value ? EditBox.InputMode.SINGLE_LINE : EditBox.InputMode.ANY;
-    }
-    requestFocus() {
-        this._editBox.focus();
-    }
-    markSizeChanged() {
-        //不支持自动大小，所以这里空
-    }
-    updateText() {
-        var text2 = this._text;
-        if (this._templateVars)
-            text2 = this.parseTemplate(text2);
-        if (this._ubbEnabled) //不支持同一个文本不同样式
-            text2 = defaultParser.parse(text2, true);
-        this._editBox.string = text2;
-    }
-    updateFont() {
-        this.assignFont(this._editBox.textLabel, this._realFont);
-        if (this._editBox.placeholderLabel)
-            this.assignFont(this._editBox.placeholderLabel, this._realFont);
-    }
-    updateFontColor() {
-        this.assignFontColor(this._editBox.textLabel, this._color);
-    }
-    updateFontSize() {
-        this._editBox.textLabel.fontSize = this._fontSize;
-        this._editBox.textLabel.lineHeight = this._fontSize + this._leading;
-        if (this._editBox.placeholderLabel)
-            this._editBox.placeholderLabel.fontSize = this._editBox.textLabel.fontSize;
-    }
-    updateOverflow() {
-        //not supported
-    }
-    onTextChanged() {
-        this._text = this._editBox.string;
-    }
-    onTouchEnd1(evt) {
-        this._editBox.openKeyboard();
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 4);
-        var str = buffer.readS();
-        if (str != null)
-            this.promptText = str;
-        else if (this._editBox.placeholderLabel)
-            this._editBox.placeholderLabel.string = "";
-        str = buffer.readS();
-        if (str != null)
-            this.restrict = str;
-        var iv = buffer.readInt();
-        if (iv != 0)
-            this.maxLength = iv;
-        iv = buffer.readInt();
-        if (buffer.readBool())
-            this.password = true;
-        //同步一下对齐方式
-        if (this._editBox.placeholderLabel) {
-            let hAlign = this._editBox.textLabel.horizontalAlign;
-            this._editBox.placeholderLabel.horizontalAlign = hAlign;
-            let vAlign = this._editBox.textLabel.verticalAlign;
-            this._editBox.placeholderLabel.verticalAlign = vAlign;
-        }
-    }
-}
-class MyEditBox extends EditBox {
-    _registerEvent() {
-        //取消掉原来的事件处理
-    }
-    // _syncSize() {
-    //     let size = this.node._uiProps.uiTransformComp.contentSize;
-    //     let impl = this["_impl"];
-    //     impl.setSize(size.width, size.height);
-    //     if (this.textLabel)
-    //         this.textLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    //     if (this.placeholderLabel)
-    //         this.placeholderLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    // }
-    openKeyboard() {
-        let impl = this["_impl"];
-        if (impl) {
-            impl.beginEditing();
-        }
-    }
-}
-
 class GComboBox extends GComponent {
     dropdown;
     _titleObject;
@@ -17758,1473 +19226,224 @@ class GComboBox extends GComponent {
     }
 }
 
-class GLabel extends GComponent {
+class GSlider extends GComponent {
+    _min = 0;
+    _max = 0;
+    _value = 0;
+    _titleType;
+    _reverse;
+    _wholeNumbers;
     _titleObject;
-    _iconObject;
-    _sound;
-    _soundVolumeScale;
+    _barObjectH;
+    _barObjectV;
+    _barMaxWidth = 0;
+    _barMaxHeight = 0;
+    _barMaxWidthDelta = 0;
+    _barMaxHeightDelta = 0;
+    _gripObject;
+    _clickPos;
+    _clickPercent = 0;
+    _barStartX = 0;
+    _barStartY = 0;
+    changeOnClick = true;
+    canDrag = true;
     constructor() {
         super();
-        this._node.name = "GLabel";
+        this._node.name = "GSlider";
+        this._titleType = ProgressTitleType.Percent;
+        this._value = 50;
+        this._max = 100;
+        this._clickPos = new Vec2();
     }
-    get icon() {
-        if (this._iconObject)
-            return this._iconObject.icon;
+    get titleType() {
+        return this._titleType;
     }
-    set icon(value) {
-        if (this._iconObject)
-            this._iconObject.icon = value;
-        this.updateGear(7);
+    set titleType(value) {
+        this._titleType = value;
     }
-    get title() {
-        if (this._titleObject)
-            return this._titleObject.text;
-        else
-            return null;
+    get wholeNumbers() {
+        return this._wholeNumbers;
     }
-    set title(value) {
-        if (this._titleObject)
-            this._titleObject.text = value;
-        this.updateGear(6);
-    }
-    get text() {
-        return this.title;
-    }
-    set text(value) {
-        this.title = value;
-    }
-    get titleColor() {
-        var tf = this.getTextField();
-        if (tf)
-            return tf.color;
-        else
-            return Color.WHITE;
-    }
-    set titleColor(value) {
-        var tf = this.getTextField();
-        if (tf)
-            tf.color = value;
-        this.updateGear(4);
-    }
-    get titleFontSize() {
-        var tf = this.getTextField();
-        if (tf)
-            return tf.fontSize;
-        else
-            return 0;
-    }
-    set titleFontSize(value) {
-        var tf = this.getTextField();
-        if (tf)
-            tf.fontSize = value;
-    }
-    set editable(val) {
-        if (this._titleObject && (this._titleObject instanceof GTextInput))
-            this._titleObject.editable = val;
-    }
-    get editable() {
-        if (this._titleObject && (this._titleObject instanceof GTextInput))
-            return this._titleObject.editable;
-        else
-            return false;
-    }
-    getTextField() {
-        if (this._titleObject instanceof GTextField)
-            return this._titleObject;
-        else if ('getTextField' in this._titleObject)
-            return this._titleObject.getTextField();
-        else
-            return null;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.titleColor;
-            case ObjectPropID.OutlineColor:
-                {
-                    var tf = this.getTextField();
-                    if (tf)
-                        return tf.strokeColor;
-                    else
-                        return 0;
-                }
-            case ObjectPropID.FontSize:
-                return this.titleFontSize;
-            default:
-                return super.getProp(index);
+    set wholeNumbers(value) {
+        if (this._wholeNumbers != value) {
+            this._wholeNumbers = value;
+            this.update();
         }
     }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.titleColor = value;
-                break;
-            case ObjectPropID.OutlineColor:
-                {
-                    var tf = this.getTextField();
-                    if (tf)
-                        tf.strokeColor = value;
-                }
-                break;
-            case ObjectPropID.FontSize:
-                this.titleFontSize = value;
-                break;
-            default:
-                super.setProp(index, value);
-                break;
+    get min() {
+        return this._min;
+    }
+    set min(value) {
+        if (this._min != value) {
+            this._min = value;
+            this.update();
+        }
+    }
+    get max() {
+        return this._max;
+    }
+    set max(value) {
+        if (this._max != value) {
+            this._max = value;
+            this.update();
+        }
+    }
+    get value() {
+        return this._value;
+    }
+    set value(value) {
+        if (this._value != value) {
+            this._value = value;
+            this.update();
+        }
+    }
+    update() {
+        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
+    }
+    updateWithPercent(percent, manual) {
+        percent = math.clamp01(percent);
+        if (manual) {
+            var newValue = math.clamp(this._min + (this._max - this._min) * percent, this._min, this._max);
+            if (this._wholeNumbers) {
+                newValue = Math.round(newValue);
+                percent = math.clamp01((newValue - this._min) / (this._max - this._min));
+            }
+            if (newValue != this._value) {
+                this._value = newValue;
+                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
+            }
+        }
+        if (this._titleObject) {
+            switch (this._titleType) {
+                case ProgressTitleType.Percent:
+                    this._titleObject.text = Math.floor(percent * 100) + "%";
+                    break;
+                case ProgressTitleType.ValueAndMax:
+                    this._titleObject.text = this._value + "/" + this._max;
+                    break;
+                case ProgressTitleType.Value:
+                    this._titleObject.text = "" + this._value;
+                    break;
+                case ProgressTitleType.Max:
+                    this._titleObject.text = "" + this._max;
+                    break;
+            }
+        }
+        var fullWidth = this.width - this._barMaxWidthDelta;
+        var fullHeight = this.height - this._barMaxHeightDelta;
+        if (!this._reverse) {
+            if (this._barObjectH)
+                this._barObjectH.width = Math.round(fullWidth * percent);
+            if (this._barObjectV)
+                this._barObjectV.height = Math.round(fullHeight * percent);
+        }
+        else {
+            if (this._barObjectH) {
+                this._barObjectH.width = Math.round(fullWidth * percent);
+                this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
+            }
+            if (this._barObjectV) {
+                this._barObjectV.height = Math.round(fullHeight * percent);
+                this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
+            }
         }
     }
     constructExtension(buffer) {
+        buffer.seek(0, 6);
+        this._titleType = buffer.readByte();
+        this._reverse = buffer.readBool();
+        if (buffer.version >= 2) {
+            this._wholeNumbers = buffer.readBool();
+            this.changeOnClick = buffer.readBool();
+        }
         this._titleObject = this.getChild("title");
-        this._iconObject = this.getChild("icon");
+        this._barObjectH = this.getChild("bar");
+        this._barObjectV = this.getChild("bar_v");
+        this._gripObject = this.getChild("grip");
+        if (this._barObjectH) {
+            this._barMaxWidth = this._barObjectH.width;
+            this._barMaxWidthDelta = this.width - this._barMaxWidth;
+            this._barStartX = this._barObjectH.x;
+        }
+        if (this._barObjectV) {
+            this._barMaxHeight = this._barObjectV.height;
+            this._barMaxHeightDelta = this.height - this._barMaxHeight;
+            this._barStartY = this._barObjectV.y;
+        }
+        if (this._gripObject) {
+            this._gripObject.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
+            this._gripObject.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
+        }
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (this._barObjectH)
+            this._barMaxWidth = this.width - this._barMaxWidthDelta;
+        if (this._barObjectV)
+            this._barMaxHeight = this.height - this._barMaxHeightDelta;
+        if (!this._underConstruct)
+            this.update();
     }
     setup_afterAdd(buffer, beginPos) {
         super.setup_afterAdd(buffer, beginPos);
-        if (!buffer.seek(beginPos, 6))
+        if (!buffer.seek(beginPos, 6)) {
+            this.update();
             return;
-        if (buffer.readByte() != this.packageItem.objectType)
+        }
+        if (buffer.readByte() != this.packageItem.objectType) {
+            this.update();
             return;
-        var str;
-        str = buffer.readS();
-        if (str != null)
-            this.title = str;
-        str = buffer.readS();
-        if (str != null)
-            this.icon = str;
-        if (buffer.readBool())
-            this.titleColor = buffer.readColor();
-        var iv = buffer.readInt();
-        if (iv != 0)
-            this.titleFontSize = iv;
-        if (buffer.readBool()) {
-            var input = this.getTextField();
-            if (input instanceof GTextInput) {
-                str = buffer.readS();
-                if (str != null)
-                    input.promptText = str;
-                str = buffer.readS();
-                if (str != null)
-                    input.restrict = str;
-                iv = buffer.readInt();
-                if (iv != 0)
-                    input.maxLength = iv;
-                iv = buffer.readInt();
-                if (buffer.readBool())
-                    input.password = true;
-            }
-            else
-                buffer.skip(13);
         }
-        str = buffer.readS();
-        if (str != null) {
-            this._sound = str;
-            if (buffer.readBool()) {
-                this._soundVolumeScale = buffer.readFloat();
-            }
-            this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
-        }
+        this._value = buffer.readInt();
+        this._max = buffer.readInt();
+        if (buffer.version >= 2)
+            this._min = buffer.readInt();
+        this.update();
     }
-    onClick_1() {
-        if (this._sound) {
-            var pi = UIPackage.getItemByURL(this._sound);
-            if (pi) {
-                var sound = pi.owner.getItemAsset(pi);
-                if (sound)
-                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
-            }
+    onGripTouchBegin(evt) {
+        this.canDrag = true;
+        evt.propagationStopped = true;
+        evt.captureTouch();
+        this._clickPos = this.globalToLocal(evt.pos.x, evt.pos.y);
+        this._clickPercent = math.clamp01((this._value - this._min) / (this._max - this._min));
+    }
+    onGripTouchMove(evt) {
+        if (!this.canDrag) {
+            return;
         }
+        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
+        var deltaX = pt.x - this._clickPos.x;
+        var deltaY = pt.y - this._clickPos.y;
+        if (this._reverse) {
+            deltaX = -deltaX;
+            deltaY = -deltaY;
+        }
+        var percent;
+        if (this._barObjectH)
+            percent = this._clickPercent + deltaX / this._barMaxWidth;
+        else
+            percent = this._clickPercent + deltaY / this._barMaxHeight;
+        this.updateWithPercent(percent, true);
+    }
+    onBarTouchBegin(evt) {
+        if (!this.changeOnClick)
+            return;
+        var pt = this._gripObject.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
+        var percent = math.clamp01((this._value - this._min) / (this._max - this._min));
+        var delta = 0;
+        if (this._barObjectH != null)
+            delta = (pt.x - this._gripObject.width / 2) / this._barMaxWidth;
+        if (this._barObjectV != null)
+            delta = (pt.y - this._gripObject.height / 2) / this._barMaxHeight;
+        if (this._reverse)
+            percent -= delta;
+        else
+            percent += delta;
+        this.updateWithPercent(percent, true);
     }
 }
-
-class MovieClip extends Image {
-    interval = 0;
-    swing = false;
-    repeatDelay = 0;
-    timeScale = 1;
-    _playing = true;
-    _frameCount = 0;
-    _frames;
-    _frame = 0;
-    _start = 0;
-    _end = 0;
-    _times = 0;
-    _endAt = 0;
-    _status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-    _callback;
-    _smoothing = true;
-    _frameElapsed = 0; //当前帧延迟
-    _reversed = false;
-    _repeatedCount = 0;
-    constructor() {
-        super();
-    }
-    get frames() {
-        return this._frames;
-    }
-    set frames(value) {
-        this._frames = value;
-        if (this._frames) {
-            this._frameCount = this._frames.length;
-            if (this._end == -1 || this._end > this._frameCount - 1)
-                this._end = this._frameCount - 1;
-            if (this._endAt == -1 || this._endAt > this._frameCount - 1)
-                this._endAt = this._frameCount - 1;
-            if (this._frame < 0 || this._frame > this._frameCount - 1)
-                this._frame = this._frameCount - 1;
-            this.type = Sprite.Type.SIMPLE;
-            this.drawFrame();
-            this._frameElapsed = 0;
-            this._repeatedCount = 0;
-            this._reversed = false;
-        }
-        else {
-            this._frameCount = 0;
-        }
-    }
-    get frameCount() {
-        return this._frameCount;
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            if (this._frames && value >= this._frameCount)
-                value = this._frameCount - 1;
-            this._frame = value;
-            this._frameElapsed = 0;
-            this.drawFrame();
-        }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-        }
-    }
-    get smoothing() {
-        return this._smoothing;
-    }
-    set smoothing(value) {
-        this._smoothing = value;
-    }
-    rewind() {
-        this._frame = 0;
-        this._frameElapsed = 0;
-        this._reversed = false;
-        this._repeatedCount = 0;
-        this.drawFrame();
-    }
-    syncStatus(anotherMc) {
-        this._frame = anotherMc._frame;
-        this._frameElapsed = anotherMc._frameElapsed;
-        this._reversed = anotherMc._reversed;
-        this._repeatedCount = anotherMc._repeatedCount;
-        this.drawFrame();
-    }
-    advance(timeInSeconds) {
-        var beginFrame = this._frame;
-        var beginReversed = this._reversed;
-        var backupTime = timeInSeconds;
-        while (true) {
-            var tt = this.interval + this._frames[this._frame].addDelay;
-            if (this._frame == 0 && this._repeatedCount > 0)
-                tt += this.repeatDelay;
-            if (timeInSeconds < tt) {
-                this._frameElapsed = 0;
-                break;
-            }
-            timeInSeconds -= tt;
-            if (this.swing) {
-                if (this._reversed) {
-                    this._frame--;
-                    if (this._frame <= 0) {
-                        this._frame = 0;
-                        this._repeatedCount++;
-                        this._reversed = !this._reversed;
-                    }
-                }
-                else {
-                    this._frame++;
-                    if (this._frame > this._frameCount - 1) {
-                        this._frame = Math.max(0, this._frameCount - 2);
-                        this._repeatedCount++;
-                        this._reversed = !this._reversed;
-                    }
-                }
-            }
-            else {
-                this._frame++;
-                if (this._frame > this._frameCount - 1) {
-                    this._frame = 0;
-                    this._repeatedCount++;
-                }
-            }
-            if (this._frame == beginFrame && this._reversed == beginReversed) //走了一轮了
-             {
-                var roundTime = backupTime - timeInSeconds; //这就是一轮需要的时间
-                timeInSeconds -= Math.floor(timeInSeconds / roundTime) * roundTime; //跳过
-            }
-        }
-        this.drawFrame();
-    }
-    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-    setPlaySettings(start, end, times, endAt, endCallback) {
-        if (start == undefined)
-            start = 0;
-        if (end == undefined)
-            end = -1;
-        if (times == undefined)
-            times = 0;
-        if (endAt == undefined)
-            endAt = -1;
-        this._start = start;
-        this._end = end;
-        if (this._end == -1 || this._end > this._frameCount - 1)
-            this._end = this._frameCount - 1;
-        this._times = times;
-        this._endAt = endAt;
-        if (this._endAt == -1)
-            this._endAt = this._end;
-        this._status = 0;
-        this._callback = endCallback;
-        this.frame = start;
-    }
-    update(dt) {
-        if (!this._playing || this._frameCount == 0 || this._status == 3)
-            return;
-        if (this.timeScale != 1)
-            dt *= this.timeScale;
-        this._frameElapsed += dt;
-        var tt = this.interval + this._frames[this._frame].addDelay;
-        if (this._frame == 0 && this._repeatedCount > 0)
-            tt += this.repeatDelay;
-        if (this._frameElapsed < tt)
-            return;
-        this._frameElapsed -= tt;
-        if (this._frameElapsed > this.interval)
-            this._frameElapsed = this.interval;
-        if (this.swing) {
-            if (this._reversed) {
-                this._frame--;
-                if (this._frame <= 0) {
-                    this._frame = 0;
-                    this._repeatedCount++;
-                    this._reversed = !this._reversed;
-                }
-            }
-            else {
-                this._frame++;
-                if (this._frame > this._frameCount - 1) {
-                    this._frame = Math.max(0, this._frameCount - 2);
-                    this._repeatedCount++;
-                    this._reversed = !this._reversed;
-                }
-            }
-        }
-        else {
-            this._frame++;
-            if (this._frame > this._frameCount - 1) {
-                this._frame = 0;
-                this._repeatedCount++;
-            }
-        }
-        if (this._status == 1) //new loop
-         {
-            this._frame = this._start;
-            this._frameElapsed = 0;
-            this._status = 0;
-        }
-        else if (this._status == 2) //ending
-         {
-            this._frame = this._endAt;
-            this._frameElapsed = 0;
-            this._status = 3; //ended
-            //play end
-            if (this._callback != null) {
-                let callback = this._callback;
-                this._callback = null;
-                callback();
-            }
-        }
-        else {
-            if (this._frame == this._end) {
-                if (this._times > 0) {
-                    this._times--;
-                    if (this._times == 0)
-                        this._status = 2; //ending
-                    else
-                        this._status = 1; //new loop
-                }
-                else if (this._start != 0)
-                    this._status = 1; //new loop
-            }
-        }
-        this.drawFrame();
-    }
-    drawFrame() {
-        if (this._frameCount > 0 && this._frame < this._frames.length) {
-            var frame = this._frames[this._frame];
-            this.spriteFrame = frame.texture;
-        }
-    }
-}
-
-class GLoader extends GObject {
-    _content;
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _showErrorSign;
-    _playing;
-    _frame = 0;
-    _color;
-    _contentItem;
-    _container;
-    _errorSign;
-    _content2;
-    _updatingLayout;
-    static _errorSignPool = new GObjectPool();
-    constructor() {
-        super();
-        this._node.name = "GLoader";
-        this._playing = true;
-        this._url = "";
-        this._fill = LoaderFillType.None;
-        this._align = AlignType.Left;
-        this._verticalAlign = VertAlignType.Top;
-        this._showErrorSign = true;
-        this._color = new Color(255, 255, 255, 255);
-        this._container = new Node("Image");
-        this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
-        this._node.addChild(this._container);
-        this._content = this._container.addComponent(MovieClip);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-        this._content.setPlaySettings();
-    }
-    dispose() {
-        if (this._contentItem == null) {
-            if (this._content.spriteFrame)
-                this.freeExternal(this._content.spriteFrame);
-        }
-        if (this._content2)
-            this._content2.dispose();
-        super.dispose();
-    }
-    get url() {
-        return this._url;
-    }
-    set url(value) {
-        if (this._url == value)
-            return;
-        this._url = value;
-        this.loadContent();
-        this.updateGear(7);
-    }
-    get icon() {
-        return this._url;
-    }
-    set icon(value) {
-        this.url = value;
-    }
-    get align() {
-        return this._align;
-    }
-    set align(value) {
-        if (this._align != value) {
-            this._align = value;
-            this.updateLayout();
-        }
-    }
-    get verticalAlign() {
-        return this._verticalAlign;
-    }
-    set verticalAlign(value) {
-        if (this._verticalAlign != value) {
-            this._verticalAlign = value;
-            this.updateLayout();
-        }
-    }
-    get fill() {
-        return this._fill;
-    }
-    set fill(value) {
-        if (this._fill != value) {
-            this._fill = value;
-            this.updateLayout();
-        }
-    }
-    get shrinkOnly() {
-        return this._shrinkOnly;
-    }
-    set shrinkOnly(value) {
-        if (this._shrinkOnly != value) {
-            this._shrinkOnly = value;
-            this.updateLayout();
-        }
-    }
-    get autoSize() {
-        return this._autoSize;
-    }
-    set autoSize(value) {
-        if (this._autoSize != value) {
-            this._autoSize = value;
-            this.updateLayout();
-        }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-            if (this._content instanceof MovieClip)
-                this._content.playing = value;
-            this.updateGear(5);
-        }
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            this._frame = value;
-            if (this._content instanceof MovieClip)
-                this._content.frame = value;
-            this.updateGear(5);
-        }
-    }
-    get color() {
-        return this._color;
-    }
-    set color(value) {
-        this._color.set(value);
-        this.updateGear(4);
-        this._content.color = value;
-    }
-    get fillMethod() {
-        return this._content.fillMethod;
-    }
-    set fillMethod(value) {
-        this._content.fillMethod = value;
-    }
-    get fillOrigin() {
-        return this._content.fillOrigin;
-    }
-    set fillOrigin(value) {
-        this._content.fillOrigin = value;
-    }
-    get fillClockwise() {
-        return this._content.fillClockwise;
-    }
-    set fillClockwise(value) {
-        this._content.fillClockwise = value;
-    }
-    get fillAmount() {
-        return this._content.fillAmount;
-    }
-    set fillAmount(value) {
-        this._content.fillAmount = value;
-    }
-    get showErrorSign() {
-        return this._showErrorSign;
-    }
-    set showErrorSign(value) {
-        this._showErrorSign = value;
-    }
-    get component() {
-        return this._content2;
-    }
-    get texture() {
-        return this._content.spriteFrame;
-    }
-    set texture(value) {
-        this.url = null;
-        this._content.spriteFrame = value;
-        this._content.type = Sprite.Type.SIMPLE;
-        if (value != null) {
-            this.sourceWidth = value.getRect().width;
-            this.sourceHeight = value.getRect().height;
-        }
-        else {
-            this.sourceWidth = this.sourceHeight = 0;
-        }
-        this.updateLayout();
-    }
-    loadContent() {
-        this.clearContent();
-        if (!this._url)
-            return;
-        if (typeof this._url == "string" && this._url.startsWith("ui://"))
-            this.loadFromPackage(this._url);
-        else
-            this.loadExternal();
-    }
-    loadFromPackage(itemURL) {
-        this._contentItem = UIPackage.getItemByURL(itemURL);
-        if (this._contentItem) {
-            this._contentItem = this._contentItem.getBranch();
-            this.sourceWidth = this._contentItem.width;
-            this.sourceHeight = this._contentItem.height;
-            this._contentItem = this._contentItem.getHighResolution();
-            this._contentItem.load();
-            if (this._autoSize)
-                this.setSize(this.sourceWidth, this.sourceHeight);
-            if (this._contentItem.type == PackageItemType.Image) {
-                if (!this._contentItem.asset) {
-                    this.setErrorState();
-                }
-                else {
-                    this._content.spriteFrame = this._contentItem.asset;
-                    if (this._content.fillMethod == 0) {
-                        if (this._contentItem.scale9Grid)
-                            this._content.type = Sprite.Type.SLICED;
-                        else if (this._contentItem.scaleByTile)
-                            this._content.type = Sprite.Type.TILED;
-                        else
-                            this._content.type = Sprite.Type.SIMPLE;
-                    }
-                    this.updateLayout();
-                }
-            }
-            else if (this._contentItem.type == PackageItemType.MovieClip) {
-                this._content.interval = this._contentItem.interval;
-                this._content.swing = this._contentItem.swing;
-                this._content.repeatDelay = this._contentItem.repeatDelay;
-                this._content.frames = this._contentItem.frames;
-                this.updateLayout();
-            }
-            else if (this._contentItem.type == PackageItemType.Component) {
-                var obj = UIPackage.createObjectFromURL(itemURL);
-                if (!obj)
-                    this.setErrorState();
-                else if (!(obj instanceof GComponent)) {
-                    obj.dispose();
-                    this.setErrorState();
-                }
-                else {
-                    this._content2 = obj;
-                    this._container.addChild(this._content2.node);
-                    this.updateLayout();
-                }
-            }
-            else
-                this.setErrorState();
-        }
-        else
-            this.setErrorState();
-    }
-    loadExternal() {
-        let url = this.url;
-        let callback = (err, asset) => {
-            //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
-            if (this._url != url || !isValid(this._node))
-                return;
-            if (err)
-                console.warn(err);
-            if (asset instanceof SpriteFrame)
-                this.onExternalLoadSuccess(asset);
-            else if (asset instanceof Texture2D) {
-                let sf = new SpriteFrame();
-                sf.texture = asset;
-                this.onExternalLoadSuccess(sf);
-            }
-            else if (asset instanceof ImageAsset) {
-                let sf = new SpriteFrame();
-                let texture = new Texture2D();
-                texture.image = asset;
-                sf.texture = texture;
-                this.onExternalLoadSuccess(sf);
-            }
-        };
-        if (typeof this._url == "string") {
-            if (this._url.startsWith("http://")
-                || this._url.startsWith("https://")
-                || this._url.startsWith('/'))
-                assetManager.loadRemote(this._url, callback);
-            else
-                resources.load(this._url + "/spriteFrame", Asset, callback);
-        }
-        else {
-            throw new Error("fgui底层未实现CCURL的非string资源加载！");
-        }
-    }
-    freeExternal(texture) {
-    }
-    onExternalLoadSuccess(texture) {
-        this._content.spriteFrame = texture;
-        this._content.type = Sprite.Type.SIMPLE;
-        this.sourceWidth = texture.getRect().width;
-        this.sourceHeight = texture.getRect().height;
-        if (this._autoSize)
-            this.setSize(this.sourceWidth, this.sourceHeight);
-        this.updateLayout();
-    }
-    onExternalLoadFailed() {
-        this.setErrorState();
-    }
-    setErrorState() {
-        if (!this._showErrorSign)
-            return;
-        if (this._errorSign == null) {
-            if (UIConfig.loaderErrorSign != null) {
-                this._errorSign = GLoader._errorSignPool.getObject(UIConfig.loaderErrorSign);
-            }
-        }
-        if (this._errorSign) {
-            this._errorSign.setSize(this.width, this.height);
-            this._container.addChild(this._errorSign.node);
-        }
-    }
-    clearErrorState() {
-        if (this._errorSign) {
-            this._container.removeChild(this._errorSign.node);
-            GLoader._errorSignPool.returnObject(this._errorSign);
-            this._errorSign = null;
-        }
-    }
-    updateLayout() {
-        if (this._content2 == null && this._content == null) {
-            if (this._autoSize) {
-                this._updatingLayout = true;
-                this.setSize(50, 30);
-                this._updatingLayout = false;
-            }
-            return;
-        }
-        let cw = this.sourceWidth;
-        let ch = this.sourceHeight;
-        let pivotCorrectX = -this.pivotX * this._width;
-        let pivotCorrectY = this.pivotY * this._height;
-        if (this._autoSize) {
-            this._updatingLayout = true;
-            if (cw == 0)
-                cw = 50;
-            if (ch == 0)
-                ch = 30;
-            this.setSize(cw, ch);
-            this._updatingLayout = false;
-            this._container._uiProps.uiTransformComp.setContentSize(this._width, this._height);
-            this._container.setPosition(pivotCorrectX, pivotCorrectY);
-            if (this._content2) {
-                this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
-                this._content2.setScale(1, 1);
-            }
-            if (cw == this._width && ch == this._height)
-                return;
-        }
-        var sx = 1, sy = 1;
-        if (this._fill != LoaderFillType.None) {
-            sx = this.width / this.sourceWidth;
-            sy = this.height / this.sourceHeight;
-            if (sx != 1 || sy != 1) {
-                if (this._fill == LoaderFillType.ScaleMatchHeight)
-                    sx = sy;
-                else if (this._fill == LoaderFillType.ScaleMatchWidth)
-                    sy = sx;
-                else if (this._fill == LoaderFillType.Scale) {
-                    if (sx > sy)
-                        sx = sy;
-                    else
-                        sy = sx;
-                }
-                else if (this._fill == LoaderFillType.ScaleNoBorder) {
-                    if (sx > sy)
-                        sy = sx;
-                    else
-                        sx = sy;
-                }
-                if (this._shrinkOnly) {
-                    if (sx > 1)
-                        sx = 1;
-                    if (sy > 1)
-                        sy = 1;
-                }
-                cw = this.sourceWidth * sx;
-                ch = this.sourceHeight * sy;
-            }
-        }
-        this._container._uiProps.uiTransformComp.setContentSize(cw, ch);
-        if (this._content2) {
-            this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
-            this._content2.setScale(sx, sy);
-        }
-        var nx, ny;
-        if (this._align == AlignType.Left)
-            nx = 0;
-        else if (this._align == AlignType.Center)
-            nx = Math.floor((this._width - cw) / 2);
-        else
-            nx = this._width - cw;
-        if (this._verticalAlign == VertAlignType.Top)
-            ny = 0;
-        else if (this._verticalAlign == VertAlignType.Middle)
-            ny = Math.floor((this._height - ch) / 2);
-        else
-            ny = this._height - ch;
-        ny = -ny;
-        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
-    }
-    clearContent() {
-        this.clearErrorState();
-        if (!this._contentItem) {
-            var texture = this._content.spriteFrame;
-            if (texture)
-                this.freeExternal(texture);
-        }
-        if (this._content2) {
-            this._container.removeChild(this._content2.node);
-            this._content2.dispose();
-            this._content2 = null;
-        }
-        this._content.frames = null;
-        this._content.spriteFrame = null;
-        this._contentItem = null;
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    _hitTest(pt, globalPt) {
-        if (this._content2) {
-            let obj = this._content2.hitTest(globalPt);
-            if (obj)
-                return obj;
-        }
-        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height)
-            return this;
-        else
-            return null;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return this._content.timeScale;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                this._content.timeScale = value;
-                break;
-            case ObjectPropID.DeltaTime:
-                this._content.advance(value);
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._url = buffer.readS();
-        this._align = buffer.readByte();
-        this._verticalAlign = buffer.readByte();
-        this._fill = buffer.readByte();
-        this._shrinkOnly = buffer.readBool();
-        this._autoSize = buffer.readBool();
-        this._showErrorSign = buffer.readBool();
-        this._playing = buffer.readBool();
-        this._frame = buffer.readInt();
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        this._content.fillMethod = buffer.readByte();
-        if (this._content.fillMethod != 0) {
-            this._content.fillOrigin = buffer.readByte();
-            this._content.fillClockwise = buffer.readBool();
-            this._content.fillAmount = buffer.readFloat();
-        }
-        if (this._url)
-            this.loadContent();
-    }
-}
-
-class GLoader3D extends GObject {
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _playing;
-    _frame = 0;
-    _loop;
-    _animationName;
-    _skinName;
-    _color;
-    _contentItem;
-    _container;
-    _content;
-    _updatingLayout;
-    constructor() {
-        super();
-        this._node.name = "GLoader3D";
-        this._playing = true;
-        this._url = "";
-        this._fill = LoaderFillType.None;
-        this._align = AlignType.Left;
-        this._verticalAlign = VertAlignType.Top;
-        this._color = new Color(255, 255, 255, 255);
-        this._container = new Node("Wrapper");
-        this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
-        this._node.addChild(this._container);
-    }
-    dispose() {
-        super.dispose();
-    }
-    get url() {
-        return this._url;
-    }
-    set url(value) {
-        if (this._url == value)
-            return;
-        this._url = value;
-        this.loadContent();
-        this.updateGear(7);
-    }
-    get icon() {
-        return this._url;
-    }
-    set icon(value) {
-        this.url = value;
-    }
-    get align() {
-        return this._align;
-    }
-    set align(value) {
-        if (this._align != value) {
-            this._align = value;
-            this.updateLayout();
-        }
-    }
-    get verticalAlign() {
-        return this._verticalAlign;
-    }
-    set verticalAlign(value) {
-        if (this._verticalAlign != value) {
-            this._verticalAlign = value;
-            this.updateLayout();
-        }
-    }
-    get fill() {
-        return this._fill;
-    }
-    set fill(value) {
-        if (this._fill != value) {
-            this._fill = value;
-            this.updateLayout();
-        }
-    }
-    get shrinkOnly() {
-        return this._shrinkOnly;
-    }
-    set shrinkOnly(value) {
-        if (this._shrinkOnly != value) {
-            this._shrinkOnly = value;
-            this.updateLayout();
-        }
-    }
-    get autoSize() {
-        return this._autoSize;
-    }
-    set autoSize(value) {
-        if (this._autoSize != value) {
-            this._autoSize = value;
-            this.updateLayout();
-        }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-            this.updateGear(5);
-            this.onChange();
-        }
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            this._frame = value;
-            this.updateGear(5);
-            this.onChange();
-        }
-    }
-    get animationName() {
-        return this._animationName;
-    }
-    set animationName(value) {
-        if (this._animationName != value) {
-            this._animationName = value;
-            this.onChange();
-        }
-    }
-    get skinName() {
-        return this._skinName;
-    }
-    set skinName(value) {
-        if (this._skinName != value) {
-            this._skinName = value;
-            this.onChange();
-        }
-    }
-    get loop() {
-        return this._loop;
-    }
-    set loop(value) {
-        if (this._loop != value) {
-            this._loop = value;
-            this.onChange();
-        }
-    }
-    get color() {
-        return this._color;
-    }
-    set color(value) {
-        this._color.set(value);
-        this.updateGear(4);
-        if (this._content)
-            this._content.color = value;
-    }
-    get content() {
-        return this._content;
-    }
-    loadContent() {
-        this.clearContent();
-        if (!this._url)
-            return;
-        if (this._url.startsWith("ui://"))
-            this.loadFromPackage(this._url);
-        else
-            this.loadExternal();
-    }
-    loadFromPackage(itemURL) {
-        this._contentItem = UIPackage.getItemByURL(itemURL);
-        if (this._contentItem) {
-            this._contentItem = this._contentItem.getBranch();
-            this.sourceWidth = this._contentItem.width;
-            this.sourceHeight = this._contentItem.height;
-            this._contentItem = this._contentItem.getHighResolution();
-            if (this._autoSize)
-                this.setSize(this.sourceWidth, this.sourceHeight);
-            if (this._contentItem.type == PackageItemType.Spine || this._contentItem.type == PackageItemType.DragonBones)
-                this._contentItem.owner.getItemAssetAsync(this._contentItem, this.onLoaded.bind(this));
-        }
-    }
-    onLoaded(err, item) {
-        if (this._contentItem != item)
-            return;
-        if (err)
-            console.warn(err);
-        if (!this._contentItem.asset)
-            return;
-        if (this._contentItem.type == PackageItemType.Spine)
-            this.setSpine(this._contentItem.asset, this._contentItem.skeletonAnchor);
-        else if (this._contentItem.type == PackageItemType.DragonBones)
-            this.setDragonBones(this._contentItem.asset, this._contentItem.atlasAsset, this._contentItem.skeletonAnchor);
-    }
-    setSpine(asset, anchor, pma) {
-        this.freeSpine();
-        let node = new Node();
-        this._container.addChild(node);
-        node.layer = UIConfig.defaultUILayer;
-        node.setPosition(anchor.x, -anchor.y);
-        this._content = node.addComponent(sp.Skeleton);
-        this._content.premultipliedAlpha = pma;
-        this._content.skeletonData = asset;
-        this._content.color = this._color;
-        this.onChangeSpine();
-        this.updateLayout();
-    }
-    freeSpine() {
-        if (this._content) {
-            this._content.destroy();
-        }
-    }
-    setDragonBones(asset, atlasAsset, anchor, pma) {
-        this.freeDragonBones();
-        let node = new Node();
-        node.layer = UIConfig.defaultUILayer;
-        this._container.addChild(node);
-        node.setPosition(anchor.x, -anchor.y);
-        this._content = node.addComponent(dragonBones.ArmatureDisplay);
-        this._content.premultipliedAlpha = pma;
-        this._content.dragonAsset = asset;
-        this._content.dragonAtlasAsset = atlasAsset;
-        this._content.color = this._color;
-        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
-        let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
-        this._content.armatureName = dragonBonesData.armatureNames[0];
-        this.onChangeDragonBones();
-        this.updateLayout();
-    }
-    freeDragonBones() {
-        if (this._content) {
-            this._content.destroy();
-        }
-    }
-    onChange() {
-        if (this._contentItem == null)
-            return;
-        if (this._contentItem.type == PackageItemType.Spine) {
-            this.onChangeSpine();
-        }
-        if (this._contentItem.type == PackageItemType.DragonBones) {
-            this.onChangeDragonBones();
-        }
-    }
-    onChangeSpine() {
-        if (!(this._content instanceof sp.Skeleton))
-            return;
-        if (this._animationName) {
-            let trackEntry = this._content.getCurrent(0);
-            if (!trackEntry || trackEntry.animation.name != this._animationName || trackEntry.isComplete() && !trackEntry.loop) {
-                this._content.animation = this._animationName;
-                trackEntry = this._content.setAnimation(0, this._animationName, this._loop);
-            }
-            if (this._playing)
-                this._content.paused = false;
-            else {
-                this._content.paused = true;
-                trackEntry.trackTime = math.lerp(0, trackEntry.animationEnd - trackEntry.animationStart, this._frame / 100);
-            }
-        }
-        else
-            this._content.clearTrack(0);
-        let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
-        if (this._content["_skeleton"].skin != skin)
-            this._content.setSkin(skin);
-    }
-    onChangeDragonBones() {
-        if (!(this._content instanceof dragonBones.ArmatureDisplay))
-            return;
-        if (this._animationName) {
-            if (this._playing)
-                this._content.playAnimation(this._animationName, this._loop ? 0 : 1);
-            else
-                this._content.armature().animation.gotoAndStopByFrame(this._animationName, this._frame);
-        }
-        else
-            this._content.armature().animation.reset();
-    }
-    loadExternal() {
-        if (this._url.startsWith("http://")
-            || this._url.startsWith("https://")
-            || this._url.startsWith('/'))
-            assetManager.loadRemote(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
-        else
-            resources.load(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
-    }
-    onLoaded2(err, asset) {
-        //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
-        if (!this._url || !isValid(this._node))
-            return;
-        if (err)
-            console.warn(err);
-    }
-    updateLayout() {
-        let cw = this.sourceWidth;
-        let ch = this.sourceHeight;
-        let pivotCorrectX = -this.pivotX * this._width;
-        let pivotCorrectY = this.pivotY * this._height;
-        if (this._autoSize) {
-            this._updatingLayout = true;
-            if (cw == 0)
-                cw = 50;
-            if (ch == 0)
-                ch = 30;
-            this.setSize(cw, ch);
-            this._updatingLayout = false;
-            if (cw == this._width && ch == this._height) {
-                this._container.setScale(1, 1);
-                this._container.setPosition(pivotCorrectX, pivotCorrectY);
-                return;
-            }
-        }
-        var sx = 1, sy = 1;
-        if (this._fill != LoaderFillType.None) {
-            sx = this.width / this.sourceWidth;
-            sy = this.height / this.sourceHeight;
-            if (sx != 1 || sy != 1) {
-                if (this._fill == LoaderFillType.ScaleMatchHeight)
-                    sx = sy;
-                else if (this._fill == LoaderFillType.ScaleMatchWidth)
-                    sy = sx;
-                else if (this._fill == LoaderFillType.Scale) {
-                    if (sx > sy)
-                        sx = sy;
-                    else
-                        sy = sx;
-                }
-                else if (this._fill == LoaderFillType.ScaleNoBorder) {
-                    if (sx > sy)
-                        sy = sx;
-                    else
-                        sx = sy;
-                }
-                if (this._shrinkOnly) {
-                    if (sx > 1)
-                        sx = 1;
-                    if (sy > 1)
-                        sy = 1;
-                }
-                cw = this.sourceWidth * sx;
-                ch = this.sourceHeight * sy;
-            }
-        }
-        this._container.setScale(sx, sy);
-        var nx, ny;
-        if (this._align == AlignType.Left)
-            nx = 0;
-        else if (this._align == AlignType.Center)
-            nx = Math.floor((this._width - cw) / 2);
-        else
-            nx = this._width - cw;
-        if (this._verticalAlign == VertAlignType.Top)
-            ny = 0;
-        else if (this._verticalAlign == VertAlignType.Middle)
-            ny = Math.floor((this._height - ch) / 2);
-        else
-            ny = this._height - ch;
-        ny = -ny;
-        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
-    }
-    clearContent() {
-        this._contentItem = null;
-        if (this._content) {
-            this._content.node.destroy();
-            this._content = null;
-        }
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleGrayedChanged() {
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return 1;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                break;
-            case ObjectPropID.DeltaTime:
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._url = buffer.readS();
-        this._align = buffer.readByte();
-        this._verticalAlign = buffer.readByte();
-        this._fill = buffer.readByte();
-        this._shrinkOnly = buffer.readBool();
-        this._autoSize = buffer.readBool();
-        this._animationName = buffer.readS();
-        this._skinName = buffer.readS();
-        this._playing = buffer.readBool();
-        this._frame = buffer.readInt();
-        this._loop = buffer.readBool();
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        if (this._url)
-            this.loadContent();
-    }
-}
-
-class GMovieClip extends GObject {
-    _content;
-    constructor() {
-        super();
-        this._node.name = "GMovieClip";
-        this._touchDisabled = true;
-        this._content = this._node.addComponent(MovieClip);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-        this._content.setPlaySettings();
-    }
-    get color() {
-        return this._content.color;
-    }
-    set color(value) {
-        this._content.color = value;
-        this.updateGear(4);
-    }
-    get playing() {
-        return this._content.playing;
-    }
-    set playing(value) {
-        if (this._content.playing != value) {
-            this._content.playing = value;
-            this.updateGear(5);
-        }
-    }
-    get frame() {
-        return this._content.frame;
-    }
-    set frame(value) {
-        if (this._content.frame != value) {
-            this._content.frame = value;
-            this.updateGear(5);
-        }
-    }
-    get timeScale() {
-        return this._content.timeScale;
-    }
-    set timeScale(value) {
-        this._content.timeScale = value;
-    }
-    rewind() {
-        this._content.rewind();
-    }
-    syncStatus(anotherMc) {
-        this._content.syncStatus(anotherMc._content);
-    }
-    advance(timeInSeconds) {
-        this._content.advance(timeInSeconds);
-    }
-    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-    setPlaySettings(start, end, times, endAt, endCallback) {
-        this._content.setPlaySettings(start, end, times, endAt, endCallback);
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        //不知道原因，尺寸改变必须调用一次这个，否则大小不对
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return this.timeScale;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                this.timeScale = value;
-                break;
-            case ObjectPropID.DeltaTime:
-                this.advance(value);
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    constructFromResource() {
-        var contentItem = this.packageItem.getBranch();
-        this.sourceWidth = contentItem.width;
-        this.sourceHeight = contentItem.height;
-        this.initWidth = this.sourceWidth;
-        this.initHeight = this.sourceHeight;
-        this.setSize(this.sourceWidth, this.sourceHeight);
-        contentItem = contentItem.getHighResolution();
-        contentItem.load();
-        this._content.interval = contentItem.interval;
-        this._content.swing = contentItem.swing;
-        this._content.repeatDelay = contentItem.repeatDelay;
-        this._content.frames = contentItem.frames;
-        this._content.smoothing = contentItem.smoothing;
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        buffer.readByte(); //flip
-        this._content.frame = buffer.readInt();
-        this._content.playing = buffer.readBool();
-    }
-}
+var s_vec2$1 = new Vec2();
 
 class GProgressBar extends GComponent {
     _min = 0;
@@ -19485,7 +19704,7 @@ class GScrollBar extends GComponent {
     onGripTouchMove(evt) {
         if (!this.onStage)
             return;
-        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
+        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
         if (this._vertical) {
             var curY = pt.y - this._dragOffset.y;
             this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
@@ -19516,7 +19735,7 @@ class GScrollBar extends GComponent {
             this._target.scrollRight();
     }
     onBarTouchBegin(evt) {
-        var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
+        var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
         if (this._vertical) {
             if (pt.y < 0)
                 this._target.scrollUp(4);
@@ -19529,225 +19748,6 @@ class GScrollBar extends GComponent {
             else
                 this._target.scrollRight(4);
         }
-    }
-}
-var s_vec2$1 = new Vec2();
-
-class GSlider extends GComponent {
-    _min = 0;
-    _max = 0;
-    _value = 0;
-    _titleType;
-    _reverse;
-    _wholeNumbers;
-    _titleObject;
-    _barObjectH;
-    _barObjectV;
-    _barMaxWidth = 0;
-    _barMaxHeight = 0;
-    _barMaxWidthDelta = 0;
-    _barMaxHeightDelta = 0;
-    _gripObject;
-    _clickPos;
-    _clickPercent = 0;
-    _barStartX = 0;
-    _barStartY = 0;
-    changeOnClick = true;
-    canDrag = true;
-    constructor() {
-        super();
-        this._node.name = "GSlider";
-        this._titleType = ProgressTitleType.Percent;
-        this._value = 50;
-        this._max = 100;
-        this._clickPos = new Vec2();
-    }
-    get titleType() {
-        return this._titleType;
-    }
-    set titleType(value) {
-        this._titleType = value;
-    }
-    get wholeNumbers() {
-        return this._wholeNumbers;
-    }
-    set wholeNumbers(value) {
-        if (this._wholeNumbers != value) {
-            this._wholeNumbers = value;
-            this.update();
-        }
-    }
-    get min() {
-        return this._min;
-    }
-    set min(value) {
-        if (this._min != value) {
-            this._min = value;
-            this.update();
-        }
-    }
-    get max() {
-        return this._max;
-    }
-    set max(value) {
-        if (this._max != value) {
-            this._max = value;
-            this.update();
-        }
-    }
-    get value() {
-        return this._value;
-    }
-    set value(value) {
-        if (this._value != value) {
-            this._value = value;
-            this.update();
-        }
-    }
-    update() {
-        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
-    }
-    updateWithPercent(percent, manual) {
-        percent = math.clamp01(percent);
-        if (manual) {
-            var newValue = math.clamp(this._min + (this._max - this._min) * percent, this._min, this._max);
-            if (this._wholeNumbers) {
-                newValue = Math.round(newValue);
-                percent = math.clamp01((newValue - this._min) / (this._max - this._min));
-            }
-            if (newValue != this._value) {
-                this._value = newValue;
-                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
-            }
-        }
-        if (this._titleObject) {
-            switch (this._titleType) {
-                case ProgressTitleType.Percent:
-                    this._titleObject.text = Math.floor(percent * 100) + "%";
-                    break;
-                case ProgressTitleType.ValueAndMax:
-                    this._titleObject.text = this._value + "/" + this._max;
-                    break;
-                case ProgressTitleType.Value:
-                    this._titleObject.text = "" + this._value;
-                    break;
-                case ProgressTitleType.Max:
-                    this._titleObject.text = "" + this._max;
-                    break;
-            }
-        }
-        var fullWidth = this.width - this._barMaxWidthDelta;
-        var fullHeight = this.height - this._barMaxHeightDelta;
-        if (!this._reverse) {
-            if (this._barObjectH)
-                this._barObjectH.width = Math.round(fullWidth * percent);
-            if (this._barObjectV)
-                this._barObjectV.height = Math.round(fullHeight * percent);
-        }
-        else {
-            if (this._barObjectH) {
-                this._barObjectH.width = Math.round(fullWidth * percent);
-                this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
-            }
-            if (this._barObjectV) {
-                this._barObjectV.height = Math.round(fullHeight * percent);
-                this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
-            }
-        }
-    }
-    constructExtension(buffer) {
-        buffer.seek(0, 6);
-        this._titleType = buffer.readByte();
-        this._reverse = buffer.readBool();
-        if (buffer.version >= 2) {
-            this._wholeNumbers = buffer.readBool();
-            this.changeOnClick = buffer.readBool();
-        }
-        this._titleObject = this.getChild("title");
-        this._barObjectH = this.getChild("bar");
-        this._barObjectV = this.getChild("bar_v");
-        this._gripObject = this.getChild("grip");
-        if (this._barObjectH) {
-            this._barMaxWidth = this._barObjectH.width;
-            this._barMaxWidthDelta = this.width - this._barMaxWidth;
-            this._barStartX = this._barObjectH.x;
-        }
-        if (this._barObjectV) {
-            this._barMaxHeight = this._barObjectV.height;
-            this._barMaxHeightDelta = this.height - this._barMaxHeight;
-            this._barStartY = this._barObjectV.y;
-        }
-        if (this._gripObject) {
-            this._gripObject.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
-            this._gripObject.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
-        }
-        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (this._barObjectH)
-            this._barMaxWidth = this.width - this._barMaxWidthDelta;
-        if (this._barObjectV)
-            this._barMaxHeight = this.height - this._barMaxHeightDelta;
-        if (!this._underConstruct)
-            this.update();
-    }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        if (!buffer.seek(beginPos, 6)) {
-            this.update();
-            return;
-        }
-        if (buffer.readByte() != this.packageItem.objectType) {
-            this.update();
-            return;
-        }
-        this._value = buffer.readInt();
-        this._max = buffer.readInt();
-        if (buffer.version >= 2)
-            this._min = buffer.readInt();
-        this.update();
-    }
-    onGripTouchBegin(evt) {
-        this.canDrag = true;
-        evt.propagationStopped = true;
-        evt.captureTouch();
-        this._clickPos = this.globalToLocal(evt.pos.x, evt.pos.y);
-        this._clickPercent = math.clamp01((this._value - this._min) / (this._max - this._min));
-    }
-    onGripTouchMove(evt) {
-        if (!this.canDrag) {
-            return;
-        }
-        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
-        var deltaX = pt.x - this._clickPos.x;
-        var deltaY = pt.y - this._clickPos.y;
-        if (this._reverse) {
-            deltaX = -deltaX;
-            deltaY = -deltaY;
-        }
-        var percent;
-        if (this._barObjectH)
-            percent = this._clickPercent + deltaX / this._barMaxWidth;
-        else
-            percent = this._clickPercent + deltaY / this._barMaxHeight;
-        this.updateWithPercent(percent, true);
-    }
-    onBarTouchBegin(evt) {
-        if (!this.changeOnClick)
-            return;
-        var pt = this._gripObject.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
-        var percent = math.clamp01((this._value - this._min) / (this._max - this._min));
-        var delta = 0;
-        if (this._barObjectH != null)
-            delta = (pt.x - this._gripObject.width / 2) / this._barMaxWidth;
-        if (this._barObjectV != null)
-            delta = (pt.y - this._gripObject.height / 2) / this._barMaxHeight;
-        if (this._reverse)
-            percent -= delta;
-        else
-            percent += delta;
-        this.updateWithPercent(percent, true);
     }
 }
 var s_vec2 = new Vec2();
@@ -20278,6 +20278,153 @@ class GTree extends GList {
 }
 var s_list = new Array();
 
+class PopupMenu {
+    _contentPane;
+    _list;
+    constructor(url) {
+        if (!url) {
+            url = UIConfig.popupMenu;
+            if (!url)
+                throw "UIConfig.popupMenu not defined";
+        }
+        this._contentPane = UIPackage.createObjectFromURL(url);
+        this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
+        this._list = (this._contentPane.getChild("list"));
+        this._list.removeChildrenToPool();
+        this._list.addRelation(this._contentPane, RelationType.Width);
+        this._list.removeRelation(this._contentPane, RelationType.Height);
+        this._contentPane.addRelation(this._list, RelationType.Height);
+        this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
+    }
+    dispose() {
+        this._contentPane.dispose();
+    }
+    addItem(caption, callback) {
+        var item = this._list.addItemFromPool();
+        item.title = caption;
+        item.data = callback;
+        item.grayed = false;
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = 0;
+        return item;
+    }
+    addItemAt(caption, index, callback) {
+        var item = this._list.getFromPool();
+        this._list.addChildAt(item, index);
+        item.title = caption;
+        item.data = callback;
+        item.grayed = false;
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = 0;
+        return item;
+    }
+    addSeperator() {
+        if (UIConfig.popupMenu_seperator == null)
+            throw "UIConfig.popupMenu_seperator not defined";
+        this.list.addItemFromPool(UIConfig.popupMenu_seperator);
+    }
+    getItemName(index) {
+        var item = this._list.getChildAt(index);
+        return item.name;
+    }
+    setItemText(name, caption) {
+        var item = this._list.getChild(name);
+        item.title = caption;
+    }
+    setItemVisible(name, visible) {
+        var item = this._list.getChild(name);
+        if (item.visible != visible) {
+            item.visible = visible;
+            this._list.setBoundsChangedFlag();
+        }
+    }
+    setItemGrayed(name, grayed) {
+        var item = this._list.getChild(name);
+        item.grayed = grayed;
+    }
+    setItemCheckable(name, checkable) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c) {
+            if (checkable) {
+                if (c.selectedIndex == 0)
+                    c.selectedIndex = 1;
+            }
+            else
+                c.selectedIndex = 0;
+        }
+    }
+    setItemChecked(name, checked) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = checked ? 2 : 1;
+    }
+    isItemChecked(name) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c)
+            return c.selectedIndex == 2;
+        else
+            return false;
+    }
+    removeItem(name) {
+        var item = this._list.getChild(name);
+        if (item) {
+            var index = this._list.getChildIndex(item);
+            this._list.removeChildToPoolAt(index);
+            return true;
+        }
+        else
+            return false;
+    }
+    clearItems() {
+        this._list.removeChildrenToPool();
+    }
+    get itemCount() {
+        return this._list.numChildren;
+    }
+    get contentPane() {
+        return this._contentPane;
+    }
+    get list() {
+        return this._list;
+    }
+    show(target, dir) {
+        GRoot.inst.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
+    }
+    onClickItem(item, evt) {
+        this._list._partner.callLater((dt) => {
+            this.onClickItem2(item, evt);
+        }, 0.1);
+    }
+    onClickItem2(item, evt) {
+        if (!(item instanceof GButton))
+            return;
+        if (item.grayed) {
+            this._list.selectedIndex = -1;
+            return;
+        }
+        var c = item.getController("checked");
+        if (c && c.selectedIndex != 0) {
+            if (c.selectedIndex == 1)
+                c.selectedIndex = 2;
+            else
+                c.selectedIndex = 1;
+        }
+        var r = (this._contentPane.parent);
+        r.hidePopup(this.contentPane);
+        if (item.data instanceof Function)
+            item.data(item, evt);
+    }
+    onDisplay() {
+        this._list.selectedIndex = -1;
+        this._list.resizeToFit(100000, 10);
+    }
+}
+
 class UIObjectFactory {
     static counter = 0;
     static extensions = {};
@@ -20368,6 +20515,68 @@ class UIObjectFactory {
     }
 }
 Decls.UIObjectFactory = UIObjectFactory;
+
+class DragDropManager {
+    _agent;
+    _sourceData;
+    static _inst;
+    static get inst() {
+        if (!DragDropManager._inst)
+            DragDropManager._inst = new DragDropManager();
+        return DragDropManager._inst;
+    }
+    constructor() {
+        this._agent = new GLoader();
+        this._agent.draggable = true;
+        this._agent.touchable = false; //important
+        this._agent.setSize(100, 100);
+        this._agent.setPivot(0.5, 0.5, true);
+        this._agent.align = AlignType.Center;
+        this._agent.verticalAlign = VertAlignType.Middle;
+        this._agent.sortingOrder = 1000000;
+        this._agent.on(FGUIEvent.DRAG_END, this.onDragEnd, this);
+    }
+    get dragAgent() {
+        return this._agent;
+    }
+    get dragging() {
+        return this._agent.parent != null;
+    }
+    startDrag(source, icon, sourceData, touchId) {
+        if (this._agent.parent)
+            return;
+        this._sourceData = sourceData;
+        this._agent.url = icon;
+        GRoot.inst.addChild(this._agent);
+        let pt = GRoot.inst.getTouchPosition(touchId);
+        pt = GRoot.inst.globalToLocal(pt.x, pt.y);
+        this._agent.setPosition(pt.x, pt.y);
+        this._agent.startDrag(touchId);
+    }
+    cancel() {
+        if (this._agent.parent) {
+            this._agent.stopDrag();
+            GRoot.inst.removeChild(this._agent);
+            this._sourceData = null;
+        }
+    }
+    onDragEnd() {
+        if (!this._agent.parent) //cancelled
+            return;
+        GRoot.inst.removeChild(this._agent);
+        var sourceData = this._sourceData;
+        this._sourceData = null;
+        var obj = GRoot.inst.touchTarget;
+        while (obj) {
+            if (obj.node.hasEventListener(FGUIEvent.DROP)) {
+                obj.requestFocus();
+                obj.node.emit(FGUIEvent.DROP, obj, sourceData);
+                return;
+            }
+            obj = obj.parent;
+        }
+    }
+}
 
 class AsyncOperation {
     callback;
@@ -20551,215 +20760,6 @@ class AsyncOperationRunner extends Component {
     }
 }
 
-class DragDropManager {
-    _agent;
-    _sourceData;
-    static _inst;
-    static get inst() {
-        if (!DragDropManager._inst)
-            DragDropManager._inst = new DragDropManager();
-        return DragDropManager._inst;
-    }
-    constructor() {
-        this._agent = new GLoader();
-        this._agent.draggable = true;
-        this._agent.touchable = false; //important
-        this._agent.setSize(100, 100);
-        this._agent.setPivot(0.5, 0.5, true);
-        this._agent.align = AlignType.Center;
-        this._agent.verticalAlign = VertAlignType.Middle;
-        this._agent.sortingOrder = 1000000;
-        this._agent.on(FGUIEvent.DRAG_END, this.onDragEnd, this);
-    }
-    get dragAgent() {
-        return this._agent;
-    }
-    get dragging() {
-        return this._agent.parent != null;
-    }
-    startDrag(source, icon, sourceData, touchId) {
-        if (this._agent.parent)
-            return;
-        this._sourceData = sourceData;
-        this._agent.url = icon;
-        GRoot.inst.addChild(this._agent);
-        let pt = GRoot.inst.getTouchPosition(touchId);
-        pt = GRoot.inst.globalToLocal(pt.x, pt.y);
-        this._agent.setPosition(pt.x, pt.y);
-        this._agent.startDrag(touchId);
-    }
-    cancel() {
-        if (this._agent.parent) {
-            this._agent.stopDrag();
-            GRoot.inst.removeChild(this._agent);
-            this._sourceData = null;
-        }
-    }
-    onDragEnd() {
-        if (!this._agent.parent) //cancelled
-            return;
-        GRoot.inst.removeChild(this._agent);
-        var sourceData = this._sourceData;
-        this._sourceData = null;
-        var obj = GRoot.inst.touchTarget;
-        while (obj) {
-            if (obj.node.hasEventListener(FGUIEvent.DROP)) {
-                obj.requestFocus();
-                obj.node.emit(FGUIEvent.DROP, obj, sourceData);
-                return;
-            }
-            obj = obj.parent;
-        }
-    }
-}
-
-class PopupMenu {
-    _contentPane;
-    _list;
-    constructor(url) {
-        if (!url) {
-            url = UIConfig.popupMenu;
-            if (!url)
-                throw "UIConfig.popupMenu not defined";
-        }
-        this._contentPane = UIPackage.createObjectFromURL(url);
-        this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
-        this._list = (this._contentPane.getChild("list"));
-        this._list.removeChildrenToPool();
-        this._list.addRelation(this._contentPane, RelationType.Width);
-        this._list.removeRelation(this._contentPane, RelationType.Height);
-        this._contentPane.addRelation(this._list, RelationType.Height);
-        this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
-    }
-    dispose() {
-        this._contentPane.dispose();
-    }
-    addItem(caption, callback) {
-        var item = this._list.addItemFromPool();
-        item.title = caption;
-        item.data = callback;
-        item.grayed = false;
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = 0;
-        return item;
-    }
-    addItemAt(caption, index, callback) {
-        var item = this._list.getFromPool();
-        this._list.addChildAt(item, index);
-        item.title = caption;
-        item.data = callback;
-        item.grayed = false;
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = 0;
-        return item;
-    }
-    addSeperator() {
-        if (UIConfig.popupMenu_seperator == null)
-            throw "UIConfig.popupMenu_seperator not defined";
-        this.list.addItemFromPool(UIConfig.popupMenu_seperator);
-    }
-    getItemName(index) {
-        var item = this._list.getChildAt(index);
-        return item.name;
-    }
-    setItemText(name, caption) {
-        var item = this._list.getChild(name);
-        item.title = caption;
-    }
-    setItemVisible(name, visible) {
-        var item = this._list.getChild(name);
-        if (item.visible != visible) {
-            item.visible = visible;
-            this._list.setBoundsChangedFlag();
-        }
-    }
-    setItemGrayed(name, grayed) {
-        var item = this._list.getChild(name);
-        item.grayed = grayed;
-    }
-    setItemCheckable(name, checkable) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c) {
-            if (checkable) {
-                if (c.selectedIndex == 0)
-                    c.selectedIndex = 1;
-            }
-            else
-                c.selectedIndex = 0;
-        }
-    }
-    setItemChecked(name, checked) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = checked ? 2 : 1;
-    }
-    isItemChecked(name) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c)
-            return c.selectedIndex == 2;
-        else
-            return false;
-    }
-    removeItem(name) {
-        var item = this._list.getChild(name);
-        if (item) {
-            var index = this._list.getChildIndex(item);
-            this._list.removeChildToPoolAt(index);
-            return true;
-        }
-        else
-            return false;
-    }
-    clearItems() {
-        this._list.removeChildrenToPool();
-    }
-    get itemCount() {
-        return this._list.numChildren;
-    }
-    get contentPane() {
-        return this._contentPane;
-    }
-    get list() {
-        return this._list;
-    }
-    show(target, dir) {
-        GRoot.inst.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
-    }
-    onClickItem(item, evt) {
-        this._list._partner.callLater((dt) => {
-            this.onClickItem2(item, evt);
-        }, 0.1);
-    }
-    onClickItem2(item, evt) {
-        if (!(item instanceof GButton))
-            return;
-        if (item.grayed) {
-            this._list.selectedIndex = -1;
-            return;
-        }
-        var c = item.getController("checked");
-        if (c && c.selectedIndex != 0) {
-            if (c.selectedIndex == 1)
-                c.selectedIndex = 2;
-            else
-                c.selectedIndex = 1;
-        }
-        var r = (this._contentPane.parent);
-        r.hidePopup(this.contentPane);
-        if (item.data instanceof Function)
-            item.data(item, evt);
-    }
-    onDisplay() {
-        this._list.selectedIndex = -1;
-        this._list.resizeToFit(100000, 10);
-    }
-}
-
 class Drongo {
     /**
      * UI资源AssetBundle
@@ -20782,4 +20782,4 @@ class Drongo {
     }
 }
 
-export { AsyncOperation, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, Event, EventDispatcher, FGUIEvent, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
