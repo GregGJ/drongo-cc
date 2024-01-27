@@ -226,7 +226,13 @@ class EventDispatcher {
      * @param type
      * @param data
      */
-    Emit(type, ...data) {
+    Emit(type, data) {
+        for (let index = 0; index < this.needEmit.length; index++) {
+            const element = this.needEmit[index];
+            if (element.type == type && element.data === data) {
+                return;
+            }
+        }
         this.needEmit.push({ type, data });
         TickerManager.CallNextFrame(this.__emit, this);
     }
@@ -1157,11 +1163,11 @@ class CCLoaderImpl extends EventDispatcher {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, url, err);
+                    this.Emit(Event.ERROR, { url, err });
                     return;
                 }
                 bundle.load(FullURL(url), url.type, (progress) => {
-                    __this.Emit(Event.PROGRESS, url, progress);
+                    __this.Emit(Event.PROGRESS, { url, progress });
                 }, (err, asset) => {
                     if (err) {
                         __this.Emit(Event.ERROR, err);
@@ -1172,7 +1178,7 @@ class CCLoaderImpl extends EventDispatcher {
                     res.key = urlKey;
                     res.content = asset;
                     ResManager.AddRes(res);
-                    __this.Emit(Event.COMPLETE, url);
+                    __this.Emit(Event.COMPLETE, { url });
                 });
             });
         }
@@ -1390,18 +1396,18 @@ class LoaderQueue {
         target.On(Event.ERROR, this.__eventHandler, this);
         target.On(Event.PROGRESS, this.__eventHandler, this);
     }
-    __eventHandler(type, target, url, data) {
+    __eventHandler(type, target, data) {
         if (type == Event.PROGRESS) {
-            Loader.single.ChildProgress(url, data);
+            Loader.single.ChildProgress(data.url, data.progress);
             return;
         }
         target.OffAllEvent();
         if (type == Event.ERROR) {
-            Loader.single.ChildError(url, data);
+            Loader.single.ChildError(data.url, data.err);
             return;
         }
         if (type == Event.COMPLETE) {
-            Loader.single.ChildComplete(url);
+            Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();
             this.pool.push(target);

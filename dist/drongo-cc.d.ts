@@ -9,14 +9,14 @@ interface IEventDispatcher {
      * @param handler
      * @param priority 优先级 数字越小优先级越高
      */
-    On(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any, priority?: number): void;
+    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority?: number): void;
     /**
      * 删除事件监听
      * @param key
      * @param caller
      * @param handler
      */
-    Off(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): void;
+    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void;
     /**
      * 删除指定对象所有的事件处理
      * @param caller
@@ -31,7 +31,7 @@ interface IEventDispatcher {
      * @param key
      * @param data
      */
-    Emit(key: string, ...arg: any[]): void;
+    Emit(key: string, data?: any): void;
     /**
      * 是否有事件监听
      * @param key
@@ -43,7 +43,7 @@ interface IEventDispatcher {
      * @param caller
      * @param handler
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): boolean;
+    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean;
 }
 
 /**
@@ -70,14 +70,14 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param func
      * @param priority 优先级（数字越小优先级越高）
      */
-    On(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any, priority?: number): void;
+    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority?: number): void;
     /**
      * 删除事件监听
      * @param key
      * @param caller
      * @param handler
      */
-    Off(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): void;
+    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void;
     /**
      * 删除指定对象所有的事件处理
      * @param caller
@@ -92,7 +92,7 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param type
      * @param data
      */
-    Emit(type: string, ...data: any[]): void;
+    Emit(type: string, data?: any): void;
     private __emit;
     /**
      * 是否有事件监听
@@ -105,7 +105,7 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param caller
      * @param func
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): boolean;
+    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean;
     Destroy(): void;
 }
 
