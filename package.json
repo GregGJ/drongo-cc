@@ -1,0 +1,30 @@
+{
+  "name": "drongo-cc",
+  "version": "1.0.8",
+  "description": "cocos create +fgui game framework",
+  "main": "dist/drongo-cc.mjs",
+  "types": "dist/drongo-cc.d.ts",
+  "module": "dist/drongo-cc.mjs",
+  "type": "module",
+  "files": [
+    "dist/drongo-cc.mjs",
+    "dist/drongo-cc.d.ts"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "keywords": [
+    "cocos create +fgui 游戏框架"
+  ],
+  "author": "guojie.greg",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "rollup": "^3.20.2",
+    "rollup-plugin-dts": "^5.3.0",
+    "rollup-plugin-typescript2": "^0.34.1"
+  },
+  "dependencies": {
+  }
+}
