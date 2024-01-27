@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, Color } from 'cc';
 
 /**
  * 注入器
@@ -1616,7 +1616,7 @@ class ResImpl {
     GetResLoader(key) {
         let className = GetClassName(key);
         if (!this.loaderClass.has(className)) {
-            throw new Error("未注册加载器！" + className);
+            return CCLoaderImpl;
         }
         return this.loaderClass.get(className);
     }
@@ -2984,4 +2984,23 @@ class Handler {
     }
 }
 
-export { BitFlag, ByteArray, CCLoaderImpl, Dictionary, Event, EventDispatcher, FullURL, GetClassName, Handler, Injector, Key2URL, List, Loader, LoaderQueue, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, URL2Key };
+class Drongo {
+    /**
+     * UI资源AssetBundle
+     */
+    static UIBundle = "UI";
+    /**
+     * UI遮罩颜色值
+     */
+    static MaskColor = new Color(0, 0, 0, 255 * 0.5);
+    static Init(root, guiconfig, layer, sheetConfig, callback) {
+        //ticker
+        Injector.Inject(TickerManager.KEY, TickerManagerImpl);
+        //timer
+        Injector.Inject(Timer.KEY, TimerImpl);
+        //res
+        Injector.Inject(Res.KEY, ResImpl);
+    }
+}
+
+export { BitFlag, ByteArray, CCLoaderImpl, Dictionary, Drongo, Event, EventDispatcher, FullURL, GetClassName, Handler, Injector, Key2URL, List, Loader, LoaderQueue, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, URL2Key };

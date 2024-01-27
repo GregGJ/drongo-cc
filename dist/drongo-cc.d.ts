@@ -1,3 +1,5 @@
+import { Color, Node } from 'cc';
+
 /**
  * 事件分发器
  */
@@ -1593,4 +1595,22 @@ declare class StringUtils {
     static ReplaceSuffix(url: string, suff: string): string;
 }
 
-export { BitFlag, ByteArray, CCLoaderImpl, Dictionary, Event, EventDispatcher, FullURL, GetClassName, Handler, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Injector, Key2URL, List, Loader, LoaderQueue, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, URL2Key };
+declare class Drongo {
+    /**
+     * UI资源AssetBundle
+     */
+    static UIBundle: string;
+    /**
+     * UI遮罩颜色值
+     */
+    static MaskColor: Color;
+    static Init(root: Node, guiconfig: ResURL, layer: {
+        layers: Array<string>;
+        fullScrene: Array<string>;
+    }, sheetConfig: {
+        preURL: string;
+        bundle: string;
+    }, callback: () => void): void;
+}
+
+export { BitFlag, ByteArray, CCLoaderImpl, Dictionary, Drongo, Event, EventDispatcher, FullURL, GetClassName, Handler, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Injector, Key2URL, List, Loader, LoaderQueue, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, URL2Key };

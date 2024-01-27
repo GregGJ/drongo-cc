@@ -6,6 +6,7 @@ import { ResURL, URL2Key } from "../res/ResURL";
 import { ILoader } from "../res/ILoader";
 import { StringUtils } from "../utils/StringUtils";
 import { Loader } from "../loaders/Loader";
+import { CCLoaderImpl } from "./CCLoaderImpl";
 
 
 
@@ -25,7 +26,7 @@ export class ResImpl implements IRes {
     GetResLoader(key: any): new () => ILoader {
         let className = GetClassName(key);
         if (!this.loaderClass.has(className)) {
-            throw new Error("未注册加载器！" + className);
+            return CCLoaderImpl;
         }
         return this.loaderClass.get(className);
     }

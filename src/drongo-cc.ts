@@ -50,3 +50,7 @@ export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
 export { StringUtils } from "./drongo/utils/StringUtils"
+
+
+//框架对外接口
+export { Drongo } from "./drongo"
