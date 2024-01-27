@@ -32,7 +32,8 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
                     return;
                 }
                 bundle.load(FullURL(url), url.type,
-                    (progress: number) => {
+                    (finished: number, total: number) => {
+                        const progress = finished / total;
                         __this.Emit(Event.PROGRESS, { url, progress });
                     }, (err: Error, asset: Asset) => {
                         if (err) {

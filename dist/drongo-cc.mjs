@@ -1167,7 +1167,8 @@ class CCLoaderImpl extends EventDispatcher {
                     this.Emit(Event.ERROR, { url, err });
                     return;
                 }
-                bundle.load(FullURL(url), url.type, (progress) => {
+                bundle.load(FullURL(url), url.type, (finished, total) => {
+                    const progress = finished / total;
                     __this.Emit(Event.PROGRESS, { url, progress });
                 }, (err, asset) => {
                     if (err) {
