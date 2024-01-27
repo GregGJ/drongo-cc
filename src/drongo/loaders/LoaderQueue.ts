@@ -64,18 +64,18 @@ export class LoaderQueue implements ITicker {
         target.On(Event.PROGRESS, this.__eventHandler, this);
     }
 
-    private __eventHandler(type: string, target: ILoader, url: ResURL, data: any): void {
+    private __eventHandler(type: string, target: ILoader, data: any): void {
         if (type == Event.PROGRESS) {
-            Loader.single.ChildProgress(url, data);
+            Loader.single.ChildProgress(data.url, data.progress);
             return;
         }
         target.OffAllEvent();
         if (type == Event.ERROR) {
-            Loader.single.ChildError(url, data);
+            Loader.single.ChildError(data.url, data.err);
             return;
         }
         if (type == Event.COMPLETE) {
-            Loader.single.ChildComplete(url);
+            Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();
             this.pool.push(target);

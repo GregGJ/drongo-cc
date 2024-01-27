@@ -28,12 +28,12 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, url, err);
+                    this.Emit(Event.ERROR, { url, err });
                     return;
                 }
                 bundle.load(FullURL(url), url.type,
                     (progress: number) => {
-                        __this.Emit(Event.PROGRESS, url, progress);
+                        __this.Emit(Event.PROGRESS, { url, progress });
                     }, (err: Error, asset: Asset) => {
                         if (err) {
                             __this.Emit(Event.ERROR, err);
@@ -44,7 +44,7 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
                         res.key = urlKey;
                         res.content = asset;
                         ResManager.AddRes(res);
-                        __this.Emit(Event.COMPLETE, url);
+                        __this.Emit(Event.COMPLETE, { url });
                     });
             });
         }

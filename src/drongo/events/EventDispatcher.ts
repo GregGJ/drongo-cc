@@ -37,7 +37,7 @@ export class EventDispatcher implements IEventDispatcher {
      * @param func 
      * @param priority 优先级（数字越小优先级越高）
      */
-    On(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any, priority: number = 0): void {
+    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority: number = 0): void {
         let infoList: EventInfo[];
         let info: EventInfo;
         if (this.keyMap.has(key)) {
@@ -78,7 +78,7 @@ export class EventDispatcher implements IEventDispatcher {
      * @param caller 
      * @param handler 
      */
-    Off(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): void {
+    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void {
         if (this.keyMap.has(key) == false) {
             return;
         }
@@ -151,7 +151,13 @@ export class EventDispatcher implements IEventDispatcher {
      * @param type 
      * @param data 
      */
-    Emit(type: string, ...data: any[]): void {
+    Emit(type: string, data?: any): void {
+        for (let index = 0; index < this.needEmit.length; index++) {
+            const element = this.needEmit[index];
+            if (element.type == type && element.data === data) {
+                return;
+            }
+        }
         this.needEmit.push({ type, data });
         TickerManager.CallNextFrame(this.__emit, this);
     }
@@ -186,7 +192,7 @@ export class EventDispatcher implements IEventDispatcher {
      * @param caller 
      * @param func 
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any): boolean {
+    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean {
         if (this.keyMap.has(key) == false) {
             return false;
         }
@@ -211,10 +217,10 @@ export class EventDispatcher implements IEventDispatcher {
 class EventInfo {
     key: string = "";
     target: any | null;
-    handler: (type: string, target?: any, ...arg: any[]) => void;
+    handler: (type: string, target?: any, data?: any) => void;
     priority: number = 255;
 
-    constructor(key: string, target: any, handler: (type: string, target?: any, ...arg: any[]) => void) {
+    constructor(key: string, target: any, handler: (type: string, target?: any, data?: any) => void) {
         this.key = key;
         this.target = target;
         this.handler = handler;
