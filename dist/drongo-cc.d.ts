@@ -707,6 +707,7 @@ declare class ResRequest {
     ChildProgress(resURL: ResURL, progress: number): void;
     ChildError(err: Error): void;
     UpdateProgress(): void;
+    private checkComplete;
     private getLoaded;
     Destroy(): void;
 }

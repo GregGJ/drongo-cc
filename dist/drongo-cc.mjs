@@ -1471,7 +1471,7 @@ class ResRequest {
     ChildComplete(resURL) {
         const urlKey = URL2Key(resURL);
         this.__loadedMap.set(urlKey, 1);
-        this.UpdateProgress();
+        this.checkComplete();
     }
     ChildProgress(resURL, progress) {
         const urlKey = URL2Key(resURL);
@@ -1484,6 +1484,17 @@ class ResRequest {
         }
     }
     UpdateProgress() {
+        let loaded = this.getLoaded();
+        let progress = loaded / this.urls.length;
+        if (this.progress) {
+            this.progress(progress);
+        }
+        //完成
+        if (progress == 1 && this.cb != null) {
+            this.cb(null);
+        }
+    }
+    checkComplete() {
         let loaded = this.getLoaded();
         let progress = loaded / this.urls.length;
         if (this.progress) {
