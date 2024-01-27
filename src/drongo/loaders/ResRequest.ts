@@ -44,7 +44,7 @@ export class ResRequest {
     ChildComplete(resURL: ResURL): void {
         const urlKey = URL2Key(resURL);
         this.__loadedMap.set(urlKey, 1);
-        this.UpdateProgress();
+        this.checkComplete();
     }
 
     ChildProgress(resURL: ResURL, progress: number): void {
@@ -60,6 +60,18 @@ export class ResRequest {
     }
 
     UpdateProgress(): void {
+        let loaded: number = this.getLoaded();
+        let progress: number = loaded / this.urls.length;
+        if (this.progress) {
+            this.progress(progress);
+        }
+        //完成
+        if (progress == 1 && this.cb != null) {
+            this.cb(null);
+        }
+    }
+
+    private checkComplete():void{
         let loaded: number = this.getLoaded();
         let progress: number = loaded / this.urls.length;
         if (this.progress) {
