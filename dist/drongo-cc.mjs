@@ -1489,10 +1489,6 @@ class ResRequest {
         if (this.progress) {
             this.progress(progress);
         }
-        //完成
-        if (progress == 1 && this.cb != null) {
-            this.cb(null);
-        }
     }
     checkComplete() {
         let loaded = this.getLoaded();

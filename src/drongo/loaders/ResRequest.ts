@@ -65,13 +65,9 @@ export class ResRequest {
         if (this.progress) {
             this.progress(progress);
         }
-        //完成
-        if (progress == 1 && this.cb != null) {
-            this.cb(null);
-        }
     }
-
-    private checkComplete():void{
+    
+    private checkComplete(): void {
         let loaded: number = this.getLoaded();
         let progress: number = loaded / this.urls.length;
         if (this.progress) {
