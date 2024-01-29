@@ -1442,6 +1442,152 @@ declare class ResManager {
     private static get impl();
 }
 
+interface ILocalStorage {
+    /**
+     * 初始化
+     * @param gameName
+     */
+    Init(gameName: string): void;
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    GetItem(key: string): any;
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    SetItem(key: string, value: any): void;
+    /**
+     * 清理
+     * @param key
+     */
+    ClearItem(key: string): void;
+    /**
+     * 清理所有
+     */
+    ClearAll(): void;
+}
+
+/**
+ * 本地数据缓存
+ */
+declare class LocalStorage {
+    static KEY: string;
+    /**
+     * 初始化
+     * @param gameName
+     */
+    static Init(gameName: string): void;
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    static GetItem(key: string): any;
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    static SetItem(key: string, value: any): void;
+    /**
+     * 清理
+     * @param key
+     */
+    static ClearItem(key: string): void;
+    /**
+     * 清理所有
+     */
+    static ClearAll(): void;
+    private static __impl;
+    private static get impl();
+}
+
+/**
+ * 本地数据缓存
+ */
+declare class LocalStorageImpl implements ILocalStorage {
+    private __gameName;
+    private data;
+    /**
+     * 初始化
+     * @param gameName
+     */
+    Init(gameName: string): void;
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    GetItem(key: string): any;
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    SetItem(key: string, value: any): void;
+    /**
+     * 清理
+     * @param key
+     */
+    ClearItem(key: string): void;
+    /**
+     * 清理所有
+     */
+    ClearAll(): void;
+    /**
+     * 保存
+     */
+    private __save;
+}
+
+/**
+ * 任务接口
+ */
+interface ITask extends IEventDispatcher {
+    /**
+     * 开始
+     * @param data
+     */
+    Start(data?: any): void;
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+/**
+ * 任务队列
+ */
+declare class TaskQueue extends EventDispatcher implements ITask {
+    private __taskList;
+    private __index;
+    constructor();
+    AddTask(value: ITask): void;
+    RemoveTask(value: ITask): void;
+    Start(data?: any): void;
+    private __tryNext;
+    private __subTaskEventHandler;
+    Destroy(): void;
+}
+
+/**
+ * 任务序列（并行）
+ */
+declare class TaskSequence extends EventDispatcher implements ITask {
+    private __taskList;
+    private __index;
+    constructor();
+    AddTask(value: ITask): void;
+    RemoveTask(value: ITask): void;
+    Start(data?: any): void;
+    private __subTaskEventHandler;
+    Destroy(): void;
+}
+
 /**
  * 心跳管理器
  */
@@ -4721,4 +4867,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, ILoader, ILocalStorage, IRes, IResManager, IResource, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

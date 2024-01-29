@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, sys, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -4637,6 +4637,240 @@ class List extends EventDispatcher {
      */
     get elements() {
         return this.__element;
+    }
+}
+
+/**
+ * 本地数据缓存
+ */
+class LocalStorage {
+    static KEY = "drongo.LocalStorage";
+    /**
+     * 初始化
+     * @param gameName
+     */
+    static Init(gameName) {
+        this.impl.Init(gameName);
+    }
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    static GetItem(key) {
+        this.impl.GetItem(key);
+    }
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    static SetItem(key, value) {
+        this.impl.SetItem(key, value);
+    }
+    /**
+     * 清理
+     * @param key
+     */
+    static ClearItem(key) {
+        this.impl.ClearItem(key);
+    }
+    /**
+     * 清理所有
+     */
+    static ClearAll() {
+        this.impl.ClearAll();
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            throw new Error(this.KEY + "未注入!");
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 本地数据缓存
+ */
+class LocalStorageImpl {
+    __gameName;
+    data;
+    /**
+     * 初始化
+     * @param gameName
+     */
+    Init(gameName) {
+        this.__gameName = gameName;
+        let localDataStr = sys.localStorage.getItem(this.__gameName);
+        if (!localDataStr) {
+            this.data = {};
+        }
+        else {
+            this.data = JSON.parse(localDataStr);
+        }
+    }
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    GetItem(key) {
+        return this.data[key];
+    }
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    SetItem(key, value) {
+        this.data[key] = value;
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 清理
+     * @param key
+     */
+    ClearItem(key) {
+        delete this.data[key];
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 清理所有
+     */
+    ClearAll() {
+        this.data = {};
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 保存
+     */
+    __save() {
+        //保存到本地
+        let localDataStr = JSON.stringify(this.data);
+        sys.localStorage.setItem(this.__gameName, localDataStr);
+    }
+}
+
+/**
+ * 任务队列
+ */
+class TaskQueue extends EventDispatcher {
+    __taskList;
+    __index = 0;
+    constructor() {
+        super();
+        this.__taskList = [];
+    }
+    AddTask(value) {
+        if (this.__taskList.indexOf(value) >= 0) {
+            throw new Error("重复添加！");
+        }
+        this.__taskList.push(value);
+    }
+    RemoveTask(value) {
+        let index = this.__taskList.indexOf(value);
+        if (index < 0) {
+            throw new Error("未找到要删除的内容！");
+        }
+        this.__taskList.splice(index, 1);
+    }
+    Start(data) {
+        this.__index = 0;
+        this.__tryNext();
+    }
+    __tryNext() {
+        if (this.__index < this.__taskList.length) {
+            let task = this.__taskList[this.__index];
+            task.On(Event.COMPLETE, this.__subTaskEventHandler, this);
+            task.On(Event.PROGRESS, this.__subTaskEventHandler, this);
+            task.On(Event.ERROR, this.__subTaskEventHandler, this);
+            task.Start();
+        }
+        else {
+            //结束
+            this.Emit(Event.COMPLETE);
+        }
+    }
+    __subTaskEventHandler(key, target, data) {
+        if (key == Event.PROGRESS) {
+            let dataValue = Number(data) == undefined ? 0 : Number(data);
+            let progress = (this.__index + dataValue) / this.__taskList.length;
+            this.Emit(Event.PROGRESS, progress);
+            return;
+        }
+        target.OffAllEvent();
+        if (key == Event.ERROR) {
+            this.Emit(Event.ERROR, data);
+            return;
+        }
+        target.Destroy();
+        this.__index++;
+        this.__tryNext();
+    }
+    Destroy() {
+        super.Destroy();
+        this.__taskList.length = 0;
+        this.__index = 0;
+    }
+}
+
+/**
+ * 任务序列（并行）
+ */
+class TaskSequence extends EventDispatcher {
+    __taskList = new Array();
+    __index = 0;
+    constructor() {
+        super();
+    }
+    AddTask(value) {
+        if (this.__taskList.indexOf(value) >= 0) {
+            throw new Error("重复添加！");
+        }
+        this.__taskList.push(value);
+    }
+    RemoveTask(value) {
+        let index = this.__taskList.indexOf(value);
+        if (index < 0) {
+            throw new Error("找不到要删除的内容!");
+        }
+        this.__taskList.splice(index, 1);
+    }
+    Start(data) {
+        for (let index = 0; index < this.__taskList.length; index++) {
+            const element = this.__taskList[index];
+            element.On(Event.COMPLETE, this.__subTaskEventHandler, this);
+            element.On(Event.ERROR, this.__subTaskEventHandler, this);
+            element.On(Event.PROGRESS, this.__subTaskEventHandler, this);
+            element.Start();
+        }
+    }
+    __subTaskEventHandler(type, target, data) {
+        if (type == Event.PROGRESS) {
+            this.Emit(Event.PROGRESS, this.__index / this.__taskList.length);
+            return;
+        }
+        target.OffAllEvent();
+        if (type == Event.ERROR) {
+            this.Emit(Event.ERROR, data);
+            return;
+        }
+        this.__index++;
+        if (this.__index < this.__taskList.length) {
+            return;
+        }
+        target.Destroy();
+        //完成
+        this.Emit(Event.COMPLETE);
+    }
+    Destroy() {
+        super.Destroy();
+        this.__taskList.length = 0;
+        this.__index = 0;
     }
 }
 
@@ -22525,4 +22759,4 @@ class Drongo {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

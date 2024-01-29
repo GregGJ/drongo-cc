@@ -54,6 +54,16 @@ export { ResManager } from "./drongo/res/ResManager"
 export { ResRef } from "./drongo/res/ResRef"
 export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/ResURL"
 
+//storages
+export {ILocalStorage} from "./drongo/storages/ILocalStorage"
+export {LocalStorage} from "./drongo/storages/LocalStorage"
+export {LocalStorageImpl} from "./drongo/storages/LocalStorageImpl"
+
+//tasks
+export {ITask} from "./drongo/tasks/ITask"
+export {TaskQueue} from "./drongo/tasks/TaskQueue"
+export {TaskSequence} from "./drongo/tasks/TaskSequence"
+
 //ticker
 export { ITicker } from "./drongo/ticker/ITicker"
 export { ITickerManager } from "./drongo/ticker/ITickerManager"
