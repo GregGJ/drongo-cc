@@ -1,4 +1,4 @@
-import { ResManager } from "./ResManager";
+import { ResManager } from "../res/ResManager";
 
 
 export class ResRef {

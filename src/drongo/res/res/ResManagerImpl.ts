@@ -1,10 +1,10 @@
-import { Dictionary } from "../containers/Dictionary";
-import { TickerManager } from "../ticker/TickerManager";
-import { Timer } from "../timer/Timer";
-import { IResManager } from "../res/IResManager";
-import { IResource } from "../res/IResource";
-import { ResManager } from "../res/ResManager";
-import { ResRef } from "../res/ResRef";
+import { Dictionary } from "../../containers/Dictionary";
+import { TickerManager } from "../../ticker/TickerManager";
+import { Timer } from "../../timer/Timer";
+import { IResManager } from "../core/IResManager";
+import { IResource } from "../core/IResource";
+import { ResRef } from "../core/ResRef";
+import { ResManager } from "./ResManager";
 
 
 /**

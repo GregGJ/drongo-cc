@@ -1,6 +1,6 @@
+
+import { ResURL, URL2Key } from "../core/ResURL";
 import { ResManager } from "../res/ResManager";
-import { ResURL, URL2Key } from "../res/ResURL";
-import { Timer } from "../timer/Timer";
 import { LoaderQueue } from "./LoaderQueue";
 
 

@@ -9,7 +9,7 @@ import { PackageItem } from "./PackageItem";
 import { UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
 import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
-import { ResURL } from "../drongo/res/ResURL";
+import { ResURL } from "../drongo/res/core/ResURL";
 
 export class GLabel extends GComponent {
     protected _titleObject: GObject;

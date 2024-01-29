@@ -1,4 +1,4 @@
-import { ResURL } from "../../drongo/res/ResURL";
+import { ResURL } from "../../drongo/res/core/ResURL";
 import { ByteBuffer } from "../utils/ByteBuffer";
 import { GearBase } from "./GearBase";
 

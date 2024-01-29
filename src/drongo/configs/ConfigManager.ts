@@ -1,4 +1,4 @@
-import { ResURL } from "../res/ResURL";
+import { ResURL } from "../res/core/ResURL";
 import { Injector } from "../utils/Injector";
 import { ConfigManagerImpl } from "./ConfigManagerImpl";
 import { IConfigAccessor } from "./core/IConfigAccessor";

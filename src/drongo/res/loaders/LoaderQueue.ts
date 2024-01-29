@@ -1,10 +1,11 @@
-import { Dictionary } from "../containers/Dictionary";
-import { Event } from "../events/Event";
-import { Res } from "../res/Res";
-import { ResURL, URL2Key } from "../res/ResURL";
-import { ILoader } from "../res/ILoader";
-import { ITicker } from "../ticker/ITicker";
-import { TickerManager } from "../ticker/TickerManager";
+
+import { Dictionary } from "../../containers/Dictionary";
+import { Event } from "../../events/Event";
+import { ITicker } from "../../ticker/ITicker";
+import { TickerManager } from "../../ticker/TickerManager";
+import { Res } from "../Res";
+import { ILoader } from "../core/ILoader";
+import { ResURL, URL2Key } from "../core/ResURL";
 import { Loader } from "./Loader";
 
 

@@ -1,4 +1,4 @@
-import { IEventDispatcher } from "../events/IEventDispatcher";
+import { IEventDispatcher } from "../../events/IEventDispatcher";
 import { ResURL } from "./ResURL";
 
 

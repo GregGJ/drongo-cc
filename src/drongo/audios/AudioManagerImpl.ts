@@ -3,7 +3,7 @@ import { IAudioManager } from "./IAudioManager";
 import { IAudioChannel } from "./IAudioChannel";
 import { TickerManager } from "../ticker/TickerManager";
 import { AudioChannelImpl } from "./AudioChannelImpl";
-import { ResURL, URL2Key } from "../res/ResURL";
+import { ResURL, URL2Key } from "../res/core/ResURL";
 import { AudioManager } from "./AudioManager";
 
 

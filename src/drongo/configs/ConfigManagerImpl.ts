@@ -1,6 +1,6 @@
 import { Debuger } from "../debugers/Debuger";
 import { Res } from "../res/Res";
-import { ResURL } from "../res/ResURL";
+import { ResURL } from "../res/core/ResURL";
 import { ByteArray } from "../utils/ByteArray";
 import { ConfigManager } from "./ConfigManager";
 import { ConfigUtils } from "./ConfigUtils";

@@ -1,9 +1,9 @@
 import { Asset, AssetManager, assetManager } from "cc";
-import { EventDispatcher } from "../events/EventDispatcher";
-import { ILoader } from "../res/ILoader";
-import { FullURL, ResURL, URL2Key } from "../res/ResURL";
-import { Event } from "../events/Event";
-import { ResourceImpl } from "./ResourceImpl";
+import { EventDispatcher } from "../../events/EventDispatcher";
+import { ILoader } from "../core/ILoader";
+import { FullURL, ResURL, URL2Key } from "../core/ResURL";
+import { Event } from "../../events/Event";
+import { ResourceImpl } from "../res/ResourceImpl";
 import { ResManager } from "../res/ResManager";
 
 

@@ -1,4 +1,4 @@
-import { ResURL, URL2Key } from "../res/ResURL";
+import { ResURL, URL2Key } from "../core/ResURL";
 import { ResRequest } from "./ResRequest";
 
 

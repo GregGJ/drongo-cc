@@ -1,30 +1,32 @@
 
 //audios
-export {AudioManager} from "./drongo/audios/AudioManager"
-export {IAudioChannel} from "./drongo/audios/IAudioChannel"
-export {IAudioGroup} from "./drongo/audios/IAudioGroup"
-export {IAudioManager} from "./drongo/audios/IAudioManager"
+export { AudioManager } from "./drongo/audios/AudioManager"
+export { IAudioChannel } from "./drongo/audios/IAudioChannel"
+export { IAudioGroup } from "./drongo/audios/IAudioGroup"
+export { IAudioManager } from "./drongo/audios/IAudioManager"
+export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
+export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
 
 //bindings
-export {BinderUtils} from "./drongo/bindings/BinderUtils"
-export {BindingUtils} from "./drongo/bindings/BindingUtils"
-export {FunctionHook} from "./drongo/bindings/FunctionHook"
-export {PropertyBinder} from "./drongo/bindings/PropertyBinder"
+export { BinderUtils } from "./drongo/bindings/BinderUtils"
+export { BindingUtils } from "./drongo/bindings/BindingUtils"
+export { FunctionHook } from "./drongo/bindings/FunctionHook"
+export { PropertyBinder } from "./drongo/bindings/PropertyBinder"
 
 //configs
-export {IConfigAccessor} from "./drongo/configs/core/IConfigAccessor"
-export {IConfigManager} from "./drongo/configs/core/IConfigManager"
-export {BaseConfigAccessor} from "./drongo/configs/BaseConfigAccessor"
-export {ConfigManager} from "./drongo/configs/ConfigManager"
+export { BaseConfigAccessor } from "./drongo/configs/BaseConfigAccessor"
+export { ConfigManager } from "./drongo/configs/ConfigManager"
+export { IConfigAccessor } from "./drongo/configs/core/IConfigAccessor"
+export { IConfigManager } from "./drongo/configs/core/IConfigManager"
 
 //containers
 export { Dictionary } from "./drongo/containers/Dictionary"
 export { List } from "./drongo/containers/List"
 
 //debugers
-export {Debuger} from "./drongo/debugers/Debuger"
-export {DebugerImpl} from "./drongo/debugers/DebugerImpl"
-export {IDebuger} from "./drongo/debugers/IDebuger"
+export { Debuger } from "./drongo/debugers/Debuger"
+export { DebugerImpl } from "./drongo/debugers/DebugerImpl"
+export { IDebuger } from "./drongo/debugers/IDebuger"
 
 //events
 export { Event } from "./drongo/events/Event"
@@ -38,63 +40,95 @@ export { GetClassName } from "./drongo/exports/GetClassName"
 export { FSM } from "./drongo/fsm/FSM"
 export { IState } from "./drongo/fsm/IState"
 
-//impls
-export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
-export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
-export { CCLoaderImpl } from "./drongo/impls/CCLoaderImpl"
-export { ResImpl } from "./drongo/impls/ResImpl"
-export { ResManagerImpl } from "./drongo/impls/ResManagerImpl"
-export { ResourceImpl } from "./drongo/impls/ResourceImpl"
-export { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl"
-export { TimerImpl } from "./drongo/timer/TimerImpl"
+//gui
+export { GUIManager } from "./drongo/gui/GUIManager"
+//layer
+export { ILayer } from "./drongo/gui/core/layer/ILayer"
+export { ILayerManager } from "./drongo/gui/core/layer/ILayerManager"
+export { LayerManager } from "./drongo/gui/core/layer/LayerManager"
+//loadingView
+export { ILoadingView } from "./drongo/gui/core/loadingView/ILoadingView"
+export { LoadingView } from "./drongo/gui/core/loadingView/LoadingView"
+//relations
+export { IRelationInfo } from "./drongo/gui/core/relations/IRelationInfo"
+export { IRelationList } from "./drongo/gui/core/relations/IRelationList"
+export { RelationManager } from "./drongo/gui/core/relations/RelationManager"
 
-//loaders
-export { Loader } from "./drongo/loaders/Loader"
-export { LoaderQueue } from "./drongo/loaders/LoaderQueue"
-export { ResRequest } from "./drongo/loaders/ResRequest"
+export { GUIState } from "./drongo/gui/core/GUIState"
+export { IGUIManager } from "./drongo/gui/core/IGUIManager"
+export { IGUIMediator } from "./drongo/gui/core/IGUIMediator"
+export { IViewComponent } from "./drongo/gui/core/IViewComponent"
+export { IViewCreator } from "./drongo/gui/core/IViewCreator"
+
+//gui
+export { BaseMediator } from "./drongo/gui/gui/BaseMediator"
+export { GUIManagerImpl } from "./drongo/gui/gui/GUIManagerImpl"
+export { GUIMediator } from "./drongo/gui/gui/GUIMediator"
+export { GUIProxy } from "./drongo/gui/gui/GUIProxy"
+export { IGUIInfo } from "./drongo/gui/gui/IGUIInfo"
+export { SubGUIMediator } from "./drongo/gui/gui/SubGUIMediator"
+
+//layer
+export { Layer } from "./drongo/gui//layer/Layer"
+export { LayerManagerImpl } from "./drongo/gui//layer/LayerManagerImpl"
 
 //maxRects
-export {FindPosition}  from "./drongo/maxRects/FindPosition"
-export {MaxRectBinPack}  from "./drongo/maxRects/MaxRectsBinPack"
-export {Rect}  from "./drongo/maxRects/Rect"
+export { FindPosition } from "./drongo/maxRects/FindPosition"
+export { MaxRectBinPack } from "./drongo/maxRects/MaxRectsBinPack"
+export { Rect } from "./drongo/maxRects/Rect"
 
 //pools
-export {IRecyclable} from "./drongo/pools/IRecyclable"
-export {Pool} from "./drongo/pools/Pool"
+export { IRecyclable } from "./drongo/pools/IRecyclable"
+export { Pool } from "./drongo/pools/Pool"
 
 //res
-export { ILoader } from "./drongo/res/ILoader"
-export { IRes } from "./drongo/res/IRes"
-export { IResManager } from "./drongo/res/IResManager"
-export { IResource } from "./drongo/res/IResource"
 export { Res } from "./drongo/res/Res"
-export { ResManager } from "./drongo/res/ResManager"
-export { ResRef } from "./drongo/res/ResRef"
-export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/ResURL"
+//res/core
+export { ILoader } from "./drongo/res/core/ILoader"
+export { IRes } from "./drongo/res/core/IRes"
+export { IResManager } from "./drongo/res/core/IResManager"
+export { IResource } from "./drongo/res/core/IResource"
+export { ResRef } from "./drongo/res/core/ResRef"
+export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/core/ResURL"
+//res/loader
+export { CCLoaderImpl } from "./drongo/res/loaders/CCLoaderImpl"
+export { FGUILoader } from "./drongo/res/loaders/FGUILoader"
+export { Loader } from "./drongo/res/loaders/Loader"
+export { LoaderQueue } from "./drongo/res/loaders/LoaderQueue"
+export { ResRequest } from "./drongo/res/loaders/ResRequest"
+//res/res
+export { FGUIResource } from "./drongo/res/res/FGUIResource"
+export { ResImpl } from "./drongo/res/res/ResImpl"
+export { ResManager } from "./drongo/res//res/ResManager"
+export { ResManagerImpl } from "./drongo/res//res/ResManagerImpl"
+export { ResourceImpl } from "./drongo/res/res/ResourceImpl"
+
 
 //services
-export {BaseService} from "./drongo/services/BaseService"
-export {IService} from "./drongo/services/IService"
-export {ServiceManager} from "./drongo/services/ServiceManager"
+export { BaseService } from "./drongo/services/BaseService"
+export { IService } from "./drongo/services/IService"
+export { ServiceManager } from "./drongo/services/ServiceManager"
 
 //storages
-export {ILocalStorage} from "./drongo/storages/ILocalStorage"
-export {LocalStorage} from "./drongo/storages/LocalStorage"
-export {LocalStorageImpl} from "./drongo/storages/LocalStorageImpl"
+export { ILocalStorage } from "./drongo/storages/ILocalStorage"
+export { LocalStorage } from "./drongo/storages/LocalStorage"
+export { LocalStorageImpl } from "./drongo/storages/LocalStorageImpl"
 
 //tasks
-export {ITask} from "./drongo/tasks/ITask"
-export {TaskQueue} from "./drongo/tasks/TaskQueue"
-export {TaskSequence} from "./drongo/tasks/TaskSequence"
+export { ITask } from "./drongo/tasks/ITask"
+export { TaskQueue } from "./drongo/tasks/TaskQueue"
+export { TaskSequence } from "./drongo/tasks/TaskSequence"
 
 //ticker
 export { ITicker } from "./drongo/ticker/ITicker"
 export { ITickerManager } from "./drongo/ticker/ITickerManager"
 export { TickerManager } from "./drongo/ticker/TickerManager"
+export { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl"
 
 //timer
 export { ITimer } from "./drongo/timer/ITimer"
 export { Timer } from "./drongo/timer/Timer"
+export { TimerImpl } from "./drongo/timer/TimerImpl"
 
 //utils
 export { BitFlag } from "./drongo/utils/BitFlag"
@@ -162,3 +196,4 @@ export { ByteBuffer } from "./fairygui/utils/ByteBuffer";
 
 //框架对外接口
 export { Drongo } from "./drongo"
+

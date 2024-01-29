@@ -1,5 +1,5 @@
 import { Injector } from "../utils/Injector";
-import { ResURL } from "../res/ResURL";
+import { ResURL } from "../res/core/ResURL";
 import { IAudioChannel } from "./IAudioChannel";
 import { IAudioManager } from "./IAudioManager";
 import { AudioManagerImpl } from "./AudioManagerImpl";

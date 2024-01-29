@@ -1,4 +1,4 @@
-import { ResURL } from "../res/ResURL";
+import { ResURL } from "../res/core/ResURL";
 import { IAudioChannel } from "./IAudioChannel";
 
 

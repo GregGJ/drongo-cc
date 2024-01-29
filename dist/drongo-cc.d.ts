@@ -1,4 +1,4 @@
-import { Node, AudioSource, Color, Vec2, Component, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Node, AudioSource, Color, EventTarget, Vec2, Component, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Mask, Constructor, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
 
 /**
  * 资源地址
@@ -215,6 +215,101 @@ interface IAudioManager {
      * @param url
      */
     GetPlaying(url: ResURL): IAudioChannel;
+}
+
+declare class AudioChannelImpl implements IAudioChannel {
+    private __node;
+    private __source;
+    private __isPlaying;
+    private __url;
+    private __volume;
+    private __speed;
+    private __loop;
+    private __startTime;
+    private __time;
+    private __fadeData;
+    private __paused;
+    private __pauseTime;
+    private __playedComplete;
+    private __ref;
+    private __mute;
+    volume: number;
+    constructor(node: Node, source?: AudioSource);
+    get url(): ResURL;
+    get mute(): boolean;
+    set mute(value: boolean);
+    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
+        time: number;
+        startVolume?: number;
+        complete?: Function;
+        completeStop?: boolean;
+    }, loop?: boolean, speed?: number): void;
+    Stop(): void;
+    get isPlaying(): boolean;
+    /**
+     *
+     * @param time
+     * @param endVolume
+     * @param startVolume
+     * @param complete
+     * @param completeStop
+     * @returns
+     */
+    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
+    private __reset;
+    private __clipLoaded;
+    private __play;
+    Tick(dt: number): void;
+    Resume(): void;
+    Pause(): void;
+    get curVolume(): number;
+}
+
+/**
+ * 音频播放管理器
+ */
+declare class AudioManagerImpl implements IAudioManager {
+    private __audioRoot;
+    private __musicChannels;
+    private __musicChannelIndex;
+    private __soundChannels;
+    constructor();
+    /**
+     * 总音量
+     */
+    get volume(): number;
+    private __volume;
+    set volume(value: number);
+    /**
+     * 音乐总音量控制
+     */
+    set musicVolume(value: number);
+    private __musicVolume;
+    get musicVolume(): number;
+    /**
+     * 声音总音量
+     */
+    get soundVolume(): number;
+    private __soundVolume;
+    set soundVolume(value: number);
+    set mute(value: boolean);
+    private __mute;
+    get mute(): boolean;
+    get muteMusic(): boolean;
+    private __muteMusic;
+    set muteMusic(value: boolean);
+    get muteSound(): boolean;
+    private __muteSound;
+    set muteSound(value: boolean);
+    private __changedMutes;
+    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
+    StopMusic(): void;
+    PauseMusic(): void;
+    ResumeMusic(): void;
+    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    GetPlaying(url: ResURL): IAudioChannel;
+    private GetIdleChannel;
+    Tick(dt: number): void;
 }
 
 /**
@@ -487,34 +582,6 @@ interface IConfigAccessor {
 }
 
 /**
- * 配置管理器接口
- */
-interface IConfigManager {
-    /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
-     */
-    Register(sheet: string, accessors?: IConfigAccessor): void;
-    /**
-     * 加载配置文件
-     * @param sheet
-     * @param callback
-     */
-    Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
-    /**
-     * 卸载配置文件
-     * @param sheets
-     */
-    Unload(sheets: string | Array<string>): void;
-    /**
-     * 获取配置存取器
-     * @param sheet
-     */
-    GetAccessor(sheet: string): IConfigAccessor;
-}
-
-/**
  * 配置存取器基类
  */
 declare class BaseConfigAccessor implements IConfigAccessor {
@@ -560,6 +627,34 @@ declare class ConfigManager {
     static GetAccessor(sheet: string): IConfigAccessor;
     private static __impl;
     private static get impl();
+}
+
+/**
+ * 配置管理器接口
+ */
+interface IConfigManager {
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    Register(sheet: string, accessors?: IConfigAccessor): void;
+    /**
+     * 加载配置文件
+     * @param sheet
+     * @param callback
+     */
+    Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
+    /**
+     * 卸载配置文件
+     * @param sheets
+     */
+    Unload(sheets: string | Array<string>): void;
+    /**
+     * 获取配置存取器
+     * @param sheet
+     */
+    GetAccessor(sheet: string): IConfigAccessor;
 }
 
 /**
@@ -1007,478 +1102,2279 @@ declare class FSM extends EventDispatcher {
     Destroy(): void;
 }
 
-declare class AudioChannelImpl implements IAudioChannel {
-    private __node;
-    private __source;
-    private __isPlaying;
-    private __url;
-    private __volume;
-    private __speed;
-    private __loop;
-    private __startTime;
-    private __time;
-    private __fadeData;
-    private __paused;
-    private __pauseTime;
-    private __playedComplete;
-    private __ref;
-    private __mute;
-    volume: number;
-    constructor(node: Node, source?: AudioSource);
-    get url(): ResURL;
-    get mute(): boolean;
-    set mute(value: boolean);
-    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
-        time: number;
-        startVolume?: number;
-        complete?: Function;
-        completeStop?: boolean;
-    }, loop?: boolean, speed?: number): void;
-    Stop(): void;
-    get isPlaying(): boolean;
+declare enum GUIState {
     /**
-     *
-     * @param time
-     * @param endVolume
-     * @param startVolume
-     * @param complete
-     * @param completeStop
-     * @returns
+     * 未使用状态
      */
-    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
-    private __reset;
-    private __clipLoaded;
-    private __play;
-    Tick(dt: number): void;
-    Resume(): void;
-    Pause(): void;
-    get curVolume(): number;
+    Null = 0,
+    /**
+     * 显示处理中
+     */
+    Showing = 1,
+    /**
+     * 已显示
+     */
+    Showed = 2,
+    /**
+     * 关闭处理中
+     */
+    Closeing = 3,
+    /**
+     * 已关闭
+     */
+    Closed = 4
 }
 
 /**
- * 音频播放管理器
+ * 服务接口
  */
-declare class AudioManagerImpl implements IAudioManager {
-    private __audioRoot;
-    private __musicChannels;
-    private __musicChannelIndex;
-    private __soundChannels;
-    constructor();
+interface IService {
     /**
-     * 总音量
+     * 名称
      */
-    get volume(): number;
-    private __volume;
-    set volume(value: number);
+    name: string;
     /**
-     * 音乐总音量控制
+     * 初始化
+     * @param callback
      */
-    set musicVolume(value: number);
-    private __musicVolume;
-    get musicVolume(): number;
-    /**
-     * 声音总音量
-     */
-    get soundVolume(): number;
-    private __soundVolume;
-    set soundVolume(value: number);
-    set mute(value: boolean);
-    private __mute;
-    get mute(): boolean;
-    get muteMusic(): boolean;
-    private __muteMusic;
-    set muteMusic(value: boolean);
-    get muteSound(): boolean;
-    private __muteSound;
-    set muteSound(value: boolean);
-    private __changedMutes;
-    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
-    StopMusic(): void;
-    PauseMusic(): void;
-    ResumeMusic(): void;
-    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
-    GetPlaying(url: ResURL): IAudioChannel;
-    private GetIdleChannel;
-    Tick(dt: number): void;
-}
-
-interface ILoader extends IEventDispatcher {
-    /**
-     * 加载
-     * @param url
-     */
-    Load(url: ResURL): void;
-    /**
-     * 重置
-     */
-    Reset(): void;
-}
-
-/**
- * 加载器CC实现
- */
-declare class CCLoaderImpl extends EventDispatcher implements ILoader {
-    url: ResURL;
-    constructor();
-    Load(url: ResURL): void;
-    Reset(): void;
-}
-
-declare class ResRef {
-    /**唯一KEY */
-    key: string;
-    /**引用KEY */
-    refKey: string | undefined;
-    /**资源内容 */
-    content: any;
-    /**是否已释放 */
-    private __isDispose;
-    constructor();
-    /**释放 */
-    Dispose(): void;
-    get isDispose(): boolean;
-    Reset(): void;
-    /**
-     * 彻底销毁(注意内部接口，请勿调用)
-     */
-    Destroy(): void;
-}
-
-interface IRes {
-    /**
-     * 设置加载器
-     * @param key
-     * @param loader
-     */
-    SetResLoader(key: any, loader: new () => ILoader): void;
-    /**
-     * 获取加载器
-     * @param key
-     */
-    GetResLoader(key: any): new () => ILoader;
-    /**
-    * 获取资源
-    * @param url
-    * @param refKey
-    * @param progress
-    */
-    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
-    /**
-     * 获取资源列表
-     * @param urls
-     * @param refKey
-     * @param progress
-     */
-    GetResRefList(urls: Array<ResURL>, refKey: string, progress?: (progress: number) => void): Promise<Array<ResRef>>;
-    /**
-     * 获取资源列表按照URL存放到字典中
-     * @param urls
-     * @param refKey
-     * @param result
-     * @param progress
-     */
-    GetResRefMap(urls: Array<ResURL>, refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
-}
-
-declare class ResImpl implements IRes {
-    private loaderClass;
-    constructor();
-    SetResLoader(key: any, loader: new () => ILoader): void;
-    GetResLoader(key: any): new () => ILoader;
-    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
-    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]>;
-    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
-}
-
-/**
- * 心跳接口
- */
-interface ITicker {
-    /**
-     * 心跳
-     * @param dt    间隔时间(秒)
-     */
-    Tick(dt: number): void;
-}
-
-/**
- * 资源接口
- */
-interface IResource {
-    /**
-     * 资源全局唯一KEY
-     */
-    key: string;
-    /**
-     * 最后一次操作的时间点
-     */
-    lastOpTime: number;
-    /**
-     * 资源
-     */
-    content: any;
-    /**
-     * 资源引用数量
-     */
-    readonly refCount: number;
-    /**
-     * 资源引用列表长度
-     */
-    readonly refLength: number;
-    /**
-     * 添加一个引用
-     * @param refKey
-     */
-    AddRef(refKey?: string): ResRef;
-    /**
-     * 删除引用
-     * @param value
-     */
-    RemoveRef(value: ResRef): void;
-    /**销毁*/
-    Destroy(): void;
-}
-
-/**
- * 资源管理器接口
- */
-interface IResManager extends ITicker {
-    /**
-     * 添加一个资源
-     * @param value
-     */
-    AddRes(value: IResource): void;
-    /**
-     * 获取资源(内部接口)
-     * @param key
-     */
-    _getRes(key: string): IResource;
-    /**
-     * 是否包含该资源
-     * @param key
-     */
-    HasRes(key: string): boolean;
-    /**
-     * 添加并返回一个资源引用
-     * @param key
-     * @param refKey
-     */
-    AddResRef(key: string, refKey?: string): ResRef;
-    /**
-     * 删除一个资源引用
-     * @param value
-     */
-    RemoveResRef(value: ResRef): void;
-    /**
-     * 资源清理
-     */
-    GC(ignoreTime?: boolean): void;
-    /**
-     * 资源列表
-     */
-    readonly resList: Array<IResource>;
-}
-
-/**
- * 默认资源管理器
- * @internal
- */
-declare class ResManagerImpl implements IResManager {
-    /**
-     * 资源
-     */
-    protected __resDic: Dictionary<string, IResource>;
-    /**
-     * 等待销毁的资源
-     */
-    protected _waitDestroy: Array<IResource>;
-    constructor();
-    Tick(dt: number): void;
-    AddRes(value: IResource): void;
-    HasRes(key: string): boolean;
-    _getRes(key: string): IResource;
-    AddResRef(key: string, refKey?: string): ResRef;
-    RemoveResRef(value: ResRef): void;
-    GC(ignoreTime?: boolean): void;
+    Init(callback: (err: Error, result: IService) => void): void;
     /**
      * 销毁
-     * @param value
      */
-    protected DestroyRes(value: IResource): void;
-    get resList(): Array<IResource>;
-}
-
-declare class ResourceImpl implements IResource {
-    /**
-     * 状态 0 正常 1待删除
-     */
-    state: number;
-    key: string;
-    lastOpTime: number;
-    /**
-     * @internal
-     */
-    private __refs;
-    constructor();
-    set content(value: any);
-    private __content;
-    get content(): any;
-    AddRef(refKey?: string): ResRef;
-    RemoveRef(value: ResRef): void;
     Destroy(): void;
-    /**
-     * 引用数量
-     */
-    get refCount(): number;
-    /**
-     * 引用列表长度
-     */
-    get refLength(): number;
 }
 
-/**
- * 心跳管理器
- */
-interface ITickerManager {
+interface IViewComponent {
     /**
-     * 心跳驱动函数
+     * 可见性
+     */
+    visible: boolean;
+}
+
+interface IGUIMediator {
+    info: any;
+    /**
+     * 依赖的服务
+     */
+    services: Array<{
+        new (): IService;
+    }>;
+    /**初始化完毕 */
+    inited: boolean;
+    /**
+     * 显示节点
+     */
+    viewComponent: IViewComponent | null;
+    /**
+     * 播放显示动画
+     * @param complete
+     */
+    PlayShowAnimation?: (complete: Function) => void;
+    /**
+     * 界面关闭时播放的动画
+     * @param complete
+     */
+    PlayHideAnimation?: (complete: Function) => void;
+    /**
+     * 创建UI
+     * @param info
+     * @param created
+     */
+    CreateUI(info: any, created: Function): void;
+    /**
+     * 初始化
+     */
+    Init(): void;
+    /**
+     * 心跳
      * @param dt
      */
     Tick(dt: number): void;
     /**
-     * 添加心跳
-     * @param value
+     * 显示(内部接口，请勿调用)
+     * @param data
      */
-    AddTicker(value: ITicker): void;
+    Show(data?: any): void;
     /**
-     * 删除心跳
-     * @param value
+     * 当已经处在显示中 GUIManager.call时 则调用该方法而不调用showedUpdate
+     * @param data
      */
-    RemoveTicker(value: ITicker): void;
+    ShowedUpdate(data?: any): void;
     /**
-     * 下一帧回调
-     * @param value
-     * @param caller
+     * 隐藏(内部接口，请勿调用)
+     * @param info
      */
-    CallNextFrame(value: Function, caller: any): void;
+    Hide(): void;
     /**
-     * 清理下一帧回调请求(如果存在的话)
-     * @param value
-     * @param caller
+     * 销毁
      */
-    ClearNextFrame(value: Function, caller: any): void;
-}
-
-declare class TickerManagerImpl implements ITickerManager {
-    private __tickerList;
-    private __nextFrameCallBacks;
-    Tick(dt: number): void;
-    AddTicker(value: ITicker): void;
-    RemoveTicker(value: ITicker): void;
-    CallNextFrame(value: Function, caller: any): void;
-    ClearNextFrame(value: Function, caller: any): void;
+    Destroy(): void;
+    /**
+     * 获取组件
+     * @param path
+     */
+    GetUIComponent(path: string): any;
 }
 
 /**
- * 计时器接口
+     * GUI 管理器
+     */
+declare class GUIManager {
+    static KEY: string;
+    /**
+     * 在界面关闭后多长时间不使用则销毁(秒)
+     */
+    static GUI_GC_INTERVAL: number;
+    /**
+     * 注册
+     * @param info
+     * @returns
+     */
+    static Register(info: {
+        key: string;
+    }): void;
+    /**
+     * 注销
+     * @param key
+     * @returns
+     */
+    static Unregister(key: string): void;
+    /**
+     * 打开指定UI界面
+     * @param key
+     * @param data
+     */
+    static Open(key: string, data?: any): void;
+    /**
+     * 关闭
+     * @param key
+     * @param checkLayer 是否检查全屏记录
+     */
+    static Close(key: string, checkLayer?: boolean): void;
+    /**
+     * 关闭所有界面
+     */
+    static CloseAll(): void;
+    /**
+     * 获取界面状态
+     * @param key
+     * @returns  0 未显示  1显示中
+     */
+    static GetGUIState(key: string): GUIState;
+    /**
+     * 是否已打开或再打开中
+     * @param key
+     * @returns
+     */
+    static IsOpen(key: string): boolean;
+    /**
+     * 获取GUI中的某个组件
+     * @param key    界面全局唯一KEY
+     * @param path   组件名称/路径
+     */
+    static GetUIComponent(key: string, path: string): any;
+    /**
+     * 获取界面的mediator
+     */
+    static GetMediatorByKey(key: string): IGUIMediator;
+    /**
+     * 获得前一个打开的全屏界面
+     * @param curLayerKey 当前打开的全屏界面
+     */
+    static GetPrevLayer(): string;
+    private static __impl;
+    private static get impl();
+}
+
+interface ILayer {
+    AddChild(child: any): void;
+    AddChildAt(child: any, index: number): void;
+    RemoveChild(child: any): void;
+    RemoveChildAt(index: number): void;
+    /**
+     * 获取指定索引内容
+     * @param index
+     */
+    GetChildAt(index: number): any;
+    /**
+     * 当前层拥有的子对象数量
+     */
+    GetCount(): number;
+}
+
+interface ILayerManager {
+    /**
+     * 添加层
+     * @param key
+     * @param layer
+     */
+    AddLayer(key: string, layer: ILayer): void;
+    /**
+     * 删除层
+     * @param key
+     */
+    RemoveLayer(key: string): void;
+    /**
+     * 获取层对象
+     * @param key
+     */
+    GetLayer(key: string): ILayer | undefined;
+    /**
+     * 获得所有层
+     */
+    GetAllLayer(): ILayer[];
+}
+
+/**
+ * 层管理器
  */
-interface ITimer {
+declare class LayerManager {
+    static KEY: string;
     /**
-     * 当前时间(推荐使用)
+     * 添加一个层
+     * @param key
+     * @param layer
      */
-    readonly currentTime: number;
+    static AddLayer(key: string, layer: ILayer): void;
     /**
-     * 绝对时间(注意效率较差，不推荐使用！)
+     * 删除层
+     * @param key
      */
-    readonly absTime: number;
+    static RemoveLayer(key: string): void;
     /**
-     * 重新校准
+     * 获取层对象
+     * @param key
      */
-    Reset(time?: number): void;
+    static GetLayer(key: string): ILayer | undefined;
+    /**
+     * 获得所有层
+     */
+    static GetAllLayer(): ILayer[];
+    private static __impl;
+    private static get impl();
 }
 
-declare class TimerImpl implements ITimer, ITicker {
-    private __lastTime;
+/**
+ * 加载界面
+ */
+interface ILoadingView {
+    /**
+     * 更新
+     * @param data
+     */
+    ChangeData(data: {
+        progress?: number;
+        label?: string;
+        tip?: string;
+    }): void;
+    /**
+     * 显示
+     */
+    Show(): void;
+    /**
+     * 隐藏
+     */
+    Hide(): void;
+}
+
+/**
+ * 加载界面
+ */
+declare class LoadingView {
+    static KEY: string;
+    static Show(): void;
+    static Hide(): void;
+    static ChangeData(data: {
+        progress?: number;
+        label?: string;
+        tip?: string;
+    }): void;
+    private static __impl;
+    static get impl(): ILoadingView;
+}
+
+/**
+ * UI关联数据列表
+ */
+interface IRelationList {
+    /**
+     * 要显示的UI列表
+     */
+    show: Array<string>;
+    /**
+     * 要隐藏的UI列表
+     */
+    hide: Array<string>;
+}
+
+/**
+ * UI关联数据
+ */
+interface IRelationInfo {
+    /**
+     * 显示时的关联
+     */
+    show: IRelationList;
+    /**
+     * 隐藏时的关联
+     */
+    hide: IRelationList;
+}
+
+/**
+* GUI 关联关系
+*/
+declare class RelationManager {
+    static DEBUG: boolean;
+    private static __map;
     constructor();
-    Reset(): void;
+    /**
+     * 添加UI关联关系
+     * @param key
+     * @param value
+     */
+    static AddRelation(key: string, value: IRelationInfo): void;
+    static RemoveRelation(key: string): void;
+    /**
+     * 检测合法性
+     * @param value
+     */
+    private static __checkValidity;
+    static GetRelation(key: string): IRelationInfo;
+}
+
+/**
+ * UI管理器接口
+ */
+interface IGUIManager {
+    /**
+     * 注册
+     * @param key
+     * @param mediatorClass
+     * @param data
+     */
+    Register(info: {
+        key: string;
+    }): void;
+    /**
+     * 注销
+     * @param key
+     */
+    Unregister(key: string): void;
+    /**
+     * 心跳
+     * @param dt
+     */
     Tick(dt: number): void;
-    get currentTime(): number;
-    get absTime(): number;
+    /**
+     * 打开
+     * @param key
+     * @param data
+     */
+    Open(key: string, data?: any): void;
+    /**
+     * 关闭
+     * @param key
+     * @param checkLayer  是否检查全屏打开记录
+     */
+    Close(key: string, checkLayer: boolean): void;
+    /**
+     * 关闭所有
+     * @param key
+     */
+    CloseAll(): void;
+    /**
+     * 是否已打开
+     * @param key
+     * @returns
+     */
+    GetGUIState(key: string): GUIState;
+    /**
+     * 获取GUI中的某个组件
+     * @param key    界面全局唯一KEY
+     * @param path   组件名称/路径
+     */
+    GetUIComponent(key: string, path: string): any;
+    /**
+     * 获取界面Mediator
+     * @param key 界面全局唯一KEY
+     */
+    GetMediatorByKey(key: string): IGUIMediator;
+    /**
+     * 获得前一个打开的全屏界面
+     */
+    GetPrevLayer(): string;
+    /**
+     * 是否已打开或打开中
+     * @param key
+     */
+    IsOpen(key: string): boolean;
 }
 
-declare class Loader {
-    private requests;
-    constructor();
+interface IViewCreator {
     /**
-     * 加载
-     * @param url
-     * @param resKey
-     * @param cb
-     * @param progress
+     * 创建Mediator
      */
-    Load(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void): void;
-    ChildComplete(url: ResURL): void;
-    ChildError(url: ResURL, err: Error): void;
-    ChildProgress(url: ResURL, progress: number): void;
-    /**
-     * 添加
-     * @param request
-     */
-    private __addReqeuset;
-    /**
-     * 删除
-     * @param request
-     */
-    private __deleteReqeuset;
-    private static __instance;
-    static get single(): Loader;
+    createMediator(): IGUIMediator;
 }
 
-declare class LoaderQueue implements ITicker {
-    /**
-     * 加载中
-     */
-    private running;
-    /**
-     * 等待加载
-     */
-    private waiting;
-    /**
-     * 对象池
-     */
-    private pool;
+declare class ByteBuffer {
+    stringTable: Array<string>;
+    version: number;
+    littleEndian: boolean;
+    protected _view: DataView;
+    protected _bytes: Uint8Array;
+    protected _pos: number;
+    protected _length: number;
+    constructor(buffer: ArrayBuffer, offset?: number, length?: number);
+    get data(): Uint8Array;
+    get position(): number;
+    set position(value: number);
+    skip(count: number): void;
+    private validate;
+    readByte(): number;
+    readBool(): boolean;
+    readShort(): number;
+    readUshort(): number;
+    readInt(): number;
+    readUint(): number;
+    readFloat(): number;
+    readString(len?: number): string;
+    readS(): string;
+    readSArray(cnt: number): Array<string>;
+    writeS(value: string): void;
+    readColor(hasAlpha?: boolean): Color;
+    readChar(): string;
+    readBuffer(): ByteBuffer;
+    seek(indexTablePos: number, blockIndex: number): boolean;
+}
+
+declare class Controller extends EventTarget {
+    private _selectedIndex;
+    private _previousIndex;
+    private _pageIds;
+    private _pageNames;
+    private _actions?;
+    name: string;
+    parent: GComponent;
+    autoRadioGroupDepth?: boolean;
+    changing?: boolean;
     constructor();
+    dispose(): void;
+    get selectedIndex(): number;
+    set selectedIndex(value: number);
+    onChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void;
+    offChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void;
+    setSelectedIndex(value: number): void;
+    get previsousIndex(): number;
+    get selectedPage(): string;
+    set selectedPage(val: string);
+    setSelectedPage(value: string): void;
+    get previousPage(): string;
+    get pageCount(): number;
+    getPageName(index: number): string;
+    addPage(name?: string): void;
+    addPageAt(name?: string, index?: number): void;
+    removePage(name: string): void;
+    removePageAt(index: number): void;
+    clearPages(): void;
+    hasPage(aName: string): boolean;
+    getPageIndexById(aId: string): number;
+    getPageIdByName(aName: string): string | null;
+    getPageNameById(aId: string): string | null;
+    getPageId(index: number): string | null;
+    get selectedPageId(): string | null;
+    set selectedPageId(val: string | null);
+    set oppositePageId(val: string | null);
+    get previousPageId(): string | null;
+    runActions(): void;
+    setup(buffer: ByteBuffer): void;
+}
+
+declare enum BlendMode {
+    Normal = 0,
+    None = 1,
+    Add = 2,
+    Multiply = 3,
+    Screen = 4,
+    Erase = 5,
+    Mask = 6,
+    Below = 7,
+    Off = 8,
+    Custom1 = 9,
+    Custom2 = 10,
+    Custom3 = 11
+}
+
+declare class GPathPoint {
+    x: number;
+    y: number;
+    control1_x: number;
+    control1_y: number;
+    control2_x: number;
+    control2_y: number;
+    curveType: number;
+    constructor();
+    static newPoint(x: number, y: number, curveType: number): GPathPoint;
+    static newBezierPoint(x: number, y: number, control1_x: number, control1_y: number): GPathPoint;
+    static newCubicBezierPoint(x: number, y: number, control1_x: number, control1_y: number, control2_x: number, control2_y: number): GPathPoint;
+    clone(): GPathPoint;
+}
+
+declare class GPath {
+    private _segments;
+    private _points;
+    private _fullLength;
+    constructor();
+    get length(): number;
+    create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
+    create(points: Array<GPathPoint>): void;
+    private createSplineSegment;
+    clear(): void;
+    getPointAt(t: number, result?: Vec2): Vec2;
+    get segmentCount(): number;
+    getAnchorsInSegment(segmentIndex: number, points?: Array<Vec2>): Array<Vec2>;
+    getPointsInSegment(segmentIndex: number, t0: number, t1: number, points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
+    getAllPoints(points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
+    private onCRSplineCurve;
+    private onBezierCurve;
+}
+
+declare class TweenValue {
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+    constructor();
+    get color(): number;
+    set color(value: number);
+    getField(index: number): number;
+    setField(index: number, value: number): void;
+    setZero(): void;
+}
+
+declare class GTweener {
+    _target: any;
+    _propType: any;
+    _killed: boolean;
+    _paused: boolean;
+    private _delay;
+    private _duration;
+    private _breakpoint;
+    private _easeType;
+    private _easeOvershootOrAmplitude;
+    private _easePeriod;
+    private _repeat;
+    private _yoyo;
+    private _timeScale;
+    private _snapping;
+    private _userData;
+    private _path;
+    private _onUpdate;
+    private _onStart;
+    private _onComplete;
+    private _onUpdateCaller;
+    private _onStartCaller;
+    private _onCompleteCaller;
+    private _startValue;
+    private _endValue;
+    private _value;
+    private _deltaValue;
+    private _valueSize;
+    private _started;
+    private _ended;
+    private _elapsedTime;
+    private _normalizedTime;
+    constructor();
+    setDelay(value: number): GTweener;
+    get delay(): number;
+    setDuration(value: number): GTweener;
+    get duration(): number;
+    setBreakpoint(value: number): GTweener;
+    setEase(value: number): GTweener;
+    setEasePeriod(value: number): GTweener;
+    setEaseOvershootOrAmplitude(value: number): GTweener;
+    setRepeat(repeat: number, yoyo?: boolean): GTweener;
+    get repeat(): number;
+    setTimeScale(value: number): GTweener;
+    setSnapping(value: boolean): GTweener;
+    setTarget(value: any, propType?: any): GTweener;
+    get target(): any;
+    setPath(value: GPath): GTweener;
+    setUserData(value: any): GTweener;
+    get userData(): any;
+    onUpdate(callback: Function, target?: any): GTweener;
+    onStart(callback: Function, target?: any): GTweener;
+    onComplete(callback: Function, target?: any): GTweener;
+    get startValue(): TweenValue;
+    get endValue(): TweenValue;
+    get value(): TweenValue;
+    get deltaValue(): TweenValue;
+    get normalizedTime(): number;
+    get completed(): boolean;
+    get allCompleted(): boolean;
+    setPaused(paused: boolean): GTweener;
+    /**
+     * seek position of the tween, in seconds.
+     */
+    seek(time: number): void;
+    kill(complete?: boolean): void;
+    _to(start: number, end: number, duration: number): GTweener;
+    _to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
+    _to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
+    _to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
+    _toColor(start: number, end: number, duration: number): GTweener;
+    _shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
+    _init(): void;
+    _reset(): void;
+    _update(dt: number): void;
+    private update;
+    private callStartCallback;
+    private callUpdateCallback;
+    private callCompleteCallback;
+}
+
+declare class GearBase {
+    static disableAllTweenEffect?: boolean;
+    _owner: GObject;
+    protected _controller: Controller;
+    protected _tweenConfig: GearTweenConfig;
+    dispose(): void;
+    get controller(): Controller;
+    set controller(val: Controller);
+    get tweenConfig(): GearTweenConfig;
+    protected get allowTween(): boolean;
+    setup(buffer: ByteBuffer): void;
+    updateFromRelations(dx: number, dy: number): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    protected init(): void;
+    apply(): void;
+    updateState(): void;
+}
+declare class GearTweenConfig {
+    tween: boolean;
+    easeType: number;
+    duration: number;
+    delay: number;
+    _displayLockToken: number;
+    _tweener: GTweener;
+    constructor();
+}
+
+declare class GearLook extends GearBase {
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+}
+
+declare class GearSize extends GearBase {
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+    updateFromRelations(dx: number, dy: number): void;
+}
+
+declare class GearXY extends GearBase {
+    positionsInPercent: boolean;
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    addExtStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+    updateFromRelations(dx: number, dy: number): void;
+}
+
+declare class GGroup extends GObject {
+    private _layout;
+    private _lineGap;
+    private _columnGap;
+    private _excludeInvisibles;
+    private _autoSizeDisabled;
+    private _mainGridIndex;
+    private _mainGridMinSize;
+    private _boundsChanged;
+    private _percentReady;
+    private _mainChildIndex;
+    private _totalSize;
+    private _numChildren;
+    _updating: number;
+    constructor();
+    dispose(): void;
+    get layout(): number;
+    set layout(value: number);
+    get lineGap(): number;
+    set lineGap(value: number);
+    get columnGap(): number;
+    set columnGap(value: number);
+    get excludeInvisibles(): boolean;
+    set excludeInvisibles(value: boolean);
+    get autoSizeDisabled(): boolean;
+    set autoSizeDisabled(value: boolean);
+    get mainGridMinSize(): number;
+    set mainGridMinSize(value: number);
+    get mainGridIndex(): number;
+    set mainGridIndex(value: number);
+    setBoundsChangedFlag(positionChangedOnly?: boolean): void;
+    private _ensureBoundsCorrect;
+    ensureSizeCorrect(): void;
+    ensureBoundsCorrect(): void;
+    private updateBounds;
+    private handleLayout;
+    moveChildren(dx: number, dy: number): void;
+    resizeChildren(dw: number, dh: number): void;
+    handleAlphaChanged(): void;
+    handleVisibleChanged(): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+}
+
+declare class InputProcessor extends Component {
+    private _owner;
+    private _touchListener;
+    private _touchPos;
+    private _touches;
+    private _rollOutChain;
+    private _rollOverChain;
+    _captureCallback: (evt: FGUIEvent) => void;
+    constructor();
+    onLoad(): void;
+    onEnable(): void;
+    onDisable(): void;
+    getAllTouches(touchIds?: Array<number>): Array<number>;
+    getTouchPosition(touchId?: number): Vec2;
+    getTouchTarget(): GObject;
+    addTouchMonitor(touchId: number, target: GObject): void;
+    removeTouchMonitor(target: GObject): void;
+    cancelClick(touchId: number): void;
+    simulateClick(target: GObject): void;
+    private touchBeginHandler;
+    private touchMoveHandler;
+    private touchEndHandler;
+    private touchCancelHandler;
+    private mouseDownHandler;
+    private mouseUpHandler;
+    private mouseMoveHandler;
+    private mouseWheelHandler;
+    private updateInfo;
+    private getInfo;
+    private setBegin;
+    private setEnd;
+    private clickTest;
+    private handleRollOver;
+    private getEvent;
+}
+
+declare class FGUIEvent extends Event$2 {
+    static TOUCH_BEGIN: string;
+    static TOUCH_MOVE: string;
+    static TOUCH_END: string;
+    static CLICK: string;
+    static ROLL_OVER: string;
+    static ROLL_OUT: string;
+    static MOUSE_WHEEL: string;
+    static DISPLAY: string;
+    static UNDISPLAY: string;
+    static GEAR_STOP: string;
+    static LINK: string;
+    static Submit: string;
+    static TEXT_CHANGE: string;
+    static STATUS_CHANGED: string;
+    static XY_CHANGED: string;
+    static SIZE_CHANGED: string;
+    static SIZE_DELAY_CHANGE: string;
+    static DRAG_START: string;
+    static DRAG_MOVE: string;
+    static DRAG_END: string;
+    static DROP: string;
+    static SCROLL: string;
+    static SCROLL_END: string;
+    static PULL_DOWN_RELEASE: string;
+    static PULL_UP_RELEASE: string;
+    static CLICK_ITEM: string;
+    initiator: GObject;
+    pos: Vec2;
+    touchId: number;
+    clickCount: number;
+    button: number;
+    keyModifiers: number;
+    mouseWheelDelta: number;
+    _processor: InputProcessor;
+    constructor(type: string, bubbles: boolean);
+    get sender(): GObject | null;
+    get isShiftDown(): boolean;
+    get isCtrlDown(): boolean;
+    captureTouch(): void;
+}
+
+declare enum ButtonMode {
+    Common = 0,
+    Check = 1,
+    Radio = 2
+}
+declare enum AutoSizeType {
+    None = 0,
+    Both = 1,
+    Height = 2,
+    Shrink = 3
+}
+declare enum AlignType {
+    Left = 0,
+    Center = 1,
+    Right = 2
+}
+declare enum VertAlignType {
+    Top = 0,
+    Middle = 1,
+    Bottom = 2
+}
+declare enum LoaderFillType {
+    None = 0,
+    Scale = 1,
+    ScaleMatchHeight = 2,
+    ScaleMatchWidth = 3,
+    ScaleFree = 4,
+    ScaleNoBorder = 5
+}
+declare enum ListLayoutType {
+    SingleColumn = 0,
+    SingleRow = 1,
+    FlowHorizontal = 2,
+    FlowVertical = 3,
+    Pagination = 4
+}
+declare enum ListSelectionMode {
+    Single = 0,
+    Multiple = 1,
+    Multiple_SingleClick = 2,
+    None = 3
+}
+declare enum OverflowType {
+    Visible = 0,
+    Hidden = 1,
+    Scroll = 2
+}
+declare enum PackageItemType {
+    Image = 0,
+    MovieClip = 1,
+    Sound = 2,
+    Component = 3,
+    Atlas = 4,
+    Font = 5,
+    Swf = 6,
+    Misc = 7,
+    Unknown = 8,
+    Spine = 9,
+    DragonBones = 10
+}
+declare enum ObjectType {
+    Image = 0,
+    MovieClip = 1,
+    Swf = 2,
+    Graph = 3,
+    Loader = 4,
+    Group = 5,
+    Text = 6,
+    RichText = 7,
+    InputText = 8,
+    Component = 9,
+    List = 10,
+    Label = 11,
+    Button = 12,
+    ComboBox = 13,
+    ProgressBar = 14,
+    Slider = 15,
+    ScrollBar = 16,
+    Tree = 17,
+    Loader3D = 18
+}
+declare enum ProgressTitleType {
+    Percent = 0,
+    ValueAndMax = 1,
+    Value = 2,
+    Max = 3
+}
+declare enum FlipType {
+    None = 0,
+    Horizontal = 1,
+    Vertical = 2,
+    Both = 3
+}
+declare enum ChildrenRenderOrder {
+    Ascent = 0,
+    Descent = 1,
+    Arch = 2
+}
+declare enum PopupDirection {
+    Auto = 0,
+    Up = 1,
+    Down = 2
+}
+declare enum RelationType {
+    Left_Left = 0,
+    Left_Center = 1,
+    Left_Right = 2,
+    Center_Center = 3,
+    Right_Left = 4,
+    Right_Center = 5,
+    Right_Right = 6,
+    Top_Top = 7,
+    Top_Middle = 8,
+    Top_Bottom = 9,
+    Middle_Middle = 10,
+    Bottom_Top = 11,
+    Bottom_Middle = 12,
+    Bottom_Bottom = 13,
+    Width = 14,
+    Height = 15,
+    LeftExt_Left = 16,
+    LeftExt_Right = 17,
+    RightExt_Left = 18,
+    RightExt_Right = 19,
+    TopExt_Top = 20,
+    TopExt_Bottom = 21,
+    BottomExt_Top = 22,
+    BottomExt_Bottom = 23,
+    Size = 24
+}
+declare enum FillMethod {
+    None = 0,
+    Horizontal = 1,
+    Vertical = 2,
+    Radial90 = 3,
+    Radial180 = 4,
+    Radial360 = 5
+}
+declare enum FillOrigin {
+    Top = 0,
+    Bottom = 1,
+    Left = 2,
+    Right = 3
+}
+
+declare class GObjectPool {
+    private _pool;
+    private _count;
+    constructor();
+    clear(): void;
+    get count(): number;
+    getObject(url: string): GObject;
+    returnObject(obj: GObject): void;
+}
+
+type ListItemRenderer = (index: number, item: GObject) => void;
+declare class GList extends GComponent {
+    itemRenderer: ListItemRenderer;
+    itemProvider: (index: number) => string;
+    scrollItemToViewOnClick: boolean;
+    foldInvisibleItems: boolean;
+    private _layout;
+    private _lineCount;
+    private _columnCount;
+    private _lineGap;
+    private _columnGap;
+    private _defaultItem;
+    private _autoResizeItem;
+    private _selectionMode;
+    private _align;
+    private _verticalAlign;
+    private _selectionController?;
+    private _lastSelectedIndex;
+    private _pool;
+    private _virtual?;
+    private _loop?;
+    private _numItems;
+    private _realNumItems;
+    private _firstIndex;
+    private _curLineItemCount;
+    private _curLineItemCount2;
+    private _itemSize?;
+    private _virtualListChanged;
+    private _virtualItems?;
+    private _eventLocked?;
+    private itemInfoVer;
+    constructor();
+    dispose(): void;
+    get layout(): ListLayoutType;
+    set layout(value: ListLayoutType);
+    get lineCount(): number;
+    set lineCount(value: number);
+    get columnCount(): number;
+    set columnCount(value: number);
+    get lineGap(): number;
+    set lineGap(value: number);
+    get columnGap(): number;
+    set columnGap(value: number);
+    get align(): AlignType;
+    set align(value: AlignType);
+    get verticalAlign(): VertAlignType;
+    set verticalAlign(value: VertAlignType);
+    get virtualItemSize(): Size;
+    set virtualItemSize(value: Size);
+    get defaultItem(): string | null;
+    set defaultItem(val: string | null);
+    get autoResizeItem(): boolean;
+    set autoResizeItem(value: boolean);
+    get selectionMode(): ListSelectionMode;
+    set selectionMode(value: ListSelectionMode);
+    get selectionController(): Controller;
+    set selectionController(value: Controller);
+    get itemPool(): GObjectPool;
+    getFromPool(url?: string): GObject;
+    returnToPool(obj: GObject): void;
+    addChildAt(child: GObject, index: number): GObject;
+    addItem(url?: string): GObject;
+    addItemFromPool(url?: string): GObject;
+    removeChildAt(index: number, dispose?: boolean): GObject;
+    removeChildToPoolAt(index: number): void;
+    removeChildToPool(child: GObject): void;
+    removeChildrenToPool(beginIndex?: number, endIndex?: number): void;
+    get selectedIndex(): number;
+    set selectedIndex(value: number);
+    getSelection(result?: number[]): number[];
+    addSelection(index: number, scrollItToView?: boolean): void;
+    removeSelection(index: number): void;
+    clearSelection(): void;
+    private clearSelectionExcept;
+    selectAll(): void;
+    selectNone(): void;
+    selectReverse(): void;
+    handleArrowKey(dir: number): void;
+    private onClickItem;
+    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void;
+    private setSelectionOnEvent;
+    resizeToFit(itemCount?: number, minSize?: number): void;
+    getMaxItemWidth(): number;
+    protected handleSizeChanged(): void;
+    handleControllerChanged(c: Controller): void;
+    private updateSelectionController;
+    getSnappingPosition(xValue: number, yValue: number, resultPoint?: Vec2): Vec2;
+    scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
+    getFirstChildInView(): number;
+    childIndexToItemIndex(index: number): number;
+    itemIndexToChildIndex(index: number): number;
+    setVirtual(): void;
+    setVirtualAndLoop(): void;
+    private _setVirtual;
+    get numItems(): number;
+    set numItems(value: number);
+    refreshVirtualList(): void;
+    private checkVirtualList;
+    private setVirtualListChangedFlag;
+    private _refreshVirtualList;
+    private __scrolled;
+    private getIndexOnPos1;
+    private getIndexOnPos2;
+    private getIndexOnPos3;
+    private handleScroll;
+    private static pos_param;
+    private handleScroll1;
+    private handleScroll2;
+    private handleScroll3;
+    private handleArchOrder1;
+    private handleArchOrder2;
+    private handleAlign;
+    protected updateBounds(): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    protected readItems(buffer: ByteBuffer): void;
+    protected setupItem(buffer: ByteBuffer, obj: GObject): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+}
+
+declare class GTree extends GList {
+    treeNodeRender: (node: GTreeNode, obj: GComponent) => void;
+    treeNodeWillExpand: (node: GTreeNode, expanded: boolean) => void;
+    private _indent;
+    private _clickToExpand;
+    private _rootNode;
+    private _expandedStatusInEvt;
+    constructor();
+    get rootNode(): GTreeNode;
+    get indent(): number;
+    set indent(value: number);
+    get clickToExpand(): number;
+    set clickToExpand(value: number);
+    getSelectedNode(): GTreeNode;
+    getSelectedNodes(result?: Array<GTreeNode>): Array<GTreeNode>;
+    selectNode(node: GTreeNode, scrollItToView?: boolean): void;
+    unselectNode(node: GTreeNode): void;
+    expandAll(folderNode?: GTreeNode): void;
+    collapseAll(folderNode?: GTreeNode): void;
+    private createCell;
+    _afterInserted(node: GTreeNode): void;
+    private getInsertIndexForNode;
+    _afterRemoved(node: GTreeNode): void;
+    _afterExpanded(node: GTreeNode): void;
+    _afterCollapsed(node: GTreeNode): void;
+    _afterMoved(node: GTreeNode): void;
+    private getFolderEndIndex;
+    private checkChildren;
+    private hideFolderNode;
+    private removeNode;
+    private __cellMouseDown;
+    private __expandedStateChanged;
+    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    protected readItems(buffer: ByteBuffer): void;
+}
+
+declare class GTreeNode {
+    data?: any;
+    private _parent;
+    private _children;
+    private _expanded;
+    private _level;
+    private _tree;
+    _cell: GComponent;
+    _resURL?: string;
+    constructor(hasChild?: boolean, resURL?: string);
+    set expanded(value: boolean);
+    get expanded(): boolean;
+    get isFolder(): boolean;
+    get parent(): GTreeNode;
+    get text(): string | null;
+    set text(value: string | null);
+    get icon(): ResURL | null;
+    set icon(value: ResURL | null);
+    get cell(): GComponent;
+    get level(): number;
+    _setLevel(value: number): void;
+    addChild(child: GTreeNode): GTreeNode;
+    addChildAt(child: GTreeNode, index: number): GTreeNode;
+    removeChild(child: GTreeNode): GTreeNode;
+    removeChildAt(index: number): GTreeNode;
+    removeChildren(beginIndex?: number, endIndex?: number): void;
+    getChildAt(index: number): GTreeNode;
+    getChildIndex(child: GTreeNode): number;
+    getPrevSibling(): GTreeNode;
+    getNextSibling(): GTreeNode;
+    setChildIndex(child: GTreeNode, index: number): void;
+    swapChildren(child1: GTreeNode, child2: GTreeNode): void;
+    swapChildrenAt(index1: number, index2: number): void;
+    get numChildren(): number;
+    expandToRoot(): void;
+    get tree(): GTree;
+    _setTree(value: GTree): void;
+}
+
+declare class Image extends Sprite {
+    private _flip;
+    private _fillMethod;
+    private _fillOrigin;
+    private _fillAmount;
+    private _fillClockwise;
+    constructor();
+    get flip(): FlipType;
+    set flip(value: FlipType);
+    get fillMethod(): FillMethod;
+    set fillMethod(value: FillMethod);
+    get fillOrigin(): FillOrigin;
+    set fillOrigin(value: FillOrigin);
+    get fillClockwise(): boolean;
+    set fillClockwise(value: boolean);
+    get fillAmount(): number;
+    set fillAmount(value: number);
+    private setupFill;
+}
+
+interface Frame {
+    rect: Rect$1;
+    addDelay: number;
+    texture: SpriteFrame | null;
+}
+declare class MovieClip extends Image {
+    interval: number;
+    swing: boolean;
+    repeatDelay: number;
+    timeScale: number;
+    private _playing;
+    private _frameCount;
+    private _frames;
+    private _frame;
+    private _start;
+    private _end;
+    private _times;
+    private _endAt;
+    private _status;
+    private _callback;
+    private _smoothing;
+    private _frameElapsed;
+    private _reversed;
+    private _repeatedCount;
+    constructor();
+    get frames(): Array<Frame>;
+    set frames(value: Array<Frame>);
+    get frameCount(): number;
+    get frame(): number;
+    set frame(value: number);
+    get playing(): boolean;
+    set playing(value: boolean);
+    get smoothing(): boolean;
+    set smoothing(value: boolean);
+    rewind(): void;
+    syncStatus(anotherMc: MovieClip): void;
+    advance(timeInSeconds: number): void;
+    setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: (() => void) | null): void;
+    protected update(dt: number): void;
+    private drawFrame;
+}
+
+type PackageDependency = {
+    id: string;
+    name: string;
+};
+declare class UIPackage {
+    private _id;
+    private _name;
+    private _path;
+    private _items;
+    private _itemsById;
+    private _itemsByName;
+    private _sprites;
+    private _dependencies;
+    private _branches;
+    _branchIndex: number;
+    private _bundle;
+    constructor();
+    static get branch(): string | null;
+    static set branch(value: string | null);
+    static getVar(key: string): string | null;
+    static setVar(key: string, value: string | null): void;
+    static getById(id: string): UIPackage;
+    static getByName(name: string): UIPackage;
+    /**
+     * 注册一个包。包的所有资源必须放在resources下，且已经预加载。
+     * @param path 相对 resources 的路径。
+     */
+    static addPackage(path: string): UIPackage;
+    /**
+     * 载入一个包。包的资源从Asset Bundle加载.
+     * @param bundle Asset Bundle 对象.
+     * @param path 资源相对 Asset Bundle 目录的路径.
+     * @param onComplete 载入成功后的回调.
+     */
+    static loadPackage(bundle: AssetManager.Bundle, path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
+    /**
+     * 载入一个包。包的资源从Asset Bundle加载.
+     * @param bundle Asset Bundle 对象.
+     * @param path 资源相对 Asset Bundle 目录的路径.
+     * @param onProgress 加载进度回调.
+     * @param onComplete 载入成功后的回调.
+     */
+    static loadPackage(bundle: AssetManager.Bundle, path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void): void;
+    /**
+     * 载入一个包。包的资源从resources加载.
+     * @param path 资源相对 resources 的路径.
+     * @param onComplete 载入成功后的回调.
+     */
+    static loadPackage(path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
+    /**
+     * 载入一个包。包的资源从resources加载.
+     * @param path 资源相对 resources 的路径.
+     * @param onProgress 加载进度回调.
+     * @param onComplete 载入成功后的回调.
+     */
+    static loadPackage(path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: Error, pkg: UIPackage) => void): void;
+    static removePackage(packageIdOrName: string): void;
+    static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject;
+    static createObjectFromURL(url: string, userClass?: new () => GObject): GObject;
+    static getItemURL(pkgName: string, resName: string): string;
+    static getItemByURL(url: string): PackageItem;
+    static normalizeURL(url: string): string;
+    static setStringsSource(source: string): void;
+    private loadPackage;
+    dispose(): void;
+    get id(): string;
+    get name(): string;
+    get path(): string;
+    get dependencies(): Array<PackageDependency>;
+    createObject(resName: string, userClass?: new () => GObject): GObject;
+    internalCreateObject(item: PackageItem, userClass?: new () => GObject): GObject;
+    getItemById(itemId: string): PackageItem;
+    getItemByName(resName: string): PackageItem;
+    getItemAssetByName(resName: string): Asset;
+    getItemAsset(item: PackageItem): Asset;
+    getItemAssetAsync(item: PackageItem, onComplete?: (err: Error, item: PackageItem) => void): void;
+    loadAllAssets(): void;
+    private loadMovieClip;
+    private loadFont;
+    private loadSpine;
+    private loadDragonBones;
+}
+
+declare class PackageItem {
+    owner: UIPackage;
+    type: PackageItemType;
+    objectType?: ObjectType;
+    id: string;
+    name: string;
+    width: number;
+    height: number;
+    file: string;
+    decoded?: boolean;
+    loading?: Array<Function>;
+    rawData?: ByteBuffer;
+    asset?: Asset;
+    highResolution?: Array<string>;
+    branches?: Array<string>;
+    scale9Grid?: Rect$1;
+    scaleByTile?: boolean;
+    tileGridIndice?: number;
+    smoothing?: boolean;
+    hitTestData?: PixelHitTestData;
+    interval?: number;
+    repeatDelay?: number;
+    swing?: boolean;
+    frames?: Array<Frame>;
+    extensionType?: any;
+    skeletonAnchor?: Vec2;
+    atlasAsset?: dragonBones.DragonBonesAtlasAsset;
+    constructor();
+    load(): Asset;
+    getBranch(): PackageItem;
+    getHighResolution(): PackageItem;
+    toString(): string;
+}
+
+declare class Relations {
+    private _owner;
+    private _items;
+    handling: GObject | null;
+    sizeDirty: boolean;
+    constructor(owner: GObject);
+    add(target: GObject, relationType: number, usePercent?: boolean): void;
+    remove(target: GObject, relationType?: number): void;
+    contains(target: GObject): boolean;
+    clearFor(target: GObject): void;
+    clearAll(): void;
+    copyFrom(source: Relations): void;
+    dispose(): void;
+    onOwnerSizeChanged(dWidth: number, dHeight: number, applyPivot: boolean): void;
+    ensureRelationsSizeCorrect(): void;
+    get empty(): boolean;
+    setup(buffer: ByteBuffer, parentToChild: boolean): void;
+}
+
+/**
+ * tooltips数据
+ */
+type TooltipsData = string | {
+    type: string;
+    data: any;
+};
+
+declare class GObject {
+    data?: any;
+    packageItem?: PackageItem;
+    static draggingObject: GObject | null;
+    protected _x: number;
+    protected _y: number;
+    protected _alpha: number;
+    protected _visible: boolean;
+    protected _touchable: boolean;
+    protected _grayed?: boolean;
+    protected _draggable?: boolean;
+    protected _skewX: number;
+    protected _skewY: number;
+    protected _pivotAsAnchor?: boolean;
+    protected _sortingOrder: number;
+    protected _internalVisible: boolean;
+    protected _handlingController?: boolean;
+    protected _tooltips?: TooltipsData;
+    protected _blendMode: BlendMode;
+    protected _pixelSnapping?: boolean;
+    protected _dragTesting?: boolean;
+    protected _dragStartPos?: Vec2;
+    protected _relations: Relations;
+    protected _group: GGroup | null;
+    protected _gears: GearBase[];
+    protected _node: Node;
+    protected _dragBounds?: Rect$1;
+    sourceWidth: number;
+    sourceHeight: number;
+    initWidth: number;
+    initHeight: number;
+    minWidth: number;
+    minHeight: number;
+    maxWidth: number;
+    maxHeight: number;
+    _parent: GComponent | null;
+    _width: number;
+    _height: number;
+    _rawWidth: number;
+    _rawHeight: number;
+    _id: string;
+    _name: string;
+    _underConstruct: boolean;
+    _gearLocked?: boolean;
+    _sizePercentInGroup: number;
+    _touchDisabled?: boolean;
+    _partner: GObjectPartner;
+    _treeNode?: GTreeNode;
+    _uiTrans: UITransform;
+    _uiOpacity: UIOpacity;
+    private _hitTestPt?;
+    constructor();
+    get id(): string;
+    get name(): string;
+    set name(value: string);
+    get x(): number;
+    set x(value: number);
+    get y(): number;
+    set y(value: number);
+    setPosition(xv: number, yv: number): void;
+    get xMin(): number;
+    set xMin(value: number);
+    get yMin(): number;
+    set yMin(value: number);
+    get pixelSnapping(): boolean;
+    set pixelSnapping(value: boolean);
+    center(restraint?: boolean): void;
+    get width(): number;
+    set width(value: number);
+    get height(): number;
+    set height(value: number);
+    setSize(wv: number, hv: number, ignorePivot?: boolean): void;
+    makeFullScreen(): void;
+    ensureSizeCorrect(): void;
+    get actualWidth(): number;
+    get actualHeight(): number;
+    get scaleX(): number;
+    set scaleX(value: number);
+    get scaleY(): number;
+    set scaleY(value: number);
+    setScale(sx: number, sy: number): void;
+    get skewX(): number;
+    get pivotX(): number;
+    set pivotX(value: number);
+    get pivotY(): number;
+    set pivotY(value: number);
+    setPivot(xv: number, yv: number, asAnchor?: boolean): void;
+    get pivotAsAnchor(): boolean;
+    get touchable(): boolean;
+    set touchable(value: boolean);
+    get grayed(): boolean;
+    set grayed(value: boolean);
+    get enabled(): boolean;
+    set enabled(value: boolean);
+    get rotation(): number;
+    set rotation(value: number);
+    get alpha(): number;
+    set alpha(value: number);
+    get visible(): boolean;
+    set visible(value: boolean);
+    get _finalVisible(): boolean;
+    get internalVisible3(): boolean;
+    get sortingOrder(): number;
+    set sortingOrder(value: number);
+    requestFocus(): void;
+    get tooltips(): TooltipsData | null;
+    set tooltips(value: TooltipsData | null);
+    get blendMode(): BlendMode;
+    set blendMode(value: BlendMode);
+    get onStage(): boolean;
+    get resourceURL(): string | null;
+    set group(value: GGroup);
+    get group(): GGroup;
+    getGear(index: number): GearBase;
+    protected updateGear(index: number): void;
+    checkGearController(index: number, c: Controller): boolean;
+    updateGearFromRelations(index: number, dx: number, dy: number): void;
+    addDisplayLock(): number;
+    releaseDisplayLock(token: number): void;
+    private checkGearDisplay;
+    get gearXY(): GearXY;
+    get gearSize(): GearSize;
+    get gearLook(): GearLook;
+    get relations(): Relations;
+    addRelation(target: GObject, relationType: number, usePercent?: boolean): void;
+    removeRelation(target: GObject, relationType: number): void;
+    get node(): Node;
+    get parent(): GComponent;
+    removeFromParent(): void;
+    findParent(): GObject;
+    get asCom(): GComponent;
+    static cast(obj: Node): GObject;
+    get text(): string | null;
+    set text(value: string | null);
+    get icon(): ResURL | null;
+    set icon(value: ResURL | null);
+    get treeNode(): GTreeNode;
+    get isDisposed(): boolean;
+    dispose(): void;
+    protected onEnable(): void;
+    protected onDisable(): void;
+    protected onUpdate(): void;
+    protected onDestroy(): void;
+    onClick(listener: Function, target?: any): void;
+    onceClick(listener: Function, target?: any): void;
+    offClick(listener: Function, target?: any): void;
+    clearClick(): void;
+    hasClickListener(): boolean;
+    on(type: string, listener: Function, target?: any): void;
+    once(type: string, listener: Function, target?: any): void;
+    off(type: string, listener?: Function, target?: any): void;
+    get draggable(): boolean;
+    set draggable(value: boolean);
+    get dragBounds(): Rect$1;
+    set dragBounds(value: Rect$1);
+    startDrag(touchId?: number): void;
+    stopDrag(): void;
+    get dragging(): boolean;
+    localToGlobal(ax?: number, ay?: number, result?: Vec2): Vec2;
+    globalToLocal(ax?: number, ay?: number, result?: Vec2): Vec2;
+    localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
+    globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
+    handleControllerChanged(c: Controller): void;
+    protected handleAnchorChanged(): void;
+    handlePositionChanged(): void;
+    protected handleSizeChanged(): void;
+    protected handleGrayedChanged(): void;
+    handleVisibleChanged(): void;
+    hitTest(globalPt: Vec2, forTouch?: boolean): GObject;
+    protected _hitTest(pt: Vec2, globalPt: Vec2): GObject;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    constructFromResource(): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+    private onRollOver;
+    private onRollOut;
+    private initDrag;
+    private dragBegin;
+    private dragEnd;
+    private onTouchBegin_0;
+    private onTouchMove_0;
+    private onTouchEnd_0;
+}
+declare class GObjectPartner extends Component {
+    _emitDisplayEvents?: boolean;
+    callLater(callback: any, delay?: number): void;
+    onClickLink(evt: Event, text: string): void;
+    protected onEnable(): void;
+    protected onDisable(): void;
+    protected update(dt: number): void;
+    protected onDestroy(): void;
+}
+
+interface IHitTest {
+    hitTest(pt: Vec2, globalPt: Vec2): boolean;
+}
+declare class PixelHitTestData {
+    pixelWidth: number;
+    scale: number;
+    pixels: Uint8Array;
+    constructor(ba: ByteBuffer);
+}
+
+declare class Margin {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    constructor();
+    copy(source: Margin): void;
+    isNone(): boolean;
+}
+
+declare class GScrollBar extends GComponent {
+    private _grip;
+    private _arrowButton1;
+    private _arrowButton2;
+    private _bar;
+    private _target;
+    private _vertical;
+    private _scrollPerc;
+    private _fixedGripSize;
+    private _dragOffset;
+    private _gripDragging;
+    constructor();
+    setScrollPane(target: ScrollPane, vertical: boolean): void;
+    setDisplayPerc(value: number): void;
+    setScrollPerc(val: number): void;
+    get minSize(): number;
+    get gripDragging(): boolean;
+    protected constructExtension(buffer: ByteBuffer): void;
+    private onGripTouchDown;
+    private onGripTouchMove;
+    private onGripTouchEnd;
+    private onClickArrow1;
+    private onClickArrow2;
+    private onBarTouchBegin;
+}
+
+declare class ScrollPane extends Component {
+    private _owner;
+    private _container;
+    private _maskContainer;
+    private _scrollType;
+    private _scrollStep;
+    private _mouseWheelStep;
+    private _decelerationRate;
+    private _scrollBarMargin;
+    private _bouncebackEffect;
+    private _touchEffect;
+    private _scrollBarDisplayAuto?;
+    private _vScrollNone;
+    private _hScrollNone;
+    private _needRefresh;
+    private _refreshBarAxis;
+    private _displayOnLeft?;
+    private _snapToItem?;
+    private _snappingPolicy?;
+    _displayInDemand?: boolean;
+    private _mouseWheelEnabled;
+    private _pageMode?;
+    private _inertiaDisabled?;
+    private _floating?;
+    private _dontClipMargin?;
+    private _xPos;
+    private _yPos;
+    private _viewSize;
+    private _contentSize;
+    private _overlapSize;
+    private _pageSize;
+    private _containerPos;
+    private _beginTouchPos;
+    private _lastTouchPos;
+    private _lastTouchGlobalPos;
+    private _velocity;
+    private _velocityScale;
+    private _lastMoveTime;
+    private _isHoldAreaDone;
+    private _aniFlag;
+    _loop: number;
+    private _headerLockedSize;
+    private _footerLockedSize;
+    private _refreshEventDispatching;
+    private _dragged;
+    private _hover;
+    private _tweening;
+    private _tweenTime;
+    private _tweenDuration;
+    private _tweenStart;
+    private _tweenChange;
+    private _pageController?;
+    private _hzScrollBar?;
+    private _vtScrollBar?;
+    private _header?;
+    private _footer?;
+    static draggingPane: ScrollPane;
+    setup(buffer: ByteBuffer): void;
+    protected onDestroy(): void;
+    hitTest(pt: Vec2, globalPt: Vec2): GObject;
+    get owner(): GComponent;
+    get hzScrollBar(): GScrollBar;
+    get vtScrollBar(): GScrollBar;
+    get header(): GComponent;
+    get footer(): GComponent;
+    get bouncebackEffect(): boolean;
+    set bouncebackEffect(sc: boolean);
+    get touchEffect(): boolean;
+    set touchEffect(sc: boolean);
+    set scrollStep(val: number);
+    get decelerationRate(): number;
+    set decelerationRate(val: number);
+    get scrollStep(): number;
+    get snapToItem(): boolean;
+    set snapToItem(value: boolean);
+    get snappingPolicy(): number;
+    set snappingPolicy(value: number);
+    get mouseWheelEnabled(): boolean;
+    set mouseWheelEnabled(value: boolean);
+    get isDragged(): boolean;
+    get percX(): number;
+    set percX(value: number);
+    setPercX(value: number, ani?: boolean): void;
+    get percY(): number;
+    set percY(value: number);
+    setPercY(value: number, ani?: boolean): void;
+    get posX(): number;
+    set posX(value: number);
+    setPosX(value: number, ani?: boolean): void;
+    get posY(): number;
+    set posY(value: number);
+    setPosY(value: number, ani?: boolean): void;
+    get contentWidth(): number;
+    get contentHeight(): number;
+    get viewWidth(): number;
+    set viewWidth(value: number);
+    get viewHeight(): number;
+    set viewHeight(value: number);
+    get currentPageX(): number;
+    set currentPageX(value: number);
+    get currentPageY(): number;
+    set currentPageY(value: number);
+    setCurrentPageX(value: number, ani?: boolean): void;
+    setCurrentPageY(value: number, ani?: boolean): void;
+    get isBottomMost(): boolean;
+    get isRightMost(): boolean;
+    get pageController(): Controller;
+    set pageController(value: Controller);
+    get scrollingPosX(): number;
+    get scrollingPosY(): number;
+    scrollTop(ani?: boolean): void;
+    scrollBottom(ani?: boolean): void;
+    scrollUp(ratio?: number, ani?: boolean): void;
+    scrollDown(ratio?: number, ani?: boolean): void;
+    scrollLeft(ratio?: number, ani?: boolean): void;
+    scrollRight(ratio?: number, ani?: boolean): void;
+    scrollToView(target: any, ani?: boolean, setFirst?: boolean): void;
+    isChildInView(obj: GObject): boolean;
+    cancelDragging(): void;
+    lockHeader(size: number): void;
+    lockFooter(size: number): void;
+    onOwnerSizeChanged(): void;
+    handleControllerChanged(c: Controller): void;
+    private updatePageController;
+    adjustMaskContainer(): void;
+    setSize(aWidth: number, aHeight: number): void;
+    setContentSize(aWidth: number, aHeight: number): void;
+    changeContentSizeOnScrolling(deltaWidth: number, deltaHeight: number, deltaPosX: number, deltaPosY: number): void;
+    private handleSizeChanged;
+    private posChanged;
+    private refresh;
+    private refresh2;
+    private onTouchBegin;
+    private onTouchMove;
+    private onTouchEnd;
+    private onRollOver;
+    private onRollOut;
+    private onMouseWheel;
+    private updateScrollBarPos;
+    updateScrollBarVisible(): void;
+    private updateScrollBarVisible2;
+    private __barTweenComplete;
+    private getLoopPartSize;
+    private loopCheckingCurrent;
+    private loopCheckingTarget;
+    private loopCheckingTarget2;
+    private loopCheckingNewPos;
+    private alignPosition;
+    private alignByPage;
+    private updateTargetAndDuration;
+    private updateTargetAndDuration2;
+    private fixDuration;
+    private startTween;
+    private killTween;
+    private checkRefreshBar;
+    protected update(dt: number): boolean;
+    private runTween;
+}
+
+declare class Transition {
+    name: string;
+    private _owner;
+    private _ownerBaseX;
+    private _ownerBaseY;
+    private _items;
+    private _totalTimes;
+    private _totalTasks;
+    private _playing;
+    private _paused?;
+    private _onComplete?;
+    private _options;
+    private _reversed?;
+    private _totalDuration;
+    private _autoPlay?;
+    private _autoPlayTimes;
+    private _autoPlayDelay;
+    private _timeScale;
+    private _startTime;
+    private _endTime;
+    constructor(owner: GComponent);
+    play(onComplete?: (() => void) | null, times?: number, delay?: number, startTime?: number, endTime?: number): void;
+    playReverse(onComplete?: (() => void) | null, times?: number, delay?: number): void;
+    changePlayTimes(value: number): void;
+    setAutoPlay(value: boolean, times?: number, delay?: number): void;
+    private _play;
+    stop(setToComplete?: boolean, processCallback?: boolean): void;
+    private stopItem;
+    setPaused(paused: boolean): void;
+    dispose(): void;
+    get playing(): boolean;
+    setValue(label: string, ...args: any[]): void;
+    setHook(label: string, callback: (label?: string) => void): void;
+    clearHooks(): void;
+    setTarget(label: string, newTarget: GObject): void;
+    setDuration(label: string, value: number): void;
+    getLabelTime(label: string): number;
+    get timeScale(): number;
+    set timeScale(value: number);
+    updateFromRelations(targetId: string, dx: number, dy: number): void;
+    onEnable(): void;
+    onDisable(): void;
+    private onDelayedPlay;
+    private internalPlay;
+    private playItem;
+    private skipAnimations;
+    private onDelayedPlayItem;
+    private onTweenStart;
+    private onTweenUpdate;
+    private onTweenComplete;
+    private onPlayTransCompleted;
+    private callHook;
+    private checkAllComplete;
+    private applyValue;
+    setup(buffer: ByteBuffer): void;
+    private decodeValue;
+}
+
+declare class GComponent extends GObject {
+    hitArea?: IHitTest;
+    private _sortingChildCount;
+    private _opaque;
+    private _applyingController?;
+    private _rectMask?;
+    private _maskContent?;
+    protected _margin: Margin;
+    protected _trackBounds: boolean;
+    protected _boundsChanged: boolean;
+    protected _childrenRenderOrder: ChildrenRenderOrder;
+    protected _apexIndex: number;
+    _buildingDisplayList: boolean;
+    _children: Array<GObject>;
+    _controllers: Array<Controller>;
+    _transitions: Array<Transition>;
+    _container: Node;
+    _scrollPane?: ScrollPane;
+    _alignOffset: Vec2;
+    _customMask?: Mask;
+    constructor();
+    dispose(): void;
+    get displayListContainer(): Node;
+    addChild(child: GObject): GObject;
+    addChildAt(child: GObject, index: number): GObject;
+    private getInsertPosForSortingChild;
+    removeChild(child: GObject, dispose?: boolean): GObject;
+    removeChildAt(index: number, dispose?: boolean): GObject;
+    removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void;
+    getChildAt<T extends GObject>(index: number, classType?: Constructor<T>): T;
+    getChild<T extends GObject>(name: string, classType?: Constructor<T>): T;
+    getChildByPath<T extends GObject>(path: String, classType?: Constructor<T>): T;
+    getVisibleChild(name: string): GObject;
+    getChildInGroup(name: string, group: GGroup): GObject;
+    getChildById(id: string): GObject;
+    getChildIndex(child: GObject): number;
+    setChildIndex(child: GObject, index: number): void;
+    setChildIndexBefore(child: GObject, index: number): number;
+    private _setChildIndex;
+    swapChildren(child1: GObject, child2: GObject): void;
+    swapChildrenAt(index1: number, index2: number): void;
+    get numChildren(): number;
+    isAncestorOf(child: GObject): boolean;
+    addController(controller: Controller): void;
+    getControllerAt(index: number): Controller;
+    getController(name: string): Controller;
+    removeController(c: Controller): void;
+    get controllers(): Array<Controller>;
+    private onChildAdd;
+    private buildNativeDisplayList;
+    applyController(c: Controller): void;
+    applyAllControllers(): void;
+    adjustRadioGroupDepth(obj: GObject, c: Controller): void;
+    getTransitionAt(index: number): Transition;
+    getTransition(transName: string): Transition;
+    isChildInView(child: GObject): boolean;
+    getFirstChildInView(): number;
+    get scrollPane(): ScrollPane;
+    get opaque(): boolean;
+    set opaque(value: boolean);
+    get margin(): Margin;
+    set margin(value: Margin);
+    get childrenRenderOrder(): ChildrenRenderOrder;
+    set childrenRenderOrder(value: ChildrenRenderOrder);
+    get apexIndex(): number;
+    set apexIndex(value: number);
+    get mask(): GObject;
+    set mask(value: GObject);
+    setMask(value: GObject, inverted: boolean): void;
+    private onMaskReady;
+    private onMaskContentChanged;
+    get _pivotCorrectX(): number;
+    get _pivotCorrectY(): number;
+    get baseUserData(): string;
+    protected setupScroll(buffer: ByteBuffer): void;
+    protected setupOverflow(overflow: OverflowType): void;
+    protected handleAnchorChanged(): void;
+    protected handleSizeChanged(): void;
+    protected handleGrayedChanged(): void;
+    handleControllerChanged(c: Controller): void;
+    protected _hitTest(pt: Vec2, globalPt: Vec2): GObject;
+    setBoundsChangedFlag(): void;
+    private refresh;
+    ensureBoundsCorrect(): void;
+    protected updateBounds(): void;
+    setBounds(ax: number, ay: number, aw: number, ah?: number): void;
+    get viewWidth(): number;
+    set viewWidth(value: number);
+    get viewHeight(): number;
+    set viewHeight(value: number);
+    getSnappingPosition(xValue: number, yValue: number, resultPoint?: Vec2): Vec2;
+    childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
+    constructFromResource(): void;
+    constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void;
+    protected constructExtension(buffer: ByteBuffer): void;
+    protected onConstruct(): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+    protected onEnable(): void;
+    protected onDisable(): void;
+}
+
+/**
+ * 基础UIMediator类
+ */
+declare class BaseMediator {
+    /**UI组件 */
+    ui: GComponent | null;
+    /**初始化完毕*/
+    inited: boolean;
+    /**外部传参*/
+    data: any;
+    /**需要注册和删除的事件*/
+    private __bindEvents;
+    private __bindingUtils;
+    constructor();
+    Init(): void;
     Tick(dt: number): void;
-    private __addEvent;
-    private __eventHandler;
-    Load(url: ResURL): void;
-    private static __instance;
-    static get single(): LoaderQueue;
-}
-
-declare class ResRequest {
-    /**
-     * 资源地址
-     */
-    urls: Array<ResURL>;
-    /**
-     * 完成回调
-     */
-    cb?: (err: Error) => void;
-    /**
-     * 进度处理器
-     */
-    progress?: (progress: number) => void;
-    private __loadedMap;
-    constructor(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void);
-    Load(): void;
-    ChildComplete(resURL: ResURL): void;
-    ChildProgress(resURL: ResURL, progress: number): void;
-    ChildError(err: Error): void;
-    UpdateProgress(): void;
-    private checkComplete;
-    private getLoaded;
+    Show(data: any): void;
+    ShowedUpdate(data?: any): void;
+    Hide(): void;
     Destroy(): void;
+    /**
+     * 根据名称或路径获取组件
+     * @param path
+     * @returns
+     */
+    GetUIComponent(path: string): any;
+    /**
+     * 属性和属性的绑定
+     */
+    BindAA(source: any, property: string, target: any, tProperty: string): void;
+    /**
+     * 取消属性和属性的绑定
+     * @param source
+     * @param property
+     * @param target
+     * @param tProperty
+     */
+    UnbindAA(source: any, property: string, target: any, tProperty: string): void;
+    /**
+     * 属性和函数的绑定
+     * @param source
+     * @param property
+     * @param callBack
+     * @param caller
+     */
+    BindAM(source: any, property: string | Array<string>, callBack: (prepertys: Array<string>) => void, caller: any): void;
+    /**
+     * 取消属性和函数的绑定
+     * @param source
+     * @param propertys
+     * @param callBack
+     * @param caller
+     */
+    UnbidAM(source: any, propertys: string | Array<string>, callBack: (prepertys: Array<string>) => void, caller: any): void;
+    /**
+     * 函数和函数的绑定
+     * @param source
+     * @param functionName  目标函数
+     * @param preHandle     该函数将在目标函数调用前调用
+     * @param laterHandler  该函数将在目标函数调用后调用
+     */
+    BindMM(source: any, functionName: string, preHandle: Handler, laterHandler?: Handler): void;
+    /**
+     * 取消方法和方法的绑定关系
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    UnbindMM(source: any, functionName: string, preHandle: Handler, laterHandler: Handler): void;
+    /**
+     * 绑定事件
+     * @param target
+     * @param type
+     * @param handler
+     * @param caller
+     */
+    BindEvent(target: any, type: string, handler: Function, caller: any): void;
+    /**
+     * 取消事件绑定
+     * @param target
+     * @param type
+     * @param handler
+     * @param caller
+     */
+    UnbindEvent(target: any, type: string, handler: Function, caller: any): void;
+    /**
+     * 按照绑定记录添加事件
+     */
+    _addBindedEvents(): void;
+    /**
+     * 删除已绑定事件
+     */
+    _removeBindedEvents(): void;
+}
+
+interface IGUIInfo {
+    /**
+     * UI 全局唯一KEY
+     */
+    key: string;
+    /**
+     * 是否永久存在
+     */
+    permanence: boolean;
+    /**
+     * UI所在层
+     */
+    layer: string;
+    /**
+     * 是否使用遮罩
+     */
+    modal: boolean;
+    /**
+     * 点击蒙版时时候关闭界面
+     */
+    modalClose: boolean;
+    /**
+     * 资源包
+     */
+    bundleName: string;
+    /**
+     * UIPackage名称
+     */
+    packageName: string;
+    /**
+     * FGUI 组件名
+     */
+    comName: string;
+    /**UI所属状态 */
+    state: GUIState;
+}
+
+/**
+ * GUI管理器
+ */
+declare class GUIManagerImpl implements IGUIManager {
+    /**已注册*/
+    private __registered;
+    /**实例 */
+    private __instances;
+    /**
+     * 删除列表
+     */
+    private __destryList;
+    constructor();
+    /**获取某个组件 */
+    GetUIComponent(key: string, path: string): any;
+    /**
+     * 获取界面的mediator
+     * @param key
+     */
+    GetMediatorByKey(key: string): IGUIMediator | null;
+    private __showedHandler;
+    private __closedHandler;
+    Register(info: IGUIInfo): void;
+    Unregister(key: string): void;
+    Tick(dt: number): void;
+    Open(key: string, data?: any): void;
+    private __open;
+    private CheckFullLayer;
+    Close(key: string, checkLayer?: boolean): void;
+    CloseAll(): void;
+    private __close;
+    /**
+     * 检测UI关联关系
+     * @param key
+     */
+    private __checkRelation;
+    /**
+     * 获得前一个打开的全屏界面
+     */
+    GetPrevLayer(): string;
+    /**
+     * 获取界面状态
+     * @param key
+     */
+    GetGUIState(key: string): GUIState;
+    SetGUIState(key: string, state: GUIState): void;
+    /**
+     * 是否已打开或打开中
+     * @param key
+     * @returns
+     */
+    IsOpen(key: string): boolean;
+}
+
+/**
+ * 子UI 逻辑划分
+ */
+declare class SubGUIMediator extends BaseMediator {
+    /**所属GUI*/
+    owner: GUIMediator;
+    constructor(ui: GComponent, owner: GUIMediator);
+    Destroy(): void;
+}
+
+/**
+ * UI中介者
+ */
+declare class GUIMediator extends BaseMediator implements IGUIMediator {
+    info: IGUIInfo | null;
+    /**依赖的服务 */
+    services: Array<{
+        new (): IService;
+    }>;
+    /**根节点 */
+    viewComponent: GComponent | null;
+    /**遮罩 */
+    private __mask;
+    /**创建UI完成回调*/
+    private __createdCallBack;
+    /**子Mediator(用于代码拆分)*/
+    protected $subMediators: Array<SubGUIMediator>;
+    constructor();
+    /**
+     * 创建UI
+     * @param info
+     * @param created
+     */
+    CreateUI(info: any, created: Function): void;
+    private __asyncCreator;
+    private __createUI;
+    private __uiCreated;
+    protected _maskClickHandler(): void;
+    Init(): void;
+    Show(data?: any): void;
+    ShowedUpdate(data?: any): void;
+    Hide(): void;
+    /**
+     * 关闭
+     * @param checkLayer 是否检查全屏层记录
+     */
+    Close(checkLayer?: boolean): void;
+    Tick(dt: number): void;
+    Destroy(): void;
+}
+
+/**
+ * GUI代理，将资源加载和Mediator逻辑隔离开
+ */
+declare class GUIProxy {
+    /**用于Creator创建器的统一帮助节点 */
+    private static createNode;
+    info?: IGUIInfo;
+    /**GUI中介*/
+    mediator?: IGUIMediator;
+    /**关闭时间*/
+    closeTime: number;
+    /**UI层次*/
+    zIndex: number;
+    /**数据 */
+    data: any;
+    /**资源引用*/
+    private __resRef;
+    /**是否在显示中*/
+    private __showing;
+    /**加载状态 */
+    private __loadState;
+    private __uiURL;
+    private __startTime;
+    constructor(info: IGUIInfo);
+    /**
+     * 加载代码包
+     */
+    private __loadCodeBundle;
+    /**
+     * 代码包加载完成
+     */
+    private __codeBundleLoaded;
+    private __loadAssets;
+    private __loadAssetProgress;
+    private __loadAssetError;
+    private __loadAssetComplete;
+    /**创建Mediator */
+    private __createUIMediator;
+    /**
+    * 初始化服务
+    */
+    private __initServices;
+    /**
+     * 创建UI
+     */
+    private __createUI;
+    /**
+     * UI创建完成回调
+     */
+    private __createUICallBack;
+    private __addToLayer;
+    Tick(dt: number): void;
+    Show(data?: any): void;
+    ShowedUpdate(data: any): void;
+    private __show;
+    private __showAnimationPlayed;
+    Hide(): void;
+    private __hideAnimationPlayed;
+    private __hide;
+    Destroy(): void;
+    private getLayerChildCount;
+    private get layer();
+    /**
+     * 获取组件
+     * @param path
+     */
+    getComponent(path: string): any;
+}
+
+declare class Layer extends GComponent implements ILayer {
+    isFullScrene: boolean;
+    openRecord: Array<string>;
+    constructor(name: string, isFullScrene?: boolean);
+    AddChild(child: any): void;
+    AddChildAt(child: any, index: number): void;
+    RemoveChild(child: any): void;
+    RemoveChildAt(index: number): void;
+    GetChildAt(index: number): GObject;
+    GetCount(): number;
+}
+
+/**
+ * cocos fgui 层管理器
+ */
+declare class LayerManagerImpl implements ILayerManager {
+    private __layerMap;
+    constructor();
+    /**
+     * 添加层
+     * @param key
+     * @param layer
+     */
+    AddLayer(key: string, layer: ILayer): void;
+    /**
+     * 删除层
+     * @param key
+     */
+    RemoveLayer(key: string): void;
+    GetLayer(layerKey: string): ILayer | undefined;
+    /**
+     * 获得所有层
+     */
+    GetAllLayer(): ILayer[];
 }
 
 declare enum FindPosition {
@@ -1620,6 +3516,38 @@ declare class Pool {
     }): void;
 }
 
+declare class ResRef {
+    /**唯一KEY */
+    key: string;
+    /**引用KEY */
+    refKey: string | undefined;
+    /**资源内容 */
+    content: any;
+    /**是否已释放 */
+    private __isDispose;
+    constructor();
+    /**释放 */
+    Dispose(): void;
+    get isDispose(): boolean;
+    Reset(): void;
+    /**
+     * 彻底销毁(注意内部接口，请勿调用)
+     */
+    Destroy(): void;
+}
+
+interface ILoader extends IEventDispatcher {
+    /**
+     * 加载
+     * @param url
+     */
+    Load(url: ResURL): void;
+    /**
+     * 重置
+     */
+    Reset(): void;
+}
+
 declare class Res {
     static KEY: string;
     /**
@@ -1665,6 +3593,270 @@ declare class Res {
     static GetResRefMap(url: Array<ResURL>, refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
     private static __impl;
     private static get impl();
+}
+
+interface IRes {
+    /**
+     * 设置加载器
+     * @param key
+     * @param loader
+     */
+    SetResLoader(key: any, loader: new () => ILoader): void;
+    /**
+     * 获取加载器
+     * @param key
+     */
+    GetResLoader(key: any): new () => ILoader;
+    /**
+    * 获取资源
+    * @param url
+    * @param refKey
+    * @param progress
+    */
+    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
+    /**
+     * 获取资源列表
+     * @param urls
+     * @param refKey
+     * @param progress
+     */
+    GetResRefList(urls: Array<ResURL>, refKey: string, progress?: (progress: number) => void): Promise<Array<ResRef>>;
+    /**
+     * 获取资源列表按照URL存放到字典中
+     * @param urls
+     * @param refKey
+     * @param result
+     * @param progress
+     */
+    GetResRefMap(urls: Array<ResURL>, refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
+}
+
+/**
+ * 心跳接口
+ */
+interface ITicker {
+    /**
+     * 心跳
+     * @param dt    间隔时间(秒)
+     */
+    Tick(dt: number): void;
+}
+
+/**
+ * 资源接口
+ */
+interface IResource {
+    /**
+     * 资源全局唯一KEY
+     */
+    key: string;
+    /**
+     * 最后一次操作的时间点
+     */
+    lastOpTime: number;
+    /**
+     * 资源
+     */
+    content: any;
+    /**
+     * 资源引用数量
+     */
+    readonly refCount: number;
+    /**
+     * 资源引用列表长度
+     */
+    readonly refLength: number;
+    /**
+     * 添加一个引用
+     * @param refKey
+     */
+    AddRef(refKey?: string): ResRef;
+    /**
+     * 删除引用
+     * @param value
+     */
+    RemoveRef(value: ResRef): void;
+    /**销毁*/
+    Destroy(): void;
+}
+
+/**
+ * 资源管理器接口
+ */
+interface IResManager extends ITicker {
+    /**
+     * 添加一个资源
+     * @param value
+     */
+    AddRes(value: IResource): void;
+    /**
+     * 获取资源(内部接口)
+     * @param key
+     */
+    _getRes(key: string): IResource;
+    /**
+     * 是否包含该资源
+     * @param key
+     */
+    HasRes(key: string): boolean;
+    /**
+     * 添加并返回一个资源引用
+     * @param key
+     * @param refKey
+     */
+    AddResRef(key: string, refKey?: string): ResRef;
+    /**
+     * 删除一个资源引用
+     * @param value
+     */
+    RemoveResRef(value: ResRef): void;
+    /**
+     * 资源清理
+     */
+    GC(ignoreTime?: boolean): void;
+    /**
+     * 资源列表
+     */
+    readonly resList: Array<IResource>;
+}
+
+/**
+ * 加载器CC实现
+ */
+declare class CCLoaderImpl extends EventDispatcher implements ILoader {
+    url: ResURL;
+    constructor();
+    Load(url: ResURL): void;
+    Reset(): void;
+}
+
+declare class FGUILoader extends EventDispatcher implements ILoader {
+    url: ResURL;
+    constructor();
+    Load(url: ResURL): void;
+    private loadUIPackge;
+    Reset(): void;
+}
+
+declare class Loader {
+    private requests;
+    constructor();
+    /**
+     * 加载
+     * @param url
+     * @param resKey
+     * @param cb
+     * @param progress
+     */
+    Load(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void): void;
+    ChildComplete(url: ResURL): void;
+    ChildError(url: ResURL, err: Error): void;
+    ChildProgress(url: ResURL, progress: number): void;
+    /**
+     * 添加
+     * @param request
+     */
+    private __addReqeuset;
+    /**
+     * 删除
+     * @param request
+     */
+    private __deleteReqeuset;
+    private static __instance;
+    static get single(): Loader;
+}
+
+declare class LoaderQueue implements ITicker {
+    /**
+     * 加载中
+     */
+    private running;
+    /**
+     * 等待加载
+     */
+    private waiting;
+    /**
+     * 对象池
+     */
+    private pool;
+    constructor();
+    Tick(dt: number): void;
+    private __addEvent;
+    private __eventHandler;
+    Load(url: ResURL): void;
+    private static __instance;
+    static get single(): LoaderQueue;
+}
+
+declare class ResRequest {
+    /**
+     * 资源地址
+     */
+    urls: Array<ResURL>;
+    /**
+     * 完成回调
+     */
+    cb?: (err: Error) => void;
+    /**
+     * 进度处理器
+     */
+    progress?: (progress: number) => void;
+    private __loadedMap;
+    constructor(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void);
+    Load(): void;
+    ChildComplete(resURL: ResURL): void;
+    ChildProgress(resURL: ResURL, progress: number): void;
+    ChildError(err: Error): void;
+    UpdateProgress(): void;
+    private checkComplete;
+    private getLoaded;
+    Destroy(): void;
+}
+
+declare class ResourceImpl implements IResource {
+    /**
+     * 状态 0 正常 1待删除
+     */
+    state: number;
+    key: string;
+    lastOpTime: number;
+    /**
+     * @internal
+     */
+    private __refs;
+    constructor();
+    set content(value: any);
+    private __content;
+    get content(): any;
+    AddRef(refKey?: string): ResRef;
+    RemoveRef(value: ResRef): void;
+    Destroy(): void;
+    /**
+     * 引用数量
+     */
+    get refCount(): number;
+    /**
+     * 引用列表长度
+     */
+    get refLength(): number;
+}
+
+declare class FGUIResource extends ResourceImpl {
+    constructor();
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+declare class ResImpl implements IRes {
+    private loaderClass;
+    constructor();
+    SetResLoader(key: any, loader: new () => ILoader): void;
+    GetResLoader(key: any): new () => ILoader;
+    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
+    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]>;
+    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
 }
 
 /**
@@ -1721,22 +3913,32 @@ declare class ResManager {
 }
 
 /**
- * 服务接口
+ * 默认资源管理器
+ * @internal
  */
-interface IService {
+declare class ResManagerImpl implements IResManager {
     /**
-     * 名称
+     * 资源
      */
-    name: string;
+    protected __resDic: Dictionary<string, IResource>;
     /**
-     * 初始化
-     * @param callback
+     * 等待销毁的资源
      */
-    Init(callback: (err: Error, result: IService) => void): void;
+    protected _waitDestroy: Array<IResource>;
+    constructor();
+    Tick(dt: number): void;
+    AddRes(value: IResource): void;
+    HasRes(key: string): boolean;
+    _getRes(key: string): IResource;
+    AddResRef(key: string, refKey?: string): ResRef;
+    RemoveResRef(value: ResRef): void;
+    GC(ignoreTime?: boolean): void;
     /**
      * 销毁
+     * @param value
      */
-    Destroy(): void;
+    protected DestroyRes(value: IResource): void;
+    get resList(): Array<IResource>;
 }
 
 /**
@@ -1940,6 +4142,39 @@ declare class TaskSequence extends EventDispatcher implements ITask {
 /**
  * 心跳管理器
  */
+interface ITickerManager {
+    /**
+     * 心跳驱动函数
+     * @param dt
+     */
+    Tick(dt: number): void;
+    /**
+     * 添加心跳
+     * @param value
+     */
+    AddTicker(value: ITicker): void;
+    /**
+     * 删除心跳
+     * @param value
+     */
+    RemoveTicker(value: ITicker): void;
+    /**
+     * 下一帧回调
+     * @param value
+     * @param caller
+     */
+    CallNextFrame(value: Function, caller: any): void;
+    /**
+     * 清理下一帧回调请求(如果存在的话)
+     * @param value
+     * @param caller
+     */
+    ClearNextFrame(value: Function, caller: any): void;
+}
+
+/**
+ * 心跳管理器
+ */
 declare class TickerManager {
     static KEY: string;
     /**
@@ -1972,6 +4207,34 @@ declare class TickerManager {
     static get impl(): ITickerManager;
 }
 
+declare class TickerManagerImpl implements ITickerManager {
+    private __tickerList;
+    private __nextFrameCallBacks;
+    Tick(dt: number): void;
+    AddTicker(value: ITicker): void;
+    RemoveTicker(value: ITicker): void;
+    CallNextFrame(value: Function, caller: any): void;
+    ClearNextFrame(value: Function, caller: any): void;
+}
+
+/**
+ * 计时器接口
+ */
+interface ITimer {
+    /**
+     * 当前时间(推荐使用)
+     */
+    readonly currentTime: number;
+    /**
+     * 绝对时间(注意效率较差，不推荐使用！)
+     */
+    readonly absTime: number;
+    /**
+     * 重新校准
+     */
+    Reset(time?: number): void;
+}
+
 /**
  * 计时器工具类
  */
@@ -1992,6 +4255,15 @@ declare class Timer {
     static Reset(time?: number): void;
     private static __impl;
     private static get impl();
+}
+
+declare class TimerImpl implements ITimer, ITicker {
+    private __lastTime;
+    constructor();
+    Reset(): void;
+    Tick(dt: number): void;
+    get currentTime(): number;
+    get absTime(): number;
 }
 
 /**
@@ -2690,1522 +4962,6 @@ declare class StringUtils {
      * @returns
      */
     static ReplaceSuffix(url: string, suff: string): string;
-}
-
-declare class ByteBuffer {
-    stringTable: Array<string>;
-    version: number;
-    littleEndian: boolean;
-    protected _view: DataView;
-    protected _bytes: Uint8Array;
-    protected _pos: number;
-    protected _length: number;
-    constructor(buffer: ArrayBuffer, offset?: number, length?: number);
-    get data(): Uint8Array;
-    get position(): number;
-    set position(value: number);
-    skip(count: number): void;
-    private validate;
-    readByte(): number;
-    readBool(): boolean;
-    readShort(): number;
-    readUshort(): number;
-    readInt(): number;
-    readUint(): number;
-    readFloat(): number;
-    readString(len?: number): string;
-    readS(): string;
-    readSArray(cnt: number): Array<string>;
-    writeS(value: string): void;
-    readColor(hasAlpha?: boolean): Color;
-    readChar(): string;
-    readBuffer(): ByteBuffer;
-    seek(indexTablePos: number, blockIndex: number): boolean;
-}
-
-interface IHitTest {
-    hitTest(pt: Vec2, globalPt: Vec2): boolean;
-}
-declare class PixelHitTestData {
-    pixelWidth: number;
-    scale: number;
-    pixels: Uint8Array;
-    constructor(ba: ByteBuffer);
-}
-
-declare enum ButtonMode {
-    Common = 0,
-    Check = 1,
-    Radio = 2
-}
-declare enum AutoSizeType {
-    None = 0,
-    Both = 1,
-    Height = 2,
-    Shrink = 3
-}
-declare enum AlignType {
-    Left = 0,
-    Center = 1,
-    Right = 2
-}
-declare enum VertAlignType {
-    Top = 0,
-    Middle = 1,
-    Bottom = 2
-}
-declare enum LoaderFillType {
-    None = 0,
-    Scale = 1,
-    ScaleMatchHeight = 2,
-    ScaleMatchWidth = 3,
-    ScaleFree = 4,
-    ScaleNoBorder = 5
-}
-declare enum ListLayoutType {
-    SingleColumn = 0,
-    SingleRow = 1,
-    FlowHorizontal = 2,
-    FlowVertical = 3,
-    Pagination = 4
-}
-declare enum ListSelectionMode {
-    Single = 0,
-    Multiple = 1,
-    Multiple_SingleClick = 2,
-    None = 3
-}
-declare enum OverflowType {
-    Visible = 0,
-    Hidden = 1,
-    Scroll = 2
-}
-declare enum PackageItemType {
-    Image = 0,
-    MovieClip = 1,
-    Sound = 2,
-    Component = 3,
-    Atlas = 4,
-    Font = 5,
-    Swf = 6,
-    Misc = 7,
-    Unknown = 8,
-    Spine = 9,
-    DragonBones = 10
-}
-declare enum ObjectType {
-    Image = 0,
-    MovieClip = 1,
-    Swf = 2,
-    Graph = 3,
-    Loader = 4,
-    Group = 5,
-    Text = 6,
-    RichText = 7,
-    InputText = 8,
-    Component = 9,
-    List = 10,
-    Label = 11,
-    Button = 12,
-    ComboBox = 13,
-    ProgressBar = 14,
-    Slider = 15,
-    ScrollBar = 16,
-    Tree = 17,
-    Loader3D = 18
-}
-declare enum ProgressTitleType {
-    Percent = 0,
-    ValueAndMax = 1,
-    Value = 2,
-    Max = 3
-}
-declare enum FlipType {
-    None = 0,
-    Horizontal = 1,
-    Vertical = 2,
-    Both = 3
-}
-declare enum ChildrenRenderOrder {
-    Ascent = 0,
-    Descent = 1,
-    Arch = 2
-}
-declare enum PopupDirection {
-    Auto = 0,
-    Up = 1,
-    Down = 2
-}
-declare enum RelationType {
-    Left_Left = 0,
-    Left_Center = 1,
-    Left_Right = 2,
-    Center_Center = 3,
-    Right_Left = 4,
-    Right_Center = 5,
-    Right_Right = 6,
-    Top_Top = 7,
-    Top_Middle = 8,
-    Top_Bottom = 9,
-    Middle_Middle = 10,
-    Bottom_Top = 11,
-    Bottom_Middle = 12,
-    Bottom_Bottom = 13,
-    Width = 14,
-    Height = 15,
-    LeftExt_Left = 16,
-    LeftExt_Right = 17,
-    RightExt_Left = 18,
-    RightExt_Right = 19,
-    TopExt_Top = 20,
-    TopExt_Bottom = 21,
-    BottomExt_Top = 22,
-    BottomExt_Bottom = 23,
-    Size = 24
-}
-declare enum FillMethod {
-    None = 0,
-    Horizontal = 1,
-    Vertical = 2,
-    Radial90 = 3,
-    Radial180 = 4,
-    Radial360 = 5
-}
-declare enum FillOrigin {
-    Top = 0,
-    Bottom = 1,
-    Left = 2,
-    Right = 3
-}
-
-declare class Margin {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
-    constructor();
-    copy(source: Margin): void;
-    isNone(): boolean;
-}
-
-declare class GScrollBar extends GComponent {
-    private _grip;
-    private _arrowButton1;
-    private _arrowButton2;
-    private _bar;
-    private _target;
-    private _vertical;
-    private _scrollPerc;
-    private _fixedGripSize;
-    private _dragOffset;
-    private _gripDragging;
-    constructor();
-    setScrollPane(target: ScrollPane, vertical: boolean): void;
-    setDisplayPerc(value: number): void;
-    setScrollPerc(val: number): void;
-    get minSize(): number;
-    get gripDragging(): boolean;
-    protected constructExtension(buffer: ByteBuffer): void;
-    private onGripTouchDown;
-    private onGripTouchMove;
-    private onGripTouchEnd;
-    private onClickArrow1;
-    private onClickArrow2;
-    private onBarTouchBegin;
-}
-
-declare class ScrollPane extends Component {
-    private _owner;
-    private _container;
-    private _maskContainer;
-    private _scrollType;
-    private _scrollStep;
-    private _mouseWheelStep;
-    private _decelerationRate;
-    private _scrollBarMargin;
-    private _bouncebackEffect;
-    private _touchEffect;
-    private _scrollBarDisplayAuto?;
-    private _vScrollNone;
-    private _hScrollNone;
-    private _needRefresh;
-    private _refreshBarAxis;
-    private _displayOnLeft?;
-    private _snapToItem?;
-    private _snappingPolicy?;
-    _displayInDemand?: boolean;
-    private _mouseWheelEnabled;
-    private _pageMode?;
-    private _inertiaDisabled?;
-    private _floating?;
-    private _dontClipMargin?;
-    private _xPos;
-    private _yPos;
-    private _viewSize;
-    private _contentSize;
-    private _overlapSize;
-    private _pageSize;
-    private _containerPos;
-    private _beginTouchPos;
-    private _lastTouchPos;
-    private _lastTouchGlobalPos;
-    private _velocity;
-    private _velocityScale;
-    private _lastMoveTime;
-    private _isHoldAreaDone;
-    private _aniFlag;
-    _loop: number;
-    private _headerLockedSize;
-    private _footerLockedSize;
-    private _refreshEventDispatching;
-    private _dragged;
-    private _hover;
-    private _tweening;
-    private _tweenTime;
-    private _tweenDuration;
-    private _tweenStart;
-    private _tweenChange;
-    private _pageController?;
-    private _hzScrollBar?;
-    private _vtScrollBar?;
-    private _header?;
-    private _footer?;
-    static draggingPane: ScrollPane;
-    setup(buffer: ByteBuffer): void;
-    protected onDestroy(): void;
-    hitTest(pt: Vec2, globalPt: Vec2): GObject;
-    get owner(): GComponent;
-    get hzScrollBar(): GScrollBar;
-    get vtScrollBar(): GScrollBar;
-    get header(): GComponent;
-    get footer(): GComponent;
-    get bouncebackEffect(): boolean;
-    set bouncebackEffect(sc: boolean);
-    get touchEffect(): boolean;
-    set touchEffect(sc: boolean);
-    set scrollStep(val: number);
-    get decelerationRate(): number;
-    set decelerationRate(val: number);
-    get scrollStep(): number;
-    get snapToItem(): boolean;
-    set snapToItem(value: boolean);
-    get snappingPolicy(): number;
-    set snappingPolicy(value: number);
-    get mouseWheelEnabled(): boolean;
-    set mouseWheelEnabled(value: boolean);
-    get isDragged(): boolean;
-    get percX(): number;
-    set percX(value: number);
-    setPercX(value: number, ani?: boolean): void;
-    get percY(): number;
-    set percY(value: number);
-    setPercY(value: number, ani?: boolean): void;
-    get posX(): number;
-    set posX(value: number);
-    setPosX(value: number, ani?: boolean): void;
-    get posY(): number;
-    set posY(value: number);
-    setPosY(value: number, ani?: boolean): void;
-    get contentWidth(): number;
-    get contentHeight(): number;
-    get viewWidth(): number;
-    set viewWidth(value: number);
-    get viewHeight(): number;
-    set viewHeight(value: number);
-    get currentPageX(): number;
-    set currentPageX(value: number);
-    get currentPageY(): number;
-    set currentPageY(value: number);
-    setCurrentPageX(value: number, ani?: boolean): void;
-    setCurrentPageY(value: number, ani?: boolean): void;
-    get isBottomMost(): boolean;
-    get isRightMost(): boolean;
-    get pageController(): Controller;
-    set pageController(value: Controller);
-    get scrollingPosX(): number;
-    get scrollingPosY(): number;
-    scrollTop(ani?: boolean): void;
-    scrollBottom(ani?: boolean): void;
-    scrollUp(ratio?: number, ani?: boolean): void;
-    scrollDown(ratio?: number, ani?: boolean): void;
-    scrollLeft(ratio?: number, ani?: boolean): void;
-    scrollRight(ratio?: number, ani?: boolean): void;
-    scrollToView(target: any, ani?: boolean, setFirst?: boolean): void;
-    isChildInView(obj: GObject): boolean;
-    cancelDragging(): void;
-    lockHeader(size: number): void;
-    lockFooter(size: number): void;
-    onOwnerSizeChanged(): void;
-    handleControllerChanged(c: Controller): void;
-    private updatePageController;
-    adjustMaskContainer(): void;
-    setSize(aWidth: number, aHeight: number): void;
-    setContentSize(aWidth: number, aHeight: number): void;
-    changeContentSizeOnScrolling(deltaWidth: number, deltaHeight: number, deltaPosX: number, deltaPosY: number): void;
-    private handleSizeChanged;
-    private posChanged;
-    private refresh;
-    private refresh2;
-    private onTouchBegin;
-    private onTouchMove;
-    private onTouchEnd;
-    private onRollOver;
-    private onRollOut;
-    private onMouseWheel;
-    private updateScrollBarPos;
-    updateScrollBarVisible(): void;
-    private updateScrollBarVisible2;
-    private __barTweenComplete;
-    private getLoopPartSize;
-    private loopCheckingCurrent;
-    private loopCheckingTarget;
-    private loopCheckingTarget2;
-    private loopCheckingNewPos;
-    private alignPosition;
-    private alignByPage;
-    private updateTargetAndDuration;
-    private updateTargetAndDuration2;
-    private fixDuration;
-    private startTween;
-    private killTween;
-    private checkRefreshBar;
-    protected update(dt: number): boolean;
-    private runTween;
-}
-
-declare class Transition {
-    name: string;
-    private _owner;
-    private _ownerBaseX;
-    private _ownerBaseY;
-    private _items;
-    private _totalTimes;
-    private _totalTasks;
-    private _playing;
-    private _paused?;
-    private _onComplete?;
-    private _options;
-    private _reversed?;
-    private _totalDuration;
-    private _autoPlay?;
-    private _autoPlayTimes;
-    private _autoPlayDelay;
-    private _timeScale;
-    private _startTime;
-    private _endTime;
-    constructor(owner: GComponent);
-    play(onComplete?: (() => void) | null, times?: number, delay?: number, startTime?: number, endTime?: number): void;
-    playReverse(onComplete?: (() => void) | null, times?: number, delay?: number): void;
-    changePlayTimes(value: number): void;
-    setAutoPlay(value: boolean, times?: number, delay?: number): void;
-    private _play;
-    stop(setToComplete?: boolean, processCallback?: boolean): void;
-    private stopItem;
-    setPaused(paused: boolean): void;
-    dispose(): void;
-    get playing(): boolean;
-    setValue(label: string, ...args: any[]): void;
-    setHook(label: string, callback: (label?: string) => void): void;
-    clearHooks(): void;
-    setTarget(label: string, newTarget: GObject): void;
-    setDuration(label: string, value: number): void;
-    getLabelTime(label: string): number;
-    get timeScale(): number;
-    set timeScale(value: number);
-    updateFromRelations(targetId: string, dx: number, dy: number): void;
-    onEnable(): void;
-    onDisable(): void;
-    private onDelayedPlay;
-    private internalPlay;
-    private playItem;
-    private skipAnimations;
-    private onDelayedPlayItem;
-    private onTweenStart;
-    private onTweenUpdate;
-    private onTweenComplete;
-    private onPlayTransCompleted;
-    private callHook;
-    private checkAllComplete;
-    private applyValue;
-    setup(buffer: ByteBuffer): void;
-    private decodeValue;
-}
-
-declare class GComponent extends GObject {
-    hitArea?: IHitTest;
-    private _sortingChildCount;
-    private _opaque;
-    private _applyingController?;
-    private _rectMask?;
-    private _maskContent?;
-    protected _margin: Margin;
-    protected _trackBounds: boolean;
-    protected _boundsChanged: boolean;
-    protected _childrenRenderOrder: ChildrenRenderOrder;
-    protected _apexIndex: number;
-    _buildingDisplayList: boolean;
-    _children: Array<GObject>;
-    _controllers: Array<Controller>;
-    _transitions: Array<Transition>;
-    _container: Node;
-    _scrollPane?: ScrollPane;
-    _alignOffset: Vec2;
-    _customMask?: Mask;
-    constructor();
-    dispose(): void;
-    get displayListContainer(): Node;
-    addChild(child: GObject): GObject;
-    addChildAt(child: GObject, index: number): GObject;
-    private getInsertPosForSortingChild;
-    removeChild(child: GObject, dispose?: boolean): GObject;
-    removeChildAt(index: number, dispose?: boolean): GObject;
-    removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void;
-    getChildAt<T extends GObject>(index: number, classType?: Constructor<T>): T;
-    getChild<T extends GObject>(name: string, classType?: Constructor<T>): T;
-    getChildByPath<T extends GObject>(path: String, classType?: Constructor<T>): T;
-    getVisibleChild(name: string): GObject;
-    getChildInGroup(name: string, group: GGroup): GObject;
-    getChildById(id: string): GObject;
-    getChildIndex(child: GObject): number;
-    setChildIndex(child: GObject, index: number): void;
-    setChildIndexBefore(child: GObject, index: number): number;
-    private _setChildIndex;
-    swapChildren(child1: GObject, child2: GObject): void;
-    swapChildrenAt(index1: number, index2: number): void;
-    get numChildren(): number;
-    isAncestorOf(child: GObject): boolean;
-    addController(controller: Controller): void;
-    getControllerAt(index: number): Controller;
-    getController(name: string): Controller;
-    removeController(c: Controller): void;
-    get controllers(): Array<Controller>;
-    private onChildAdd;
-    private buildNativeDisplayList;
-    applyController(c: Controller): void;
-    applyAllControllers(): void;
-    adjustRadioGroupDepth(obj: GObject, c: Controller): void;
-    getTransitionAt(index: number): Transition;
-    getTransition(transName: string): Transition;
-    isChildInView(child: GObject): boolean;
-    getFirstChildInView(): number;
-    get scrollPane(): ScrollPane;
-    get opaque(): boolean;
-    set opaque(value: boolean);
-    get margin(): Margin;
-    set margin(value: Margin);
-    get childrenRenderOrder(): ChildrenRenderOrder;
-    set childrenRenderOrder(value: ChildrenRenderOrder);
-    get apexIndex(): number;
-    set apexIndex(value: number);
-    get mask(): GObject;
-    set mask(value: GObject);
-    setMask(value: GObject, inverted: boolean): void;
-    private onMaskReady;
-    private onMaskContentChanged;
-    get _pivotCorrectX(): number;
-    get _pivotCorrectY(): number;
-    get baseUserData(): string;
-    protected setupScroll(buffer: ByteBuffer): void;
-    protected setupOverflow(overflow: OverflowType): void;
-    protected handleAnchorChanged(): void;
-    protected handleSizeChanged(): void;
-    protected handleGrayedChanged(): void;
-    handleControllerChanged(c: Controller): void;
-    protected _hitTest(pt: Vec2, globalPt: Vec2): GObject;
-    setBoundsChangedFlag(): void;
-    private refresh;
-    ensureBoundsCorrect(): void;
-    protected updateBounds(): void;
-    setBounds(ax: number, ay: number, aw: number, ah?: number): void;
-    get viewWidth(): number;
-    set viewWidth(value: number);
-    get viewHeight(): number;
-    set viewHeight(value: number);
-    getSnappingPosition(xValue: number, yValue: number, resultPoint?: Vec2): Vec2;
-    childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
-    constructFromResource(): void;
-    constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void;
-    protected constructExtension(buffer: ByteBuffer): void;
-    protected onConstruct(): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-    protected onEnable(): void;
-    protected onDisable(): void;
-}
-
-declare class Controller extends EventTarget {
-    private _selectedIndex;
-    private _previousIndex;
-    private _pageIds;
-    private _pageNames;
-    private _actions?;
-    name: string;
-    parent: GComponent;
-    autoRadioGroupDepth?: boolean;
-    changing?: boolean;
-    constructor();
-    dispose(): void;
-    get selectedIndex(): number;
-    set selectedIndex(value: number);
-    onChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void;
-    offChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void;
-    setSelectedIndex(value: number): void;
-    get previsousIndex(): number;
-    get selectedPage(): string;
-    set selectedPage(val: string);
-    setSelectedPage(value: string): void;
-    get previousPage(): string;
-    get pageCount(): number;
-    getPageName(index: number): string;
-    addPage(name?: string): void;
-    addPageAt(name?: string, index?: number): void;
-    removePage(name: string): void;
-    removePageAt(index: number): void;
-    clearPages(): void;
-    hasPage(aName: string): boolean;
-    getPageIndexById(aId: string): number;
-    getPageIdByName(aName: string): string | null;
-    getPageNameById(aId: string): string | null;
-    getPageId(index: number): string | null;
-    get selectedPageId(): string | null;
-    set selectedPageId(val: string | null);
-    set oppositePageId(val: string | null);
-    get previousPageId(): string | null;
-    runActions(): void;
-    setup(buffer: ByteBuffer): void;
-}
-
-declare enum BlendMode {
-    Normal = 0,
-    None = 1,
-    Add = 2,
-    Multiply = 3,
-    Screen = 4,
-    Erase = 5,
-    Mask = 6,
-    Below = 7,
-    Off = 8,
-    Custom1 = 9,
-    Custom2 = 10,
-    Custom3 = 11
-}
-
-declare class GPathPoint {
-    x: number;
-    y: number;
-    control1_x: number;
-    control1_y: number;
-    control2_x: number;
-    control2_y: number;
-    curveType: number;
-    constructor();
-    static newPoint(x: number, y: number, curveType: number): GPathPoint;
-    static newBezierPoint(x: number, y: number, control1_x: number, control1_y: number): GPathPoint;
-    static newCubicBezierPoint(x: number, y: number, control1_x: number, control1_y: number, control2_x: number, control2_y: number): GPathPoint;
-    clone(): GPathPoint;
-}
-
-declare class GPath {
-    private _segments;
-    private _points;
-    private _fullLength;
-    constructor();
-    get length(): number;
-    create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
-    create(points: Array<GPathPoint>): void;
-    private createSplineSegment;
-    clear(): void;
-    getPointAt(t: number, result?: Vec2): Vec2;
-    get segmentCount(): number;
-    getAnchorsInSegment(segmentIndex: number, points?: Array<Vec2>): Array<Vec2>;
-    getPointsInSegment(segmentIndex: number, t0: number, t1: number, points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
-    getAllPoints(points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
-    private onCRSplineCurve;
-    private onBezierCurve;
-}
-
-declare class TweenValue {
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-    constructor();
-    get color(): number;
-    set color(value: number);
-    getField(index: number): number;
-    setField(index: number, value: number): void;
-    setZero(): void;
-}
-
-declare class GTweener {
-    _target: any;
-    _propType: any;
-    _killed: boolean;
-    _paused: boolean;
-    private _delay;
-    private _duration;
-    private _breakpoint;
-    private _easeType;
-    private _easeOvershootOrAmplitude;
-    private _easePeriod;
-    private _repeat;
-    private _yoyo;
-    private _timeScale;
-    private _snapping;
-    private _userData;
-    private _path;
-    private _onUpdate;
-    private _onStart;
-    private _onComplete;
-    private _onUpdateCaller;
-    private _onStartCaller;
-    private _onCompleteCaller;
-    private _startValue;
-    private _endValue;
-    private _value;
-    private _deltaValue;
-    private _valueSize;
-    private _started;
-    private _ended;
-    private _elapsedTime;
-    private _normalizedTime;
-    constructor();
-    setDelay(value: number): GTweener;
-    get delay(): number;
-    setDuration(value: number): GTweener;
-    get duration(): number;
-    setBreakpoint(value: number): GTweener;
-    setEase(value: number): GTweener;
-    setEasePeriod(value: number): GTweener;
-    setEaseOvershootOrAmplitude(value: number): GTweener;
-    setRepeat(repeat: number, yoyo?: boolean): GTweener;
-    get repeat(): number;
-    setTimeScale(value: number): GTweener;
-    setSnapping(value: boolean): GTweener;
-    setTarget(value: any, propType?: any): GTweener;
-    get target(): any;
-    setPath(value: GPath): GTweener;
-    setUserData(value: any): GTweener;
-    get userData(): any;
-    onUpdate(callback: Function, target?: any): GTweener;
-    onStart(callback: Function, target?: any): GTweener;
-    onComplete(callback: Function, target?: any): GTweener;
-    get startValue(): TweenValue;
-    get endValue(): TweenValue;
-    get value(): TweenValue;
-    get deltaValue(): TweenValue;
-    get normalizedTime(): number;
-    get completed(): boolean;
-    get allCompleted(): boolean;
-    setPaused(paused: boolean): GTweener;
-    /**
-     * seek position of the tween, in seconds.
-     */
-    seek(time: number): void;
-    kill(complete?: boolean): void;
-    _to(start: number, end: number, duration: number): GTweener;
-    _to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
-    _to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
-    _to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
-    _toColor(start: number, end: number, duration: number): GTweener;
-    _shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
-    _init(): void;
-    _reset(): void;
-    _update(dt: number): void;
-    private update;
-    private callStartCallback;
-    private callUpdateCallback;
-    private callCompleteCallback;
-}
-
-declare class GearBase {
-    static disableAllTweenEffect?: boolean;
-    _owner: GObject;
-    protected _controller: Controller;
-    protected _tweenConfig: GearTweenConfig;
-    dispose(): void;
-    get controller(): Controller;
-    set controller(val: Controller);
-    get tweenConfig(): GearTweenConfig;
-    protected get allowTween(): boolean;
-    setup(buffer: ByteBuffer): void;
-    updateFromRelations(dx: number, dy: number): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    protected init(): void;
-    apply(): void;
-    updateState(): void;
-}
-declare class GearTweenConfig {
-    tween: boolean;
-    easeType: number;
-    duration: number;
-    delay: number;
-    _displayLockToken: number;
-    _tweener: GTweener;
-    constructor();
-}
-
-declare class GearLook extends GearBase {
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-}
-
-declare class GearSize extends GearBase {
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-    updateFromRelations(dx: number, dy: number): void;
-}
-
-declare class GearXY extends GearBase {
-    positionsInPercent: boolean;
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    addExtStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-    updateFromRelations(dx: number, dy: number): void;
-}
-
-declare class InputProcessor extends Component {
-    private _owner;
-    private _touchListener;
-    private _touchPos;
-    private _touches;
-    private _rollOutChain;
-    private _rollOverChain;
-    _captureCallback: (evt: FGUIEvent) => void;
-    constructor();
-    onLoad(): void;
-    onEnable(): void;
-    onDisable(): void;
-    getAllTouches(touchIds?: Array<number>): Array<number>;
-    getTouchPosition(touchId?: number): Vec2;
-    getTouchTarget(): GObject;
-    addTouchMonitor(touchId: number, target: GObject): void;
-    removeTouchMonitor(target: GObject): void;
-    cancelClick(touchId: number): void;
-    simulateClick(target: GObject): void;
-    private touchBeginHandler;
-    private touchMoveHandler;
-    private touchEndHandler;
-    private touchCancelHandler;
-    private mouseDownHandler;
-    private mouseUpHandler;
-    private mouseMoveHandler;
-    private mouseWheelHandler;
-    private updateInfo;
-    private getInfo;
-    private setBegin;
-    private setEnd;
-    private clickTest;
-    private handleRollOver;
-    private getEvent;
-}
-
-declare class FGUIEvent extends Event$2 {
-    static TOUCH_BEGIN: string;
-    static TOUCH_MOVE: string;
-    static TOUCH_END: string;
-    static CLICK: string;
-    static ROLL_OVER: string;
-    static ROLL_OUT: string;
-    static MOUSE_WHEEL: string;
-    static DISPLAY: string;
-    static UNDISPLAY: string;
-    static GEAR_STOP: string;
-    static LINK: string;
-    static Submit: string;
-    static TEXT_CHANGE: string;
-    static STATUS_CHANGED: string;
-    static XY_CHANGED: string;
-    static SIZE_CHANGED: string;
-    static SIZE_DELAY_CHANGE: string;
-    static DRAG_START: string;
-    static DRAG_MOVE: string;
-    static DRAG_END: string;
-    static DROP: string;
-    static SCROLL: string;
-    static SCROLL_END: string;
-    static PULL_DOWN_RELEASE: string;
-    static PULL_UP_RELEASE: string;
-    static CLICK_ITEM: string;
-    initiator: GObject;
-    pos: Vec2;
-    touchId: number;
-    clickCount: number;
-    button: number;
-    keyModifiers: number;
-    mouseWheelDelta: number;
-    _processor: InputProcessor;
-    constructor(type: string, bubbles: boolean);
-    get sender(): GObject | null;
-    get isShiftDown(): boolean;
-    get isCtrlDown(): boolean;
-    captureTouch(): void;
-}
-
-declare class GObjectPool {
-    private _pool;
-    private _count;
-    constructor();
-    clear(): void;
-    get count(): number;
-    getObject(url: string): GObject;
-    returnObject(obj: GObject): void;
-}
-
-type ListItemRenderer = (index: number, item: GObject) => void;
-declare class GList extends GComponent {
-    itemRenderer: ListItemRenderer;
-    itemProvider: (index: number) => string;
-    scrollItemToViewOnClick: boolean;
-    foldInvisibleItems: boolean;
-    private _layout;
-    private _lineCount;
-    private _columnCount;
-    private _lineGap;
-    private _columnGap;
-    private _defaultItem;
-    private _autoResizeItem;
-    private _selectionMode;
-    private _align;
-    private _verticalAlign;
-    private _selectionController?;
-    private _lastSelectedIndex;
-    private _pool;
-    private _virtual?;
-    private _loop?;
-    private _numItems;
-    private _realNumItems;
-    private _firstIndex;
-    private _curLineItemCount;
-    private _curLineItemCount2;
-    private _itemSize?;
-    private _virtualListChanged;
-    private _virtualItems?;
-    private _eventLocked?;
-    private itemInfoVer;
-    constructor();
-    dispose(): void;
-    get layout(): ListLayoutType;
-    set layout(value: ListLayoutType);
-    get lineCount(): number;
-    set lineCount(value: number);
-    get columnCount(): number;
-    set columnCount(value: number);
-    get lineGap(): number;
-    set lineGap(value: number);
-    get columnGap(): number;
-    set columnGap(value: number);
-    get align(): AlignType;
-    set align(value: AlignType);
-    get verticalAlign(): VertAlignType;
-    set verticalAlign(value: VertAlignType);
-    get virtualItemSize(): Size;
-    set virtualItemSize(value: Size);
-    get defaultItem(): string | null;
-    set defaultItem(val: string | null);
-    get autoResizeItem(): boolean;
-    set autoResizeItem(value: boolean);
-    get selectionMode(): ListSelectionMode;
-    set selectionMode(value: ListSelectionMode);
-    get selectionController(): Controller;
-    set selectionController(value: Controller);
-    get itemPool(): GObjectPool;
-    getFromPool(url?: string): GObject;
-    returnToPool(obj: GObject): void;
-    addChildAt(child: GObject, index: number): GObject;
-    addItem(url?: string): GObject;
-    addItemFromPool(url?: string): GObject;
-    removeChildAt(index: number, dispose?: boolean): GObject;
-    removeChildToPoolAt(index: number): void;
-    removeChildToPool(child: GObject): void;
-    removeChildrenToPool(beginIndex?: number, endIndex?: number): void;
-    get selectedIndex(): number;
-    set selectedIndex(value: number);
-    getSelection(result?: number[]): number[];
-    addSelection(index: number, scrollItToView?: boolean): void;
-    removeSelection(index: number): void;
-    clearSelection(): void;
-    private clearSelectionExcept;
-    selectAll(): void;
-    selectNone(): void;
-    selectReverse(): void;
-    handleArrowKey(dir: number): void;
-    private onClickItem;
-    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void;
-    private setSelectionOnEvent;
-    resizeToFit(itemCount?: number, minSize?: number): void;
-    getMaxItemWidth(): number;
-    protected handleSizeChanged(): void;
-    handleControllerChanged(c: Controller): void;
-    private updateSelectionController;
-    getSnappingPosition(xValue: number, yValue: number, resultPoint?: Vec2): Vec2;
-    scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
-    getFirstChildInView(): number;
-    childIndexToItemIndex(index: number): number;
-    itemIndexToChildIndex(index: number): number;
-    setVirtual(): void;
-    setVirtualAndLoop(): void;
-    private _setVirtual;
-    get numItems(): number;
-    set numItems(value: number);
-    refreshVirtualList(): void;
-    private checkVirtualList;
-    private setVirtualListChangedFlag;
-    private _refreshVirtualList;
-    private __scrolled;
-    private getIndexOnPos1;
-    private getIndexOnPos2;
-    private getIndexOnPos3;
-    private handleScroll;
-    private static pos_param;
-    private handleScroll1;
-    private handleScroll2;
-    private handleScroll3;
-    private handleArchOrder1;
-    private handleArchOrder2;
-    private handleAlign;
-    protected updateBounds(): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-    protected readItems(buffer: ByteBuffer): void;
-    protected setupItem(buffer: ByteBuffer, obj: GObject): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-}
-
-declare class GTree extends GList {
-    treeNodeRender: (node: GTreeNode, obj: GComponent) => void;
-    treeNodeWillExpand: (node: GTreeNode, expanded: boolean) => void;
-    private _indent;
-    private _clickToExpand;
-    private _rootNode;
-    private _expandedStatusInEvt;
-    constructor();
-    get rootNode(): GTreeNode;
-    get indent(): number;
-    set indent(value: number);
-    get clickToExpand(): number;
-    set clickToExpand(value: number);
-    getSelectedNode(): GTreeNode;
-    getSelectedNodes(result?: Array<GTreeNode>): Array<GTreeNode>;
-    selectNode(node: GTreeNode, scrollItToView?: boolean): void;
-    unselectNode(node: GTreeNode): void;
-    expandAll(folderNode?: GTreeNode): void;
-    collapseAll(folderNode?: GTreeNode): void;
-    private createCell;
-    _afterInserted(node: GTreeNode): void;
-    private getInsertIndexForNode;
-    _afterRemoved(node: GTreeNode): void;
-    _afterExpanded(node: GTreeNode): void;
-    _afterCollapsed(node: GTreeNode): void;
-    _afterMoved(node: GTreeNode): void;
-    private getFolderEndIndex;
-    private checkChildren;
-    private hideFolderNode;
-    private removeNode;
-    private __cellMouseDown;
-    private __expandedStateChanged;
-    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-    protected readItems(buffer: ByteBuffer): void;
-}
-
-declare class GTreeNode {
-    data?: any;
-    private _parent;
-    private _children;
-    private _expanded;
-    private _level;
-    private _tree;
-    _cell: GComponent;
-    _resURL?: string;
-    constructor(hasChild?: boolean, resURL?: string);
-    set expanded(value: boolean);
-    get expanded(): boolean;
-    get isFolder(): boolean;
-    get parent(): GTreeNode;
-    get text(): string | null;
-    set text(value: string | null);
-    get icon(): ResURL | null;
-    set icon(value: ResURL | null);
-    get cell(): GComponent;
-    get level(): number;
-    _setLevel(value: number): void;
-    addChild(child: GTreeNode): GTreeNode;
-    addChildAt(child: GTreeNode, index: number): GTreeNode;
-    removeChild(child: GTreeNode): GTreeNode;
-    removeChildAt(index: number): GTreeNode;
-    removeChildren(beginIndex?: number, endIndex?: number): void;
-    getChildAt(index: number): GTreeNode;
-    getChildIndex(child: GTreeNode): number;
-    getPrevSibling(): GTreeNode;
-    getNextSibling(): GTreeNode;
-    setChildIndex(child: GTreeNode, index: number): void;
-    swapChildren(child1: GTreeNode, child2: GTreeNode): void;
-    swapChildrenAt(index1: number, index2: number): void;
-    get numChildren(): number;
-    expandToRoot(): void;
-    get tree(): GTree;
-    _setTree(value: GTree): void;
-}
-
-declare class Image extends Sprite {
-    private _flip;
-    private _fillMethod;
-    private _fillOrigin;
-    private _fillAmount;
-    private _fillClockwise;
-    constructor();
-    get flip(): FlipType;
-    set flip(value: FlipType);
-    get fillMethod(): FillMethod;
-    set fillMethod(value: FillMethod);
-    get fillOrigin(): FillOrigin;
-    set fillOrigin(value: FillOrigin);
-    get fillClockwise(): boolean;
-    set fillClockwise(value: boolean);
-    get fillAmount(): number;
-    set fillAmount(value: number);
-    private setupFill;
-}
-
-interface Frame {
-    rect: Rect$1;
-    addDelay: number;
-    texture: SpriteFrame | null;
-}
-declare class MovieClip extends Image {
-    interval: number;
-    swing: boolean;
-    repeatDelay: number;
-    timeScale: number;
-    private _playing;
-    private _frameCount;
-    private _frames;
-    private _frame;
-    private _start;
-    private _end;
-    private _times;
-    private _endAt;
-    private _status;
-    private _callback;
-    private _smoothing;
-    private _frameElapsed;
-    private _reversed;
-    private _repeatedCount;
-    constructor();
-    get frames(): Array<Frame>;
-    set frames(value: Array<Frame>);
-    get frameCount(): number;
-    get frame(): number;
-    set frame(value: number);
-    get playing(): boolean;
-    set playing(value: boolean);
-    get smoothing(): boolean;
-    set smoothing(value: boolean);
-    rewind(): void;
-    syncStatus(anotherMc: MovieClip): void;
-    advance(timeInSeconds: number): void;
-    setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: (() => void) | null): void;
-    protected update(dt: number): void;
-    private drawFrame;
-}
-
-type PackageDependency = {
-    id: string;
-    name: string;
-};
-declare class UIPackage {
-    private _id;
-    private _name;
-    private _path;
-    private _items;
-    private _itemsById;
-    private _itemsByName;
-    private _sprites;
-    private _dependencies;
-    private _branches;
-    _branchIndex: number;
-    private _bundle;
-    constructor();
-    static get branch(): string | null;
-    static set branch(value: string | null);
-    static getVar(key: string): string | null;
-    static setVar(key: string, value: string | null): void;
-    static getById(id: string): UIPackage;
-    static getByName(name: string): UIPackage;
-    /**
-     * 注册一个包。包的所有资源必须放在resources下，且已经预加载。
-     * @param path 相对 resources 的路径。
-     */
-    static addPackage(path: string): UIPackage;
-    /**
-     * 载入一个包。包的资源从Asset Bundle加载.
-     * @param bundle Asset Bundle 对象.
-     * @param path 资源相对 Asset Bundle 目录的路径.
-     * @param onComplete 载入成功后的回调.
-     */
-    static loadPackage(bundle: AssetManager.Bundle, path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
-    /**
-     * 载入一个包。包的资源从Asset Bundle加载.
-     * @param bundle Asset Bundle 对象.
-     * @param path 资源相对 Asset Bundle 目录的路径.
-     * @param onProgress 加载进度回调.
-     * @param onComplete 载入成功后的回调.
-     */
-    static loadPackage(bundle: AssetManager.Bundle, path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void): void;
-    /**
-     * 载入一个包。包的资源从resources加载.
-     * @param path 资源相对 resources 的路径.
-     * @param onComplete 载入成功后的回调.
-     */
-    static loadPackage(path: string, onComplete?: (error: any, pkg: UIPackage) => void): void;
-    /**
-     * 载入一个包。包的资源从resources加载.
-     * @param path 资源相对 resources 的路径.
-     * @param onProgress 加载进度回调.
-     * @param onComplete 载入成功后的回调.
-     */
-    static loadPackage(path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: Error, pkg: UIPackage) => void): void;
-    static removePackage(packageIdOrName: string): void;
-    static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject;
-    static createObjectFromURL(url: string, userClass?: new () => GObject): GObject;
-    static getItemURL(pkgName: string, resName: string): string;
-    static getItemByURL(url: string): PackageItem;
-    static normalizeURL(url: string): string;
-    static setStringsSource(source: string): void;
-    private loadPackage;
-    dispose(): void;
-    get id(): string;
-    get name(): string;
-    get path(): string;
-    get dependencies(): Array<PackageDependency>;
-    createObject(resName: string, userClass?: new () => GObject): GObject;
-    internalCreateObject(item: PackageItem, userClass?: new () => GObject): GObject;
-    getItemById(itemId: string): PackageItem;
-    getItemByName(resName: string): PackageItem;
-    getItemAssetByName(resName: string): Asset;
-    getItemAsset(item: PackageItem): Asset;
-    getItemAssetAsync(item: PackageItem, onComplete?: (err: Error, item: PackageItem) => void): void;
-    loadAllAssets(): void;
-    private loadMovieClip;
-    private loadFont;
-    private loadSpine;
-    private loadDragonBones;
-}
-
-declare class PackageItem {
-    owner: UIPackage;
-    type: PackageItemType;
-    objectType?: ObjectType;
-    id: string;
-    name: string;
-    width: number;
-    height: number;
-    file: string;
-    decoded?: boolean;
-    loading?: Array<Function>;
-    rawData?: ByteBuffer;
-    asset?: Asset;
-    highResolution?: Array<string>;
-    branches?: Array<string>;
-    scale9Grid?: Rect$1;
-    scaleByTile?: boolean;
-    tileGridIndice?: number;
-    smoothing?: boolean;
-    hitTestData?: PixelHitTestData;
-    interval?: number;
-    repeatDelay?: number;
-    swing?: boolean;
-    frames?: Array<Frame>;
-    extensionType?: any;
-    skeletonAnchor?: Vec2;
-    atlasAsset?: dragonBones.DragonBonesAtlasAsset;
-    constructor();
-    load(): Asset;
-    getBranch(): PackageItem;
-    getHighResolution(): PackageItem;
-    toString(): string;
-}
-
-declare class Relations {
-    private _owner;
-    private _items;
-    handling: GObject | null;
-    sizeDirty: boolean;
-    constructor(owner: GObject);
-    add(target: GObject, relationType: number, usePercent?: boolean): void;
-    remove(target: GObject, relationType?: number): void;
-    contains(target: GObject): boolean;
-    clearFor(target: GObject): void;
-    clearAll(): void;
-    copyFrom(source: Relations): void;
-    dispose(): void;
-    onOwnerSizeChanged(dWidth: number, dHeight: number, applyPivot: boolean): void;
-    ensureRelationsSizeCorrect(): void;
-    get empty(): boolean;
-    setup(buffer: ByteBuffer, parentToChild: boolean): void;
-}
-
-/**
- * tooltips数据
- */
-type TooltipsData = string | {
-    type: string;
-    data: any;
-};
-
-declare class GObject {
-    data?: any;
-    packageItem?: PackageItem;
-    static draggingObject: GObject | null;
-    protected _x: number;
-    protected _y: number;
-    protected _alpha: number;
-    protected _visible: boolean;
-    protected _touchable: boolean;
-    protected _grayed?: boolean;
-    protected _draggable?: boolean;
-    protected _skewX: number;
-    protected _skewY: number;
-    protected _pivotAsAnchor?: boolean;
-    protected _sortingOrder: number;
-    protected _internalVisible: boolean;
-    protected _handlingController?: boolean;
-    protected _tooltips?: TooltipsData;
-    protected _blendMode: BlendMode;
-    protected _pixelSnapping?: boolean;
-    protected _dragTesting?: boolean;
-    protected _dragStartPos?: Vec2;
-    protected _relations: Relations;
-    protected _group: GGroup | null;
-    protected _gears: GearBase[];
-    protected _node: Node;
-    protected _dragBounds?: Rect$1;
-    sourceWidth: number;
-    sourceHeight: number;
-    initWidth: number;
-    initHeight: number;
-    minWidth: number;
-    minHeight: number;
-    maxWidth: number;
-    maxHeight: number;
-    _parent: GComponent | null;
-    _width: number;
-    _height: number;
-    _rawWidth: number;
-    _rawHeight: number;
-    _id: string;
-    _name: string;
-    _underConstruct: boolean;
-    _gearLocked?: boolean;
-    _sizePercentInGroup: number;
-    _touchDisabled?: boolean;
-    _partner: GObjectPartner;
-    _treeNode?: GTreeNode;
-    _uiTrans: UITransform;
-    _uiOpacity: UIOpacity;
-    private _hitTestPt?;
-    constructor();
-    get id(): string;
-    get name(): string;
-    set name(value: string);
-    get x(): number;
-    set x(value: number);
-    get y(): number;
-    set y(value: number);
-    setPosition(xv: number, yv: number): void;
-    get xMin(): number;
-    set xMin(value: number);
-    get yMin(): number;
-    set yMin(value: number);
-    get pixelSnapping(): boolean;
-    set pixelSnapping(value: boolean);
-    center(restraint?: boolean): void;
-    get width(): number;
-    set width(value: number);
-    get height(): number;
-    set height(value: number);
-    setSize(wv: number, hv: number, ignorePivot?: boolean): void;
-    makeFullScreen(): void;
-    ensureSizeCorrect(): void;
-    get actualWidth(): number;
-    get actualHeight(): number;
-    get scaleX(): number;
-    set scaleX(value: number);
-    get scaleY(): number;
-    set scaleY(value: number);
-    setScale(sx: number, sy: number): void;
-    get skewX(): number;
-    get pivotX(): number;
-    set pivotX(value: number);
-    get pivotY(): number;
-    set pivotY(value: number);
-    setPivot(xv: number, yv: number, asAnchor?: boolean): void;
-    get pivotAsAnchor(): boolean;
-    get touchable(): boolean;
-    set touchable(value: boolean);
-    get grayed(): boolean;
-    set grayed(value: boolean);
-    get enabled(): boolean;
-    set enabled(value: boolean);
-    get rotation(): number;
-    set rotation(value: number);
-    get alpha(): number;
-    set alpha(value: number);
-    get visible(): boolean;
-    set visible(value: boolean);
-    get _finalVisible(): boolean;
-    get internalVisible3(): boolean;
-    get sortingOrder(): number;
-    set sortingOrder(value: number);
-    requestFocus(): void;
-    get tooltips(): TooltipsData | null;
-    set tooltips(value: TooltipsData | null);
-    get blendMode(): BlendMode;
-    set blendMode(value: BlendMode);
-    get onStage(): boolean;
-    get resourceURL(): string | null;
-    set group(value: GGroup);
-    get group(): GGroup;
-    getGear(index: number): GearBase;
-    protected updateGear(index: number): void;
-    checkGearController(index: number, c: Controller): boolean;
-    updateGearFromRelations(index: number, dx: number, dy: number): void;
-    addDisplayLock(): number;
-    releaseDisplayLock(token: number): void;
-    private checkGearDisplay;
-    get gearXY(): GearXY;
-    get gearSize(): GearSize;
-    get gearLook(): GearLook;
-    get relations(): Relations;
-    addRelation(target: GObject, relationType: number, usePercent?: boolean): void;
-    removeRelation(target: GObject, relationType: number): void;
-    get node(): Node;
-    get parent(): GComponent;
-    removeFromParent(): void;
-    findParent(): GObject;
-    get asCom(): GComponent;
-    static cast(obj: Node): GObject;
-    get text(): string | null;
-    set text(value: string | null);
-    get icon(): ResURL | null;
-    set icon(value: ResURL | null);
-    get treeNode(): GTreeNode;
-    get isDisposed(): boolean;
-    dispose(): void;
-    protected onEnable(): void;
-    protected onDisable(): void;
-    protected onUpdate(): void;
-    protected onDestroy(): void;
-    onClick(listener: Function, target?: any): void;
-    onceClick(listener: Function, target?: any): void;
-    offClick(listener: Function, target?: any): void;
-    clearClick(): void;
-    hasClickListener(): boolean;
-    on(type: string, listener: Function, target?: any): void;
-    once(type: string, listener: Function, target?: any): void;
-    off(type: string, listener?: Function, target?: any): void;
-    get draggable(): boolean;
-    set draggable(value: boolean);
-    get dragBounds(): Rect$1;
-    set dragBounds(value: Rect$1);
-    startDrag(touchId?: number): void;
-    stopDrag(): void;
-    get dragging(): boolean;
-    localToGlobal(ax?: number, ay?: number, result?: Vec2): Vec2;
-    globalToLocal(ax?: number, ay?: number, result?: Vec2): Vec2;
-    localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
-    globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
-    handleControllerChanged(c: Controller): void;
-    protected handleAnchorChanged(): void;
-    handlePositionChanged(): void;
-    protected handleSizeChanged(): void;
-    protected handleGrayedChanged(): void;
-    handleVisibleChanged(): void;
-    hitTest(globalPt: Vec2, forTouch?: boolean): GObject;
-    protected _hitTest(pt: Vec2, globalPt: Vec2): GObject;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    constructFromResource(): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-    private onRollOver;
-    private onRollOut;
-    private initDrag;
-    private dragBegin;
-    private dragEnd;
-    private onTouchBegin_0;
-    private onTouchMove_0;
-    private onTouchEnd_0;
-}
-declare class GObjectPartner extends Component {
-    _emitDisplayEvents?: boolean;
-    callLater(callback: any, delay?: number): void;
-    onClickLink(evt: Event, text: string): void;
-    protected onEnable(): void;
-    protected onDisable(): void;
-    protected update(dt: number): void;
-    protected onDestroy(): void;
-}
-
-declare class GGroup extends GObject {
-    private _layout;
-    private _lineGap;
-    private _columnGap;
-    private _excludeInvisibles;
-    private _autoSizeDisabled;
-    private _mainGridIndex;
-    private _mainGridMinSize;
-    private _boundsChanged;
-    private _percentReady;
-    private _mainChildIndex;
-    private _totalSize;
-    private _numChildren;
-    _updating: number;
-    constructor();
-    dispose(): void;
-    get layout(): number;
-    set layout(value: number);
-    get lineGap(): number;
-    set lineGap(value: number);
-    get columnGap(): number;
-    set columnGap(value: number);
-    get excludeInvisibles(): boolean;
-    set excludeInvisibles(value: boolean);
-    get autoSizeDisabled(): boolean;
-    set autoSizeDisabled(value: boolean);
-    get mainGridMinSize(): number;
-    set mainGridMinSize(value: number);
-    get mainGridIndex(): number;
-    set mainGridIndex(value: number);
-    setBoundsChangedFlag(positionChangedOnly?: boolean): void;
-    private _ensureBoundsCorrect;
-    ensureSizeCorrect(): void;
-    ensureBoundsCorrect(): void;
-    private updateBounds;
-    private handleLayout;
-    moveChildren(dx: number, dy: number): void;
-    resizeChildren(dw: number, dh: number): void;
-    handleAlphaChanged(): void;
-    handleVisibleChanged(): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
 declare class GGraph extends GObject {
@@ -5216,4 +5972,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, ILoader, ILocalStorage, IRecyclable, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILayerManager, ILoader, ILoadingView, ILocalStorage, IRecyclable, IRelationInfo, IRelationList, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, ListItemRenderer, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

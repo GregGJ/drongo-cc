@@ -1,5 +1,5 @@
 import { AudioClip, Color, EventMouse } from "cc";
-import { ResURL } from "../drongo/res/ResURL";
+import { ResURL } from "../drongo/res/core/ResURL";
 import { Controller } from "./Controller";
 import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
 import { ButtonMode, ObjectPropID } from "./FieldTypes";

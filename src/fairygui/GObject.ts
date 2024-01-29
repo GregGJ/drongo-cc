@@ -1,5 +1,5 @@
 import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3, Constructor } from "cc";
-import { ResURL } from "../drongo/res/ResURL";
+import { ResURL } from "../drongo/res/core/ResURL";
 import { Controller } from "./Controller";
 import { BlendMode, BlendModeUtils } from "./display/BlendMode";
 import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";

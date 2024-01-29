@@ -1,9 +1,9 @@
 import { Injector } from "../utils/Injector";
-import { IRes } from "./IRes";
-import { ResRef } from "./ResRef";
-import { ResURL } from "./ResURL";
-import { ILoader } from "./ILoader";
-import { ResImpl } from "../impls/ResImpl";
+import { IRes } from "./core/IRes";
+import { ResRef } from "./core/ResRef";
+import { ResURL } from "./core/ResURL";
+import { ILoader } from "./core/ILoader";
+import { ResImpl } from "./res/ResImpl";
 
 
 

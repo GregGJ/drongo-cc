@@ -1,4 +1,4 @@
-import { ITicker } from "../ticker/ITicker";
+import { ITicker } from "../../ticker/ITicker";
 import { IResource } from "./IResource";
 import { ResRef } from "./ResRef";
 

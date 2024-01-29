@@ -1,12 +1,12 @@
-import { GetClassName } from "../exports/GetClassName";
-import { IRes } from "../res/IRes";
-import { ResManager } from "../res/ResManager";
-import { ResRef } from "../res/ResRef";
-import { ResURL, URL2Key } from "../res/ResURL";
-import { ILoader } from "../res/ILoader";
-import { StringUtils } from "../utils/StringUtils";
 import { Loader } from "../loaders/Loader";
-import { CCLoaderImpl } from "./CCLoaderImpl";
+import { CCLoaderImpl } from "../loaders/CCLoaderImpl";
+import { IRes } from "../core/IRes";
+import { ILoader } from "../core/ILoader";
+import { GetClassName } from "../../exports/GetClassName";
+import { ResURL, URL2Key } from "../core/ResURL";
+import { ResRef } from "../core/ResRef";
+import { StringUtils } from "../../utils/StringUtils";
+import { ResManager } from "./ResManager";
 
 
 

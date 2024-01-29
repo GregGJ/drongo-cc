@@ -1,7 +1,7 @@
 import { Asset, Node, Prefab, assetManager, instantiate, isValid } from "cc";
-import { IResource } from "../res/IResource";
-import { ResRef } from "../res/ResRef";
-import { Debuger } from "../debugers/Debuger";
+import { IResource } from "../core/IResource";
+import { ResRef } from "../core/ResRef";
+import { Debuger } from "../../debugers/Debuger";
 
 
 export class ResourceImpl implements IResource {

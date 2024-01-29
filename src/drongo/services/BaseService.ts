@@ -1,7 +1,7 @@
 import { ConfigManager } from "../configs/ConfigManager";
 import { Res } from "../res/Res";
-import { ResRef } from "../res/ResRef";
-import { ResURL } from "../res/ResURL";
+import { ResRef } from "../res/core/ResRef";
+import { ResURL } from "../res/core/ResURL";
 import { IService } from "./IService";
 
 /**

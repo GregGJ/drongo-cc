@@ -1,7 +1,7 @@
 import { AudioSource, Node, director } from "cc";
 import { IAudioChannel } from "./IAudioChannel";
-import { ResURL, URL2Key } from "../res/ResURL";
-import { ResRef } from "../res/ResRef";
+import { ResURL, URL2Key } from "../res/core/ResURL";
+import { ResRef } from "../res/core/ResRef";
 import { Res } from "../res/Res";
 import { Debuger } from "../debugers/Debuger";
 

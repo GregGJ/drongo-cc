@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, sys, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Graphics, misc, Sprite, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -1019,101 +1019,6 @@ class ResRef {
     }
 }
 
-class StringUtils {
-    /**
-     * 是否为空
-     * @param str
-     */
-    static IsEmpty(str) {
-        if (str == null || str == undefined || str.length == 0) {
-            return true;
-        }
-        return false;
-    }
-    /**
-     * 参数替换
-     *  @param  str
-     *  @param  rest
-     *
-     *  @example
-     *
-     *  var str:string = "here is some info '{0}' and {1}";
-     *  trace(StringUtil.substitute(str, 15.4, true));
-     *
-     *  // this will output the following string:
-     *  // "here is some info '15.4' and true"
-     */
-    static Substitute(str, ...rest) {
-        if (str == null)
-            return '';
-        // Replace all of the parameters in the msg string.
-        var len = rest.length;
-        var args;
-        if (len == 1 && rest[0] instanceof Array) {
-            args = rest[0];
-            len = args.length;
-        }
-        else {
-            args = rest;
-        }
-        for (var i = 0; i < len; i++) {
-            str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
-        }
-        return str;
-    }
-    /**
-    * 替换全部字符串
-    * @param string src 源串
-    * @param string from_ch 被替换的字符
-    * @param string to_ch 替换的字符
-    *
-    * @return string 结果字符串
-    */
-    static ReplaceAll(src, from_ch, to_ch) {
-        return src.split(from_ch).join(to_ch);
-    }
-    /**
-     * 拆分字符串
-     * @param str
-     */
-    static SplitString(str, split0, split1) {
-        let args = new Array();
-        let tmp = str.split(split0);
-        tmp.forEach((val, key) => {
-            let s = val.split(split1);
-            args.push(s);
-        });
-        return args;
-    }
-    /**
-     * 获取文件后缀名
-     * @param url
-     */
-    static GetFileSuffix(url) {
-        let index = url.lastIndexOf(".");
-        if (index < 0) {
-            return "";
-        }
-        let suixx = url.substring(index + 1);
-        return suixx;
-    }
-    /**
-     * 替换后缀
-     * @param url
-     * @param suff      后缀
-     * @returns
-     */
-    static ReplaceSuffix(url, suff) {
-        let index = url.lastIndexOf(".");
-        if (index < 0) {
-            throw new Error(url + "没有后缀！！！");
-        }
-        let suixx = url.substring(index + 1);
-        let changeUrl = url.replace(suixx, suff);
-        return changeUrl;
-    }
-}
-
 class LoaderQueue {
     /**
      * 加载中
@@ -1520,6 +1425,101 @@ class CCLoaderImpl extends EventDispatcher {
     }
     Reset() {
         this.url = null;
+    }
+}
+
+class StringUtils {
+    /**
+     * 是否为空
+     * @param str
+     */
+    static IsEmpty(str) {
+        if (str == null || str == undefined || str.length == 0) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 参数替换
+     *  @param  str
+     *  @param  rest
+     *
+     *  @example
+     *
+     *  var str:string = "here is some info '{0}' and {1}";
+     *  trace(StringUtil.substitute(str, 15.4, true));
+     *
+     *  // this will output the following string:
+     *  // "here is some info '15.4' and true"
+     */
+    static Substitute(str, ...rest) {
+        if (str == null)
+            return '';
+        // Replace all of the parameters in the msg string.
+        var len = rest.length;
+        var args;
+        if (len == 1 && rest[0] instanceof Array) {
+            args = rest[0];
+            len = args.length;
+        }
+        else {
+            args = rest;
+        }
+        for (var i = 0; i < len; i++) {
+            str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
+        }
+        return str;
+    }
+    /**
+    * 替换全部字符串
+    * @param string src 源串
+    * @param string from_ch 被替换的字符
+    * @param string to_ch 替换的字符
+    *
+    * @return string 结果字符串
+    */
+    static ReplaceAll(src, from_ch, to_ch) {
+        return src.split(from_ch).join(to_ch);
+    }
+    /**
+     * 拆分字符串
+     * @param str
+     */
+    static SplitString(str, split0, split1) {
+        let args = new Array();
+        let tmp = str.split(split0);
+        tmp.forEach((val, key) => {
+            let s = val.split(split1);
+            args.push(s);
+        });
+        return args;
+    }
+    /**
+     * 获取文件后缀名
+     * @param url
+     */
+    static GetFileSuffix(url) {
+        let index = url.lastIndexOf(".");
+        if (index < 0) {
+            return "";
+        }
+        let suixx = url.substring(index + 1);
+        return suixx;
+    }
+    /**
+     * 替换后缀
+     * @param url
+     * @param suff      后缀
+     * @returns
+     */
+    static ReplaceSuffix(url, suff) {
+        let index = url.lastIndexOf(".");
+        if (index < 0) {
+            throw new Error(url + "没有后缀！！！");
+        }
+        let suixx = url.substring(index + 1);
+        let changeUrl = url.replace(suixx, suff);
+        return changeUrl;
     }
 }
 
@@ -4855,1195 +4855,144 @@ class FSM extends EventDispatcher {
     }
 }
 
-var FindPosition;
-(function (FindPosition) {
-    FindPosition[FindPosition["ShortSideFit"] = 0] = "ShortSideFit";
-    FindPosition[FindPosition["BottomLeft"] = 1] = "BottomLeft";
-    FindPosition[FindPosition["ContactPoint"] = 2] = "ContactPoint";
-    FindPosition[FindPosition["LongSideFit"] = 3] = "LongSideFit";
-    FindPosition[FindPosition["AreaFit"] = 4] = "AreaFit";
-})(FindPosition || (FindPosition = {}));
+var GUIState;
+(function (GUIState) {
+    /**
+     * 未使用状态
+     */
+    GUIState[GUIState["Null"] = 0] = "Null";
+    /**
+     * 显示处理中
+     */
+    GUIState[GUIState["Showing"] = 1] = "Showing";
+    /**
+     * 已显示
+     */
+    GUIState[GUIState["Showed"] = 2] = "Showed";
+    /**
+     * 关闭处理中
+     */
+    GUIState[GUIState["Closeing"] = 3] = "Closeing";
+    /**
+     * 已关闭
+     */
+    GUIState[GUIState["Closed"] = 4] = "Closed";
+})(GUIState || (GUIState = {}));
 
-class Rect {
-    /**
-     * 起点 x 坐标
-     */
-    x = 0;
-    /**
-     * 起点 y 坐标
-     */
-    y = 0;
-    /**
-     * 宽度
-     */
-    width = 0;
-    /**
-     * 高度
-     */
-    height = 0;
-    /**
-     * 当前是否被旋转了
-     */
-    isRotated = false;
-    /**
-     * 自定义信息
-     */
-    info;
-    /**
-     * 克隆
-     */
-    Clone() {
-        const cloned = new Rect();
-        cloned.x = this.x;
-        cloned.y = this.y;
-        cloned.height = this.height;
-        cloned.width = this.width;
-        cloned.info = this.info;
-        return cloned;
-    }
-    /**
-     * 矩形是否在另一个矩形内部
-     * @param otherRect {Rect}
-     */
-    IsIn(otherRect) {
-        return (this.x >= otherRect.x &&
-            this.y >= otherRect.y &&
-            this.x + this.width <= otherRect.x + otherRect.width &&
-            this.y + this.height <= otherRect.y + otherRect.height);
-    }
-    get isEmpty() {
-        return this.x == 0 && this.y == 0 && this.width == 0 && this.height == 0;
-    }
-}
-
-class MaxRectBinPack {
-    containerHeight;
-    containerWidth;
-    allowRotate;
-    freeRects = [];
-    usedRects = [];
-    /**
-     * 构建方程
-     * @param width {number} 画板宽度
-     * @param height {number} 画板高度
-     * @param allowRotate {boolean} 允许旋转
-     */
-    constructor(width, height, allowRotate) {
-        this.containerHeight = height;
-        this.containerWidth = width;
-        this.allowRotate = allowRotate === true;
-        const rect = new Rect();
-        rect.x = 0;
-        rect.y = 0;
-        rect.width = width;
-        rect.height = height;
-        this.freeRects.push(rect);
-    }
-    /**
-     * 在线算法入口 插入矩形方法
-     * @param width {number}
-     * @param height {number}
-     * @param method {FindPosition}
-     */
-    Insert(width, height, method) {
-        // width height 参数合法性检查
-        if (width <= 0 || height <= 0) {
-            throw new Error(`width & height should greater than 0, but got width as ${width}, height as ${height}`);
-        }
-        // method 合法性检查
-        if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
-            method = FindPosition.ShortSideFit;
-        }
-        let newRect = new Rect();
-        const score1 = {
-            value: 0,
-        };
-        const score2 = {
-            value: 0,
-        };
-        switch (method) {
-            case FindPosition.ShortSideFit:
-                newRect = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
-                break;
-            case FindPosition.BottomLeft:
-                newRect = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
-                break;
-            case FindPosition.ContactPoint:
-                newRect = this.FindPositionForNewNodeContactPoint(width, height, score1);
-                break;
-            case FindPosition.LongSideFit:
-                newRect = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
-                break;
-            case FindPosition.AreaFit:
-                newRect = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
-                break;
-        }
-        if (newRect.height === 0) {
-            return newRect;
-        }
-        if (this.allowRotate) { // 更新旋转属性
-            if (newRect.height === height && newRect.width === width) {
-                newRect.isRotated = false;
-            }
-            else {
-                newRect.isRotated = true;
-            }
-        }
-        this.PlaceRectangle(newRect);
-        return newRect;
-    }
-    // /**
-    //  * 算法离线入口 插入一组举行
-    //  * @param rects {Rect[]} 矩形数组
-    //  * @param method {FindPosition} 查找位置的方法
-    //  */
-    // public insertRects(rects: Rect[], method: FindPosition): Rect[] {
-    //     // rects 参数合法性检查
-    //     if (rects && rects.length === 0) {
-    //         throw new Error('rects should be array with length greater than zero');
-    //     }
-    //     // method 合法性检查
-    //     if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
-    //         method = FindPosition.ShortSideFit;
-    //     }
-    //     const result: Rect[] = [];
-    //     while (rects.length > 0) {
-    //         const bestScore1: IScoreCounter = {
-    //             value: Infinity,
-    //         };
-    //         const bestScore2: IScoreCounter = {
-    //             value: Infinity,
-    //         };
-    //         let bestRectIndex = -1;
-    //         let bestNode: Rect;
-    //         for (let i = 0; i < rects.length; ++i) {
-    //             const score1: IScoreCounter = {
-    //                 value: 0,
-    //             };
-    //             const score2: IScoreCounter = {
-    //                 value: 0,
-    //             };
-    //             const newNode: Rect = this.scoreRectangle(
-    //                 rects[i].width,
-    //                 rects[i].height,
-    //                 method,
-    //                 score1,
-    //                 score2,
-    //             );
-    //             if (
-    //                 score1.value < bestScore1.value ||
-    //                 (score1.value === bestScore1.value && score2.value < bestScore2.value)
-    //             ) {
-    //                 bestScore1.value = score1.value;
-    //                 bestScore2.value = score2.value;
-    //                 bestNode = newNode;
-    //                 bestRectIndex = i;
-    //             }
-    //         }
-    //         if (bestRectIndex === -1) {
-    //             return result;
-    //         }
-    //         this.placeRectangle(bestNode);
-    //         bestNode.info = rects[bestRectIndex].info;
-    //         if (this.allowRotate) {
-    //             if (
-    //                 bestNode.height === rects[bestRectIndex].height &&
-    //                 bestNode.width === rects[bestRectIndex].width
-    //             ) {
-    //                 bestNode.isRotated = false;
-    //             } else {
-    //                 bestNode.isRotated = true;
-    //             }
-    //         }
-    //         rects.splice(bestRectIndex, 1);
-    //         result.push(bestNode);
-    //     }
-    //     return result;
-    // }
-    /**
-     * 占有率
-     * @returns
-     */
-    get occupancy() {
-        let usedSurfaceArea = 0;
-        for (const rect of this.usedRects) {
-            usedSurfaceArea += rect.width * rect.height;
-        }
-        return usedSurfaceArea / (this.containerWidth * this.containerHeight);
-    }
-    /**
-     * 擦除节点
-     * @param rect
-     */
-    EraseNoce(rect) {
-        let index = this.usedRects.indexOf(rect);
-        if (index != -1) {
-            this.usedRects.splice(index, 1);
-        }
-        index = this.freeRects.indexOf(rect);
-        if (index == -1) {
-            this.freeRects.push(rect);
-            this.PruneFreeList();
-        }
-    }
-    /**
-     *
-     * @param node
-     */
-    PlaceRectangle(node) {
-        let numRectanglesToProcess = this.freeRects.length;
-        for (let i = 0; i < numRectanglesToProcess; i++) {
-            if (this.SplitFreeNode(this.freeRects[i], node)) {
-                this.freeRects.splice(i, 1);
-                i--;
-                numRectanglesToProcess--;
-            }
-        }
-        this.PruneFreeList();
-        this.usedRects.push(node);
-    }
-    ScoreRectangle(width, height, method, score1, score2) {
-        let newNode = new Rect();
-        score1.value = Infinity;
-        score2.value = Infinity;
-        switch (method) {
-            case FindPosition.ShortSideFit:
-                newNode = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
-                break;
-            case FindPosition.BottomLeft:
-                newNode = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
-                break;
-            case FindPosition.ContactPoint:
-                newNode = this.FindPositionForNewNodeContactPoint(width, height, score1);
-                // todo: reverse
-                score1.value = -score1.value; // Reverse since we are minimizing, but for contact point score bigger is better.
-                break;
-            case FindPosition.LongSideFit:
-                newNode = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
-                break;
-            case FindPosition.AreaFit:
-                newNode = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
-                break;
-        }
-        // Cannot fit the current Rectangle.
-        if (newNode.height === 0) {
-            score1.value = Infinity;
-            score2.value = Infinity;
-        }
-        return newNode;
-    }
-    FindPositionForNewNodeBottomLeft(width, height, bestY, bestX) {
-        this.freeRects;
-        const bestNode = new Rect();
-        bestY.value = Infinity;
-        let topSideY;
-        for (const rect of this.freeRects) {
-            // Try to place the Rectangle in upright (non-flipped) orientation.
-            if (rect.width >= width && rect.height >= height) {
-                topSideY = rect.y + height;
-                if (topSideY < bestY.value ||
-                    (topSideY === bestY.value && rect.x < bestX.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = width;
-                    bestNode.height = height;
-                    bestY.value = topSideY;
-                    bestX.value = rect.x;
-                }
-            }
-            if (this.allowRotate && rect.width >= height && rect.height >= width) {
-                topSideY = rect.y + width;
-                if (topSideY < bestY.value ||
-                    (topSideY === bestY.value && rect.x < bestX.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = height;
-                    bestNode.height = width;
-                    bestY.value = topSideY;
-                    bestX.value = rect.x;
-                }
-            }
-        }
-        return bestNode;
-    }
-    FindPositionForNewNodeBestShortSideFit(width, height, bestShortSideFit, bestLongSideFit) {
-        const bestNode = new Rect();
-        bestShortSideFit.value = Infinity;
-        let leftoverHoriz;
-        let leftoverVert;
-        let shortSideFit;
-        let longSideFit;
-        for (const rect of this.freeRects) {
-            // Try to place the Rectangle in upright (non-flipped) orientation.
-            if (rect.width >= width && rect.height >= height) {
-                leftoverHoriz = Math.abs(rect.width - width);
-                leftoverVert = Math.abs(rect.height - height);
-                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
-                longSideFit = Math.max(leftoverHoriz, leftoverVert);
-                if (shortSideFit < bestShortSideFit.value ||
-                    (shortSideFit === bestShortSideFit.value &&
-                        longSideFit < bestLongSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = width;
-                    bestNode.height = height;
-                    bestShortSideFit.value = shortSideFit;
-                    bestLongSideFit.value = longSideFit;
-                }
-            }
-            let flippedLeftoverHoriz;
-            let flippedLeftoverVert;
-            let flippedShortSideFit;
-            let flippedLongSideFit;
-            if (this.allowRotate && rect.width >= height && rect.height >= width) {
-                flippedLeftoverHoriz = Math.abs(rect.width - height);
-                flippedLeftoverVert = Math.abs(rect.height - width);
-                flippedShortSideFit = Math.min(flippedLeftoverHoriz, flippedLeftoverVert);
-                flippedLongSideFit = Math.max(flippedLeftoverHoriz, flippedLeftoverVert);
-                if (flippedShortSideFit < bestShortSideFit.value ||
-                    (flippedShortSideFit === bestShortSideFit.value &&
-                        flippedLongSideFit < bestLongSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = height;
-                    bestNode.height = width;
-                    bestShortSideFit.value = flippedShortSideFit;
-                    bestLongSideFit.value = flippedLongSideFit;
-                }
-            }
-        }
-        return bestNode;
-    }
-    FindPositionForNewNodeBestLongSideFit(width, height, bestShortSideFit, bestLongSideFit) {
-        const bestNode = new Rect();
-        bestLongSideFit.value = Infinity;
-        let leftoverHoriz;
-        let leftoverVert;
-        let shortSideFit;
-        let longSideFit;
-        for (const rect of this.freeRects) {
-            // Try to place the Rectangle in upright (non-flipped) orientation.
-            if (rect.width >= width && rect.height >= height) {
-                leftoverHoriz = Math.abs(rect.width - width);
-                leftoverVert = Math.abs(rect.height - height);
-                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
-                longSideFit = Math.max(leftoverHoriz, leftoverVert);
-                if (longSideFit < bestLongSideFit.value ||
-                    (longSideFit === bestLongSideFit.value &&
-                        shortSideFit < bestShortSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = width;
-                    bestNode.height = height;
-                    bestShortSideFit.value = shortSideFit;
-                    bestLongSideFit.value = longSideFit;
-                }
-            }
-            if (this.allowRotate && rect.width >= height && rect.height >= width) {
-                leftoverHoriz = Math.abs(rect.width - height);
-                leftoverVert = Math.abs(rect.height - width);
-                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
-                longSideFit = Math.max(leftoverHoriz, leftoverVert);
-                if (longSideFit < bestLongSideFit.value ||
-                    (longSideFit === bestLongSideFit.value &&
-                        shortSideFit < bestShortSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = height;
-                    bestNode.height = width;
-                    bestShortSideFit.value = shortSideFit;
-                    bestLongSideFit.value = longSideFit;
-                }
-            }
-        }
-        return bestNode;
-    }
-    FindPositionForNewNodeBestAreaFit(width, height, bestAreaFit, bestShortSideFit) {
-        const bestNode = new Rect();
-        bestAreaFit.value = Infinity;
-        let leftoverHoriz;
-        let leftoverVert;
-        let shortSideFit;
-        let areaFit;
-        for (const rect of this.freeRects) {
-            areaFit = rect.width * rect.height - width * height;
-            // Try to place the Rectangle in upright (non-flipped) orientation.
-            if (rect.width >= width && rect.height >= height) {
-                leftoverHoriz = Math.abs(rect.width - width);
-                leftoverVert = Math.abs(rect.height - height);
-                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
-                if (areaFit < bestAreaFit.value ||
-                    (areaFit === bestAreaFit.value &&
-                        shortSideFit < bestShortSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = width;
-                    bestNode.height = height;
-                    bestShortSideFit.value = shortSideFit;
-                    bestAreaFit.value = areaFit;
-                }
-            }
-            if (this.allowRotate && rect.width >= height && rect.height >= width) {
-                leftoverHoriz = Math.abs(rect.width - height);
-                leftoverVert = Math.abs(rect.height - width);
-                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
-                if (areaFit < bestAreaFit.value ||
-                    (areaFit === bestAreaFit.value &&
-                        shortSideFit < bestShortSideFit.value)) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = height;
-                    bestNode.height = width;
-                    bestShortSideFit.value = shortSideFit;
-                    bestAreaFit.value = areaFit;
-                }
-            }
-        }
-        return bestNode;
-    }
-    CommonIntervalLength(i1start, i1end, i2start, i2end) {
-        if (i1end < i2start || i2end < i1start) {
-            return 0;
-        }
-        return Math.min(i1end, i2end) - Math.max(i1start, i2start);
-    }
-    ContactPointScoreNode(x, y, width, height) {
-        let score = 0;
-        if (x === 0 || x + width === this.containerWidth) {
-            score += height;
-        }
-        if (y === 0 || y + height === this.containerHeight) {
-            score += width;
-        }
-        for (const rect of this.usedRects) {
-            if (rect.x === x + width || rect.x + rect.width === x) {
-                score += this.CommonIntervalLength(rect.y, rect.y + rect.height, y, y + height);
-            }
-            if (rect.y === y + height || rect.y + rect.height === y) {
-                score += this.CommonIntervalLength(rect.x, rect.x + rect.width, x, x + width);
-            }
-        }
-        return score;
-    }
-    FindPositionForNewNodeContactPoint(width, height, bestContactScore) {
-        const bestNode = new Rect();
-        bestContactScore.value = -1;
-        let score;
-        for (const rect of this.freeRects) {
-            // Try to place the Rectangle in upright (non-flipped) orientation.
-            if (rect.width >= width && rect.height >= height) {
-                score = this.ContactPointScoreNode(rect.x, rect.y, width, height);
-                if (score > bestContactScore.value) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = width;
-                    bestNode.height = height;
-                    bestContactScore.value = score;
-                }
-            }
-            if (this.allowRotate && rect.width >= height && rect.height >= width) {
-                score = this.ContactPointScoreNode(rect.x, rect.y, height, width);
-                if (score > bestContactScore.value) {
-                    bestNode.x = rect.x;
-                    bestNode.y = rect.y;
-                    bestNode.width = height;
-                    bestNode.height = width;
-                    bestContactScore.value = score;
-                }
-            }
-        }
-        return bestNode;
-    }
-    SplitFreeNode(freeNode, usedNode) {
-        const freeRectangles = this.freeRects;
-        // Test with SAT if the Rectangles even intersect.
-        if (usedNode.x >= freeNode.x + freeNode.width ||
-            usedNode.x + usedNode.width <= freeNode.x ||
-            usedNode.y >= freeNode.y + freeNode.height ||
-            usedNode.y + usedNode.height <= freeNode.y) {
-            return false;
-        }
-        let newNode;
-        if (usedNode.x < freeNode.x + freeNode.width &&
-            usedNode.x + usedNode.width > freeNode.x) {
-            // New node at the top side of the used node.
-            if (usedNode.y > freeNode.y &&
-                usedNode.y < freeNode.y + freeNode.height) {
-                newNode = freeNode.Clone();
-                newNode.height = usedNode.y - newNode.y;
-                freeRectangles.push(newNode);
-            }
-            // New node at the bottom side of the used node.
-            if (usedNode.y + usedNode.height < freeNode.y + freeNode.height) {
-                newNode = freeNode.Clone();
-                newNode.y = usedNode.y + usedNode.height;
-                newNode.height =
-                    freeNode.y + freeNode.height - (usedNode.y + usedNode.height);
-                freeRectangles.push(newNode);
-            }
-        }
-        if (usedNode.y < freeNode.y + freeNode.height &&
-            usedNode.y + usedNode.height > freeNode.y) {
-            // New node at the left side of the used node.
-            if (usedNode.x > freeNode.x && usedNode.x < freeNode.x + freeNode.width) {
-                newNode = freeNode.Clone();
-                newNode.width = usedNode.x - newNode.x;
-                freeRectangles.push(newNode);
-            }
-            // New node at the right side of the used node.
-            if (usedNode.x + usedNode.width < freeNode.x + freeNode.width) {
-                newNode = freeNode.Clone();
-                newNode.x = usedNode.x + usedNode.width;
-                newNode.width =
-                    freeNode.x + freeNode.width - (usedNode.x + usedNode.width);
-                freeRectangles.push(newNode);
-            }
-        }
-        return true;
-    }
-    PruneFreeList() {
-        const freeRectangles = this.freeRects;
-        for (let i = 0; i < freeRectangles.length; i++) {
-            for (let j = i + 1; j < freeRectangles.length; j++) {
-                if (freeRectangles[i].IsIn(freeRectangles[j])) {
-                    freeRectangles.splice(i, 1);
-                    break;
-                }
-                if (freeRectangles[j].IsIn(freeRectangles[i])) {
-                    freeRectangles.splice(j, 1);
-                }
-            }
-        }
-    }
-}
-
-/**
- * 对象池
- */
-let Pool$1 = class Pool {
-    static __pools = new Map();
-    /**
-     * 分配
-     * @param clazz
-     * @param maxCount
-     * @returns
-     */
-    static allocate(clazz, maxCount) {
-        let className = GetClassName(clazz);
-        let pool;
-        if (this.__pools.has(className)) {
-            pool = this.__pools.get(className);
-        }
-        else {
-            pool = new PoolImpl(clazz, maxCount);
-            this.__pools.set(className, pool);
-        }
-        return pool.allocate();
-    }
-    /**
-     * 回收
-     * @param value
-     */
-    static recycle(value) {
-        let className = GetClassName(value);
-        if (!this.__pools.has(className)) {
-            throw new Error("对象池不存在:" + className);
-        }
-        let pool = this.__pools.get(className);
-        pool.recycle(value);
-    }
-    /**
-     * 回收多个对象
-     * @param list
-     */
-    static recycleList(list) {
-        for (let index = 0; index < list.length; index++) {
-            const element = list[index];
-            this.recycle(element);
-        }
-    }
-    /**
-     * 回收该类型的所有对象
-     * @param clazz
-     */
-    static recycleAll(clazz) {
-        let className = GetClassName(clazz);
-        if (!this.__pools.has(className)) {
-            throw new Error("对象池不存在:" + className);
-        }
-        let pool = this.__pools.get(className);
-        pool.recycleAll();
-    }
-};
-class PoolImpl {
-    /**池中闲置对象 */
-    __cacheStack = new Array();
-    /**正在使用的对象 */
-    __usingArray = new Array();
-    /**池中对象最大数 */
-    __maxCount = 0;
-    __class;
-    constructor(clazz, maxCount) {
-        this.__class = clazz;
-        if (!this.__class) {
-            throw new Error("构造函数不能为空！");
-        }
-        this.__maxCount = maxCount == undefined ? Number.MAX_SAFE_INTEGER : maxCount;
-    }
-    /**
-    * 在池中的对象
-    */
-    get count() {
-        return this.__cacheStack.length;
-    }
-    /**
-     * 使用中的数量
-     */
-    get usingCount() {
-        return this.__usingArray.length;
-    }
-    /**
-     * 分配
-     * @returns
-     */
-    allocate() {
-        if (this.count + this.usingCount < this.__maxCount) {
-            let element = this.__cacheStack.length > 0 ? this.__cacheStack.pop() : new this.__class();
-            this.__usingArray.push(element);
-            return element;
-        }
-        throw new Error("对象池最大数量超出：" + this.__maxCount);
-    }
-    /**
-     * 回收到池中
-     * @param value
-     * @returns
-     */
-    recycle(value) {
-        if (this.__cacheStack.indexOf(value) > -1) {
-            throw new Error("重复回收！");
-        }
-        let index = this.__usingArray.indexOf(value);
-        if (index < 0) {
-            throw new Error("对象不属于该对象池！");
-        }
-        //重置
-        value.Reset();
-        this.__usingArray.splice(index, 1);
-        this.__cacheStack.push(value);
-    }
-    /**
-     * 批量回收
-     * @param list
-     */
-    recycleList(list) {
-        for (let index = 0; index < list.length; index++) {
-            const element = list[index];
-            this.recycle(element);
-        }
-    }
-    /**
-     * 将所有使用中的对象都回收到池中
-     */
-    recycleAll() {
-        for (let index = 0; index < this.__usingArray.length; index++) {
-            const element = this.__usingArray[index];
-            this.recycle(element);
-        }
-    }
-    destroy() {
-        this.recycleAll();
-        for (let index = 0; index < this.__cacheStack.length; index++) {
-            const element = this.__cacheStack[index];
-            element.Destroy();
-        }
-        this.__cacheStack.length = 0;
-        this.__cacheStack = null;
-        this.__usingArray.length = 0;
-        this.__usingArray = null;
-    }
-}
-
-/**
- *  服务基类
- *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
- *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
- */
-class BaseService {
-    /**名称 */
-    name;
-    /**
-     * 依赖的配置表名称
-     */
-    $configs;
-    /**
-     * 依赖的资源
-     */
-    $assets;
-    $assetRefs;
-    __initCallback;
-    constructor() {
-    }
-    Init(callback) {
-        this.__initCallback = callback;
-        if (this.$configs == null || this.$configs.length <= 0) {
-            this.__configLoaded();
-        }
-        else {
-            this.__loadConfigs();
-        }
-    }
-    __loadConfigs() {
-        ConfigManager.Load(this.$configs, this.__configLoaded.bind(this));
-    }
-    __configLoaded(err) {
-        if (err) {
-            throw new Error("配置加载错误：" + err.message);
-        }
-        if (this.$assets == null || this.$assets.length <= 0) {
-            this.$configAndAssetReady();
-        }
-        else {
-            this.__loadAssets();
-        }
-    }
-    __loadAssets() {
-        Res.GetResRefList(this.$assets, this.name).then((value) => {
-            this.$assetRefs = value;
-            this.$configAndAssetReady();
-        }, (reason) => {
-            throw new Error(this.name + "依赖资源加载出错:" + reason);
+var BlendMode;
+(function (BlendMode) {
+    BlendMode[BlendMode["Normal"] = 0] = "Normal";
+    BlendMode[BlendMode["None"] = 1] = "None";
+    BlendMode[BlendMode["Add"] = 2] = "Add";
+    BlendMode[BlendMode["Multiply"] = 3] = "Multiply";
+    BlendMode[BlendMode["Screen"] = 4] = "Screen";
+    BlendMode[BlendMode["Erase"] = 5] = "Erase";
+    BlendMode[BlendMode["Mask"] = 6] = "Mask";
+    BlendMode[BlendMode["Below"] = 7] = "Below";
+    BlendMode[BlendMode["Off"] = 8] = "Off";
+    BlendMode[BlendMode["Custom1"] = 9] = "Custom1";
+    BlendMode[BlendMode["Custom2"] = 10] = "Custom2";
+    BlendMode[BlendMode["Custom3"] = 11] = "Custom3";
+})(BlendMode || (BlendMode = {}));
+class BlendModeUtils {
+    static apply(node, blendMode) {
+        let f = factors[blendMode];
+        let renderers = node.getComponentsInChildren(RenderComponent);
+        renderers.forEach(element => {
+            element.srcBlendFactor = f[0];
+            element.dstBlendFactor = f[1];
         });
     }
-    /**
-     * 依赖的配置与资源准备完毕
-     */
-    $configAndAssetReady() {
-    }
-    /**
-     * 初始化完成时调用
-     */
-    $initComplete() {
-        if (this.__initCallback) {
-            this.__initCallback(null, this);
-            this.__initCallback = null;
-        }
-    }
-    Destroy() {
-        this.name = undefined;
-        this.__initCallback = null;
-        ConfigManager.Unload(this.$configs);
-        this.$configs = null;
-        this.$assets.length = 0;
-        this.$assets = null;
-        //将引用的资源释放
-        for (let index = 0; index < this.$assetRefs.length; index++) {
-            const element = this.$assetRefs[index];
-            element.Dispose();
-        }
+    static override(blendMode, srcFactor, dstFactor) {
+        factors[blendMode][0] = srcFactor;
+        factors[blendMode][1] = dstFactor;
     }
 }
+const factors = [
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //normal
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE], //none
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE], //add
+    [gfx.BlendFactor.DST_COLOR, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //mul
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE_MINUS_SRC_COLOR], //screen
+    [gfx.BlendFactor.ZERO, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //erase
+    [gfx.BlendFactor.ZERO, gfx.BlendFactor.SRC_ALPHA], //mask
+    [gfx.BlendFactor.ONE_MINUS_DST_ALPHA, gfx.BlendFactor.DST_ALPHA], //below
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ZERO], //off
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom1
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
+];
 
-class ServiceStarter {
-    __name;
-    __serviceClass;
-    __result;
-    __service;
-    constructor(name, serviceClass) {
-        this.__name = name;
-        this.__serviceClass = serviceClass;
+class FGUIEvent extends Event$1 {
+    static TOUCH_BEGIN = "fui_touch_begin";
+    static TOUCH_MOVE = "fui_touch_move";
+    static TOUCH_END = "fui_touch_end";
+    static CLICK = "fui_click";
+    static ROLL_OVER = "fui_roll_over";
+    static ROLL_OUT = "fui_roll_out";
+    static MOUSE_WHEEL = "fui_mouse_wheel";
+    static DISPLAY = "fui_display";
+    static UNDISPLAY = "fui_undisplay";
+    static GEAR_STOP = "fui_gear_stop";
+    static LINK = "fui_text_link";
+    static Submit = "editing-return";
+    static TEXT_CHANGE = "text-changed";
+    static STATUS_CHANGED = "fui_status_changed";
+    static XY_CHANGED = "fui_xy_changed";
+    static SIZE_CHANGED = "fui_size_changed";
+    static SIZE_DELAY_CHANGE = "fui_size_delay_change";
+    static DRAG_START = "fui_drag_start";
+    static DRAG_MOVE = "fui_drag_move";
+    static DRAG_END = "fui_drag_end";
+    static DROP = "fui_drop";
+    static SCROLL = "fui_scroll";
+    static SCROLL_END = "fui_scroll_end";
+    static PULL_DOWN_RELEASE = "fui_pull_down_release";
+    static PULL_UP_RELEASE = "fui_pull_up_release";
+    static CLICK_ITEM = "fui_click_item";
+    initiator;
+    pos = new Vec2();
+    touchId = 0;
+    clickCount = 0;
+    button = 0;
+    keyModifiers = 0;
+    mouseWheelDelta = 0;
+    _processor;
+    constructor(type, bubbles) {
+        super(type, bubbles);
     }
-    /**
-     * 启动
-     */
-    async Start() {
-        if (this.__result) {
-            return this.__result;
-        }
-        this.__result = new Promise((resolve, reject) => {
-            //创建服务
-            this.__service = new this.__serviceClass();
-            this.__service.name = this.__name;
-            //初始化服务
-            this.__service.Init((err, result) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(result);
-                }
-            });
-        });
-        return this.__result;
+    get sender() {
+        return GObject.cast(this.currentTarget);
     }
-    Destroy() {
-        this.__name = undefined;
-        this.__serviceClass = undefined;
-        this.__result = undefined;
-        this.__service.Destroy();
-        this.__service = null;
-    }
-}
-
-class ServiceManager {
-    /**启动器 */
-    static __starters = new Map();
-    /**
-     * 获取服务
-     * @param key
-     * @returns
-     */
-    static GetService(value) {
-        const className = GetClassName(value);
-        //如果启动器存在
-        if (this.__starters.has(className)) {
-            return this.__starters.get(className).Start();
-        }
-        let starter = new ServiceStarter(className, value);
-        this.__starters.set(className, starter);
-        return starter.Start();
-    }
-    /**
-     * 卸载服务
-     * @param key
-     */
-    static Uninstall(value) {
-        const className = GetClassName(value);
-        if (!this.__starters.has(className)) {
-            return;
-        }
-        let starter = this.__starters.get(className);
-        starter.Destroy();
-        this.__starters.delete(className);
-    }
-}
-
-/**
- * 本地数据缓存
- */
-class LocalStorage {
-    static KEY = "drongo.LocalStorage";
-    /**
-     * 初始化
-     * @param gameName
-     */
-    static Init(gameName) {
-        this.impl.Init(gameName);
-    }
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    static GetItem(key) {
-        this.impl.GetItem(key);
-    }
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    static SetItem(key, value) {
-        this.impl.SetItem(key, value);
-    }
-    /**
-     * 清理
-     * @param key
-     */
-    static ClearItem(key) {
-        this.impl.ClearItem(key);
-    }
-    /**
-     * 清理所有
-     */
-    static ClearAll() {
-        this.impl.ClearAll();
-    }
-    static __impl;
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入!");
-        }
-        return this.__impl;
-    }
-}
-
-/**
- * 本地数据缓存
- */
-class LocalStorageImpl {
-    __gameName;
-    data;
-    /**
-     * 初始化
-     * @param gameName
-     */
-    Init(gameName) {
-        this.__gameName = gameName;
-        let localDataStr = sys.localStorage.getItem(this.__gameName);
-        if (!localDataStr) {
-            this.data = {};
-        }
-        else {
-            this.data = JSON.parse(localDataStr);
-        }
-    }
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    GetItem(key) {
-        return this.data[key];
-    }
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    SetItem(key, value) {
-        this.data[key] = value;
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 清理
-     * @param key
-     */
-    ClearItem(key) {
-        delete this.data[key];
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 清理所有
-     */
-    ClearAll() {
-        this.data = {};
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 保存
-     */
-    __save() {
-        //保存到本地
-        let localDataStr = JSON.stringify(this.data);
-        sys.localStorage.setItem(this.__gameName, localDataStr);
-    }
-}
-
-/**
- * 任务队列
- */
-class TaskQueue extends EventDispatcher {
-    __taskList;
-    __index = 0;
-    constructor() {
-        super();
-        this.__taskList = [];
-    }
-    AddTask(value) {
-        if (this.__taskList.indexOf(value) >= 0) {
-            throw new Error("重复添加！");
-        }
-        this.__taskList.push(value);
-    }
-    RemoveTask(value) {
-        let index = this.__taskList.indexOf(value);
-        if (index < 0) {
-            throw new Error("未找到要删除的内容！");
-        }
-        this.__taskList.splice(index, 1);
-    }
-    Start(data) {
-        this.__index = 0;
-        this.__tryNext();
-    }
-    __tryNext() {
-        if (this.__index < this.__taskList.length) {
-            let task = this.__taskList[this.__index];
-            task.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            task.On(Event.PROGRESS, this.__subTaskEventHandler, this);
-            task.On(Event.ERROR, this.__subTaskEventHandler, this);
-            task.Start();
-        }
-        else {
-            //结束
-            this.Emit(Event.COMPLETE);
-        }
-    }
-    __subTaskEventHandler(key, target, data) {
-        if (key == Event.PROGRESS) {
-            let dataValue = Number(data) == undefined ? 0 : Number(data);
-            let progress = (this.__index + dataValue) / this.__taskList.length;
-            this.Emit(Event.PROGRESS, progress);
-            return;
-        }
-        target.OffAllEvent();
-        if (key == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
-            return;
-        }
-        target.Destroy();
-        this.__index++;
-        this.__tryNext();
-    }
-    Destroy() {
-        super.Destroy();
-        this.__taskList.length = 0;
-        this.__index = 0;
-    }
-}
-
-/**
- * 任务序列（并行）
- */
-class TaskSequence extends EventDispatcher {
-    __taskList = new Array();
-    __index = 0;
-    constructor() {
-        super();
-    }
-    AddTask(value) {
-        if (this.__taskList.indexOf(value) >= 0) {
-            throw new Error("重复添加！");
-        }
-        this.__taskList.push(value);
-    }
-    RemoveTask(value) {
-        let index = this.__taskList.indexOf(value);
-        if (index < 0) {
-            throw new Error("找不到要删除的内容!");
-        }
-        this.__taskList.splice(index, 1);
-    }
-    Start(data) {
-        for (let index = 0; index < this.__taskList.length; index++) {
-            const element = this.__taskList[index];
-            element.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            element.On(Event.ERROR, this.__subTaskEventHandler, this);
-            element.On(Event.PROGRESS, this.__subTaskEventHandler, this);
-            element.Start();
-        }
-    }
-    __subTaskEventHandler(type, target, data) {
-        if (type == Event.PROGRESS) {
-            this.Emit(Event.PROGRESS, this.__index / this.__taskList.length);
-            return;
-        }
-        target.OffAllEvent();
-        if (type == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
-            return;
-        }
-        this.__index++;
-        if (this.__index < this.__taskList.length) {
-            return;
-        }
-        target.Destroy();
-        //完成
-        this.Emit(Event.COMPLETE);
-    }
-    Destroy() {
-        super.Destroy();
-        this.__taskList.length = 0;
-        this.__index = 0;
-    }
-}
-
-/**
- * bit位操作
- */
-class BitFlag {
-    __flags = 0;
-    __elements;
-    constructor() {
-        this.__elements = [];
-    }
-    Add(flag) {
-        this.__flags |= flag;
-        if (this.__elements.indexOf(flag) < 0) {
-            this.__elements.push(flag);
-        }
-    }
-    Remove(flag) {
-        this.__flags ^= flag;
-        let index = this.__elements.indexOf(flag);
-        if (index >= 0) {
-            this.__elements.splice(index, 1);
-        }
-    }
-    /**
-     * 是否包含
-     * @param flag
-     * @returns
-     */
-    Has(flag) {
-        return (this.__flags & flag) == flag;
-    }
-    /**
-     * 位码
-     */
-    get flags() {
-        return this.__flags;
-    }
-    get elements() {
-        return this.__elements;
-    }
-    Destroy() {
-        this.__flags = 0;
-        this.__elements.length = 0;
-        this.__elements = null;
-    }
-}
-
-/**
- * 处理器
- */
-class Handler {
-    method;
-    caller;
-    once = true;
-    isOver = false;
-    /**
-     * 运行
-     * @param args
-     */
-    Run(...args) {
-        if (this.method && !this.isOver) {
-            this.method.apply(this.caller, args);
-            if (this.once) {
-                this.isOver = true;
-            }
-        }
-    }
-    /**
-     * 判断是否相同
-     * @param value
-     * @returns
-     */
-    Equal(value) {
-        if (this.method == value.method && this.caller == value.caller) {
-            return true;
-        }
+    get isShiftDown() {
         return false;
     }
-    /**
-     * 创建一个实例
-     * @param caller
-     * @param method
-     * @param once
-     * @returns
-     */
-    static Create(caller, method, once = false) {
-        var h = new Handler();
-        h.caller = caller;
-        h.method = method;
-        h.once = once;
-        h.isOver = false;
-        return h;
+    get isCtrlDown() {
+        return false;
     }
+    captureTouch() {
+        let obj = GObject.cast(this.currentTarget);
+        if (obj)
+            this._processor.addTouchMonitor(this.touchId, obj);
+    }
+}
+var eventPool = new Array();
+function borrowEvent(type, bubbles) {
+    let evt;
+    if (eventPool.length) {
+        evt = eventPool.pop();
+        evt.type = type;
+        evt.bubbles = bubbles;
+    }
+    else {
+        evt = new FGUIEvent(type, bubbles);
+    }
+    return evt;
+}
+function returnEvent(evt) {
+    evt.initiator = null;
+    evt.unuse();
+    eventPool.push(evt);
 }
 
 var ButtonMode;
@@ -6239,122 +5188,6 @@ var ObjectPropID;
     ObjectPropID[ObjectPropID["FontSize"] = 8] = "FontSize";
     ObjectPropID[ObjectPropID["Selected"] = 9] = "Selected";
 })(ObjectPropID || (ObjectPropID = {}));
-
-var BlendMode;
-(function (BlendMode) {
-    BlendMode[BlendMode["Normal"] = 0] = "Normal";
-    BlendMode[BlendMode["None"] = 1] = "None";
-    BlendMode[BlendMode["Add"] = 2] = "Add";
-    BlendMode[BlendMode["Multiply"] = 3] = "Multiply";
-    BlendMode[BlendMode["Screen"] = 4] = "Screen";
-    BlendMode[BlendMode["Erase"] = 5] = "Erase";
-    BlendMode[BlendMode["Mask"] = 6] = "Mask";
-    BlendMode[BlendMode["Below"] = 7] = "Below";
-    BlendMode[BlendMode["Off"] = 8] = "Off";
-    BlendMode[BlendMode["Custom1"] = 9] = "Custom1";
-    BlendMode[BlendMode["Custom2"] = 10] = "Custom2";
-    BlendMode[BlendMode["Custom3"] = 11] = "Custom3";
-})(BlendMode || (BlendMode = {}));
-class BlendModeUtils {
-    static apply(node, blendMode) {
-        let f = factors[blendMode];
-        let renderers = node.getComponentsInChildren(RenderComponent);
-        renderers.forEach(element => {
-            element.srcBlendFactor = f[0];
-            element.dstBlendFactor = f[1];
-        });
-    }
-    static override(blendMode, srcFactor, dstFactor) {
-        factors[blendMode][0] = srcFactor;
-        factors[blendMode][1] = dstFactor;
-    }
-}
-const factors = [
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //normal
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE], //none
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE], //add
-    [gfx.BlendFactor.DST_COLOR, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //mul
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE_MINUS_SRC_COLOR], //screen
-    [gfx.BlendFactor.ZERO, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //erase
-    [gfx.BlendFactor.ZERO, gfx.BlendFactor.SRC_ALPHA], //mask
-    [gfx.BlendFactor.ONE_MINUS_DST_ALPHA, gfx.BlendFactor.DST_ALPHA], //below
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ZERO], //off
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom1
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
-];
-
-class FGUIEvent extends Event$1 {
-    static TOUCH_BEGIN = "fui_touch_begin";
-    static TOUCH_MOVE = "fui_touch_move";
-    static TOUCH_END = "fui_touch_end";
-    static CLICK = "fui_click";
-    static ROLL_OVER = "fui_roll_over";
-    static ROLL_OUT = "fui_roll_out";
-    static MOUSE_WHEEL = "fui_mouse_wheel";
-    static DISPLAY = "fui_display";
-    static UNDISPLAY = "fui_undisplay";
-    static GEAR_STOP = "fui_gear_stop";
-    static LINK = "fui_text_link";
-    static Submit = "editing-return";
-    static TEXT_CHANGE = "text-changed";
-    static STATUS_CHANGED = "fui_status_changed";
-    static XY_CHANGED = "fui_xy_changed";
-    static SIZE_CHANGED = "fui_size_changed";
-    static SIZE_DELAY_CHANGE = "fui_size_delay_change";
-    static DRAG_START = "fui_drag_start";
-    static DRAG_MOVE = "fui_drag_move";
-    static DRAG_END = "fui_drag_end";
-    static DROP = "fui_drop";
-    static SCROLL = "fui_scroll";
-    static SCROLL_END = "fui_scroll_end";
-    static PULL_DOWN_RELEASE = "fui_pull_down_release";
-    static PULL_UP_RELEASE = "fui_pull_up_release";
-    static CLICK_ITEM = "fui_click_item";
-    initiator;
-    pos = new Vec2();
-    touchId = 0;
-    clickCount = 0;
-    button = 0;
-    keyModifiers = 0;
-    mouseWheelDelta = 0;
-    _processor;
-    constructor(type, bubbles) {
-        super(type, bubbles);
-    }
-    get sender() {
-        return GObject.cast(this.currentTarget);
-    }
-    get isShiftDown() {
-        return false;
-    }
-    get isCtrlDown() {
-        return false;
-    }
-    captureTouch() {
-        let obj = GObject.cast(this.currentTarget);
-        if (obj)
-            this._processor.addTouchMonitor(this.touchId, obj);
-    }
-}
-var eventPool = new Array();
-function borrowEvent(type, bubbles) {
-    let evt;
-    if (eventPool.length) {
-        evt = eventPool.pop();
-        evt.type = type;
-        evt.bubbles = bubbles;
-    }
-    else {
-        evt = new FGUIEvent(type, bubbles);
-    }
-    return evt;
-}
-function returnEvent(evt) {
-    evt.initiator = null;
-    evt.unuse();
-    eventPool.push(evt);
-}
 
 var EaseType;
 (function (EaseType) {
@@ -6676,7 +5509,7 @@ class GearIcon extends GearBase {
     }
 }
 
-class Pool {
+let Pool$1 = class Pool {
     pool = [];
     _init;
     _reset;
@@ -6713,7 +5546,7 @@ class Pool {
             this.pool.push(element);
         }
     }
-}
+};
 
 // Author: Daniele Giardini - http://www.demigiant.com
 // Created: 2014/07/19 14:11
@@ -7488,7 +6321,7 @@ class TweenManager {
     }
 }
 var _activeTweens = new Array();
-var _tweenerPool = new Pool(GTweener, e => e._init(), e => e._reset());
+var _tweenerPool = new Pool$1(GTweener, e => e._init(), e => e._reset());
 var _totalActiveTweens = 0;
 var _root;
 
@@ -7851,6 +6684,384 @@ class GearXY extends GearBase {
         this._default.x += dx;
         this._default.y += dy;
         this.updateState();
+    }
+}
+
+class GGroup extends GObject {
+    _layout = 0;
+    _lineGap = 0;
+    _columnGap = 0;
+    _excludeInvisibles;
+    _autoSizeDisabled;
+    _mainGridIndex = -1;
+    _mainGridMinSize = 50;
+    _boundsChanged;
+    _percentReady;
+    _mainChildIndex = -1;
+    _totalSize = 0;
+    _numChildren = 0;
+    _updating = 0;
+    constructor() {
+        super();
+        this._node.name = "GGroup";
+        this._touchDisabled = true;
+    }
+    dispose() {
+        this._boundsChanged = false;
+        super.dispose();
+    }
+    get layout() {
+        return this._layout;
+    }
+    set layout(value) {
+        if (this._layout != value) {
+            this._layout = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get lineGap() {
+        return this._lineGap;
+    }
+    set lineGap(value) {
+        if (this._lineGap != value) {
+            this._lineGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get columnGap() {
+        return this._columnGap;
+    }
+    set columnGap(value) {
+        if (this._columnGap != value) {
+            this._columnGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get excludeInvisibles() {
+        return this._excludeInvisibles;
+    }
+    set excludeInvisibles(value) {
+        if (this._excludeInvisibles != value) {
+            this._excludeInvisibles = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get autoSizeDisabled() {
+        return this._autoSizeDisabled;
+    }
+    set autoSizeDisabled(value) {
+        this._autoSizeDisabled = value;
+    }
+    get mainGridMinSize() {
+        return this._mainGridMinSize;
+    }
+    set mainGridMinSize(value) {
+        if (this._mainGridMinSize != value) {
+            this._mainGridMinSize = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get mainGridIndex() {
+        return this._mainGridIndex;
+    }
+    set mainGridIndex(value) {
+        if (this._mainGridIndex != value) {
+            this._mainGridIndex = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    setBoundsChangedFlag(positionChangedOnly = false) {
+        if (this._updating == 0 && this._parent) {
+            if (!positionChangedOnly)
+                this._percentReady = false;
+            if (!this._boundsChanged) {
+                this._boundsChanged = true;
+                if (this._layout != GroupLayoutType.None)
+                    this._partner.callLater(this._ensureBoundsCorrect);
+            }
+        }
+    }
+    _ensureBoundsCorrect() {
+        let _t = GObject.cast(this.node);
+        _t.ensureBoundsCorrect();
+    }
+    ensureSizeCorrect() {
+        if (this._parent == null || !this._boundsChanged || this._layout == 0)
+            return;
+        this._boundsChanged = false;
+        if (this._autoSizeDisabled)
+            this.resizeChildren(0, 0);
+        else {
+            this.handleLayout();
+            this.updateBounds();
+        }
+    }
+    ensureBoundsCorrect() {
+        if (this._parent == null || !this._boundsChanged)
+            return;
+        this._boundsChanged = false;
+        if (this._layout == 0)
+            this.updateBounds();
+        else {
+            if (this._autoSizeDisabled)
+                this.resizeChildren(0, 0);
+            else {
+                this.handleLayout();
+                this.updateBounds();
+            }
+        }
+    }
+    updateBounds() {
+        this._partner.unschedule(this._ensureBoundsCorrect);
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
+        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
+        var tmp;
+        var empty = true;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
+                continue;
+            tmp = child.xMin;
+            if (tmp < ax)
+                ax = tmp;
+            tmp = child.yMin;
+            if (tmp < ay)
+                ay = tmp;
+            tmp = child.xMin + child.width;
+            if (tmp > ar)
+                ar = tmp;
+            tmp = child.yMin + child.height;
+            if (tmp > ab)
+                ab = tmp;
+            empty = false;
+        }
+        var w = 0, h = 0;
+        if (!empty) {
+            this._updating |= 1;
+            this.setPosition(ax, ay);
+            this._updating &= 2;
+            w = ar - ax;
+            h = ab - ay;
+        }
+        if ((this._updating & 2) == 0) {
+            this._updating |= 2;
+            this.setSize(w, h);
+            this._updating &= 1;
+        }
+        else {
+            this._updating &= 1;
+            this.resizeChildren(this._width - w, this._height - h);
+        }
+    }
+    handleLayout() {
+        this._updating |= 1;
+        var child;
+        var i;
+        var cnt;
+        if (this._layout == GroupLayoutType.Horizontal) {
+            var curX = this.x;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else if (this._layout == GroupLayoutType.Vertical) {
+            var curY = this.y;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 2;
+    }
+    moveChildren(dx, dy) {
+        if ((this._updating & 1) != 0 || this._parent == null)
+            return;
+        this._updating |= 1;
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group == this) {
+                child.setPosition(child.x + dx, child.y + dy);
+            }
+        }
+        this._updating &= 2;
+    }
+    resizeChildren(dw, dh) {
+        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
+            return;
+        this._updating |= 2;
+        if (this._boundsChanged) {
+            this._boundsChanged = false;
+            if (!this._autoSizeDisabled) {
+                this.updateBounds();
+                return;
+            }
+        }
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        if (!this._percentReady) {
+            this._percentReady = true;
+            this._numChildren = 0;
+            this._totalSize = 0;
+            this._mainChildIndex = -1;
+            var j = 0;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (!this._excludeInvisibles || child.internalVisible3) {
+                    if (j == this._mainGridIndex)
+                        this._mainChildIndex = i;
+                    this._numChildren++;
+                    if (this._layout == 1)
+                        this._totalSize += child.width;
+                    else
+                        this._totalSize += child.height;
+                }
+                j++;
+            }
+            if (this._mainChildIndex != -1) {
+                if (this._layout == 1) {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.width;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+                else {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.height;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+            }
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (i == this._mainChildIndex)
+                    continue;
+                if (this._totalSize > 0)
+                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
+                else
+                    child._sizePercentInGroup = 0;
+            }
+        }
+        var remainSize = 0;
+        var remainPercent = 1;
+        var priorHandled = false;
+        if (this._layout == 1) {
+            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
+                remainSize -= child.width;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curX = this.x;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.width;
+                }
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else {
+            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
+                remainSize -= child.height;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curY = this.y;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.height;
+                }
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 1;
+    }
+    handleAlphaChanged() {
+        if (this._underConstruct)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.alpha = this.alpha;
+        }
+    }
+    handleVisibleChanged() {
+        if (!this._parent)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.handleVisibleChanged();
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._layout = buffer.readByte();
+        this._lineGap = buffer.readInt();
+        this._columnGap = buffer.readInt();
+        if (buffer.version >= 2) {
+            this._excludeInvisibles = buffer.readBool();
+            this._autoSizeDisabled = buffer.readBool();
+            this._mainGridIndex = buffer.readShort();
+        }
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        if (!this.visible)
+            this.handleVisibleChanged();
     }
 }
 
@@ -9567,1178 +8778,6 @@ var s_dragging;
 var s_dragQuery;
 var Decls$1 = {};
 var constructingDepth = { n: 0 };
-
-class GGroup extends GObject {
-    _layout = 0;
-    _lineGap = 0;
-    _columnGap = 0;
-    _excludeInvisibles;
-    _autoSizeDisabled;
-    _mainGridIndex = -1;
-    _mainGridMinSize = 50;
-    _boundsChanged;
-    _percentReady;
-    _mainChildIndex = -1;
-    _totalSize = 0;
-    _numChildren = 0;
-    _updating = 0;
-    constructor() {
-        super();
-        this._node.name = "GGroup";
-        this._touchDisabled = true;
-    }
-    dispose() {
-        this._boundsChanged = false;
-        super.dispose();
-    }
-    get layout() {
-        return this._layout;
-    }
-    set layout(value) {
-        if (this._layout != value) {
-            this._layout = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get lineGap() {
-        return this._lineGap;
-    }
-    set lineGap(value) {
-        if (this._lineGap != value) {
-            this._lineGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get columnGap() {
-        return this._columnGap;
-    }
-    set columnGap(value) {
-        if (this._columnGap != value) {
-            this._columnGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get excludeInvisibles() {
-        return this._excludeInvisibles;
-    }
-    set excludeInvisibles(value) {
-        if (this._excludeInvisibles != value) {
-            this._excludeInvisibles = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get autoSizeDisabled() {
-        return this._autoSizeDisabled;
-    }
-    set autoSizeDisabled(value) {
-        this._autoSizeDisabled = value;
-    }
-    get mainGridMinSize() {
-        return this._mainGridMinSize;
-    }
-    set mainGridMinSize(value) {
-        if (this._mainGridMinSize != value) {
-            this._mainGridMinSize = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get mainGridIndex() {
-        return this._mainGridIndex;
-    }
-    set mainGridIndex(value) {
-        if (this._mainGridIndex != value) {
-            this._mainGridIndex = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    setBoundsChangedFlag(positionChangedOnly = false) {
-        if (this._updating == 0 && this._parent) {
-            if (!positionChangedOnly)
-                this._percentReady = false;
-            if (!this._boundsChanged) {
-                this._boundsChanged = true;
-                if (this._layout != GroupLayoutType.None)
-                    this._partner.callLater(this._ensureBoundsCorrect);
-            }
-        }
-    }
-    _ensureBoundsCorrect() {
-        let _t = GObject.cast(this.node);
-        _t.ensureBoundsCorrect();
-    }
-    ensureSizeCorrect() {
-        if (this._parent == null || !this._boundsChanged || this._layout == 0)
-            return;
-        this._boundsChanged = false;
-        if (this._autoSizeDisabled)
-            this.resizeChildren(0, 0);
-        else {
-            this.handleLayout();
-            this.updateBounds();
-        }
-    }
-    ensureBoundsCorrect() {
-        if (this._parent == null || !this._boundsChanged)
-            return;
-        this._boundsChanged = false;
-        if (this._layout == 0)
-            this.updateBounds();
-        else {
-            if (this._autoSizeDisabled)
-                this.resizeChildren(0, 0);
-            else {
-                this.handleLayout();
-                this.updateBounds();
-            }
-        }
-    }
-    updateBounds() {
-        this._partner.unschedule(this._ensureBoundsCorrect);
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
-        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
-        var tmp;
-        var empty = true;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
-                continue;
-            tmp = child.xMin;
-            if (tmp < ax)
-                ax = tmp;
-            tmp = child.yMin;
-            if (tmp < ay)
-                ay = tmp;
-            tmp = child.xMin + child.width;
-            if (tmp > ar)
-                ar = tmp;
-            tmp = child.yMin + child.height;
-            if (tmp > ab)
-                ab = tmp;
-            empty = false;
-        }
-        var w = 0, h = 0;
-        if (!empty) {
-            this._updating |= 1;
-            this.setPosition(ax, ay);
-            this._updating &= 2;
-            w = ar - ax;
-            h = ab - ay;
-        }
-        if ((this._updating & 2) == 0) {
-            this._updating |= 2;
-            this.setSize(w, h);
-            this._updating &= 1;
-        }
-        else {
-            this._updating &= 1;
-            this.resizeChildren(this._width - w, this._height - h);
-        }
-    }
-    handleLayout() {
-        this._updating |= 1;
-        var child;
-        var i;
-        var cnt;
-        if (this._layout == GroupLayoutType.Horizontal) {
-            var curX = this.x;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else if (this._layout == GroupLayoutType.Vertical) {
-            var curY = this.y;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 2;
-    }
-    moveChildren(dx, dy) {
-        if ((this._updating & 1) != 0 || this._parent == null)
-            return;
-        this._updating |= 1;
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group == this) {
-                child.setPosition(child.x + dx, child.y + dy);
-            }
-        }
-        this._updating &= 2;
-    }
-    resizeChildren(dw, dh) {
-        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
-            return;
-        this._updating |= 2;
-        if (this._boundsChanged) {
-            this._boundsChanged = false;
-            if (!this._autoSizeDisabled) {
-                this.updateBounds();
-                return;
-            }
-        }
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        if (!this._percentReady) {
-            this._percentReady = true;
-            this._numChildren = 0;
-            this._totalSize = 0;
-            this._mainChildIndex = -1;
-            var j = 0;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (!this._excludeInvisibles || child.internalVisible3) {
-                    if (j == this._mainGridIndex)
-                        this._mainChildIndex = i;
-                    this._numChildren++;
-                    if (this._layout == 1)
-                        this._totalSize += child.width;
-                    else
-                        this._totalSize += child.height;
-                }
-                j++;
-            }
-            if (this._mainChildIndex != -1) {
-                if (this._layout == 1) {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.width;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-                else {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.height;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-            }
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (i == this._mainChildIndex)
-                    continue;
-                if (this._totalSize > 0)
-                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
-                else
-                    child._sizePercentInGroup = 0;
-            }
-        }
-        var remainSize = 0;
-        var remainPercent = 1;
-        var priorHandled = false;
-        if (this._layout == 1) {
-            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
-                remainSize -= child.width;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curX = this.x;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.width;
-                }
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else {
-            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
-                remainSize -= child.height;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curY = this.y;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.height;
-                }
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 1;
-    }
-    handleAlphaChanged() {
-        if (this._underConstruct)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.alpha = this.alpha;
-        }
-    }
-    handleVisibleChanged() {
-        if (!this._parent)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.handleVisibleChanged();
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._layout = buffer.readByte();
-        this._lineGap = buffer.readInt();
-        this._columnGap = buffer.readInt();
-        if (buffer.version >= 2) {
-            this._excludeInvisibles = buffer.readBool();
-            this._autoSizeDisabled = buffer.readBool();
-            this._mainGridIndex = buffer.readShort();
-        }
-    }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        if (!this.visible)
-            this.handleVisibleChanged();
-    }
-}
-
-class GGraph extends GObject {
-    _content;
-    _type = 0;
-    _lineSize = 0;
-    _lineColor;
-    _fillColor;
-    _cornerRadius;
-    _sides;
-    _startAngle;
-    _polygonPoints;
-    _distances;
-    _hasContent;
-    constructor() {
-        super();
-        this._node.name = "GGraph";
-        this._lineSize = 1;
-        this._lineColor = new Color();
-        this._fillColor = new Color(255, 255, 255, 255);
-        this._content = this._node.addComponent(Graphics);
-    }
-    drawRect(lineSize, lineColor, fillColor, corner) {
-        this._type = 1;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._cornerRadius = corner;
-        this.updateGraph();
-    }
-    drawEllipse(lineSize, lineColor, fillColor) {
-        this._type = 2;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this.updateGraph();
-    }
-    drawRegularPolygon(lineSize, lineColor, fillColor, sides, startAngle, distances) {
-        this._type = 4;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._sides = sides;
-        this._startAngle = startAngle || 0;
-        this._distances = distances;
-        this.updateGraph();
-    }
-    drawPolygon(lineSize, lineColor, fillColor, points) {
-        this._type = 3;
-        this._lineSize = lineSize;
-        this._lineColor.set(lineColor);
-        this._fillColor.set(fillColor);
-        this._polygonPoints = points;
-        this.updateGraph();
-    }
-    get distances() {
-        return this._distances;
-    }
-    set distances(value) {
-        this._distances = value;
-        if (this._type == 3)
-            this.updateGraph();
-    }
-    clearGraphics() {
-        this._type = 0;
-        if (this._hasContent) {
-            this._content.clear();
-            this._hasContent = false;
-        }
-    }
-    get type() {
-        return this._type;
-    }
-    get color() {
-        return this._fillColor;
-    }
-    set color(value) {
-        this._fillColor.set(value);
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    updateGraph() {
-        let ctx = this._content;
-        if (this._hasContent) {
-            this._hasContent = false;
-            ctx.clear();
-        }
-        var w = this._width;
-        var h = this._height;
-        if (w == 0 || h == 0)
-            return;
-        var px = -this.pivotX * this._width;
-        var py = this.pivotY * this._height;
-        let ls = this._lineSize / 2;
-        ctx.lineWidth = this._lineSize;
-        ctx.strokeColor = this._lineColor;
-        ctx.fillColor = this._fillColor;
-        if (this._type == 1) {
-            if (this._cornerRadius) {
-                ctx.roundRect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize, this._cornerRadius[0]);
-            }
-            else
-                ctx.rect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize);
-        }
-        else if (this._type == 2) {
-            ctx.ellipse(w / 2 + px, -h / 2 + py, w / 2 - ls, h / 2 - ls);
-        }
-        else if (this._type == 3) {
-            this.drawPath(ctx, this._polygonPoints, px, py);
-        }
-        else if (this._type == 4) {
-            if (!this._polygonPoints)
-                this._polygonPoints = [];
-            var radius = Math.min(w, h) / 2 - ls;
-            this._polygonPoints.length = 0;
-            var angle = misc.degreesToRadians(this._startAngle);
-            var deltaAngle = 2 * Math.PI / this._sides;
-            var dist;
-            for (var i = 0; i < this._sides; i++) {
-                if (this._distances) {
-                    dist = this._distances[i];
-                    if (isNaN(dist))
-                        dist = 1;
-                }
-                else
-                    dist = 1;
-                var xv = radius + radius * dist * Math.cos(angle);
-                var yv = radius + radius * dist * Math.sin(angle);
-                this._polygonPoints.push(xv, yv);
-                angle += deltaAngle;
-            }
-            this.drawPath(ctx, this._polygonPoints, px, py);
-        }
-        if (ls != 0)
-            ctx.stroke();
-        if (this._fillColor.a != 0)
-            ctx.fill();
-        this._hasContent = true;
-    }
-    drawPath(ctx, points, px, py) {
-        var cnt = points.length;
-        ctx.moveTo(points[0] + px, -points[1] + py);
-        for (var i = 2; i < cnt; i += 2)
-            ctx.lineTo(points[i] + px, -points[i + 1] + py);
-        ctx.lineTo(points[0] + px, -points[1] + py);
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (this._type != 0)
-            this.updateGraph();
-    }
-    getProp(index) {
-        if (index == ObjectPropID.Color)
-            return this.color;
-        else
-            return super.getProp(index);
-    }
-    setProp(index, value) {
-        if (index == ObjectPropID.Color)
-            this.color = value;
-        else
-            super.setProp(index, value);
-    }
-    _hitTest(pt) {
-        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height) {
-            if (this._type == 3) {
-                let points = this._polygonPoints;
-                let len = points.length / 2;
-                let i;
-                let j = len - 1;
-                let oddNodes = false;
-                this._width;
-                this._height;
-                for (i = 0; i < len; ++i) {
-                    let ix = points[i * 2];
-                    let iy = points[i * 2 + 1];
-                    let jx = points[j * 2];
-                    let jy = points[j * 2 + 1];
-                    if ((iy < pt.y && jy >= pt.y || jy < pt.y && iy >= pt.y) && (ix <= pt.x || jx <= pt.x)) {
-                        if (ix + (pt.y - iy) / (jy - iy) * (jx - ix) < pt.x)
-                            oddNodes = !oddNodes;
-                    }
-                    j = i;
-                }
-                return oddNodes ? this : null;
-            }
-            else
-                return this;
-        }
-        else
-            return null;
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._type = buffer.readByte();
-        if (this._type != 0) {
-            var i;
-            var cnt;
-            this._lineSize = buffer.readInt();
-            this._lineColor.set(buffer.readColor(true));
-            this._fillColor.set(buffer.readColor(true));
-            if (buffer.readBool()) {
-                this._cornerRadius = new Array(4);
-                for (i = 0; i < 4; i++)
-                    this._cornerRadius[i] = buffer.readFloat();
-            }
-            if (this._type == 3) {
-                cnt = buffer.readShort();
-                this._polygonPoints = [];
-                this._polygonPoints.length = cnt;
-                for (i = 0; i < cnt; i++)
-                    this._polygonPoints[i] = buffer.readFloat();
-            }
-            else if (this._type == 4) {
-                this._sides = buffer.readShort();
-                this._startAngle = buffer.readFloat();
-                cnt = buffer.readShort();
-                if (cnt > 0) {
-                    this._distances = [];
-                    for (i = 0; i < cnt; i++)
-                        this._distances[i] = buffer.readFloat();
-                }
-            }
-            this.updateGraph();
-        }
-    }
-}
-
-class Image extends Sprite {
-    _flip = FlipType.None;
-    _fillMethod = FillMethod.None;
-    _fillOrigin = FillOrigin.Left;
-    _fillAmount = 0;
-    _fillClockwise;
-    constructor() {
-        super();
-    }
-    get flip() {
-        return this._flip;
-    }
-    set flip(value) {
-        if (this._flip != value) {
-            this._flip = value;
-            let sx = 1, sy = 1;
-            if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both)
-                sx = -1;
-            if (this._flip == FlipType.Vertical || this._flip == FlipType.Both)
-                sy = -1;
-            if (sx != 1 || sy != 1) {
-                let uiTrans = this.node.getComponent(UITransform);
-                uiTrans.setAnchorPoint(0.5, 0.5);
-            }
-            this.node.setScale(sx, sy);
-        }
-    }
-    get fillMethod() {
-        return this._fillMethod;
-    }
-    set fillMethod(value) {
-        if (this._fillMethod != value) {
-            this._fillMethod = value;
-            if (this._fillMethod != 0) {
-                this.type = Sprite.Type.FILLED;
-                if (this._fillMethod <= 3)
-                    this.fillType = this._fillMethod - 1;
-                else
-                    this.fillType = Sprite.FillType.RADIAL;
-                this.fillCenter = new Vec2(0.5, 0.5);
-                this.setupFill();
-            }
-            else {
-                this.type = Sprite.Type.SIMPLE;
-            }
-        }
-    }
-    get fillOrigin() {
-        return this._fillOrigin;
-    }
-    set fillOrigin(value) {
-        if (this._fillOrigin != value) {
-            this._fillOrigin = value;
-            if (this._fillMethod != 0)
-                this.setupFill();
-        }
-    }
-    get fillClockwise() {
-        return this._fillClockwise;
-    }
-    set fillClockwise(value) {
-        if (this._fillClockwise != value) {
-            this._fillClockwise = value;
-            if (this._fillMethod != 0)
-                this.setupFill();
-        }
-    }
-    get fillAmount() {
-        return this._fillAmount;
-    }
-    set fillAmount(value) {
-        if (this._fillAmount != value) {
-            this._fillAmount = value;
-            if (this._fillMethod != 0) {
-                if (this._fillClockwise)
-                    this.fillRange = -this._fillAmount;
-                else
-                    this.fillRange = this._fillAmount;
-            }
-        }
-    }
-    setupFill() {
-        if (this._fillMethod == FillMethod.Horizontal) {
-            this._fillClockwise = this._fillOrigin == FillOrigin.Right || this._fillOrigin == FillOrigin.Bottom;
-            this.fillStart = this._fillClockwise ? 1 : 0;
-        }
-        else if (this._fillMethod == FillMethod.Vertical) {
-            this._fillClockwise = this._fillOrigin == FillOrigin.Left || this._fillOrigin == FillOrigin.Top;
-            this.fillStart = this._fillClockwise ? 1 : 0;
-        }
-        else {
-            switch (this._fillOrigin) {
-                case FillOrigin.Right:
-                    this.fillOrigin = 0;
-                    break;
-                case FillOrigin.Top:
-                    this.fillStart = 0.25;
-                    break;
-                case FillOrigin.Left:
-                    this.fillStart = 0.5;
-                    break;
-                case FillOrigin.Bottom:
-                    this.fillStart = 0.75;
-                    break;
-            }
-        }
-    }
-}
-
-class GImage extends GObject {
-    _content;
-    constructor() {
-        super();
-        this._node.name = "GImage";
-        this._touchDisabled = true;
-        this._content = this._node.addComponent(Image);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-    }
-    get color() {
-        return this._content.color;
-    }
-    set color(value) {
-        this._content.color = value;
-        this.updateGear(4);
-    }
-    get flip() {
-        return this._content.flip;
-    }
-    set flip(value) {
-        this._content.flip = value;
-    }
-    get fillMethod() {
-        return this._content.fillMethod;
-    }
-    set fillMethod(value) {
-        this._content.fillMethod = value;
-    }
-    get fillOrigin() {
-        return this._content.fillOrigin;
-    }
-    set fillOrigin(value) {
-        this._content.fillOrigin = value;
-    }
-    get fillClockwise() {
-        return this._content.fillClockwise;
-    }
-    set fillClockwise(value) {
-        this._content.fillClockwise = value;
-    }
-    get fillAmount() {
-        return this._content.fillAmount;
-    }
-    set fillAmount(value) {
-        this._content.fillAmount = value;
-    }
-    constructFromResource() {
-        var contentItem = this.packageItem.getBranch();
-        this.sourceWidth = contentItem.width;
-        this.sourceHeight = contentItem.height;
-        this.initWidth = this.sourceWidth;
-        this.initHeight = this.sourceHeight;
-        this.setSize(this.sourceWidth, this.sourceHeight);
-        contentItem = contentItem.getHighResolution();
-        contentItem.load();
-        if (contentItem.scale9Grid)
-            this._content.type = Sprite.Type.SLICED;
-        else if (contentItem.scaleByTile)
-            this._content.type = Sprite.Type.TILED;
-        this._content.spriteFrame = contentItem.asset;
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    getProp(index) {
-        if (index == ObjectPropID.Color)
-            return this.color;
-        else
-            return super.getProp(index);
-    }
-    setProp(index, value) {
-        if (index == ObjectPropID.Color)
-            this.color = value;
-        else
-            super.setProp(index, value);
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        this._content.flip = buffer.readByte();
-        this._content.fillMethod = buffer.readByte();
-        if (this._content.fillMethod != 0) {
-            this._content.fillOrigin = buffer.readByte();
-            this._content.fillClockwise = buffer.readBool();
-            this._content.fillAmount = buffer.readFloat();
-        }
-    }
-}
-
-class MovieClip extends Image {
-    interval = 0;
-    swing = false;
-    repeatDelay = 0;
-    timeScale = 1;
-    _playing = true;
-    _frameCount = 0;
-    _frames;
-    _frame = 0;
-    _start = 0;
-    _end = 0;
-    _times = 0;
-    _endAt = 0;
-    _status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-    _callback;
-    _smoothing = true;
-    _frameElapsed = 0; //当前帧延迟
-    _reversed = false;
-    _repeatedCount = 0;
-    constructor() {
-        super();
-    }
-    get frames() {
-        return this._frames;
-    }
-    set frames(value) {
-        this._frames = value;
-        if (this._frames) {
-            this._frameCount = this._frames.length;
-            if (this._end == -1 || this._end > this._frameCount - 1)
-                this._end = this._frameCount - 1;
-            if (this._endAt == -1 || this._endAt > this._frameCount - 1)
-                this._endAt = this._frameCount - 1;
-            if (this._frame < 0 || this._frame > this._frameCount - 1)
-                this._frame = this._frameCount - 1;
-            this.type = Sprite.Type.SIMPLE;
-            this.drawFrame();
-            this._frameElapsed = 0;
-            this._repeatedCount = 0;
-            this._reversed = false;
-        }
-        else {
-            this._frameCount = 0;
-        }
-    }
-    get frameCount() {
-        return this._frameCount;
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            if (this._frames && value >= this._frameCount)
-                value = this._frameCount - 1;
-            this._frame = value;
-            this._frameElapsed = 0;
-            this.drawFrame();
-        }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-        }
-    }
-    get smoothing() {
-        return this._smoothing;
-    }
-    set smoothing(value) {
-        this._smoothing = value;
-    }
-    rewind() {
-        this._frame = 0;
-        this._frameElapsed = 0;
-        this._reversed = false;
-        this._repeatedCount = 0;
-        this.drawFrame();
-    }
-    syncStatus(anotherMc) {
-        this._frame = anotherMc._frame;
-        this._frameElapsed = anotherMc._frameElapsed;
-        this._reversed = anotherMc._reversed;
-        this._repeatedCount = anotherMc._repeatedCount;
-        this.drawFrame();
-    }
-    advance(timeInSeconds) {
-        var beginFrame = this._frame;
-        var beginReversed = this._reversed;
-        var backupTime = timeInSeconds;
-        while (true) {
-            var tt = this.interval + this._frames[this._frame].addDelay;
-            if (this._frame == 0 && this._repeatedCount > 0)
-                tt += this.repeatDelay;
-            if (timeInSeconds < tt) {
-                this._frameElapsed = 0;
-                break;
-            }
-            timeInSeconds -= tt;
-            if (this.swing) {
-                if (this._reversed) {
-                    this._frame--;
-                    if (this._frame <= 0) {
-                        this._frame = 0;
-                        this._repeatedCount++;
-                        this._reversed = !this._reversed;
-                    }
-                }
-                else {
-                    this._frame++;
-                    if (this._frame > this._frameCount - 1) {
-                        this._frame = Math.max(0, this._frameCount - 2);
-                        this._repeatedCount++;
-                        this._reversed = !this._reversed;
-                    }
-                }
-            }
-            else {
-                this._frame++;
-                if (this._frame > this._frameCount - 1) {
-                    this._frame = 0;
-                    this._repeatedCount++;
-                }
-            }
-            if (this._frame == beginFrame && this._reversed == beginReversed) //走了一轮了
-             {
-                var roundTime = backupTime - timeInSeconds; //这就是一轮需要的时间
-                timeInSeconds -= Math.floor(timeInSeconds / roundTime) * roundTime; //跳过
-            }
-        }
-        this.drawFrame();
-    }
-    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-    setPlaySettings(start, end, times, endAt, endCallback) {
-        if (start == undefined)
-            start = 0;
-        if (end == undefined)
-            end = -1;
-        if (times == undefined)
-            times = 0;
-        if (endAt == undefined)
-            endAt = -1;
-        this._start = start;
-        this._end = end;
-        if (this._end == -1 || this._end > this._frameCount - 1)
-            this._end = this._frameCount - 1;
-        this._times = times;
-        this._endAt = endAt;
-        if (this._endAt == -1)
-            this._endAt = this._end;
-        this._status = 0;
-        this._callback = endCallback;
-        this.frame = start;
-    }
-    update(dt) {
-        if (!this._playing || this._frameCount == 0 || this._status == 3)
-            return;
-        if (this.timeScale != 1)
-            dt *= this.timeScale;
-        this._frameElapsed += dt;
-        var tt = this.interval + this._frames[this._frame].addDelay;
-        if (this._frame == 0 && this._repeatedCount > 0)
-            tt += this.repeatDelay;
-        if (this._frameElapsed < tt)
-            return;
-        this._frameElapsed -= tt;
-        if (this._frameElapsed > this.interval)
-            this._frameElapsed = this.interval;
-        if (this.swing) {
-            if (this._reversed) {
-                this._frame--;
-                if (this._frame <= 0) {
-                    this._frame = 0;
-                    this._repeatedCount++;
-                    this._reversed = !this._reversed;
-                }
-            }
-            else {
-                this._frame++;
-                if (this._frame > this._frameCount - 1) {
-                    this._frame = Math.max(0, this._frameCount - 2);
-                    this._repeatedCount++;
-                    this._reversed = !this._reversed;
-                }
-            }
-        }
-        else {
-            this._frame++;
-            if (this._frame > this._frameCount - 1) {
-                this._frame = 0;
-                this._repeatedCount++;
-            }
-        }
-        if (this._status == 1) //new loop
-         {
-            this._frame = this._start;
-            this._frameElapsed = 0;
-            this._status = 0;
-        }
-        else if (this._status == 2) //ending
-         {
-            this._frame = this._endAt;
-            this._frameElapsed = 0;
-            this._status = 3; //ended
-            //play end
-            if (this._callback != null) {
-                let callback = this._callback;
-                this._callback = null;
-                callback();
-            }
-        }
-        else {
-            if (this._frame == this._end) {
-                if (this._times > 0) {
-                    this._times--;
-                    if (this._times == 0)
-                        this._status = 2; //ending
-                    else
-                        this._status = 1; //new loop
-                }
-                else if (this._start != 0)
-                    this._status = 1; //new loop
-            }
-        }
-        this.drawFrame();
-    }
-    drawFrame() {
-        if (this._frameCount > 0 && this._frame < this._frames.length) {
-            var frame = this._frames[this._frame];
-            this.spriteFrame = frame.texture;
-        }
-    }
-}
-
-class GMovieClip extends GObject {
-    _content;
-    constructor() {
-        super();
-        this._node.name = "GMovieClip";
-        this._touchDisabled = true;
-        this._content = this._node.addComponent(MovieClip);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-        this._content.setPlaySettings();
-    }
-    get color() {
-        return this._content.color;
-    }
-    set color(value) {
-        this._content.color = value;
-        this.updateGear(4);
-    }
-    get playing() {
-        return this._content.playing;
-    }
-    set playing(value) {
-        if (this._content.playing != value) {
-            this._content.playing = value;
-            this.updateGear(5);
-        }
-    }
-    get frame() {
-        return this._content.frame;
-    }
-    set frame(value) {
-        if (this._content.frame != value) {
-            this._content.frame = value;
-            this.updateGear(5);
-        }
-    }
-    get timeScale() {
-        return this._content.timeScale;
-    }
-    set timeScale(value) {
-        this._content.timeScale = value;
-    }
-    rewind() {
-        this._content.rewind();
-    }
-    syncStatus(anotherMc) {
-        this._content.syncStatus(anotherMc._content);
-    }
-    advance(timeInSeconds) {
-        this._content.advance(timeInSeconds);
-    }
-    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
-    setPlaySettings(start, end, times, endAt, endCallback) {
-        this._content.setPlaySettings(start, end, times, endAt, endCallback);
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        //不知道原因，尺寸改变必须调用一次这个，否则大小不对
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return this.timeScale;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                this.timeScale = value;
-                break;
-            case ObjectPropID.DeltaTime:
-                this.advance(value);
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    constructFromResource() {
-        var contentItem = this.packageItem.getBranch();
-        this.sourceWidth = contentItem.width;
-        this.sourceHeight = contentItem.height;
-        this.initWidth = this.sourceWidth;
-        this.initHeight = this.sourceHeight;
-        this.setSize(this.sourceWidth, this.sourceHeight);
-        contentItem = contentItem.getHighResolution();
-        contentItem.load();
-        this._content.interval = contentItem.interval;
-        this._content.swing = contentItem.swing;
-        this._content.repeatDelay = contentItem.repeatDelay;
-        this._content.frames = contentItem.frames;
-        this._content.smoothing = contentItem.smoothing;
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        buffer.readByte(); //flip
-        this._content.frame = buffer.readInt();
-        this._content.playing = buffer.readBool();
-    }
-}
 
 class UIContentScaler {
     static scaleFactor = 1;
@@ -13485,6 +11524,439 @@ function createAction(type) {
             return new ChangePageAction();
     }
     return null;
+}
+
+class GGraph extends GObject {
+    _content;
+    _type = 0;
+    _lineSize = 0;
+    _lineColor;
+    _fillColor;
+    _cornerRadius;
+    _sides;
+    _startAngle;
+    _polygonPoints;
+    _distances;
+    _hasContent;
+    constructor() {
+        super();
+        this._node.name = "GGraph";
+        this._lineSize = 1;
+        this._lineColor = new Color();
+        this._fillColor = new Color(255, 255, 255, 255);
+        this._content = this._node.addComponent(Graphics);
+    }
+    drawRect(lineSize, lineColor, fillColor, corner) {
+        this._type = 1;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._cornerRadius = corner;
+        this.updateGraph();
+    }
+    drawEllipse(lineSize, lineColor, fillColor) {
+        this._type = 2;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this.updateGraph();
+    }
+    drawRegularPolygon(lineSize, lineColor, fillColor, sides, startAngle, distances) {
+        this._type = 4;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._sides = sides;
+        this._startAngle = startAngle || 0;
+        this._distances = distances;
+        this.updateGraph();
+    }
+    drawPolygon(lineSize, lineColor, fillColor, points) {
+        this._type = 3;
+        this._lineSize = lineSize;
+        this._lineColor.set(lineColor);
+        this._fillColor.set(fillColor);
+        this._polygonPoints = points;
+        this.updateGraph();
+    }
+    get distances() {
+        return this._distances;
+    }
+    set distances(value) {
+        this._distances = value;
+        if (this._type == 3)
+            this.updateGraph();
+    }
+    clearGraphics() {
+        this._type = 0;
+        if (this._hasContent) {
+            this._content.clear();
+            this._hasContent = false;
+        }
+    }
+    get type() {
+        return this._type;
+    }
+    get color() {
+        return this._fillColor;
+    }
+    set color(value) {
+        this._fillColor.set(value);
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    updateGraph() {
+        let ctx = this._content;
+        if (this._hasContent) {
+            this._hasContent = false;
+            ctx.clear();
+        }
+        var w = this._width;
+        var h = this._height;
+        if (w == 0 || h == 0)
+            return;
+        var px = -this.pivotX * this._width;
+        var py = this.pivotY * this._height;
+        let ls = this._lineSize / 2;
+        ctx.lineWidth = this._lineSize;
+        ctx.strokeColor = this._lineColor;
+        ctx.fillColor = this._fillColor;
+        if (this._type == 1) {
+            if (this._cornerRadius) {
+                ctx.roundRect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize, this._cornerRadius[0]);
+            }
+            else
+                ctx.rect(px + ls, -h + py + ls, w - this._lineSize, h - this._lineSize);
+        }
+        else if (this._type == 2) {
+            ctx.ellipse(w / 2 + px, -h / 2 + py, w / 2 - ls, h / 2 - ls);
+        }
+        else if (this._type == 3) {
+            this.drawPath(ctx, this._polygonPoints, px, py);
+        }
+        else if (this._type == 4) {
+            if (!this._polygonPoints)
+                this._polygonPoints = [];
+            var radius = Math.min(w, h) / 2 - ls;
+            this._polygonPoints.length = 0;
+            var angle = misc.degreesToRadians(this._startAngle);
+            var deltaAngle = 2 * Math.PI / this._sides;
+            var dist;
+            for (var i = 0; i < this._sides; i++) {
+                if (this._distances) {
+                    dist = this._distances[i];
+                    if (isNaN(dist))
+                        dist = 1;
+                }
+                else
+                    dist = 1;
+                var xv = radius + radius * dist * Math.cos(angle);
+                var yv = radius + radius * dist * Math.sin(angle);
+                this._polygonPoints.push(xv, yv);
+                angle += deltaAngle;
+            }
+            this.drawPath(ctx, this._polygonPoints, px, py);
+        }
+        if (ls != 0)
+            ctx.stroke();
+        if (this._fillColor.a != 0)
+            ctx.fill();
+        this._hasContent = true;
+    }
+    drawPath(ctx, points, px, py) {
+        var cnt = points.length;
+        ctx.moveTo(points[0] + px, -points[1] + py);
+        for (var i = 2; i < cnt; i += 2)
+            ctx.lineTo(points[i] + px, -points[i + 1] + py);
+        ctx.lineTo(points[0] + px, -points[1] + py);
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (this._type != 0)
+            this.updateGraph();
+    }
+    getProp(index) {
+        if (index == ObjectPropID.Color)
+            return this.color;
+        else
+            return super.getProp(index);
+    }
+    setProp(index, value) {
+        if (index == ObjectPropID.Color)
+            this.color = value;
+        else
+            super.setProp(index, value);
+    }
+    _hitTest(pt) {
+        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height) {
+            if (this._type == 3) {
+                let points = this._polygonPoints;
+                let len = points.length / 2;
+                let i;
+                let j = len - 1;
+                let oddNodes = false;
+                this._width;
+                this._height;
+                for (i = 0; i < len; ++i) {
+                    let ix = points[i * 2];
+                    let iy = points[i * 2 + 1];
+                    let jx = points[j * 2];
+                    let jy = points[j * 2 + 1];
+                    if ((iy < pt.y && jy >= pt.y || jy < pt.y && iy >= pt.y) && (ix <= pt.x || jx <= pt.x)) {
+                        if (ix + (pt.y - iy) / (jy - iy) * (jx - ix) < pt.x)
+                            oddNodes = !oddNodes;
+                    }
+                    j = i;
+                }
+                return oddNodes ? this : null;
+            }
+            else
+                return this;
+        }
+        else
+            return null;
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._type = buffer.readByte();
+        if (this._type != 0) {
+            var i;
+            var cnt;
+            this._lineSize = buffer.readInt();
+            this._lineColor.set(buffer.readColor(true));
+            this._fillColor.set(buffer.readColor(true));
+            if (buffer.readBool()) {
+                this._cornerRadius = new Array(4);
+                for (i = 0; i < 4; i++)
+                    this._cornerRadius[i] = buffer.readFloat();
+            }
+            if (this._type == 3) {
+                cnt = buffer.readShort();
+                this._polygonPoints = [];
+                this._polygonPoints.length = cnt;
+                for (i = 0; i < cnt; i++)
+                    this._polygonPoints[i] = buffer.readFloat();
+            }
+            else if (this._type == 4) {
+                this._sides = buffer.readShort();
+                this._startAngle = buffer.readFloat();
+                cnt = buffer.readShort();
+                if (cnt > 0) {
+                    this._distances = [];
+                    for (i = 0; i < cnt; i++)
+                        this._distances[i] = buffer.readFloat();
+                }
+            }
+            this.updateGraph();
+        }
+    }
+}
+
+class Image extends Sprite {
+    _flip = FlipType.None;
+    _fillMethod = FillMethod.None;
+    _fillOrigin = FillOrigin.Left;
+    _fillAmount = 0;
+    _fillClockwise;
+    constructor() {
+        super();
+    }
+    get flip() {
+        return this._flip;
+    }
+    set flip(value) {
+        if (this._flip != value) {
+            this._flip = value;
+            let sx = 1, sy = 1;
+            if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both)
+                sx = -1;
+            if (this._flip == FlipType.Vertical || this._flip == FlipType.Both)
+                sy = -1;
+            if (sx != 1 || sy != 1) {
+                let uiTrans = this.node.getComponent(UITransform);
+                uiTrans.setAnchorPoint(0.5, 0.5);
+            }
+            this.node.setScale(sx, sy);
+        }
+    }
+    get fillMethod() {
+        return this._fillMethod;
+    }
+    set fillMethod(value) {
+        if (this._fillMethod != value) {
+            this._fillMethod = value;
+            if (this._fillMethod != 0) {
+                this.type = Sprite.Type.FILLED;
+                if (this._fillMethod <= 3)
+                    this.fillType = this._fillMethod - 1;
+                else
+                    this.fillType = Sprite.FillType.RADIAL;
+                this.fillCenter = new Vec2(0.5, 0.5);
+                this.setupFill();
+            }
+            else {
+                this.type = Sprite.Type.SIMPLE;
+            }
+        }
+    }
+    get fillOrigin() {
+        return this._fillOrigin;
+    }
+    set fillOrigin(value) {
+        if (this._fillOrigin != value) {
+            this._fillOrigin = value;
+            if (this._fillMethod != 0)
+                this.setupFill();
+        }
+    }
+    get fillClockwise() {
+        return this._fillClockwise;
+    }
+    set fillClockwise(value) {
+        if (this._fillClockwise != value) {
+            this._fillClockwise = value;
+            if (this._fillMethod != 0)
+                this.setupFill();
+        }
+    }
+    get fillAmount() {
+        return this._fillAmount;
+    }
+    set fillAmount(value) {
+        if (this._fillAmount != value) {
+            this._fillAmount = value;
+            if (this._fillMethod != 0) {
+                if (this._fillClockwise)
+                    this.fillRange = -this._fillAmount;
+                else
+                    this.fillRange = this._fillAmount;
+            }
+        }
+    }
+    setupFill() {
+        if (this._fillMethod == FillMethod.Horizontal) {
+            this._fillClockwise = this._fillOrigin == FillOrigin.Right || this._fillOrigin == FillOrigin.Bottom;
+            this.fillStart = this._fillClockwise ? 1 : 0;
+        }
+        else if (this._fillMethod == FillMethod.Vertical) {
+            this._fillClockwise = this._fillOrigin == FillOrigin.Left || this._fillOrigin == FillOrigin.Top;
+            this.fillStart = this._fillClockwise ? 1 : 0;
+        }
+        else {
+            switch (this._fillOrigin) {
+                case FillOrigin.Right:
+                    this.fillOrigin = 0;
+                    break;
+                case FillOrigin.Top:
+                    this.fillStart = 0.25;
+                    break;
+                case FillOrigin.Left:
+                    this.fillStart = 0.5;
+                    break;
+                case FillOrigin.Bottom:
+                    this.fillStart = 0.75;
+                    break;
+            }
+        }
+    }
+}
+
+class GImage extends GObject {
+    _content;
+    constructor() {
+        super();
+        this._node.name = "GImage";
+        this._touchDisabled = true;
+        this._content = this._node.addComponent(Image);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+    }
+    get color() {
+        return this._content.color;
+    }
+    set color(value) {
+        this._content.color = value;
+        this.updateGear(4);
+    }
+    get flip() {
+        return this._content.flip;
+    }
+    set flip(value) {
+        this._content.flip = value;
+    }
+    get fillMethod() {
+        return this._content.fillMethod;
+    }
+    set fillMethod(value) {
+        this._content.fillMethod = value;
+    }
+    get fillOrigin() {
+        return this._content.fillOrigin;
+    }
+    set fillOrigin(value) {
+        this._content.fillOrigin = value;
+    }
+    get fillClockwise() {
+        return this._content.fillClockwise;
+    }
+    set fillClockwise(value) {
+        this._content.fillClockwise = value;
+    }
+    get fillAmount() {
+        return this._content.fillAmount;
+    }
+    set fillAmount(value) {
+        this._content.fillAmount = value;
+    }
+    constructFromResource() {
+        var contentItem = this.packageItem.getBranch();
+        this.sourceWidth = contentItem.width;
+        this.sourceHeight = contentItem.height;
+        this.initWidth = this.sourceWidth;
+        this.initHeight = this.sourceHeight;
+        this.setSize(this.sourceWidth, this.sourceHeight);
+        contentItem = contentItem.getHighResolution();
+        contentItem.load();
+        if (contentItem.scale9Grid)
+            this._content.type = Sprite.Type.SLICED;
+        else if (contentItem.scaleByTile)
+            this._content.type = Sprite.Type.TILED;
+        this._content.spriteFrame = contentItem.asset;
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    getProp(index) {
+        if (index == ObjectPropID.Color)
+            return this.color;
+        else
+            return super.getProp(index);
+    }
+    setProp(index, value) {
+        if (index == ObjectPropID.Color)
+            this.color = value;
+        else
+            super.setProp(index, value);
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        this._content.flip = buffer.readByte();
+        this._content.fillMethod = buffer.readByte();
+        if (this._content.fillMethod != 0) {
+            this._content.fillOrigin = buffer.readByte();
+            this._content.fillClockwise = buffer.readBool();
+            this._content.fillAmount = buffer.readFloat();
+        }
+    }
 }
 
 class Margin {
@@ -18039,1328 +16511,1089 @@ class GRoot extends GComponent {
 }
 Decls$1.GRoot = GRoot;
 
-class GTextInput extends GTextField {
-    _editBox;
-    _promptText;
-    constructor() {
+class Layer extends GComponent {
+    isFullScrene;
+    openRecord;
+    constructor(name, isFullScrene = false) {
         super();
-        this._node.name = "GTextInput";
-        this._touchDisabled = false;
+        this.node.name = name;
+        this.isFullScrene = isFullScrene;
+        this.openRecord = [];
+        this.makeFullScreen();
     }
-    createRenderer() {
-        this._editBox = this._node.addComponent(MyEditBox);
-        this._editBox.maxLength = -1;
-        this._editBox["_updateTextLabel"]();
-        this._node.on('text-changed', this.onTextChanged, this);
-        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd1, this);
-        this.autoSize = AutoSizeType.None;
+    AddChild(child) {
+        this.addChild(child);
     }
-    set editable(val) {
-        this._editBox.enabled = val;
+    AddChildAt(child, index) {
+        this.addChildAt(child, index);
     }
-    get editable() {
-        return this._editBox.enabled;
+    RemoveChild(child) {
+        this.removeChild(child);
     }
-    set maxLength(val) {
-        if (val == 0)
-            val = -1;
-        this._editBox.maxLength = val;
+    RemoveChildAt(index) {
+        this.removeChildAt(index);
     }
-    get maxLength() {
-        return this._editBox.maxLength;
+    GetChildAt(index) {
+        return this.getChildAt(index);
     }
-    set promptText(val) {
-        this._promptText = val;
-        let newCreate = !this._editBox.placeholderLabel;
-        this._editBox["_updatePlaceholderLabel"]();
-        if (newCreate)
-            this.assignFont(this._editBox.placeholderLabel, this._realFont);
-        this._editBox.placeholderLabel.string = defaultParser.parse(this._promptText, true);
-        if (defaultParser.lastColor) {
-            let c = this._editBox.placeholderLabel.color;
-            if (!c)
-                c = new Color();
-            c.fromHEX(defaultParser.lastColor);
-            this.assignFontColor(this._editBox.placeholderLabel, c);
-        }
-        else
-            this.assignFontColor(this._editBox.placeholderLabel, this._color);
-        if (defaultParser.lastSize)
-            this._editBox.placeholderLabel.fontSize = parseInt(defaultParser.lastSize);
-        else
-            this._editBox.placeholderLabel.fontSize = this._fontSize;
-    }
-    get promptText() {
-        return this._promptText;
-    }
-    set restrict(value) {
-        //not supported
-    }
-    get restrict() {
-        return "";
-    }
-    get password() {
-        return this._editBox.inputFlag == EditBox.InputFlag.PASSWORD;
-    }
-    set password(val) {
-        this._editBox.inputFlag = val ? EditBox.InputFlag.PASSWORD : EditBox.InputFlag.DEFAULT;
-    }
-    get align() {
-        return this._editBox.textLabel.horizontalAlign;
-    }
-    set align(value) {
-        this._editBox.textLabel.horizontalAlign = value;
-        if (this._editBox.placeholderLabel) {
-            this._editBox.placeholderLabel.horizontalAlign = value;
-        }
-    }
-    get verticalAlign() {
-        return this._editBox.textLabel.verticalAlign;
-    }
-    set verticalAlign(value) {
-        this._editBox.textLabel.verticalAlign = value;
-        if (this._editBox.placeholderLabel) {
-            this._editBox.placeholderLabel.verticalAlign = value;
-        }
-    }
-    get singleLine() {
-        return this._editBox.inputMode != EditBox.InputMode.ANY;
-    }
-    set singleLine(value) {
-        this._editBox.inputMode = value ? EditBox.InputMode.SINGLE_LINE : EditBox.InputMode.ANY;
-    }
-    requestFocus() {
-        this._editBox.focus();
-    }
-    markSizeChanged() {
-        //不支持自动大小，所以这里空
-    }
-    updateText() {
-        var text2 = this._text;
-        if (this._templateVars)
-            text2 = this.parseTemplate(text2);
-        if (this._ubbEnabled) //不支持同一个文本不同样式
-            text2 = defaultParser.parse(text2, true);
-        this._editBox.string = text2;
-    }
-    updateFont() {
-        this.assignFont(this._editBox.textLabel, this._realFont);
-        if (this._editBox.placeholderLabel)
-            this.assignFont(this._editBox.placeholderLabel, this._realFont);
-    }
-    updateFontColor() {
-        this.assignFontColor(this._editBox.textLabel, this._color);
-    }
-    updateFontSize() {
-        this._editBox.textLabel.fontSize = this._fontSize;
-        this._editBox.textLabel.lineHeight = this._fontSize + this._leading;
-        if (this._editBox.placeholderLabel)
-            this._editBox.placeholderLabel.fontSize = this._editBox.textLabel.fontSize;
-    }
-    updateOverflow() {
-        //not supported
-    }
-    onTextChanged() {
-        this._text = this._editBox.string;
-    }
-    onTouchEnd1(evt) {
-        this._editBox.openKeyboard();
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 4);
-        var str = buffer.readS();
-        if (str != null)
-            this.promptText = str;
-        else if (this._editBox.placeholderLabel)
-            this._editBox.placeholderLabel.string = "";
-        str = buffer.readS();
-        if (str != null)
-            this.restrict = str;
-        var iv = buffer.readInt();
-        if (iv != 0)
-            this.maxLength = iv;
-        iv = buffer.readInt();
-        if (buffer.readBool())
-            this.password = true;
-        //同步一下对齐方式
-        if (this._editBox.placeholderLabel) {
-            let hAlign = this._editBox.textLabel.horizontalAlign;
-            this._editBox.placeholderLabel.horizontalAlign = hAlign;
-            let vAlign = this._editBox.textLabel.verticalAlign;
-            this._editBox.placeholderLabel.verticalAlign = vAlign;
-        }
-    }
-}
-class MyEditBox extends EditBox {
-    _registerEvent() {
-        //取消掉原来的事件处理
-    }
-    // _syncSize() {
-    //     let size = this.node._uiProps.uiTransformComp.contentSize;
-    //     let impl = this["_impl"];
-    //     impl.setSize(size.width, size.height);
-    //     if (this.textLabel)
-    //         this.textLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    //     if (this.placeholderLabel)
-    //         this.placeholderLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    // }
-    openKeyboard() {
-        let impl = this["_impl"];
-        if (impl) {
-            impl.beginEditing();
-        }
+    GetCount() {
+        return this.numChildren;
     }
 }
 
-class GObjectPool {
-    _pool;
-    _count = 0;
+/**
+ * cocos fgui 层管理器
+ */
+class LayerManagerImpl {
+    __layerMap = new Map();
     constructor() {
-        this._pool = {};
     }
-    clear() {
-        for (var i1 in this._pool) {
-            var arr = this._pool[i1];
-            var cnt = arr.length;
-            for (var i = 0; i < cnt; i++)
-                arr[i].dispose();
-        }
-        this._pool = {};
-        this._count = 0;
-    }
-    get count() {
-        return this._count;
-    }
-    getObject(url) {
-        url = UIPackage.normalizeURL(url);
-        if (url == null)
-            return null;
-        var arr = this._pool[url];
-        if (arr && arr.length) {
-            this._count--;
-            return arr.shift();
-        }
-        var child = UIPackage.createObjectFromURL(url);
-        return child;
-    }
-    returnObject(obj) {
-        var url = obj.resourceURL;
-        if (!url)
-            return;
-        var arr = this._pool[url];
-        if (arr == null) {
-            arr = new Array();
-            this._pool[url] = arr;
-        }
-        this._count++;
-        arr.push(obj);
-    }
-}
-
-class GLoader extends GObject {
-    _content;
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _showErrorSign;
-    _playing;
-    _frame = 0;
-    _color;
-    _contentItem;
-    _container;
-    _errorSign;
-    _content2;
-    _updatingLayout;
-    static _errorSignPool = new GObjectPool();
-    constructor() {
-        super();
-        this._node.name = "GLoader";
-        this._playing = true;
-        this._url = "";
-        this._fill = LoaderFillType.None;
-        this._align = AlignType.Left;
-        this._verticalAlign = VertAlignType.Top;
-        this._showErrorSign = true;
-        this._color = new Color(255, 255, 255, 255);
-        this._container = new Node("Image");
-        this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
-        this._node.addChild(this._container);
-        this._content = this._container.addComponent(MovieClip);
-        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
-        this._content.trim = false;
-        this._content.setPlaySettings();
-    }
-    dispose() {
-        if (this._contentItem == null) {
-            if (this._content.spriteFrame)
-                this.freeExternal(this._content.spriteFrame);
-        }
-        if (this._content2)
-            this._content2.dispose();
-        super.dispose();
-    }
-    get url() {
-        return this._url;
-    }
-    set url(value) {
-        if (this._url == value)
-            return;
-        this._url = value;
-        this.loadContent();
-        this.updateGear(7);
-    }
-    get icon() {
-        return this._url;
-    }
-    set icon(value) {
-        this.url = value;
-    }
-    get align() {
-        return this._align;
-    }
-    set align(value) {
-        if (this._align != value) {
-            this._align = value;
-            this.updateLayout();
-        }
-    }
-    get verticalAlign() {
-        return this._verticalAlign;
-    }
-    set verticalAlign(value) {
-        if (this._verticalAlign != value) {
-            this._verticalAlign = value;
-            this.updateLayout();
-        }
-    }
-    get fill() {
-        return this._fill;
-    }
-    set fill(value) {
-        if (this._fill != value) {
-            this._fill = value;
-            this.updateLayout();
-        }
-    }
-    get shrinkOnly() {
-        return this._shrinkOnly;
-    }
-    set shrinkOnly(value) {
-        if (this._shrinkOnly != value) {
-            this._shrinkOnly = value;
-            this.updateLayout();
-        }
-    }
-    get autoSize() {
-        return this._autoSize;
-    }
-    set autoSize(value) {
-        if (this._autoSize != value) {
-            this._autoSize = value;
-            this.updateLayout();
-        }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-            if (this._content instanceof MovieClip)
-                this._content.playing = value;
-            this.updateGear(5);
-        }
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            this._frame = value;
-            if (this._content instanceof MovieClip)
-                this._content.frame = value;
-            this.updateGear(5);
-        }
-    }
-    get color() {
-        return this._color;
-    }
-    set color(value) {
-        this._color.set(value);
-        this.updateGear(4);
-        this._content.color = value;
-    }
-    get fillMethod() {
-        return this._content.fillMethod;
-    }
-    set fillMethod(value) {
-        this._content.fillMethod = value;
-    }
-    get fillOrigin() {
-        return this._content.fillOrigin;
-    }
-    set fillOrigin(value) {
-        this._content.fillOrigin = value;
-    }
-    get fillClockwise() {
-        return this._content.fillClockwise;
-    }
-    set fillClockwise(value) {
-        this._content.fillClockwise = value;
-    }
-    get fillAmount() {
-        return this._content.fillAmount;
-    }
-    set fillAmount(value) {
-        this._content.fillAmount = value;
-    }
-    get showErrorSign() {
-        return this._showErrorSign;
-    }
-    set showErrorSign(value) {
-        this._showErrorSign = value;
-    }
-    get component() {
-        return this._content2;
-    }
-    get texture() {
-        return this._content.spriteFrame;
-    }
-    set texture(value) {
-        this.url = null;
-        this._content.spriteFrame = value;
-        this._content.type = Sprite.Type.SIMPLE;
-        if (value != null) {
-            this.sourceWidth = value.getRect().width;
-            this.sourceHeight = value.getRect().height;
+    /**
+     * 添加层
+     * @param key
+     * @param layer
+     */
+    AddLayer(key, layer) {
+        if (layer instanceof Layer) {
+            GRoot.inst.addChild(layer);
+            this.__layerMap.set(key, layer);
         }
         else {
-            this.sourceWidth = this.sourceHeight = 0;
+            throw new Error("层必须是Layer");
         }
-        this.updateLayout();
     }
-    loadContent() {
-        this.clearContent();
-        if (!this._url)
-            return;
-        if (typeof this._url == "string" && this._url.startsWith("ui://"))
-            this.loadFromPackage(this._url);
-        else
-            this.loadExternal();
-    }
-    loadFromPackage(itemURL) {
-        this._contentItem = UIPackage.getItemByURL(itemURL);
-        if (this._contentItem) {
-            this._contentItem = this._contentItem.getBranch();
-            this.sourceWidth = this._contentItem.width;
-            this.sourceHeight = this._contentItem.height;
-            this._contentItem = this._contentItem.getHighResolution();
-            this._contentItem.load();
-            if (this._autoSize)
-                this.setSize(this.sourceWidth, this.sourceHeight);
-            if (this._contentItem.type == PackageItemType.Image) {
-                if (!this._contentItem.asset) {
-                    this.setErrorState();
-                }
-                else {
-                    this._content.spriteFrame = this._contentItem.asset;
-                    if (this._content.fillMethod == 0) {
-                        if (this._contentItem.scale9Grid)
-                            this._content.type = Sprite.Type.SLICED;
-                        else if (this._contentItem.scaleByTile)
-                            this._content.type = Sprite.Type.TILED;
-                        else
-                            this._content.type = Sprite.Type.SIMPLE;
-                    }
-                    this.updateLayout();
-                }
-            }
-            else if (this._contentItem.type == PackageItemType.MovieClip) {
-                this._content.interval = this._contentItem.interval;
-                this._content.swing = this._contentItem.swing;
-                this._content.repeatDelay = this._contentItem.repeatDelay;
-                this._content.frames = this._contentItem.frames;
-                this.updateLayout();
-            }
-            else if (this._contentItem.type == PackageItemType.Component) {
-                var obj = UIPackage.createObjectFromURL(itemURL);
-                if (!obj)
-                    this.setErrorState();
-                else if (!(obj instanceof GComponent)) {
-                    obj.dispose();
-                    this.setErrorState();
-                }
-                else {
-                    this._content2 = obj;
-                    this._container.addChild(this._content2.node);
-                    this.updateLayout();
-                }
-            }
-            else
-                this.setErrorState();
-        }
-        else
-            this.setErrorState();
-    }
-    loadExternal() {
-        let url = this.url;
-        let callback = (err, asset) => {
-            //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
-            if (this._url != url || !isValid(this._node))
-                return;
-            if (err)
-                console.warn(err);
-            if (asset instanceof SpriteFrame)
-                this.onExternalLoadSuccess(asset);
-            else if (asset instanceof Texture2D) {
-                let sf = new SpriteFrame();
-                sf.texture = asset;
-                this.onExternalLoadSuccess(sf);
-            }
-            else if (asset instanceof ImageAsset) {
-                let sf = new SpriteFrame();
-                let texture = new Texture2D();
-                texture.image = asset;
-                sf.texture = texture;
-                this.onExternalLoadSuccess(sf);
-            }
-        };
-        if (typeof this._url == "string") {
-            if (this._url.startsWith("http://")
-                || this._url.startsWith("https://")
-                || this._url.startsWith('/'))
-                assetManager.loadRemote(this._url, callback);
-            else
-                resources.load(this._url + "/spriteFrame", Asset, callback);
+    /**
+     * 删除层
+     * @param key
+     */
+    RemoveLayer(key) {
+        let layer = this.__layerMap.get(key);
+        if (layer) {
+            GRoot.inst.removeChild(layer);
+            this.__layerMap.delete(key);
         }
         else {
-            throw new Error("fgui底层未实现CCURL的非string资源加载！");
+            throw new Error("找不到要删除的层：" + key);
         }
     }
-    freeExternal(texture) {
+    GetLayer(layerKey) {
+        return this.__layerMap.get(layerKey);
     }
-    onExternalLoadSuccess(texture) {
-        this._content.spriteFrame = texture;
-        this._content.type = Sprite.Type.SIMPLE;
-        this.sourceWidth = texture.getRect().width;
-        this.sourceHeight = texture.getRect().height;
-        if (this._autoSize)
-            this.setSize(this.sourceWidth, this.sourceHeight);
-        this.updateLayout();
-    }
-    onExternalLoadFailed() {
-        this.setErrorState();
-    }
-    setErrorState() {
-        if (!this._showErrorSign)
-            return;
-        if (this._errorSign == null) {
-            if (UIConfig.loaderErrorSign != null) {
-                this._errorSign = GLoader._errorSignPool.getObject(UIConfig.loaderErrorSign);
-            }
-        }
-        if (this._errorSign) {
-            this._errorSign.setSize(this.width, this.height);
-            this._container.addChild(this._errorSign.node);
-        }
-    }
-    clearErrorState() {
-        if (this._errorSign) {
-            this._container.removeChild(this._errorSign.node);
-            GLoader._errorSignPool.returnObject(this._errorSign);
-            this._errorSign = null;
-        }
-    }
-    updateLayout() {
-        if (this._content2 == null && this._content == null) {
-            if (this._autoSize) {
-                this._updatingLayout = true;
-                this.setSize(50, 30);
-                this._updatingLayout = false;
-            }
-            return;
-        }
-        let cw = this.sourceWidth;
-        let ch = this.sourceHeight;
-        let pivotCorrectX = -this.pivotX * this._width;
-        let pivotCorrectY = this.pivotY * this._height;
-        if (this._autoSize) {
-            this._updatingLayout = true;
-            if (cw == 0)
-                cw = 50;
-            if (ch == 0)
-                ch = 30;
-            this.setSize(cw, ch);
-            this._updatingLayout = false;
-            this._container._uiProps.uiTransformComp.setContentSize(this._width, this._height);
-            this._container.setPosition(pivotCorrectX, pivotCorrectY);
-            if (this._content2) {
-                this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
-                this._content2.setScale(1, 1);
-            }
-            if (cw == this._width && ch == this._height)
-                return;
-        }
-        var sx = 1, sy = 1;
-        if (this._fill != LoaderFillType.None) {
-            sx = this.width / this.sourceWidth;
-            sy = this.height / this.sourceHeight;
-            if (sx != 1 || sy != 1) {
-                if (this._fill == LoaderFillType.ScaleMatchHeight)
-                    sx = sy;
-                else if (this._fill == LoaderFillType.ScaleMatchWidth)
-                    sy = sx;
-                else if (this._fill == LoaderFillType.Scale) {
-                    if (sx > sy)
-                        sx = sy;
-                    else
-                        sy = sx;
-                }
-                else if (this._fill == LoaderFillType.ScaleNoBorder) {
-                    if (sx > sy)
-                        sy = sx;
-                    else
-                        sx = sy;
-                }
-                if (this._shrinkOnly) {
-                    if (sx > 1)
-                        sx = 1;
-                    if (sy > 1)
-                        sy = 1;
-                }
-                cw = this.sourceWidth * sx;
-                ch = this.sourceHeight * sy;
-            }
-        }
-        this._container._uiProps.uiTransformComp.setContentSize(cw, ch);
-        if (this._content2) {
-            this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
-            this._content2.setScale(sx, sy);
-        }
-        var nx, ny;
-        if (this._align == AlignType.Left)
-            nx = 0;
-        else if (this._align == AlignType.Center)
-            nx = Math.floor((this._width - cw) / 2);
-        else
-            nx = this._width - cw;
-        if (this._verticalAlign == VertAlignType.Top)
-            ny = 0;
-        else if (this._verticalAlign == VertAlignType.Middle)
-            ny = Math.floor((this._height - ch) / 2);
-        else
-            ny = this._height - ch;
-        ny = -ny;
-        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
-    }
-    clearContent() {
-        this.clearErrorState();
-        if (!this._contentItem) {
-            var texture = this._content.spriteFrame;
-            if (texture)
-                this.freeExternal(texture);
-        }
-        if (this._content2) {
-            this._container.removeChild(this._content2.node);
-            this._content2.dispose();
-            this._content2 = null;
-        }
-        this._content.frames = null;
-        this._content.spriteFrame = null;
-        this._contentItem = null;
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleGrayedChanged() {
-        this._content.grayscale = this._grayed;
-    }
-    _hitTest(pt, globalPt) {
-        if (this._content2) {
-            let obj = this._content2.hitTest(globalPt);
-            if (obj)
-                return obj;
-        }
-        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height)
-            return this;
-        else
-            return null;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return this._content.timeScale;
-            default:
-                return super.getProp(index);
-        }
-    }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                this._content.timeScale = value;
-                break;
-            case ObjectPropID.DeltaTime:
-                this._content.advance(value);
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._url = buffer.readS();
-        this._align = buffer.readByte();
-        this._verticalAlign = buffer.readByte();
-        this._fill = buffer.readByte();
-        this._shrinkOnly = buffer.readBool();
-        this._autoSize = buffer.readBool();
-        this._showErrorSign = buffer.readBool();
-        this._playing = buffer.readBool();
-        this._frame = buffer.readInt();
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        this._content.fillMethod = buffer.readByte();
-        if (this._content.fillMethod != 0) {
-            this._content.fillOrigin = buffer.readByte();
-            this._content.fillClockwise = buffer.readBool();
-            this._content.fillAmount = buffer.readFloat();
-        }
-        if (this._url)
-            this.loadContent();
+    /**
+     * 获得所有层
+     */
+    GetAllLayer() {
+        let _values = [];
+        this.__layerMap.forEach(function (v, key) {
+            _values.push(v);
+        });
+        return _values;
     }
 }
 
-class GLoader3D extends GObject {
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _playing;
-    _frame = 0;
-    _loop;
-    _animationName;
-    _skinName;
-    _color;
-    _contentItem;
-    _container;
-    _content;
-    _updatingLayout;
+/**
+ * 层管理器
+ */
+class LayerManager {
+    static KEY = "drongo.LayerManager";
+    /**
+     * 添加一个层
+     * @param key
+     * @param layer
+     */
+    static AddLayer(key, layer) {
+        this.impl.AddLayer(key, layer);
+    }
+    /**
+     * 删除层
+     * @param key
+     */
+    static RemoveLayer(key) {
+        this.impl.RemoveLayer(key);
+    }
+    /**
+     * 获取层对象
+     * @param key
+     */
+    static GetLayer(key) {
+        return this.impl.GetLayer(key);
+    }
+    /**
+     * 获得所有层
+     */
+    static GetAllLayer() {
+        return this.impl.GetAllLayer();
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new LayerManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 加载界面
+ */
+class LoadingView {
+    static KEY = "drongo.LoadingView";
+    static Show() {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.Show();
+    }
+    static Hide() {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.Hide();
+    }
+    static ChangeData(data) {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.ChangeData(data);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            console.warn(this.KEY + "未注入");
+        }
+        return this.__impl;
+    }
+}
+
+/**
+* GUI 关联关系
+*/
+class RelationManager {
+    static DEBUG = false;
+    static __map = new Map();
     constructor() {
-        super();
-        this._node.name = "GLoader3D";
-        this._playing = true;
-        this._url = "";
-        this._fill = LoaderFillType.None;
-        this._align = AlignType.Left;
-        this._verticalAlign = VertAlignType.Top;
-        this._color = new Color(255, 255, 255, 255);
-        this._container = new Node("Wrapper");
-        this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
-        this._node.addChild(this._container);
     }
-    dispose() {
-        super.dispose();
-    }
-    get url() {
-        return this._url;
-    }
-    set url(value) {
-        if (this._url == value)
-            return;
-        this._url = value;
-        this.loadContent();
-        this.updateGear(7);
-    }
-    get icon() {
-        return this._url;
-    }
-    set icon(value) {
-        this.url = value;
-    }
-    get align() {
-        return this._align;
-    }
-    set align(value) {
-        if (this._align != value) {
-            this._align = value;
-            this.updateLayout();
+    /**
+     * 添加UI关联关系
+     * @param key
+     * @param value
+     */
+    static AddRelation(key, value) {
+        if (this.DEBUG) {
+            this.__checkValidity(key, value);
         }
-    }
-    get verticalAlign() {
-        return this._verticalAlign;
-    }
-    set verticalAlign(value) {
-        if (this._verticalAlign != value) {
-            this._verticalAlign = value;
-            this.updateLayout();
+        if (this.__map.has(key)) {
+            throw new Error("重复注册！");
         }
+        this.__map.set(key, value);
     }
-    get fill() {
-        return this._fill;
-    }
-    set fill(value) {
-        if (this._fill != value) {
-            this._fill = value;
-            this.updateLayout();
+    static RemoveRelation(key) {
+        if (!this.__map.has(key)) {
+            throw new Error("找不到要删除的内容！");
         }
+        this.__map.delete(key);
     }
-    get shrinkOnly() {
-        return this._shrinkOnly;
-    }
-    set shrinkOnly(value) {
-        if (this._shrinkOnly != value) {
-            this._shrinkOnly = value;
-            this.updateLayout();
+    /**
+     * 检测合法性
+     * @param value
+     */
+    static __checkValidity(key, value) {
+        let guiKey = key;
+        let showList = value.show;
+        let hideList = value.hide;
+        let findex;
+        findex = showList.show.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show:中不能包含自身！");
         }
-    }
-    get autoSize() {
-        return this._autoSize;
-    }
-    set autoSize(value) {
-        if (this._autoSize != value) {
-            this._autoSize = value;
-            this.updateLayout();
+        findex = showList.hide.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.hide:中不能包含自身！");
         }
-    }
-    get playing() {
-        return this._playing;
-    }
-    set playing(value) {
-        if (this._playing != value) {
-            this._playing = value;
-            this.updateGear(5);
-            this.onChange();
+        findex = hideList.show.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show:中不能包含自身！");
         }
-    }
-    get frame() {
-        return this._frame;
-    }
-    set frame(value) {
-        if (this._frame != value) {
-            this._frame = value;
-            this.updateGear(5);
-            this.onChange();
+        findex = hideList.hide.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.hide:中不能包含自身！");
         }
-    }
-    get animationName() {
-        return this._animationName;
-    }
-    set animationName(value) {
-        if (this._animationName != value) {
-            this._animationName = value;
-            this.onChange();
-        }
-    }
-    get skinName() {
-        return this._skinName;
-    }
-    set skinName(value) {
-        if (this._skinName != value) {
-            this._skinName = value;
-            this.onChange();
-        }
-    }
-    get loop() {
-        return this._loop;
-    }
-    set loop(value) {
-        if (this._loop != value) {
-            this._loop = value;
-            this.onChange();
-        }
-    }
-    get color() {
-        return this._color;
-    }
-    set color(value) {
-        this._color.set(value);
-        this.updateGear(4);
-        if (this._content)
-            this._content.color = value;
-    }
-    get content() {
-        return this._content;
-    }
-    loadContent() {
-        this.clearContent();
-        if (!this._url)
-            return;
-        if (this._url.startsWith("ui://"))
-            this.loadFromPackage(this._url);
-        else
-            this.loadExternal();
-    }
-    loadFromPackage(itemURL) {
-        this._contentItem = UIPackage.getItemByURL(itemURL);
-        if (this._contentItem) {
-            this._contentItem = this._contentItem.getBranch();
-            this.sourceWidth = this._contentItem.width;
-            this.sourceHeight = this._contentItem.height;
-            this._contentItem = this._contentItem.getHighResolution();
-            if (this._autoSize)
-                this.setSize(this.sourceWidth, this.sourceHeight);
-            if (this._contentItem.type == PackageItemType.Spine || this._contentItem.type == PackageItemType.DragonBones)
-                this._contentItem.owner.getItemAssetAsync(this._contentItem, this.onLoaded.bind(this));
-        }
-    }
-    onLoaded(err, item) {
-        if (this._contentItem != item)
-            return;
-        if (err)
-            console.warn(err);
-        if (!this._contentItem.asset)
-            return;
-        if (this._contentItem.type == PackageItemType.Spine)
-            this.setSpine(this._contentItem.asset, this._contentItem.skeletonAnchor);
-        else if (this._contentItem.type == PackageItemType.DragonBones)
-            this.setDragonBones(this._contentItem.asset, this._contentItem.atlasAsset, this._contentItem.skeletonAnchor);
-    }
-    setSpine(asset, anchor, pma) {
-        this.freeSpine();
-        let node = new Node();
-        this._container.addChild(node);
-        node.layer = UIConfig.defaultUILayer;
-        node.setPosition(anchor.x, -anchor.y);
-        this._content = node.addComponent(sp.Skeleton);
-        this._content.premultipliedAlpha = pma;
-        this._content.skeletonData = asset;
-        this._content.color = this._color;
-        this.onChangeSpine();
-        this.updateLayout();
-    }
-    freeSpine() {
-        if (this._content) {
-            this._content.destroy();
-        }
-    }
-    setDragonBones(asset, atlasAsset, anchor, pma) {
-        this.freeDragonBones();
-        let node = new Node();
-        node.layer = UIConfig.defaultUILayer;
-        this._container.addChild(node);
-        node.setPosition(anchor.x, -anchor.y);
-        this._content = node.addComponent(dragonBones.ArmatureDisplay);
-        this._content.premultipliedAlpha = pma;
-        this._content.dragonAsset = asset;
-        this._content.dragonAtlasAsset = atlasAsset;
-        this._content.color = this._color;
-        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
-        let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
-        this._content.armatureName = dragonBonesData.armatureNames[0];
-        this.onChangeDragonBones();
-        this.updateLayout();
-    }
-    freeDragonBones() {
-        if (this._content) {
-            this._content.destroy();
-        }
-    }
-    onChange() {
-        if (this._contentItem == null)
-            return;
-        if (this._contentItem.type == PackageItemType.Spine) {
-            this.onChangeSpine();
-        }
-        if (this._contentItem.type == PackageItemType.DragonBones) {
-            this.onChangeDragonBones();
-        }
-    }
-    onChangeSpine() {
-        if (!(this._content instanceof sp.Skeleton))
-            return;
-        if (this._animationName) {
-            let trackEntry = this._content.getCurrent(0);
-            if (!trackEntry || trackEntry.animation.name != this._animationName || trackEntry.isComplete() && !trackEntry.loop) {
-                this._content.animation = this._animationName;
-                trackEntry = this._content.setAnimation(0, this._animationName, this._loop);
+        for (let index = 0; index < showList.show.length; index++) {
+            const showkey = showList.show[index];
+            const findex = showList.hide.indexOf(showkey);
+            if (findex >= 0) {
+                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show和show.hide中包含相同的guikey:" + showkey);
             }
-            if (this._playing)
-                this._content.paused = false;
+        }
+        for (let index = 0; index < hideList.show.length; index++) {
+            const showkey = hideList.show[index];
+            const findex = hideList.hide.indexOf(showkey);
+            if (findex >= 0) {
+                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show和hide.hide中包含相同的guikey:" + showkey);
+            }
+        }
+    }
+    static GetRelation(key) {
+        return this.__map.get(key);
+    }
+}
+
+class Drongo {
+    /**
+     * UI资源AssetBundle
+     */
+    static UIBundle = "UI";
+    /**
+     * UI遮罩颜色值
+     */
+    static MaskColor = new Color(0, 0, 0, 255 * 0.5);
+    // static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
+    static Init(root, cb) {
+        GRoot.create(root);
+        cb();
+    }
+}
+
+class ServiceStarter {
+    __name;
+    __serviceClass;
+    __result;
+    __service;
+    constructor(name, serviceClass) {
+        this.__name = name;
+        this.__serviceClass = serviceClass;
+    }
+    /**
+     * 启动
+     */
+    async Start() {
+        if (this.__result) {
+            return this.__result;
+        }
+        this.__result = new Promise((resolve, reject) => {
+            //创建服务
+            this.__service = new this.__serviceClass();
+            this.__service.name = this.__name;
+            //初始化服务
+            this.__service.Init((err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(result);
+                }
+            });
+        });
+        return this.__result;
+    }
+    Destroy() {
+        this.__name = undefined;
+        this.__serviceClass = undefined;
+        this.__result = undefined;
+        this.__service.Destroy();
+        this.__service = null;
+    }
+}
+
+class ServiceManager {
+    /**启动器 */
+    static __starters = new Map();
+    /**
+     * 获取服务
+     * @param key
+     * @returns
+     */
+    static GetService(value) {
+        const className = GetClassName(value);
+        //如果启动器存在
+        if (this.__starters.has(className)) {
+            return this.__starters.get(className).Start();
+        }
+        let starter = new ServiceStarter(className, value);
+        this.__starters.set(className, starter);
+        return starter.Start();
+    }
+    /**
+     * 卸载服务
+     * @param key
+     */
+    static Uninstall(value) {
+        const className = GetClassName(value);
+        if (!this.__starters.has(className)) {
+            return;
+        }
+        let starter = this.__starters.get(className);
+        starter.Destroy();
+        this.__starters.delete(className);
+    }
+}
+
+var LoadState;
+(function (LoadState) {
+    LoadState[LoadState["Null"] = 0] = "Null";
+    LoadState[LoadState["Loading"] = 1] = "Loading";
+    LoadState[LoadState["Loaded"] = 2] = "Loaded";
+})(LoadState || (LoadState = {}));
+/**
+ * GUI代理，将资源加载和Mediator逻辑隔离开
+ */
+class GUIProxy {
+    /**用于Creator创建器的统一帮助节点 */
+    static createNode = new Node("createHelpNode");
+    info;
+    /**GUI中介*/
+    mediator;
+    /**关闭时间*/
+    closeTime = 0;
+    /**UI层次*/
+    zIndex = 0;
+    /**数据 */
+    data;
+    /**资源引用*/
+    __resRef = null;
+    /**是否在显示中*/
+    __showing = false;
+    /**加载状态 */
+    __loadState = LoadState.Null;
+    __uiURL;
+    __startTime;
+    constructor(info) {
+        this.info = info;
+        if (!this.info) {
+            throw new Error("UI信息不能为空！");
+        }
+    }
+    /**
+     * 加载代码包
+     */
+    __loadCodeBundle() {
+        this.__startTime = Timer.currentTime;
+        this.__loadState = LoadState.Loading;
+        if (!assetManager.getBundle(this.info.bundleName)) {
+            assetManager.loadBundle(this.info.bundleName, this.__codeBundleLoaded.bind(this));
+        }
+        else {
+            this.__codeBundleLoaded();
+        }
+    }
+    /**
+     * 代码包加载完成
+     */
+    __codeBundleLoaded() {
+        this.__uiURL = { url: this.info.packageName, type: "fgui", bundle: Drongo.UIBundle };
+        this.__loadAssets();
+    }
+    //加载UI资源
+    __loadAssets() {
+        Res.GetResRef(this.__uiURL, this.info.key, this.__loadAssetProgress.bind(this)).then(this.__loadAssetComplete.bind(this), this.__loadAssetError.bind(this));
+    }
+    __loadAssetProgress(progress) {
+        LoadingView.ChangeData({ label: this.info.key + " asset loading...", progress: progress });
+    }
+    __loadAssetError(err) {
+        if (err) {
+            LoadingView.ChangeData({ label: err });
+        }
+    }
+    __loadAssetComplete(result) {
+        let resKey = URL2Key(this.__uiURL);
+        if (resKey != result.key) {
+            result.Dispose();
+            return;
+        }
+        //资源是否存在
+        this.__resRef = result;
+        if (!this.__resRef) {
+            throw new Error("加载UI资源失败:" + this.info.packageName + " ");
+        }
+        this.__createUIMediator();
+    }
+    /**创建Mediator */
+    __createUIMediator() {
+        let viewCreatorCom = GUIProxy.createNode.addComponent(this.info.key + "ViewCreator");
+        let viewCreator = viewCreatorCom;
+        if (!viewCreator) {
+            throw new Error(this.info.key + "ViewCreator类不存在或未实现IViewCreator!");
+        }
+        this.mediator = viewCreator.createMediator();
+        //销毁组件
+        viewCreatorCom.destroy();
+        if (this.mediator.services) {
+            this.__initServices();
+        }
+        else {
+            this.__createUI();
+        }
+    }
+    /**
+    * 初始化服务
+    */
+    async __initServices() {
+        for (let index = 0; index < this.mediator.services.length; index++) {
+            const serviceClass = this.mediator.services[index];
+            await ServiceManager.GetService(serviceClass);
+        }
+        this.__createUI();
+    }
+    /**
+     * 创建UI
+     */
+    __createUI() {
+        this.mediator.CreateUI(this.info, this.__createUICallBack.bind(this));
+    }
+    /**
+     * UI创建完成回调
+     */
+    __createUICallBack() {
+        this.__loadState = LoadState.Loaded;
+        this.mediator.Init();
+        this.mediator.inited = true;
+        if (this.__showing) {
+            this.__show();
+        }
+    }
+    __addToLayer() {
+        this.layer.AddChildAt(this.mediator.viewComponent, this.zIndex);
+        this.mediator.viewComponent.visible = true;
+    }
+    Tick(dt) {
+        if (this.__loadState == LoadState.Loading) {
+            let currentTime = Timer.currentTime;
+            if (currentTime - this.__startTime > 1) {
+                LoadingView.Show();
+            }
+            return;
+        }
+        if (this.__loadState == LoadState.Loaded) {
+            if (this.mediator) {
+                this.mediator.Tick(dt);
+            }
+        }
+    }
+    Show(data) {
+        this.__showing = true;
+        this.zIndex = this.getLayerChildCount();
+        this.data = data;
+        this.__show();
+    }
+    ShowedUpdate(data) {
+        if (this.mediator && this.__showing) {
+            this.mediator.ShowedUpdate(data);
+        }
+    }
+    __show() {
+        if (this.__loadState == LoadState.Null) {
+            this.__loadCodeBundle();
+        }
+        else if (this.__loadState == LoadState.Loading) ;
+        else {
+            this.__addToLayer();
+            LoadingView.Hide();
+            this.mediator.Show(this.data);
+            this.data = null;
+            //如果界面已经被关闭(这是有可能的！);
+            if (!GUIManager.IsOpen(this.info.key)) {
+                return;
+            }
+            if (this.mediator.PlayShowAnimation) {
+                this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
+            }
             else {
-                this._content.paused = true;
-                trackEntry.trackTime = math.lerp(0, trackEntry.animationEnd - trackEntry.animationStart, this._frame / 100);
+                Event.Emit(Event.SHOW, this.info.key);
             }
         }
-        else
-            this._content.clearTrack(0);
-        let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
-        if (this._content["_skeleton"].skin != skin)
-            this._content.setSkin(skin);
     }
-    onChangeDragonBones() {
-        if (!(this._content instanceof dragonBones.ArmatureDisplay))
-            return;
-        if (this._animationName) {
-            if (this._playing)
-                this._content.playAnimation(this._animationName, this._loop ? 0 : 1);
-            else
-                this._content.armature().animation.gotoAndStopByFrame(this._animationName, this._frame);
+    __showAnimationPlayed() {
+        Event.Emit(Event.SHOW, this.info.key);
+    }
+    Hide() {
+        if (this.__loadState == LoadState.Loading) {
+            this.__loadState = LoadState.Null;
         }
-        else
-            this._content.armature().animation.reset();
-    }
-    loadExternal() {
-        if (this._url.startsWith("http://")
-            || this._url.startsWith("https://")
-            || this._url.startsWith('/'))
-            assetManager.loadRemote(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
-        else
-            resources.load(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
-    }
-    onLoaded2(err, asset) {
-        //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
-        if (!this._url || !isValid(this._node))
-            return;
-        if (err)
-            console.warn(err);
-    }
-    updateLayout() {
-        let cw = this.sourceWidth;
-        let ch = this.sourceHeight;
-        let pivotCorrectX = -this.pivotX * this._width;
-        let pivotCorrectY = this.pivotY * this._height;
-        if (this._autoSize) {
-            this._updatingLayout = true;
-            if (cw == 0)
-                cw = 50;
-            if (ch == 0)
-                ch = 30;
-            this.setSize(cw, ch);
-            this._updatingLayout = false;
-            if (cw == this._width && ch == this._height) {
-                this._container.setScale(1, 1);
-                this._container.setPosition(pivotCorrectX, pivotCorrectY);
-                return;
+        else if (this.__loadState == LoadState.Loaded) {
+            //如果在显示中
+            if (this.__showing) {
+                if (this.mediator.PlayHideAnimation) {
+                    this.mediator.PlayHideAnimation(this.__hideAnimationPlayed);
+                }
+                else {
+                    this.__hide();
+                }
             }
         }
-        var sx = 1, sy = 1;
-        if (this._fill != LoaderFillType.None) {
-            sx = this.width / this.sourceWidth;
-            sy = this.height / this.sourceHeight;
-            if (sx != 1 || sy != 1) {
-                if (this._fill == LoaderFillType.ScaleMatchHeight)
-                    sx = sy;
-                else if (this._fill == LoaderFillType.ScaleMatchWidth)
-                    sy = sx;
-                else if (this._fill == LoaderFillType.Scale) {
-                    if (sx > sy)
-                        sx = sy;
-                    else
-                        sy = sx;
-                }
-                else if (this._fill == LoaderFillType.ScaleNoBorder) {
-                    if (sx > sy)
-                        sy = sx;
-                    else
-                        sx = sy;
-                }
-                if (this._shrinkOnly) {
-                    if (sx > 1)
-                        sx = 1;
-                    if (sy > 1)
-                        sy = 1;
-                }
-                cw = this.sourceWidth * sx;
-                ch = this.sourceHeight * sy;
-            }
-        }
-        this._container.setScale(sx, sy);
-        var nx, ny;
-        if (this._align == AlignType.Left)
-            nx = 0;
-        else if (this._align == AlignType.Center)
-            nx = Math.floor((this._width - cw) / 2);
-        else
-            nx = this._width - cw;
-        if (this._verticalAlign == VertAlignType.Top)
-            ny = 0;
-        else if (this._verticalAlign == VertAlignType.Middle)
-            ny = Math.floor((this._height - ch) / 2);
-        else
-            ny = this._height - ch;
-        ny = -ny;
-        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
     }
-    clearContent() {
-        this._contentItem = null;
-        if (this._content) {
-            this._content.node.destroy();
-            this._content = null;
+    __hideAnimationPlayed() {
+        if (this.__showing) {
+            this.__hide();
         }
     }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
+    __hide() {
+        this.mediator.viewComponent.visible = false;
+        this.mediator.Hide();
+        this.__showing = false;
+        Event.Emit(Event.HIDE, this.info.key);
     }
-    handleAnchorChanged() {
-        super.handleAnchorChanged();
-        if (!this._updatingLayout)
-            this.updateLayout();
-    }
-    handleGrayedChanged() {
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.color;
-            case ObjectPropID.Playing:
-                return this.playing;
-            case ObjectPropID.Frame:
-                return this.frame;
-            case ObjectPropID.TimeScale:
-                return 1;
-            default:
-                return super.getProp(index);
+    Destroy() {
+        console.log("UI销毁=>" + this.info?.key);
+        this.mediator.Destroy();
+        this.mediator = undefined;
+        this.info = undefined;
+        this.data = null;
+        if (this.__resRef) {
+            this.__resRef.Dispose();
+            this.__resRef = null;
         }
     }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.color = value;
-                break;
-            case ObjectPropID.Playing:
-                this.playing = value;
-                break;
-            case ObjectPropID.Frame:
-                this.frame = value;
-                break;
-            case ObjectPropID.TimeScale:
-                break;
-            case ObjectPropID.DeltaTime:
-                break;
-            default:
-                super.setProp(index, value);
-                break;
-        }
+    getLayerChildCount() {
+        return this.layer.GetCount();
     }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._url = buffer.readS();
-        this._align = buffer.readByte();
-        this._verticalAlign = buffer.readByte();
-        this._fill = buffer.readByte();
-        this._shrinkOnly = buffer.readBool();
-        this._autoSize = buffer.readBool();
-        this._animationName = buffer.readS();
-        this._skinName = buffer.readS();
-        this._playing = buffer.readBool();
-        this._frame = buffer.readInt();
-        this._loop = buffer.readBool();
-        if (buffer.readBool())
-            this.color = buffer.readColor();
-        if (this._url)
-            this.loadContent();
+    get layer() {
+        let l = LayerManager.GetLayer(this.info.layer);
+        if (l === undefined) {
+            throw new Error("layer：" + this.info.layer + "不存在！");
+        }
+        return l;
+    }
+    /**
+     * 获取组件
+     * @param path
+     */
+    getComponent(path) {
+        if (!this.mediator) {
+            return null;
+        }
+        return this.mediator.GetUIComponent(path);
     }
 }
 
-class GLabel extends GComponent {
-    _titleObject;
-    _iconObject;
-    _sound;
-    _soundVolumeScale;
+/**
+ * GUI管理器
+ */
+class GUIManagerImpl {
+    /**已注册*/
+    __registered = new Map();
+    /**实例 */
+    __instances = new Map();
+    /**
+     * 删除列表
+     */
+    __destryList = [];
     constructor() {
-        super();
-        this._node.name = "GLabel";
+        TickerManager.AddTicker(this);
+        //监听打开和关闭事件
+        Event.On(Event.SHOW, this.__showedHandler, this);
+        Event.On(Event.HIDE, this.__closedHandler, this);
     }
-    get icon() {
-        if (this._iconObject)
-            return this._iconObject.icon;
+    /**获取某个组件 */
+    GetUIComponent(key, path) {
+        if (!this.__instances.has(key)) {
+            throw new Error("GUI：" + key + "实例，不存在！");
+        }
+        let guiProxy = this.__instances.get(key);
+        return guiProxy.getComponent(path);
     }
-    set icon(value) {
-        if (this._iconObject)
-            this._iconObject.icon = value;
-        this.updateGear(7);
-    }
-    get title() {
-        if (this._titleObject)
-            return this._titleObject.text;
-        else
+    /**
+     * 获取界面的mediator
+     * @param key
+     */
+    GetMediatorByKey(key) {
+        if (!this.__instances.has(key)) {
             return null;
+        }
+        return this.__instances.get(key).mediator;
     }
-    set title(value) {
-        if (this._titleObject)
-            this._titleObject.text = value;
-        this.updateGear(6);
+    __showedHandler(type, target, data) {
+        let guiKey = data;
+        this.SetGUIState(guiKey, GUIState.Showed);
     }
-    get text() {
-        return this.title;
+    __closedHandler(type, target, data) {
+        let guiKey = data;
+        this.SetGUIState(guiKey, GUIState.Closed);
     }
-    set text(value) {
-        this.title = value;
+    Register(info) {
+        if (this.__registered.has(info.key)) {
+            throw new Error("重复注册！");
+        }
+        this.__registered.set(info.key, info);
     }
-    get titleColor() {
-        var tf = this.getTextField();
-        if (tf)
-            return tf.color;
-        else
-            return Color.WHITE;
+    Unregister(key) {
+        if (!this.__registered.has(key)) {
+            throw new Error("未找到要注销的界面信息！");
+        }
+        this.__registered.delete(key);
     }
-    set titleColor(value) {
-        var tf = this.getTextField();
-        if (tf)
-            tf.color = value;
-        this.updateGear(4);
-    }
-    get titleFontSize() {
-        var tf = this.getTextField();
-        if (tf)
-            return tf.fontSize;
-        else
-            return 0;
-    }
-    set titleFontSize(value) {
-        var tf = this.getTextField();
-        if (tf)
-            tf.fontSize = value;
-    }
-    set editable(val) {
-        if (this._titleObject && (this._titleObject instanceof GTextInput))
-            this._titleObject.editable = val;
-    }
-    get editable() {
-        if (this._titleObject && (this._titleObject instanceof GTextInput))
-            return this._titleObject.editable;
-        else
-            return false;
-    }
-    getTextField() {
-        if (this._titleObject instanceof GTextField)
-            return this._titleObject;
-        else if ('getTextField' in this._titleObject)
-            return this._titleObject.getTextField();
-        else
-            return null;
-    }
-    getProp(index) {
-        switch (index) {
-            case ObjectPropID.Color:
-                return this.titleColor;
-            case ObjectPropID.OutlineColor:
-                {
-                    var tf = this.getTextField();
-                    if (tf)
-                        return tf.strokeColor;
-                    else
-                        return 0;
+    Tick(dt) {
+        this.__destryList.length = 0;
+        let currentTime = Timer.currentTime;
+        // value和key就是map的key，value，map是字典本身
+        this.__instances.forEach((value, key, map) => {
+            if (value.info.state == GUIState.Showed) {
+                value.Tick(dt);
+            }
+            else if (value.info.state == GUIState.Closed) {
+                if (!value.info.permanence) {
+                    if (currentTime - value.closeTime > GUIManager.GUI_GC_INTERVAL) {
+                        this.__destryList.push(key);
+                    }
                 }
-            case ObjectPropID.FontSize:
-                return this.titleFontSize;
-            default:
-                return super.getProp(index);
+            }
+        });
+        if (this.__destryList.length > 0) {
+            let gui;
+            for (let index = 0; index < this.__destryList.length; index++) {
+                const key = this.__destryList[index];
+                gui = this.__instances.get(key);
+                gui.info.state = GUIState.Null; //标记为null;
+                this.__instances.delete(key);
+                gui.Destroy();
+            }
         }
     }
-    setProp(index, value) {
-        switch (index) {
-            case ObjectPropID.Color:
-                this.titleColor = value;
-                break;
-            case ObjectPropID.OutlineColor:
-                {
-                    var tf = this.getTextField();
-                    if (tf)
-                        tf.strokeColor = value;
+    Open(key, data) {
+        this.__open(key, data);
+        this.__checkRelation(key, true);
+    }
+    __open(key, data) {
+        let state = this.GetGUIState(key);
+        let guiProxy;
+        //没打开过！
+        if (state == GUIState.Null) {
+            let info = this.__registered.get(key);
+            guiProxy = new GUIProxy(info);
+            guiProxy.info.state = GUIState.Showing;
+            this.__instances.set(info.key, guiProxy);
+            this.CheckFullLayer(guiProxy);
+            guiProxy.Show(data);
+            return;
+        }
+        //打开中
+        if (state == GUIState.Showing) {
+            guiProxy = this.__instances.get(key);
+            this.CheckFullLayer(guiProxy);
+            //只是更新数据
+            guiProxy.Show(data);
+            return;
+        }
+        //已经打开
+        if (state == GUIState.Showed) {
+            guiProxy = this.__instances.get(key);
+            this.CheckFullLayer(guiProxy);
+            guiProxy.ShowedUpdate(data);
+            //界面已打开，则隐藏进度条
+            LoadingView.Hide();
+            return;
+        }
+        //关闭/关闭中
+        if (state == GUIState.Closeing || state == GUIState.Closed) {
+            guiProxy = this.__instances.get(key);
+            guiProxy.info.state = GUIState.Showing;
+            this.CheckFullLayer(guiProxy);
+            guiProxy.Show(data);
+            return;
+        }
+    }
+    //全屏层同时只能打开一个界面
+    CheckFullLayer(guiProxy) {
+        let layer = LayerManager.GetLayer(guiProxy.info.layer);
+        if (layer.isFullScrene) {
+            for (let index = 0; index < layer.openRecord.length; index++) {
+                const guiKey = layer.openRecord[index];
+                //新打开的界面也可能在记录里
+                if (guiKey != guiProxy.info.key) {
+                    this.__close(guiKey);
+                }
+            }
+            layer.openRecord.push(guiProxy.info.key);
+        }
+    }
+    Close(key, checkLayer = true) {
+        this.__close(key, checkLayer);
+        this.__checkRelation(key, false);
+    }
+    CloseAll() {
+        this.__instances.forEach((value, key, map) => {
+            this.Close(key, false);
+        });
+    }
+    __close(key, checkLayer = false) {
+        let state = this.GetGUIState(key);
+        let guiProxy;
+        //关闭中/已关闭
+        if (state == GUIState.Null || state == GUIState.Closed || state == GUIState.Closeing) {
+            return;
+        }
+        guiProxy = this.__instances.get(key);
+        guiProxy.closeTime = Timer.currentTime;
+        guiProxy.info.state = GUIState.Closeing;
+        guiProxy.Hide();
+        if (!checkLayer) {
+            return;
+        }
+        //通过记录找到要打开的界面
+        let layer = LayerManager.GetLayer(guiProxy.info.layer);
+        if (layer.isFullScrene && layer.openRecord.length > 1) {
+            layer.openRecord.pop();
+            let guikey = layer.openRecord.pop();
+            // console.log("关闭："+key+"时，回到："+guikey);
+            this.__open(guikey);
+        }
+    }
+    /**
+     * 检测UI关联关系
+     * @param key
+     */
+    __checkRelation(key, isOpen) {
+        //关联UI
+        let relation = RelationManager.GetRelation(key);
+        let relationList;
+        if (relation) {
+            //打开
+            if (isOpen) {
+                relationList = relation.show;
+            }
+            else { //关闭
+                relationList = relation.hide;
+            }
+            let guiKey;
+            for (let index = 0; index < relationList.show.length; index++) {
+                guiKey = relationList.show[index];
+                this.__open(guiKey);
+            }
+            for (let index = 0; index < relationList.hide.length; index++) {
+                guiKey = relationList.hide[index];
+                this.__close(guiKey);
+            }
+        }
+    }
+    /**
+     * 获得前一个打开的全屏界面
+     */
+    GetPrevLayer() {
+        let layers = LayerManager.GetAllLayer();
+        for (let i = 0, len = layers.length; i < len; i += 1) {
+            if (layers[i].isFullScrene) {
+                if (layers[i].openRecord.length > 1) {
+                    return layers[i].openRecord[layers[i].openRecord.length - 2];
                 }
                 break;
-            case ObjectPropID.FontSize:
-                this.titleFontSize = value;
-                break;
-            default:
-                super.setProp(index, value);
-                break;
+            }
+        }
+        return undefined;
+    }
+    /**
+     * 获取界面状态
+     * @param key
+     */
+    GetGUIState(key) {
+        if (!this.__registered.has(key)) {
+            throw new Error("GUI:" + key + "未注册！");
+        }
+        //不存在
+        if (!this.__instances.has(key)) {
+            return GUIState.Null;
+        }
+        let proxy = this.__instances.get(key);
+        return proxy.info.state;
+    }
+    SetGUIState(key, state) {
+        if (!this.__registered.has(key)) {
+            throw new Error("GUI:" + key + "未注册！");
+        }
+        let info = this.__registered.get(key);
+        info.state = state;
+    }
+    /**
+     * 是否已打开或打开中
+     * @param key
+     * @returns
+     */
+    IsOpen(key) {
+        let state = this.GetGUIState(key);
+        if (state == GUIState.Showing || state == GUIState.Showed) {
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
+     * GUI 管理器
+     */
+class GUIManager {
+    static KEY = "drongo.GUIManager";
+    /**
+     * 在界面关闭后多长时间不使用则销毁(秒)
+     */
+    static GUI_GC_INTERVAL = 30;
+    /**
+     * 注册
+     * @param info
+     * @returns
+     */
+    static Register(info) {
+        return this.impl.Register(info);
+    }
+    /**
+     * 注销
+     * @param key
+     * @returns
+     */
+    static Unregister(key) {
+        return this.impl.Unregister(key);
+    }
+    /**
+     * 打开指定UI界面
+     * @param key
+     * @param data
+     */
+    static Open(key, data) {
+        this.impl.Open(key, data);
+    }
+    /**
+     * 关闭
+     * @param key
+     * @param checkLayer 是否检查全屏记录
+     */
+    static Close(key, checkLayer = true) {
+        this.impl.Close(key, checkLayer);
+    }
+    /**
+     * 关闭所有界面
+     */
+    static CloseAll() {
+        this.impl.CloseAll();
+    }
+    /**
+     * 获取界面状态
+     * @param key
+     * @returns  0 未显示  1显示中
+     */
+    static GetGUIState(key) {
+        return this.impl.GetGUIState(key);
+    }
+    /**
+     * 是否已打开或再打开中
+     * @param key
+     * @returns
+     */
+    static IsOpen(key) {
+        return this.impl.IsOpen(key);
+    }
+    /**
+     * 获取GUI中的某个组件
+     * @param key    界面全局唯一KEY
+     * @param path   组件名称/路径
+     */
+    static GetUIComponent(key, path) {
+        return this.impl.GetUIComponent(key, path);
+    }
+    /**
+     * 获取界面的mediator
+     */
+    static GetMediatorByKey(key) {
+        return this.impl.GetMediatorByKey(key);
+    }
+    /**
+     * 获得前一个打开的全屏界面
+     * @param curLayerKey 当前打开的全屏界面
+     */
+    static GetPrevLayer() {
+        return this.impl.GetPrevLayer();
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new GUIManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 基础UIMediator类
+ */
+class BaseMediator {
+    /**UI组件 */
+    ui = null;
+    /**初始化完毕*/
+    inited = false;
+    /**外部传参*/
+    data;
+    /**需要注册和删除的事件*/
+    __bindEvents = [];
+    __bindingUtils;
+    constructor() {
+        this.__bindingUtils = new BindingUtils();
+    }
+    Init() {
+    }
+    Tick(dt) {
+    }
+    Show(data) {
+        this.data = data;
+        this._addBindedEvents();
+        this.__bindingUtils.BindByRecords();
+    }
+    ShowedUpdate(data) {
+        this.data = data;
+    }
+    Hide() {
+        this._removeBindedEvents();
+        this.__bindingUtils.UnbindByRecords();
+    }
+    Destroy() {
+        this.__bindEvents.length = 0;
+        this.__bindEvents = null;
+        this.__bindingUtils.Destroy();
+        this.__bindingUtils = null;
+    }
+    /**
+     * 根据名称或路径获取组件
+     * @param path
+     * @returns
+     */
+    GetUIComponent(path) {
+        let paths = path.split("/");
+        let ui = this.ui;
+        let index = 0;
+        let uiName;
+        while (ui && index < paths.length) {
+            uiName = paths[index];
+            //兼容m_写法
+            if (uiName.startsWith("m_")) {
+                uiName = uiName.replace("m_", "");
+            }
+            ui = ui.getChild(uiName);
+            index++;
+        }
+        return ui;
+    }
+    /**
+     * 属性和属性的绑定
+     */
+    BindAA(source, property, target, tProperty) {
+        this.__bindingUtils.BindAA(source, property, target, tProperty);
+    }
+    /**
+     * 取消属性和属性的绑定
+     * @param source
+     * @param property
+     * @param target
+     * @param tProperty
+     */
+    UnbindAA(source, property, target, tProperty) {
+        this.__bindingUtils.UnbindAA(source, property, target, tProperty);
+    }
+    /**
+     * 属性和函数的绑定
+     * @param source
+     * @param property
+     * @param callBack
+     * @param caller
+     */
+    BindAM(source, property, callBack, caller) {
+        this.__bindingUtils.BindAM(source, property, callBack, caller);
+    }
+    /**
+     * 取消属性和函数的绑定
+     * @param source
+     * @param propertys
+     * @param callBack
+     * @param caller
+     */
+    UnbidAM(source, propertys, callBack, caller) {
+        this.__bindingUtils.UnbidAM(source, propertys, callBack, caller);
+    }
+    /**
+     * 函数和函数的绑定
+     * @param source
+     * @param functionName  目标函数
+     * @param preHandle     该函数将在目标函数调用前调用
+     * @param laterHandler  该函数将在目标函数调用后调用
+     */
+    BindMM(source, functionName, preHandle, laterHandler) {
+        this.__bindingUtils.BindMM(source, functionName, preHandle, laterHandler);
+    }
+    /**
+     * 取消方法和方法的绑定关系
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    UnbindMM(source, functionName, preHandle, laterHandler) {
+        this.__bindingUtils.UnbindMM(source, functionName, preHandle, laterHandler);
+    }
+    /**
+     * 绑定事件
+     * @param target
+     * @param type
+     * @param handler
+     * @param caller
+     */
+    BindEvent(target, type, handler, caller) {
+        for (let index = 0; index < this.__bindEvents.length; index++) {
+            const element = this.__bindEvents[index];
+            if (element.target == target && element.eventType == type && element.handler == handler && element.caller == caller) {
+                throw new Error("重复绑定UI事件：" + target + type + handler + caller);
+            }
+        }
+        if (!this.inited) {
+            this.__bindEvents.push({ target: target, eventType: type, handler: handler, caller: caller });
+        }
+        else {
+            target.on(type, handler, caller);
         }
     }
-    constructExtension(buffer) {
-        this._titleObject = this.getChild("title");
-        this._iconObject = this.getChild("icon");
+    /**
+     * 取消事件绑定
+     * @param target
+     * @param type
+     * @param handler
+     * @param caller
+     */
+    UnbindEvent(target, type, handler, caller) {
+        for (let index = 0; index < this.__bindEvents.length; index++) {
+            const element = this.__bindEvents[index];
+            if (element.target == target && element.eventType == type && element.handler == handler && element.caller == caller) {
+                this.__bindEvents.splice(index, 1);
+                if (this.inited) {
+                    target.off(type, handler, caller);
+                }
+            }
+        }
     }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        if (!buffer.seek(beginPos, 6))
+    /**
+     * 按照绑定记录添加事件
+     */
+    _addBindedEvents() {
+        if (this.__bindEvents.length == 0) {
             return;
-        if (buffer.readByte() != this.packageItem.objectType)
-            return;
-        var str;
-        str = buffer.readS();
-        if (str != null)
-            this.title = str;
-        str = buffer.readS();
-        if (str != null)
-            this.icon = str;
-        if (buffer.readBool())
-            this.titleColor = buffer.readColor();
-        var iv = buffer.readInt();
-        if (iv != 0)
-            this.titleFontSize = iv;
-        if (buffer.readBool()) {
-            var input = this.getTextField();
-            if (input instanceof GTextInput) {
-                str = buffer.readS();
-                if (str != null)
-                    input.promptText = str;
-                str = buffer.readS();
-                if (str != null)
-                    input.restrict = str;
-                iv = buffer.readInt();
-                if (iv != 0)
-                    input.maxLength = iv;
-                iv = buffer.readInt();
-                if (buffer.readBool())
-                    input.password = true;
-            }
-            else
-                buffer.skip(13);
         }
-        str = buffer.readS();
-        if (str != null) {
-            this._sound = str;
-            if (buffer.readBool()) {
-                this._soundVolumeScale = buffer.readFloat();
-            }
-            this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
+        for (let index = 0; index < this.__bindEvents.length; index++) {
+            const eventInfo = this.__bindEvents[index];
+            eventInfo.target.on(eventInfo.eventType, eventInfo.handler, eventInfo.caller);
         }
     }
-    onClick_1() {
-        if (this._sound) {
-            var pi = UIPackage.getItemByURL(this._sound);
-            if (pi) {
-                var sound = pi.owner.getItemAsset(pi);
-                if (sound)
-                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
-            }
+    /**
+     * 删除已绑定事件
+     */
+    _removeBindedEvents() {
+        if (this.__bindEvents.length == 0) {
+            return;
+        }
+        for (let index = 0; index < this.__bindEvents.length; index++) {
+            const eventInfo = this.__bindEvents[index];
+            eventInfo.target.off(eventInfo.eventType, eventInfo.handler, eventInfo.caller);
         }
     }
 }
@@ -19824,6 +18057,51 @@ class GButton extends GComponent {
             if (this._relatedController)
                 this._relatedController.selectedPageId = this._relatedPageId;
         }
+    }
+}
+
+class GObjectPool {
+    _pool;
+    _count = 0;
+    constructor() {
+        this._pool = {};
+    }
+    clear() {
+        for (var i1 in this._pool) {
+            var arr = this._pool[i1];
+            var cnt = arr.length;
+            for (var i = 0; i < cnt; i++)
+                arr[i].dispose();
+        }
+        this._pool = {};
+        this._count = 0;
+    }
+    get count() {
+        return this._count;
+    }
+    getObject(url) {
+        url = UIPackage.normalizeURL(url);
+        if (url == null)
+            return null;
+        var arr = this._pool[url];
+        if (arr && arr.length) {
+            this._count--;
+            return arr.shift();
+        }
+        var child = UIPackage.createObjectFromURL(url);
+        return child;
+    }
+    returnObject(obj) {
+        var url = obj.resourceURL;
+        if (!url)
+            return;
+        var arr = this._pool[url];
+        if (arr == null) {
+            arr = new Array();
+            this._pool[url] = arr;
+        }
+        this._count++;
+        arr.push(obj);
     }
 }
 
@@ -21891,6 +20169,180 @@ class GList extends GComponent {
 }
 var s_n = 0;
 
+class GTextInput extends GTextField {
+    _editBox;
+    _promptText;
+    constructor() {
+        super();
+        this._node.name = "GTextInput";
+        this._touchDisabled = false;
+    }
+    createRenderer() {
+        this._editBox = this._node.addComponent(MyEditBox);
+        this._editBox.maxLength = -1;
+        this._editBox["_updateTextLabel"]();
+        this._node.on('text-changed', this.onTextChanged, this);
+        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd1, this);
+        this.autoSize = AutoSizeType.None;
+    }
+    set editable(val) {
+        this._editBox.enabled = val;
+    }
+    get editable() {
+        return this._editBox.enabled;
+    }
+    set maxLength(val) {
+        if (val == 0)
+            val = -1;
+        this._editBox.maxLength = val;
+    }
+    get maxLength() {
+        return this._editBox.maxLength;
+    }
+    set promptText(val) {
+        this._promptText = val;
+        let newCreate = !this._editBox.placeholderLabel;
+        this._editBox["_updatePlaceholderLabel"]();
+        if (newCreate)
+            this.assignFont(this._editBox.placeholderLabel, this._realFont);
+        this._editBox.placeholderLabel.string = defaultParser.parse(this._promptText, true);
+        if (defaultParser.lastColor) {
+            let c = this._editBox.placeholderLabel.color;
+            if (!c)
+                c = new Color();
+            c.fromHEX(defaultParser.lastColor);
+            this.assignFontColor(this._editBox.placeholderLabel, c);
+        }
+        else
+            this.assignFontColor(this._editBox.placeholderLabel, this._color);
+        if (defaultParser.lastSize)
+            this._editBox.placeholderLabel.fontSize = parseInt(defaultParser.lastSize);
+        else
+            this._editBox.placeholderLabel.fontSize = this._fontSize;
+    }
+    get promptText() {
+        return this._promptText;
+    }
+    set restrict(value) {
+        //not supported
+    }
+    get restrict() {
+        return "";
+    }
+    get password() {
+        return this._editBox.inputFlag == EditBox.InputFlag.PASSWORD;
+    }
+    set password(val) {
+        this._editBox.inputFlag = val ? EditBox.InputFlag.PASSWORD : EditBox.InputFlag.DEFAULT;
+    }
+    get align() {
+        return this._editBox.textLabel.horizontalAlign;
+    }
+    set align(value) {
+        this._editBox.textLabel.horizontalAlign = value;
+        if (this._editBox.placeholderLabel) {
+            this._editBox.placeholderLabel.horizontalAlign = value;
+        }
+    }
+    get verticalAlign() {
+        return this._editBox.textLabel.verticalAlign;
+    }
+    set verticalAlign(value) {
+        this._editBox.textLabel.verticalAlign = value;
+        if (this._editBox.placeholderLabel) {
+            this._editBox.placeholderLabel.verticalAlign = value;
+        }
+    }
+    get singleLine() {
+        return this._editBox.inputMode != EditBox.InputMode.ANY;
+    }
+    set singleLine(value) {
+        this._editBox.inputMode = value ? EditBox.InputMode.SINGLE_LINE : EditBox.InputMode.ANY;
+    }
+    requestFocus() {
+        this._editBox.focus();
+    }
+    markSizeChanged() {
+        //不支持自动大小，所以这里空
+    }
+    updateText() {
+        var text2 = this._text;
+        if (this._templateVars)
+            text2 = this.parseTemplate(text2);
+        if (this._ubbEnabled) //不支持同一个文本不同样式
+            text2 = defaultParser.parse(text2, true);
+        this._editBox.string = text2;
+    }
+    updateFont() {
+        this.assignFont(this._editBox.textLabel, this._realFont);
+        if (this._editBox.placeholderLabel)
+            this.assignFont(this._editBox.placeholderLabel, this._realFont);
+    }
+    updateFontColor() {
+        this.assignFontColor(this._editBox.textLabel, this._color);
+    }
+    updateFontSize() {
+        this._editBox.textLabel.fontSize = this._fontSize;
+        this._editBox.textLabel.lineHeight = this._fontSize + this._leading;
+        if (this._editBox.placeholderLabel)
+            this._editBox.placeholderLabel.fontSize = this._editBox.textLabel.fontSize;
+    }
+    updateOverflow() {
+        //not supported
+    }
+    onTextChanged() {
+        this._text = this._editBox.string;
+    }
+    onTouchEnd1(evt) {
+        this._editBox.openKeyboard();
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 4);
+        var str = buffer.readS();
+        if (str != null)
+            this.promptText = str;
+        else if (this._editBox.placeholderLabel)
+            this._editBox.placeholderLabel.string = "";
+        str = buffer.readS();
+        if (str != null)
+            this.restrict = str;
+        var iv = buffer.readInt();
+        if (iv != 0)
+            this.maxLength = iv;
+        iv = buffer.readInt();
+        if (buffer.readBool())
+            this.password = true;
+        //同步一下对齐方式
+        if (this._editBox.placeholderLabel) {
+            let hAlign = this._editBox.textLabel.horizontalAlign;
+            this._editBox.placeholderLabel.horizontalAlign = hAlign;
+            let vAlign = this._editBox.textLabel.verticalAlign;
+            this._editBox.placeholderLabel.verticalAlign = vAlign;
+        }
+    }
+}
+class MyEditBox extends EditBox {
+    _registerEvent() {
+        //取消掉原来的事件处理
+    }
+    // _syncSize() {
+    //     let size = this.node._uiProps.uiTransformComp.contentSize;
+    //     let impl = this["_impl"];
+    //     impl.setSize(size.width, size.height);
+    //     if (this.textLabel)
+    //         this.textLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
+    //     if (this.placeholderLabel)
+    //         this.placeholderLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
+    // }
+    openKeyboard() {
+        let impl = this["_impl"];
+        if (impl) {
+            impl.beginEditing();
+        }
+    }
+}
+
 class GComboBox extends GComponent {
     dropdown;
     _titleObject;
@@ -22287,224 +20739,1473 @@ class GComboBox extends GComponent {
     }
 }
 
-class GSlider extends GComponent {
-    _min = 0;
-    _max = 0;
-    _value = 0;
-    _titleType;
-    _reverse;
-    _wholeNumbers;
+class GLabel extends GComponent {
     _titleObject;
-    _barObjectH;
-    _barObjectV;
-    _barMaxWidth = 0;
-    _barMaxHeight = 0;
-    _barMaxWidthDelta = 0;
-    _barMaxHeightDelta = 0;
-    _gripObject;
-    _clickPos;
-    _clickPercent = 0;
-    _barStartX = 0;
-    _barStartY = 0;
-    changeOnClick = true;
-    canDrag = true;
+    _iconObject;
+    _sound;
+    _soundVolumeScale;
     constructor() {
         super();
-        this._node.name = "GSlider";
-        this._titleType = ProgressTitleType.Percent;
-        this._value = 50;
-        this._max = 100;
-        this._clickPos = new Vec2();
+        this._node.name = "GLabel";
     }
-    get titleType() {
-        return this._titleType;
+    get icon() {
+        if (this._iconObject)
+            return this._iconObject.icon;
     }
-    set titleType(value) {
-        this._titleType = value;
+    set icon(value) {
+        if (this._iconObject)
+            this._iconObject.icon = value;
+        this.updateGear(7);
     }
-    get wholeNumbers() {
-        return this._wholeNumbers;
+    get title() {
+        if (this._titleObject)
+            return this._titleObject.text;
+        else
+            return null;
     }
-    set wholeNumbers(value) {
-        if (this._wholeNumbers != value) {
-            this._wholeNumbers = value;
-            this.update();
+    set title(value) {
+        if (this._titleObject)
+            this._titleObject.text = value;
+        this.updateGear(6);
+    }
+    get text() {
+        return this.title;
+    }
+    set text(value) {
+        this.title = value;
+    }
+    get titleColor() {
+        var tf = this.getTextField();
+        if (tf)
+            return tf.color;
+        else
+            return Color.WHITE;
+    }
+    set titleColor(value) {
+        var tf = this.getTextField();
+        if (tf)
+            tf.color = value;
+        this.updateGear(4);
+    }
+    get titleFontSize() {
+        var tf = this.getTextField();
+        if (tf)
+            return tf.fontSize;
+        else
+            return 0;
+    }
+    set titleFontSize(value) {
+        var tf = this.getTextField();
+        if (tf)
+            tf.fontSize = value;
+    }
+    set editable(val) {
+        if (this._titleObject && (this._titleObject instanceof GTextInput))
+            this._titleObject.editable = val;
+    }
+    get editable() {
+        if (this._titleObject && (this._titleObject instanceof GTextInput))
+            return this._titleObject.editable;
+        else
+            return false;
+    }
+    getTextField() {
+        if (this._titleObject instanceof GTextField)
+            return this._titleObject;
+        else if ('getTextField' in this._titleObject)
+            return this._titleObject.getTextField();
+        else
+            return null;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.titleColor;
+            case ObjectPropID.OutlineColor:
+                {
+                    var tf = this.getTextField();
+                    if (tf)
+                        return tf.strokeColor;
+                    else
+                        return 0;
+                }
+            case ObjectPropID.FontSize:
+                return this.titleFontSize;
+            default:
+                return super.getProp(index);
         }
     }
-    get min() {
-        return this._min;
-    }
-    set min(value) {
-        if (this._min != value) {
-            this._min = value;
-            this.update();
-        }
-    }
-    get max() {
-        return this._max;
-    }
-    set max(value) {
-        if (this._max != value) {
-            this._max = value;
-            this.update();
-        }
-    }
-    get value() {
-        return this._value;
-    }
-    set value(value) {
-        if (this._value != value) {
-            this._value = value;
-            this.update();
-        }
-    }
-    update() {
-        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
-    }
-    updateWithPercent(percent, manual) {
-        percent = math.clamp01(percent);
-        if (manual) {
-            var newValue = math.clamp(this._min + (this._max - this._min) * percent, this._min, this._max);
-            if (this._wholeNumbers) {
-                newValue = Math.round(newValue);
-                percent = math.clamp01((newValue - this._min) / (this._max - this._min));
-            }
-            if (newValue != this._value) {
-                this._value = newValue;
-                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
-            }
-        }
-        if (this._titleObject) {
-            switch (this._titleType) {
-                case ProgressTitleType.Percent:
-                    this._titleObject.text = Math.floor(percent * 100) + "%";
-                    break;
-                case ProgressTitleType.ValueAndMax:
-                    this._titleObject.text = this._value + "/" + this._max;
-                    break;
-                case ProgressTitleType.Value:
-                    this._titleObject.text = "" + this._value;
-                    break;
-                case ProgressTitleType.Max:
-                    this._titleObject.text = "" + this._max;
-                    break;
-            }
-        }
-        var fullWidth = this.width - this._barMaxWidthDelta;
-        var fullHeight = this.height - this._barMaxHeightDelta;
-        if (!this._reverse) {
-            if (this._barObjectH)
-                this._barObjectH.width = Math.round(fullWidth * percent);
-            if (this._barObjectV)
-                this._barObjectV.height = Math.round(fullHeight * percent);
-        }
-        else {
-            if (this._barObjectH) {
-                this._barObjectH.width = Math.round(fullWidth * percent);
-                this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
-            }
-            if (this._barObjectV) {
-                this._barObjectV.height = Math.round(fullHeight * percent);
-                this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
-            }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.titleColor = value;
+                break;
+            case ObjectPropID.OutlineColor:
+                {
+                    var tf = this.getTextField();
+                    if (tf)
+                        tf.strokeColor = value;
+                }
+                break;
+            case ObjectPropID.FontSize:
+                this.titleFontSize = value;
+                break;
+            default:
+                super.setProp(index, value);
+                break;
         }
     }
     constructExtension(buffer) {
-        buffer.seek(0, 6);
-        this._titleType = buffer.readByte();
-        this._reverse = buffer.readBool();
-        if (buffer.version >= 2) {
-            this._wholeNumbers = buffer.readBool();
-            this.changeOnClick = buffer.readBool();
-        }
         this._titleObject = this.getChild("title");
-        this._barObjectH = this.getChild("bar");
-        this._barObjectV = this.getChild("bar_v");
-        this._gripObject = this.getChild("grip");
-        if (this._barObjectH) {
-            this._barMaxWidth = this._barObjectH.width;
-            this._barMaxWidthDelta = this.width - this._barMaxWidth;
-            this._barStartX = this._barObjectH.x;
-        }
-        if (this._barObjectV) {
-            this._barMaxHeight = this._barObjectV.height;
-            this._barMaxHeightDelta = this.height - this._barMaxHeight;
-            this._barStartY = this._barObjectV.y;
-        }
-        if (this._gripObject) {
-            this._gripObject.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
-            this._gripObject.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
-        }
-        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
-    }
-    handleSizeChanged() {
-        super.handleSizeChanged();
-        if (this._barObjectH)
-            this._barMaxWidth = this.width - this._barMaxWidthDelta;
-        if (this._barObjectV)
-            this._barMaxHeight = this.height - this._barMaxHeightDelta;
-        if (!this._underConstruct)
-            this.update();
+        this._iconObject = this.getChild("icon");
     }
     setup_afterAdd(buffer, beginPos) {
         super.setup_afterAdd(buffer, beginPos);
-        if (!buffer.seek(beginPos, 6)) {
-            this.update();
+        if (!buffer.seek(beginPos, 6))
             return;
-        }
-        if (buffer.readByte() != this.packageItem.objectType) {
-            this.update();
+        if (buffer.readByte() != this.packageItem.objectType)
             return;
+        var str;
+        str = buffer.readS();
+        if (str != null)
+            this.title = str;
+        str = buffer.readS();
+        if (str != null)
+            this.icon = str;
+        if (buffer.readBool())
+            this.titleColor = buffer.readColor();
+        var iv = buffer.readInt();
+        if (iv != 0)
+            this.titleFontSize = iv;
+        if (buffer.readBool()) {
+            var input = this.getTextField();
+            if (input instanceof GTextInput) {
+                str = buffer.readS();
+                if (str != null)
+                    input.promptText = str;
+                str = buffer.readS();
+                if (str != null)
+                    input.restrict = str;
+                iv = buffer.readInt();
+                if (iv != 0)
+                    input.maxLength = iv;
+                iv = buffer.readInt();
+                if (buffer.readBool())
+                    input.password = true;
+            }
+            else
+                buffer.skip(13);
         }
-        this._value = buffer.readInt();
-        this._max = buffer.readInt();
-        if (buffer.version >= 2)
-            this._min = buffer.readInt();
-        this.update();
+        str = buffer.readS();
+        if (str != null) {
+            this._sound = str;
+            if (buffer.readBool()) {
+                this._soundVolumeScale = buffer.readFloat();
+            }
+            this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
+        }
     }
-    onGripTouchBegin(evt) {
-        this.canDrag = true;
-        evt.propagationStopped = true;
-        evt.captureTouch();
-        this._clickPos = this.globalToLocal(evt.pos.x, evt.pos.y);
-        this._clickPercent = math.clamp01((this._value - this._min) / (this._max - this._min));
-    }
-    onGripTouchMove(evt) {
-        if (!this.canDrag) {
-            return;
+    onClick_1() {
+        if (this._sound) {
+            var pi = UIPackage.getItemByURL(this._sound);
+            if (pi) {
+                var sound = pi.owner.getItemAsset(pi);
+                if (sound)
+                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
+            }
         }
-        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
-        var deltaX = pt.x - this._clickPos.x;
-        var deltaY = pt.y - this._clickPos.y;
-        if (this._reverse) {
-            deltaX = -deltaX;
-            deltaY = -deltaY;
-        }
-        var percent;
-        if (this._barObjectH)
-            percent = this._clickPercent + deltaX / this._barMaxWidth;
-        else
-            percent = this._clickPercent + deltaY / this._barMaxHeight;
-        this.updateWithPercent(percent, true);
-    }
-    onBarTouchBegin(evt) {
-        if (!this.changeOnClick)
-            return;
-        var pt = this._gripObject.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
-        var percent = math.clamp01((this._value - this._min) / (this._max - this._min));
-        var delta = 0;
-        if (this._barObjectH != null)
-            delta = (pt.x - this._gripObject.width / 2) / this._barMaxWidth;
-        if (this._barObjectV != null)
-            delta = (pt.y - this._gripObject.height / 2) / this._barMaxHeight;
-        if (this._reverse)
-            percent -= delta;
-        else
-            percent += delta;
-        this.updateWithPercent(percent, true);
     }
 }
-var s_vec2$1 = new Vec2();
+
+class MovieClip extends Image {
+    interval = 0;
+    swing = false;
+    repeatDelay = 0;
+    timeScale = 1;
+    _playing = true;
+    _frameCount = 0;
+    _frames;
+    _frame = 0;
+    _start = 0;
+    _end = 0;
+    _times = 0;
+    _endAt = 0;
+    _status = 0; //0-none, 1-next loop, 2-ending, 3-ended
+    _callback;
+    _smoothing = true;
+    _frameElapsed = 0; //当前帧延迟
+    _reversed = false;
+    _repeatedCount = 0;
+    constructor() {
+        super();
+    }
+    get frames() {
+        return this._frames;
+    }
+    set frames(value) {
+        this._frames = value;
+        if (this._frames) {
+            this._frameCount = this._frames.length;
+            if (this._end == -1 || this._end > this._frameCount - 1)
+                this._end = this._frameCount - 1;
+            if (this._endAt == -1 || this._endAt > this._frameCount - 1)
+                this._endAt = this._frameCount - 1;
+            if (this._frame < 0 || this._frame > this._frameCount - 1)
+                this._frame = this._frameCount - 1;
+            this.type = Sprite.Type.SIMPLE;
+            this.drawFrame();
+            this._frameElapsed = 0;
+            this._repeatedCount = 0;
+            this._reversed = false;
+        }
+        else {
+            this._frameCount = 0;
+        }
+    }
+    get frameCount() {
+        return this._frameCount;
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            if (this._frames && value >= this._frameCount)
+                value = this._frameCount - 1;
+            this._frame = value;
+            this._frameElapsed = 0;
+            this.drawFrame();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+        }
+    }
+    get smoothing() {
+        return this._smoothing;
+    }
+    set smoothing(value) {
+        this._smoothing = value;
+    }
+    rewind() {
+        this._frame = 0;
+        this._frameElapsed = 0;
+        this._reversed = false;
+        this._repeatedCount = 0;
+        this.drawFrame();
+    }
+    syncStatus(anotherMc) {
+        this._frame = anotherMc._frame;
+        this._frameElapsed = anotherMc._frameElapsed;
+        this._reversed = anotherMc._reversed;
+        this._repeatedCount = anotherMc._repeatedCount;
+        this.drawFrame();
+    }
+    advance(timeInSeconds) {
+        var beginFrame = this._frame;
+        var beginReversed = this._reversed;
+        var backupTime = timeInSeconds;
+        while (true) {
+            var tt = this.interval + this._frames[this._frame].addDelay;
+            if (this._frame == 0 && this._repeatedCount > 0)
+                tt += this.repeatDelay;
+            if (timeInSeconds < tt) {
+                this._frameElapsed = 0;
+                break;
+            }
+            timeInSeconds -= tt;
+            if (this.swing) {
+                if (this._reversed) {
+                    this._frame--;
+                    if (this._frame <= 0) {
+                        this._frame = 0;
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
+                }
+                else {
+                    this._frame++;
+                    if (this._frame > this._frameCount - 1) {
+                        this._frame = Math.max(0, this._frameCount - 2);
+                        this._repeatedCount++;
+                        this._reversed = !this._reversed;
+                    }
+                }
+            }
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                }
+            }
+            if (this._frame == beginFrame && this._reversed == beginReversed) //走了一轮了
+             {
+                var roundTime = backupTime - timeInSeconds; //这就是一轮需要的时间
+                timeInSeconds -= Math.floor(timeInSeconds / roundTime) * roundTime; //跳过
+            }
+        }
+        this.drawFrame();
+    }
+    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
+    setPlaySettings(start, end, times, endAt, endCallback) {
+        if (start == undefined)
+            start = 0;
+        if (end == undefined)
+            end = -1;
+        if (times == undefined)
+            times = 0;
+        if (endAt == undefined)
+            endAt = -1;
+        this._start = start;
+        this._end = end;
+        if (this._end == -1 || this._end > this._frameCount - 1)
+            this._end = this._frameCount - 1;
+        this._times = times;
+        this._endAt = endAt;
+        if (this._endAt == -1)
+            this._endAt = this._end;
+        this._status = 0;
+        this._callback = endCallback;
+        this.frame = start;
+    }
+    update(dt) {
+        if (!this._playing || this._frameCount == 0 || this._status == 3)
+            return;
+        if (this.timeScale != 1)
+            dt *= this.timeScale;
+        this._frameElapsed += dt;
+        var tt = this.interval + this._frames[this._frame].addDelay;
+        if (this._frame == 0 && this._repeatedCount > 0)
+            tt += this.repeatDelay;
+        if (this._frameElapsed < tt)
+            return;
+        this._frameElapsed -= tt;
+        if (this._frameElapsed > this.interval)
+            this._frameElapsed = this.interval;
+        if (this.swing) {
+            if (this._reversed) {
+                this._frame--;
+                if (this._frame <= 0) {
+                    this._frame = 0;
+                    this._repeatedCount++;
+                    this._reversed = !this._reversed;
+                }
+            }
+            else {
+                this._frame++;
+                if (this._frame > this._frameCount - 1) {
+                    this._frame = Math.max(0, this._frameCount - 2);
+                    this._repeatedCount++;
+                    this._reversed = !this._reversed;
+                }
+            }
+        }
+        else {
+            this._frame++;
+            if (this._frame > this._frameCount - 1) {
+                this._frame = 0;
+                this._repeatedCount++;
+            }
+        }
+        if (this._status == 1) //new loop
+         {
+            this._frame = this._start;
+            this._frameElapsed = 0;
+            this._status = 0;
+        }
+        else if (this._status == 2) //ending
+         {
+            this._frame = this._endAt;
+            this._frameElapsed = 0;
+            this._status = 3; //ended
+            //play end
+            if (this._callback != null) {
+                let callback = this._callback;
+                this._callback = null;
+                callback();
+            }
+        }
+        else {
+            if (this._frame == this._end) {
+                if (this._times > 0) {
+                    this._times--;
+                    if (this._times == 0)
+                        this._status = 2; //ending
+                    else
+                        this._status = 1; //new loop
+                }
+                else if (this._start != 0)
+                    this._status = 1; //new loop
+            }
+        }
+        this.drawFrame();
+    }
+    drawFrame() {
+        if (this._frameCount > 0 && this._frame < this._frames.length) {
+            var frame = this._frames[this._frame];
+            this.spriteFrame = frame.texture;
+        }
+    }
+}
+
+class GLoader extends GObject {
+    _content;
+    _url;
+    _align;
+    _verticalAlign;
+    _autoSize;
+    _fill;
+    _shrinkOnly;
+    _showErrorSign;
+    _playing;
+    _frame = 0;
+    _color;
+    _contentItem;
+    _container;
+    _errorSign;
+    _content2;
+    _updatingLayout;
+    static _errorSignPool = new GObjectPool();
+    constructor() {
+        super();
+        this._node.name = "GLoader";
+        this._playing = true;
+        this._url = "";
+        this._fill = LoaderFillType.None;
+        this._align = AlignType.Left;
+        this._verticalAlign = VertAlignType.Top;
+        this._showErrorSign = true;
+        this._color = new Color(255, 255, 255, 255);
+        this._container = new Node("Image");
+        this._container.layer = UIConfig.defaultUILayer;
+        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._node.addChild(this._container);
+        this._content = this._container.addComponent(MovieClip);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+        this._content.setPlaySettings();
+    }
+    dispose() {
+        if (this._contentItem == null) {
+            if (this._content.spriteFrame)
+                this.freeExternal(this._content.spriteFrame);
+        }
+        if (this._content2)
+            this._content2.dispose();
+        super.dispose();
+    }
+    get url() {
+        return this._url;
+    }
+    set url(value) {
+        if (this._url == value)
+            return;
+        this._url = value;
+        this.loadContent();
+        this.updateGear(7);
+    }
+    get icon() {
+        return this._url;
+    }
+    set icon(value) {
+        this.url = value;
+    }
+    get align() {
+        return this._align;
+    }
+    set align(value) {
+        if (this._align != value) {
+            this._align = value;
+            this.updateLayout();
+        }
+    }
+    get verticalAlign() {
+        return this._verticalAlign;
+    }
+    set verticalAlign(value) {
+        if (this._verticalAlign != value) {
+            this._verticalAlign = value;
+            this.updateLayout();
+        }
+    }
+    get fill() {
+        return this._fill;
+    }
+    set fill(value) {
+        if (this._fill != value) {
+            this._fill = value;
+            this.updateLayout();
+        }
+    }
+    get shrinkOnly() {
+        return this._shrinkOnly;
+    }
+    set shrinkOnly(value) {
+        if (this._shrinkOnly != value) {
+            this._shrinkOnly = value;
+            this.updateLayout();
+        }
+    }
+    get autoSize() {
+        return this._autoSize;
+    }
+    set autoSize(value) {
+        if (this._autoSize != value) {
+            this._autoSize = value;
+            this.updateLayout();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+            if (this._content instanceof MovieClip)
+                this._content.playing = value;
+            this.updateGear(5);
+        }
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            this._frame = value;
+            if (this._content instanceof MovieClip)
+                this._content.frame = value;
+            this.updateGear(5);
+        }
+    }
+    get color() {
+        return this._color;
+    }
+    set color(value) {
+        this._color.set(value);
+        this.updateGear(4);
+        this._content.color = value;
+    }
+    get fillMethod() {
+        return this._content.fillMethod;
+    }
+    set fillMethod(value) {
+        this._content.fillMethod = value;
+    }
+    get fillOrigin() {
+        return this._content.fillOrigin;
+    }
+    set fillOrigin(value) {
+        this._content.fillOrigin = value;
+    }
+    get fillClockwise() {
+        return this._content.fillClockwise;
+    }
+    set fillClockwise(value) {
+        this._content.fillClockwise = value;
+    }
+    get fillAmount() {
+        return this._content.fillAmount;
+    }
+    set fillAmount(value) {
+        this._content.fillAmount = value;
+    }
+    get showErrorSign() {
+        return this._showErrorSign;
+    }
+    set showErrorSign(value) {
+        this._showErrorSign = value;
+    }
+    get component() {
+        return this._content2;
+    }
+    get texture() {
+        return this._content.spriteFrame;
+    }
+    set texture(value) {
+        this.url = null;
+        this._content.spriteFrame = value;
+        this._content.type = Sprite.Type.SIMPLE;
+        if (value != null) {
+            this.sourceWidth = value.getRect().width;
+            this.sourceHeight = value.getRect().height;
+        }
+        else {
+            this.sourceWidth = this.sourceHeight = 0;
+        }
+        this.updateLayout();
+    }
+    loadContent() {
+        this.clearContent();
+        if (!this._url)
+            return;
+        if (typeof this._url == "string" && this._url.startsWith("ui://"))
+            this.loadFromPackage(this._url);
+        else
+            this.loadExternal();
+    }
+    loadFromPackage(itemURL) {
+        this._contentItem = UIPackage.getItemByURL(itemURL);
+        if (this._contentItem) {
+            this._contentItem = this._contentItem.getBranch();
+            this.sourceWidth = this._contentItem.width;
+            this.sourceHeight = this._contentItem.height;
+            this._contentItem = this._contentItem.getHighResolution();
+            this._contentItem.load();
+            if (this._autoSize)
+                this.setSize(this.sourceWidth, this.sourceHeight);
+            if (this._contentItem.type == PackageItemType.Image) {
+                if (!this._contentItem.asset) {
+                    this.setErrorState();
+                }
+                else {
+                    this._content.spriteFrame = this._contentItem.asset;
+                    if (this._content.fillMethod == 0) {
+                        if (this._contentItem.scale9Grid)
+                            this._content.type = Sprite.Type.SLICED;
+                        else if (this._contentItem.scaleByTile)
+                            this._content.type = Sprite.Type.TILED;
+                        else
+                            this._content.type = Sprite.Type.SIMPLE;
+                    }
+                    this.updateLayout();
+                }
+            }
+            else if (this._contentItem.type == PackageItemType.MovieClip) {
+                this._content.interval = this._contentItem.interval;
+                this._content.swing = this._contentItem.swing;
+                this._content.repeatDelay = this._contentItem.repeatDelay;
+                this._content.frames = this._contentItem.frames;
+                this.updateLayout();
+            }
+            else if (this._contentItem.type == PackageItemType.Component) {
+                var obj = UIPackage.createObjectFromURL(itemURL);
+                if (!obj)
+                    this.setErrorState();
+                else if (!(obj instanceof GComponent)) {
+                    obj.dispose();
+                    this.setErrorState();
+                }
+                else {
+                    this._content2 = obj;
+                    this._container.addChild(this._content2.node);
+                    this.updateLayout();
+                }
+            }
+            else
+                this.setErrorState();
+        }
+        else
+            this.setErrorState();
+    }
+    loadExternal() {
+        let url = this.url;
+        let callback = (err, asset) => {
+            //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
+            if (this._url != url || !isValid(this._node))
+                return;
+            if (err)
+                console.warn(err);
+            if (asset instanceof SpriteFrame)
+                this.onExternalLoadSuccess(asset);
+            else if (asset instanceof Texture2D) {
+                let sf = new SpriteFrame();
+                sf.texture = asset;
+                this.onExternalLoadSuccess(sf);
+            }
+            else if (asset instanceof ImageAsset) {
+                let sf = new SpriteFrame();
+                let texture = new Texture2D();
+                texture.image = asset;
+                sf.texture = texture;
+                this.onExternalLoadSuccess(sf);
+            }
+        };
+        if (typeof this._url == "string") {
+            if (this._url.startsWith("http://")
+                || this._url.startsWith("https://")
+                || this._url.startsWith('/'))
+                assetManager.loadRemote(this._url, callback);
+            else
+                resources.load(this._url + "/spriteFrame", Asset, callback);
+        }
+        else {
+            throw new Error("fgui底层未实现CCURL的非string资源加载！");
+        }
+    }
+    freeExternal(texture) {
+    }
+    onExternalLoadSuccess(texture) {
+        this._content.spriteFrame = texture;
+        this._content.type = Sprite.Type.SIMPLE;
+        this.sourceWidth = texture.getRect().width;
+        this.sourceHeight = texture.getRect().height;
+        if (this._autoSize)
+            this.setSize(this.sourceWidth, this.sourceHeight);
+        this.updateLayout();
+    }
+    onExternalLoadFailed() {
+        this.setErrorState();
+    }
+    setErrorState() {
+        if (!this._showErrorSign)
+            return;
+        if (this._errorSign == null) {
+            if (UIConfig.loaderErrorSign != null) {
+                this._errorSign = GLoader._errorSignPool.getObject(UIConfig.loaderErrorSign);
+            }
+        }
+        if (this._errorSign) {
+            this._errorSign.setSize(this.width, this.height);
+            this._container.addChild(this._errorSign.node);
+        }
+    }
+    clearErrorState() {
+        if (this._errorSign) {
+            this._container.removeChild(this._errorSign.node);
+            GLoader._errorSignPool.returnObject(this._errorSign);
+            this._errorSign = null;
+        }
+    }
+    updateLayout() {
+        if (this._content2 == null && this._content == null) {
+            if (this._autoSize) {
+                this._updatingLayout = true;
+                this.setSize(50, 30);
+                this._updatingLayout = false;
+            }
+            return;
+        }
+        let cw = this.sourceWidth;
+        let ch = this.sourceHeight;
+        let pivotCorrectX = -this.pivotX * this._width;
+        let pivotCorrectY = this.pivotY * this._height;
+        if (this._autoSize) {
+            this._updatingLayout = true;
+            if (cw == 0)
+                cw = 50;
+            if (ch == 0)
+                ch = 30;
+            this.setSize(cw, ch);
+            this._updatingLayout = false;
+            this._container._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            this._container.setPosition(pivotCorrectX, pivotCorrectY);
+            if (this._content2) {
+                this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
+                this._content2.setScale(1, 1);
+            }
+            if (cw == this._width && ch == this._height)
+                return;
+        }
+        var sx = 1, sy = 1;
+        if (this._fill != LoaderFillType.None) {
+            sx = this.width / this.sourceWidth;
+            sy = this.height / this.sourceHeight;
+            if (sx != 1 || sy != 1) {
+                if (this._fill == LoaderFillType.ScaleMatchHeight)
+                    sx = sy;
+                else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                    sy = sx;
+                else if (this._fill == LoaderFillType.Scale) {
+                    if (sx > sy)
+                        sx = sy;
+                    else
+                        sy = sx;
+                }
+                else if (this._fill == LoaderFillType.ScaleNoBorder) {
+                    if (sx > sy)
+                        sy = sx;
+                    else
+                        sx = sy;
+                }
+                if (this._shrinkOnly) {
+                    if (sx > 1)
+                        sx = 1;
+                    if (sy > 1)
+                        sy = 1;
+                }
+                cw = this.sourceWidth * sx;
+                ch = this.sourceHeight * sy;
+            }
+        }
+        this._container._uiProps.uiTransformComp.setContentSize(cw, ch);
+        if (this._content2) {
+            this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
+            this._content2.setScale(sx, sy);
+        }
+        var nx, ny;
+        if (this._align == AlignType.Left)
+            nx = 0;
+        else if (this._align == AlignType.Center)
+            nx = Math.floor((this._width - cw) / 2);
+        else
+            nx = this._width - cw;
+        if (this._verticalAlign == VertAlignType.Top)
+            ny = 0;
+        else if (this._verticalAlign == VertAlignType.Middle)
+            ny = Math.floor((this._height - ch) / 2);
+        else
+            ny = this._height - ch;
+        ny = -ny;
+        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
+    }
+    clearContent() {
+        this.clearErrorState();
+        if (!this._contentItem) {
+            var texture = this._content.spriteFrame;
+            if (texture)
+                this.freeExternal(texture);
+        }
+        if (this._content2) {
+            this._container.removeChild(this._content2.node);
+            this._content2.dispose();
+            this._content2 = null;
+        }
+        this._content.frames = null;
+        this._content.spriteFrame = null;
+        this._contentItem = null;
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    _hitTest(pt, globalPt) {
+        if (this._content2) {
+            let obj = this._content2.hitTest(globalPt);
+            if (obj)
+                return obj;
+        }
+        if (pt.x >= 0 && pt.y >= 0 && pt.x < this._width && pt.y < this._height)
+            return this;
+        else
+            return null;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return this._content.timeScale;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                this._content.timeScale = value;
+                break;
+            case ObjectPropID.DeltaTime:
+                this._content.advance(value);
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._url = buffer.readS();
+        this._align = buffer.readByte();
+        this._verticalAlign = buffer.readByte();
+        this._fill = buffer.readByte();
+        this._shrinkOnly = buffer.readBool();
+        this._autoSize = buffer.readBool();
+        this._showErrorSign = buffer.readBool();
+        this._playing = buffer.readBool();
+        this._frame = buffer.readInt();
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        this._content.fillMethod = buffer.readByte();
+        if (this._content.fillMethod != 0) {
+            this._content.fillOrigin = buffer.readByte();
+            this._content.fillClockwise = buffer.readBool();
+            this._content.fillAmount = buffer.readFloat();
+        }
+        if (this._url)
+            this.loadContent();
+    }
+}
+
+class GLoader3D extends GObject {
+    _url;
+    _align;
+    _verticalAlign;
+    _autoSize;
+    _fill;
+    _shrinkOnly;
+    _playing;
+    _frame = 0;
+    _loop;
+    _animationName;
+    _skinName;
+    _color;
+    _contentItem;
+    _container;
+    _content;
+    _updatingLayout;
+    constructor() {
+        super();
+        this._node.name = "GLoader3D";
+        this._playing = true;
+        this._url = "";
+        this._fill = LoaderFillType.None;
+        this._align = AlignType.Left;
+        this._verticalAlign = VertAlignType.Top;
+        this._color = new Color(255, 255, 255, 255);
+        this._container = new Node("Wrapper");
+        this._container.layer = UIConfig.defaultUILayer;
+        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._node.addChild(this._container);
+    }
+    dispose() {
+        super.dispose();
+    }
+    get url() {
+        return this._url;
+    }
+    set url(value) {
+        if (this._url == value)
+            return;
+        this._url = value;
+        this.loadContent();
+        this.updateGear(7);
+    }
+    get icon() {
+        return this._url;
+    }
+    set icon(value) {
+        this.url = value;
+    }
+    get align() {
+        return this._align;
+    }
+    set align(value) {
+        if (this._align != value) {
+            this._align = value;
+            this.updateLayout();
+        }
+    }
+    get verticalAlign() {
+        return this._verticalAlign;
+    }
+    set verticalAlign(value) {
+        if (this._verticalAlign != value) {
+            this._verticalAlign = value;
+            this.updateLayout();
+        }
+    }
+    get fill() {
+        return this._fill;
+    }
+    set fill(value) {
+        if (this._fill != value) {
+            this._fill = value;
+            this.updateLayout();
+        }
+    }
+    get shrinkOnly() {
+        return this._shrinkOnly;
+    }
+    set shrinkOnly(value) {
+        if (this._shrinkOnly != value) {
+            this._shrinkOnly = value;
+            this.updateLayout();
+        }
+    }
+    get autoSize() {
+        return this._autoSize;
+    }
+    set autoSize(value) {
+        if (this._autoSize != value) {
+            this._autoSize = value;
+            this.updateLayout();
+        }
+    }
+    get playing() {
+        return this._playing;
+    }
+    set playing(value) {
+        if (this._playing != value) {
+            this._playing = value;
+            this.updateGear(5);
+            this.onChange();
+        }
+    }
+    get frame() {
+        return this._frame;
+    }
+    set frame(value) {
+        if (this._frame != value) {
+            this._frame = value;
+            this.updateGear(5);
+            this.onChange();
+        }
+    }
+    get animationName() {
+        return this._animationName;
+    }
+    set animationName(value) {
+        if (this._animationName != value) {
+            this._animationName = value;
+            this.onChange();
+        }
+    }
+    get skinName() {
+        return this._skinName;
+    }
+    set skinName(value) {
+        if (this._skinName != value) {
+            this._skinName = value;
+            this.onChange();
+        }
+    }
+    get loop() {
+        return this._loop;
+    }
+    set loop(value) {
+        if (this._loop != value) {
+            this._loop = value;
+            this.onChange();
+        }
+    }
+    get color() {
+        return this._color;
+    }
+    set color(value) {
+        this._color.set(value);
+        this.updateGear(4);
+        if (this._content)
+            this._content.color = value;
+    }
+    get content() {
+        return this._content;
+    }
+    loadContent() {
+        this.clearContent();
+        if (!this._url)
+            return;
+        if (this._url.startsWith("ui://"))
+            this.loadFromPackage(this._url);
+        else
+            this.loadExternal();
+    }
+    loadFromPackage(itemURL) {
+        this._contentItem = UIPackage.getItemByURL(itemURL);
+        if (this._contentItem) {
+            this._contentItem = this._contentItem.getBranch();
+            this.sourceWidth = this._contentItem.width;
+            this.sourceHeight = this._contentItem.height;
+            this._contentItem = this._contentItem.getHighResolution();
+            if (this._autoSize)
+                this.setSize(this.sourceWidth, this.sourceHeight);
+            if (this._contentItem.type == PackageItemType.Spine || this._contentItem.type == PackageItemType.DragonBones)
+                this._contentItem.owner.getItemAssetAsync(this._contentItem, this.onLoaded.bind(this));
+        }
+    }
+    onLoaded(err, item) {
+        if (this._contentItem != item)
+            return;
+        if (err)
+            console.warn(err);
+        if (!this._contentItem.asset)
+            return;
+        if (this._contentItem.type == PackageItemType.Spine)
+            this.setSpine(this._contentItem.asset, this._contentItem.skeletonAnchor);
+        else if (this._contentItem.type == PackageItemType.DragonBones)
+            this.setDragonBones(this._contentItem.asset, this._contentItem.atlasAsset, this._contentItem.skeletonAnchor);
+    }
+    setSpine(asset, anchor, pma) {
+        this.freeSpine();
+        let node = new Node();
+        this._container.addChild(node);
+        node.layer = UIConfig.defaultUILayer;
+        node.setPosition(anchor.x, -anchor.y);
+        this._content = node.addComponent(sp.Skeleton);
+        this._content.premultipliedAlpha = pma;
+        this._content.skeletonData = asset;
+        this._content.color = this._color;
+        this.onChangeSpine();
+        this.updateLayout();
+    }
+    freeSpine() {
+        if (this._content) {
+            this._content.destroy();
+        }
+    }
+    setDragonBones(asset, atlasAsset, anchor, pma) {
+        this.freeDragonBones();
+        let node = new Node();
+        node.layer = UIConfig.defaultUILayer;
+        this._container.addChild(node);
+        node.setPosition(anchor.x, -anchor.y);
+        this._content = node.addComponent(dragonBones.ArmatureDisplay);
+        this._content.premultipliedAlpha = pma;
+        this._content.dragonAsset = asset;
+        this._content.dragonAtlasAsset = atlasAsset;
+        this._content.color = this._color;
+        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
+        let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
+        this._content.armatureName = dragonBonesData.armatureNames[0];
+        this.onChangeDragonBones();
+        this.updateLayout();
+    }
+    freeDragonBones() {
+        if (this._content) {
+            this._content.destroy();
+        }
+    }
+    onChange() {
+        if (this._contentItem == null)
+            return;
+        if (this._contentItem.type == PackageItemType.Spine) {
+            this.onChangeSpine();
+        }
+        if (this._contentItem.type == PackageItemType.DragonBones) {
+            this.onChangeDragonBones();
+        }
+    }
+    onChangeSpine() {
+        if (!(this._content instanceof sp.Skeleton))
+            return;
+        if (this._animationName) {
+            let trackEntry = this._content.getCurrent(0);
+            if (!trackEntry || trackEntry.animation.name != this._animationName || trackEntry.isComplete() && !trackEntry.loop) {
+                this._content.animation = this._animationName;
+                trackEntry = this._content.setAnimation(0, this._animationName, this._loop);
+            }
+            if (this._playing)
+                this._content.paused = false;
+            else {
+                this._content.paused = true;
+                trackEntry.trackTime = math.lerp(0, trackEntry.animationEnd - trackEntry.animationStart, this._frame / 100);
+            }
+        }
+        else
+            this._content.clearTrack(0);
+        let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
+        if (this._content["_skeleton"].skin != skin)
+            this._content.setSkin(skin);
+    }
+    onChangeDragonBones() {
+        if (!(this._content instanceof dragonBones.ArmatureDisplay))
+            return;
+        if (this._animationName) {
+            if (this._playing)
+                this._content.playAnimation(this._animationName, this._loop ? 0 : 1);
+            else
+                this._content.armature().animation.gotoAndStopByFrame(this._animationName, this._frame);
+        }
+        else
+            this._content.armature().animation.reset();
+    }
+    loadExternal() {
+        if (this._url.startsWith("http://")
+            || this._url.startsWith("https://")
+            || this._url.startsWith('/'))
+            assetManager.loadRemote(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
+        else
+            resources.load(this._url, sp.SkeletonData, this.onLoaded2.bind(this));
+    }
+    onLoaded2(err, asset) {
+        //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
+        if (!this._url || !isValid(this._node))
+            return;
+        if (err)
+            console.warn(err);
+    }
+    updateLayout() {
+        let cw = this.sourceWidth;
+        let ch = this.sourceHeight;
+        let pivotCorrectX = -this.pivotX * this._width;
+        let pivotCorrectY = this.pivotY * this._height;
+        if (this._autoSize) {
+            this._updatingLayout = true;
+            if (cw == 0)
+                cw = 50;
+            if (ch == 0)
+                ch = 30;
+            this.setSize(cw, ch);
+            this._updatingLayout = false;
+            if (cw == this._width && ch == this._height) {
+                this._container.setScale(1, 1);
+                this._container.setPosition(pivotCorrectX, pivotCorrectY);
+                return;
+            }
+        }
+        var sx = 1, sy = 1;
+        if (this._fill != LoaderFillType.None) {
+            sx = this.width / this.sourceWidth;
+            sy = this.height / this.sourceHeight;
+            if (sx != 1 || sy != 1) {
+                if (this._fill == LoaderFillType.ScaleMatchHeight)
+                    sx = sy;
+                else if (this._fill == LoaderFillType.ScaleMatchWidth)
+                    sy = sx;
+                else if (this._fill == LoaderFillType.Scale) {
+                    if (sx > sy)
+                        sx = sy;
+                    else
+                        sy = sx;
+                }
+                else if (this._fill == LoaderFillType.ScaleNoBorder) {
+                    if (sx > sy)
+                        sy = sx;
+                    else
+                        sx = sy;
+                }
+                if (this._shrinkOnly) {
+                    if (sx > 1)
+                        sx = 1;
+                    if (sy > 1)
+                        sy = 1;
+                }
+                cw = this.sourceWidth * sx;
+                ch = this.sourceHeight * sy;
+            }
+        }
+        this._container.setScale(sx, sy);
+        var nx, ny;
+        if (this._align == AlignType.Left)
+            nx = 0;
+        else if (this._align == AlignType.Center)
+            nx = Math.floor((this._width - cw) / 2);
+        else
+            nx = this._width - cw;
+        if (this._verticalAlign == VertAlignType.Top)
+            ny = 0;
+        else if (this._verticalAlign == VertAlignType.Middle)
+            ny = Math.floor((this._height - ch) / 2);
+        else
+            ny = this._height - ch;
+        ny = -ny;
+        this._container.setPosition(pivotCorrectX + nx, pivotCorrectY + ny);
+    }
+    clearContent() {
+        this._contentItem = null;
+        if (this._content) {
+            this._content.node.destroy();
+            this._content = null;
+        }
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleAnchorChanged() {
+        super.handleAnchorChanged();
+        if (!this._updatingLayout)
+            this.updateLayout();
+    }
+    handleGrayedChanged() {
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return 1;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                break;
+            case ObjectPropID.DeltaTime:
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._url = buffer.readS();
+        this._align = buffer.readByte();
+        this._verticalAlign = buffer.readByte();
+        this._fill = buffer.readByte();
+        this._shrinkOnly = buffer.readBool();
+        this._autoSize = buffer.readBool();
+        this._animationName = buffer.readS();
+        this._skinName = buffer.readS();
+        this._playing = buffer.readBool();
+        this._frame = buffer.readInt();
+        this._loop = buffer.readBool();
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        if (this._url)
+            this.loadContent();
+    }
+}
+
+class GMovieClip extends GObject {
+    _content;
+    constructor() {
+        super();
+        this._node.name = "GMovieClip";
+        this._touchDisabled = true;
+        this._content = this._node.addComponent(MovieClip);
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+        this._content.trim = false;
+        this._content.setPlaySettings();
+    }
+    get color() {
+        return this._content.color;
+    }
+    set color(value) {
+        this._content.color = value;
+        this.updateGear(4);
+    }
+    get playing() {
+        return this._content.playing;
+    }
+    set playing(value) {
+        if (this._content.playing != value) {
+            this._content.playing = value;
+            this.updateGear(5);
+        }
+    }
+    get frame() {
+        return this._content.frame;
+    }
+    set frame(value) {
+        if (this._content.frame != value) {
+            this._content.frame = value;
+            this.updateGear(5);
+        }
+    }
+    get timeScale() {
+        return this._content.timeScale;
+    }
+    set timeScale(value) {
+        this._content.timeScale = value;
+    }
+    rewind() {
+        this._content.rewind();
+    }
+    syncStatus(anotherMc) {
+        this._content.syncStatus(anotherMc._content);
+    }
+    advance(timeInSeconds) {
+        this._content.advance(timeInSeconds);
+    }
+    //从start帧开始，播放到end帧（-1表示结尾），重复times次（0表示无限循环），循环结束后，停止在endAt帧（-1表示参数end）
+    setPlaySettings(start, end, times, endAt, endCallback) {
+        this._content.setPlaySettings(start, end, times, endAt, endCallback);
+    }
+    handleGrayedChanged() {
+        this._content.grayscale = this._grayed;
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        //不知道原因，尺寸改变必须调用一次这个，否则大小不对
+        this._content.sizeMode = Sprite.SizeMode.CUSTOM;
+    }
+    getProp(index) {
+        switch (index) {
+            case ObjectPropID.Color:
+                return this.color;
+            case ObjectPropID.Playing:
+                return this.playing;
+            case ObjectPropID.Frame:
+                return this.frame;
+            case ObjectPropID.TimeScale:
+                return this.timeScale;
+            default:
+                return super.getProp(index);
+        }
+    }
+    setProp(index, value) {
+        switch (index) {
+            case ObjectPropID.Color:
+                this.color = value;
+                break;
+            case ObjectPropID.Playing:
+                this.playing = value;
+                break;
+            case ObjectPropID.Frame:
+                this.frame = value;
+                break;
+            case ObjectPropID.TimeScale:
+                this.timeScale = value;
+                break;
+            case ObjectPropID.DeltaTime:
+                this.advance(value);
+                break;
+            default:
+                super.setProp(index, value);
+                break;
+        }
+    }
+    constructFromResource() {
+        var contentItem = this.packageItem.getBranch();
+        this.sourceWidth = contentItem.width;
+        this.sourceHeight = contentItem.height;
+        this.initWidth = this.sourceWidth;
+        this.initHeight = this.sourceHeight;
+        this.setSize(this.sourceWidth, this.sourceHeight);
+        contentItem = contentItem.getHighResolution();
+        contentItem.load();
+        this._content.interval = contentItem.interval;
+        this._content.swing = contentItem.swing;
+        this._content.repeatDelay = contentItem.repeatDelay;
+        this._content.frames = contentItem.frames;
+        this._content.smoothing = contentItem.smoothing;
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        if (buffer.readBool())
+            this.color = buffer.readColor();
+        buffer.readByte(); //flip
+        this._content.frame = buffer.readInt();
+        this._content.playing = buffer.readBool();
+    }
+}
 
 class GProgressBar extends GComponent {
     _min = 0;
@@ -22765,7 +22466,7 @@ class GScrollBar extends GComponent {
     onGripTouchMove(evt) {
         if (!this.onStage)
             return;
-        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
+        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
         if (this._vertical) {
             var curY = pt.y - this._dragOffset.y;
             this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
@@ -22796,7 +22497,7 @@ class GScrollBar extends GComponent {
             this._target.scrollRight();
     }
     onBarTouchBegin(evt) {
-        var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
+        var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2$1);
         if (this._vertical) {
             if (pt.y < 0)
                 this._target.scrollUp(4);
@@ -22809,6 +22510,225 @@ class GScrollBar extends GComponent {
             else
                 this._target.scrollRight(4);
         }
+    }
+}
+var s_vec2$1 = new Vec2();
+
+class GSlider extends GComponent {
+    _min = 0;
+    _max = 0;
+    _value = 0;
+    _titleType;
+    _reverse;
+    _wholeNumbers;
+    _titleObject;
+    _barObjectH;
+    _barObjectV;
+    _barMaxWidth = 0;
+    _barMaxHeight = 0;
+    _barMaxWidthDelta = 0;
+    _barMaxHeightDelta = 0;
+    _gripObject;
+    _clickPos;
+    _clickPercent = 0;
+    _barStartX = 0;
+    _barStartY = 0;
+    changeOnClick = true;
+    canDrag = true;
+    constructor() {
+        super();
+        this._node.name = "GSlider";
+        this._titleType = ProgressTitleType.Percent;
+        this._value = 50;
+        this._max = 100;
+        this._clickPos = new Vec2();
+    }
+    get titleType() {
+        return this._titleType;
+    }
+    set titleType(value) {
+        this._titleType = value;
+    }
+    get wholeNumbers() {
+        return this._wholeNumbers;
+    }
+    set wholeNumbers(value) {
+        if (this._wholeNumbers != value) {
+            this._wholeNumbers = value;
+            this.update();
+        }
+    }
+    get min() {
+        return this._min;
+    }
+    set min(value) {
+        if (this._min != value) {
+            this._min = value;
+            this.update();
+        }
+    }
+    get max() {
+        return this._max;
+    }
+    set max(value) {
+        if (this._max != value) {
+            this._max = value;
+            this.update();
+        }
+    }
+    get value() {
+        return this._value;
+    }
+    set value(value) {
+        if (this._value != value) {
+            this._value = value;
+            this.update();
+        }
+    }
+    update() {
+        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
+    }
+    updateWithPercent(percent, manual) {
+        percent = math.clamp01(percent);
+        if (manual) {
+            var newValue = math.clamp(this._min + (this._max - this._min) * percent, this._min, this._max);
+            if (this._wholeNumbers) {
+                newValue = Math.round(newValue);
+                percent = math.clamp01((newValue - this._min) / (this._max - this._min));
+            }
+            if (newValue != this._value) {
+                this._value = newValue;
+                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
+            }
+        }
+        if (this._titleObject) {
+            switch (this._titleType) {
+                case ProgressTitleType.Percent:
+                    this._titleObject.text = Math.floor(percent * 100) + "%";
+                    break;
+                case ProgressTitleType.ValueAndMax:
+                    this._titleObject.text = this._value + "/" + this._max;
+                    break;
+                case ProgressTitleType.Value:
+                    this._titleObject.text = "" + this._value;
+                    break;
+                case ProgressTitleType.Max:
+                    this._titleObject.text = "" + this._max;
+                    break;
+            }
+        }
+        var fullWidth = this.width - this._barMaxWidthDelta;
+        var fullHeight = this.height - this._barMaxHeightDelta;
+        if (!this._reverse) {
+            if (this._barObjectH)
+                this._barObjectH.width = Math.round(fullWidth * percent);
+            if (this._barObjectV)
+                this._barObjectV.height = Math.round(fullHeight * percent);
+        }
+        else {
+            if (this._barObjectH) {
+                this._barObjectH.width = Math.round(fullWidth * percent);
+                this._barObjectH.x = this._barStartX + (fullWidth - this._barObjectH.width);
+            }
+            if (this._barObjectV) {
+                this._barObjectV.height = Math.round(fullHeight * percent);
+                this._barObjectV.y = this._barStartY + (fullHeight - this._barObjectV.height);
+            }
+        }
+    }
+    constructExtension(buffer) {
+        buffer.seek(0, 6);
+        this._titleType = buffer.readByte();
+        this._reverse = buffer.readBool();
+        if (buffer.version >= 2) {
+            this._wholeNumbers = buffer.readBool();
+            this.changeOnClick = buffer.readBool();
+        }
+        this._titleObject = this.getChild("title");
+        this._barObjectH = this.getChild("bar");
+        this._barObjectV = this.getChild("bar_v");
+        this._gripObject = this.getChild("grip");
+        if (this._barObjectH) {
+            this._barMaxWidth = this._barObjectH.width;
+            this._barMaxWidthDelta = this.width - this._barMaxWidth;
+            this._barStartX = this._barObjectH.x;
+        }
+        if (this._barObjectV) {
+            this._barMaxHeight = this._barObjectV.height;
+            this._barMaxHeightDelta = this.height - this._barMaxHeight;
+            this._barStartY = this._barObjectV.y;
+        }
+        if (this._gripObject) {
+            this._gripObject.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
+            this._gripObject.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
+        }
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
+    }
+    handleSizeChanged() {
+        super.handleSizeChanged();
+        if (this._barObjectH)
+            this._barMaxWidth = this.width - this._barMaxWidthDelta;
+        if (this._barObjectV)
+            this._barMaxHeight = this.height - this._barMaxHeightDelta;
+        if (!this._underConstruct)
+            this.update();
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        if (!buffer.seek(beginPos, 6)) {
+            this.update();
+            return;
+        }
+        if (buffer.readByte() != this.packageItem.objectType) {
+            this.update();
+            return;
+        }
+        this._value = buffer.readInt();
+        this._max = buffer.readInt();
+        if (buffer.version >= 2)
+            this._min = buffer.readInt();
+        this.update();
+    }
+    onGripTouchBegin(evt) {
+        this.canDrag = true;
+        evt.propagationStopped = true;
+        evt.captureTouch();
+        this._clickPos = this.globalToLocal(evt.pos.x, evt.pos.y);
+        this._clickPercent = math.clamp01((this._value - this._min) / (this._max - this._min));
+    }
+    onGripTouchMove(evt) {
+        if (!this.canDrag) {
+            return;
+        }
+        var pt = this.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
+        var deltaX = pt.x - this._clickPos.x;
+        var deltaY = pt.y - this._clickPos.y;
+        if (this._reverse) {
+            deltaX = -deltaX;
+            deltaY = -deltaY;
+        }
+        var percent;
+        if (this._barObjectH)
+            percent = this._clickPercent + deltaX / this._barMaxWidth;
+        else
+            percent = this._clickPercent + deltaY / this._barMaxHeight;
+        this.updateWithPercent(percent, true);
+    }
+    onBarTouchBegin(evt) {
+        if (!this.changeOnClick)
+            return;
+        var pt = this._gripObject.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
+        var percent = math.clamp01((this._value - this._min) / (this._max - this._min));
+        var delta = 0;
+        if (this._barObjectH != null)
+            delta = (pt.x - this._gripObject.width / 2) / this._barMaxWidth;
+        if (this._barObjectV != null)
+            delta = (pt.y - this._gripObject.height / 2) / this._barMaxHeight;
+        if (this._reverse)
+            percent -= delta;
+        else
+            percent += delta;
+        this.updateWithPercent(percent, true);
     }
 }
 var s_vec2 = new Vec2();
@@ -23339,153 +23259,6 @@ class GTree extends GList {
 }
 var s_list = new Array();
 
-class PopupMenu {
-    _contentPane;
-    _list;
-    constructor(url) {
-        if (!url) {
-            url = UIConfig.popupMenu;
-            if (!url)
-                throw "UIConfig.popupMenu not defined";
-        }
-        this._contentPane = UIPackage.createObjectFromURL(url);
-        this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
-        this._list = (this._contentPane.getChild("list"));
-        this._list.removeChildrenToPool();
-        this._list.addRelation(this._contentPane, RelationType.Width);
-        this._list.removeRelation(this._contentPane, RelationType.Height);
-        this._contentPane.addRelation(this._list, RelationType.Height);
-        this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
-    }
-    dispose() {
-        this._contentPane.dispose();
-    }
-    addItem(caption, callback) {
-        var item = this._list.addItemFromPool();
-        item.title = caption;
-        item.data = callback;
-        item.grayed = false;
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = 0;
-        return item;
-    }
-    addItemAt(caption, index, callback) {
-        var item = this._list.getFromPool();
-        this._list.addChildAt(item, index);
-        item.title = caption;
-        item.data = callback;
-        item.grayed = false;
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = 0;
-        return item;
-    }
-    addSeperator() {
-        if (UIConfig.popupMenu_seperator == null)
-            throw "UIConfig.popupMenu_seperator not defined";
-        this.list.addItemFromPool(UIConfig.popupMenu_seperator);
-    }
-    getItemName(index) {
-        var item = this._list.getChildAt(index);
-        return item.name;
-    }
-    setItemText(name, caption) {
-        var item = this._list.getChild(name);
-        item.title = caption;
-    }
-    setItemVisible(name, visible) {
-        var item = this._list.getChild(name);
-        if (item.visible != visible) {
-            item.visible = visible;
-            this._list.setBoundsChangedFlag();
-        }
-    }
-    setItemGrayed(name, grayed) {
-        var item = this._list.getChild(name);
-        item.grayed = grayed;
-    }
-    setItemCheckable(name, checkable) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c) {
-            if (checkable) {
-                if (c.selectedIndex == 0)
-                    c.selectedIndex = 1;
-            }
-            else
-                c.selectedIndex = 0;
-        }
-    }
-    setItemChecked(name, checked) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c)
-            c.selectedIndex = checked ? 2 : 1;
-    }
-    isItemChecked(name) {
-        var item = this._list.getChild(name);
-        var c = item.getController("checked");
-        if (c)
-            return c.selectedIndex == 2;
-        else
-            return false;
-    }
-    removeItem(name) {
-        var item = this._list.getChild(name);
-        if (item) {
-            var index = this._list.getChildIndex(item);
-            this._list.removeChildToPoolAt(index);
-            return true;
-        }
-        else
-            return false;
-    }
-    clearItems() {
-        this._list.removeChildrenToPool();
-    }
-    get itemCount() {
-        return this._list.numChildren;
-    }
-    get contentPane() {
-        return this._contentPane;
-    }
-    get list() {
-        return this._list;
-    }
-    show(target, dir) {
-        GRoot.inst.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
-    }
-    onClickItem(item, evt) {
-        this._list._partner.callLater((dt) => {
-            this.onClickItem2(item, evt);
-        }, 0.1);
-    }
-    onClickItem2(item, evt) {
-        if (!(item instanceof GButton))
-            return;
-        if (item.grayed) {
-            this._list.selectedIndex = -1;
-            return;
-        }
-        var c = item.getController("checked");
-        if (c && c.selectedIndex != 0) {
-            if (c.selectedIndex == 1)
-                c.selectedIndex = 2;
-            else
-                c.selectedIndex = 1;
-        }
-        var r = (this._contentPane.parent);
-        r.hidePopup(this.contentPane);
-        if (item.data instanceof Function)
-            item.data(item, evt);
-    }
-    onDisplay() {
-        this._list.selectedIndex = -1;
-        this._list.resizeToFit(100000, 10);
-    }
-}
-
 class UIObjectFactory {
     static counter = 0;
     static extensions = {};
@@ -23576,68 +23349,6 @@ class UIObjectFactory {
     }
 }
 Decls.UIObjectFactory = UIObjectFactory;
-
-class DragDropManager {
-    _agent;
-    _sourceData;
-    static _inst;
-    static get inst() {
-        if (!DragDropManager._inst)
-            DragDropManager._inst = new DragDropManager();
-        return DragDropManager._inst;
-    }
-    constructor() {
-        this._agent = new GLoader();
-        this._agent.draggable = true;
-        this._agent.touchable = false; //important
-        this._agent.setSize(100, 100);
-        this._agent.setPivot(0.5, 0.5, true);
-        this._agent.align = AlignType.Center;
-        this._agent.verticalAlign = VertAlignType.Middle;
-        this._agent.sortingOrder = 1000000;
-        this._agent.on(FGUIEvent.DRAG_END, this.onDragEnd, this);
-    }
-    get dragAgent() {
-        return this._agent;
-    }
-    get dragging() {
-        return this._agent.parent != null;
-    }
-    startDrag(source, icon, sourceData, touchId) {
-        if (this._agent.parent)
-            return;
-        this._sourceData = sourceData;
-        this._agent.url = icon;
-        GRoot.inst.addChild(this._agent);
-        let pt = GRoot.inst.getTouchPosition(touchId);
-        pt = GRoot.inst.globalToLocal(pt.x, pt.y);
-        this._agent.setPosition(pt.x, pt.y);
-        this._agent.startDrag(touchId);
-    }
-    cancel() {
-        if (this._agent.parent) {
-            this._agent.stopDrag();
-            GRoot.inst.removeChild(this._agent);
-            this._sourceData = null;
-        }
-    }
-    onDragEnd() {
-        if (!this._agent.parent) //cancelled
-            return;
-        GRoot.inst.removeChild(this._agent);
-        var sourceData = this._sourceData;
-        this._sourceData = null;
-        var obj = GRoot.inst.touchTarget;
-        while (obj) {
-            if (obj.node.hasEventListener(FGUIEvent.DROP)) {
-                obj.requestFocus();
-                obj.node.emit(FGUIEvent.DROP, obj, sourceData);
-                return;
-            }
-            obj = obj.parent;
-        }
-    }
-}
 
 class AsyncOperation {
     callback;
@@ -23821,20 +23532,1565 @@ class AsyncOperationRunner extends Component {
     }
 }
 
-class Drongo {
+/**
+ * UI中介者
+ */
+class GUIMediator extends BaseMediator {
+    info = null;
+    /**依赖的服务 */
+    services;
+    /**根节点 */
+    viewComponent = null;
+    /**遮罩 */
+    __mask = null;
+    /**创建UI完成回调*/
+    __createdCallBack;
+    /**子Mediator(用于代码拆分)*/
+    $subMediators;
+    constructor() {
+        super();
+    }
     /**
-     * UI资源AssetBundle
+     * 创建UI
+     * @param info
+     * @param created
      */
-    static UIBundle = "UI";
+    CreateUI(info, created) {
+        this.info = info;
+        if (this.info == null) {
+            throw new Error("GUI 信息不能为空");
+        }
+        this.__createdCallBack = created;
+        this.__createUI(true);
+    }
+    __asyncCreator;
+    __createUI(async) {
+        let packageName = this.info.packageName;
+        if (async) {
+            this.__asyncCreator = new AsyncOperation();
+            this.__asyncCreator.callback = this.__uiCreated.bind(this);
+            this.__asyncCreator.createObject(packageName, this.info.comName);
+        }
+        else {
+            try {
+                let ui = UIPackage.createObject(packageName, this.info.comName);
+                this.__uiCreated(ui);
+            }
+            catch (err) {
+                throw new Error("创建界面失败：" + this.info.packageName + " " + this.info.comName);
+            }
+        }
+    }
+    __uiCreated(ui) {
+        let uiCom = ui.asCom;
+        uiCom.makeFullScreen();
+        //如果需要遮罩
+        if (this.info.modal) {
+            this.ui = uiCom;
+            this.viewComponent = new GComponent();
+            this.viewComponent.makeFullScreen();
+            this.__mask = new GGraph();
+            this.__mask.makeFullScreen();
+            this.__mask.drawRect(0, Color.BLACK, Drongo.MaskColor);
+            this.viewComponent.addChild(this.__mask);
+            if (this.info.modalClose) {
+                this.__mask.onClick(this._maskClickHandler, this);
+            }
+            this.viewComponent.addChild(this.ui);
+        }
+        else {
+            this.ui = this.viewComponent = uiCom;
+        }
+        this.ui.name = this.info.key;
+        if (this.__createdCallBack) {
+            this.__createdCallBack();
+            this.__createdCallBack = null;
+        }
+    }
+    _maskClickHandler() {
+        GUIManager.Close(this.info.key);
+    }
+    Init() {
+    }
+    Show(data) {
+        super.Show(data);
+        if (this.$subMediators) {
+            for (let index = 0; index < this.$subMediators.length; index++) {
+                const element = this.$subMediators[index];
+                element.Show(data);
+            }
+        }
+    }
+    ShowedUpdate(data) {
+        super.ShowedUpdate(data);
+        if (this.$subMediators) {
+            for (let index = 0; index < this.$subMediators.length; index++) {
+                const element = this.$subMediators[index];
+                element.ShowedUpdate(data);
+            }
+        }
+    }
+    Hide() {
+        super.Hide();
+        if (this.$subMediators) {
+            for (let index = 0; index < this.$subMediators.length; index++) {
+                const element = this.$subMediators[index];
+                element.Hide();
+            }
+        }
+    }
     /**
-     * UI遮罩颜色值
+     * 关闭
+     * @param checkLayer 是否检查全屏层记录
      */
-    static MaskColor = new Color(0, 0, 0, 255 * 0.5);
-    // static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
-    static Init(root, cb) {
-        GRoot.create(root);
-        cb();
+    Close(checkLayer = true) {
+        GUIManager.Close(this.info.key, checkLayer);
+    }
+    Tick(dt) {
+        if (this.$subMediators) {
+            for (let index = 0; index < this.$subMediators.length; index++) {
+                const element = this.$subMediators[index];
+                element.Tick(dt);
+            }
+        }
+    }
+    Destroy() {
+        if (this.__mask) {
+            this.__mask.offClick(this._maskClickHandler, this);
+            this.__mask.dispose();
+            this.__mask = null;
+        }
+        this.viewComponent.dispose();
+        this.info = null;
+        if (this.$subMediators) {
+            for (let index = 0; index < this.$subMediators.length; index++) {
+                const element = this.$subMediators[index];
+                element.Destroy();
+            }
+        }
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool$1 as Pool, PopupMenu, PropertyBinder, Rect, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+/**
+ * 子UI 逻辑划分
+ */
+class SubGUIMediator extends BaseMediator {
+    /**所属GUI*/
+    owner;
+    constructor(ui, owner) {
+        super();
+        this.ui = ui;
+        this.owner = owner;
+        this.Init();
+        this.inited = true;
+    }
+    Destroy() {
+        super.Destroy();
+        this.owner = null;
+        this.ui = null;
+    }
+}
+
+var FindPosition;
+(function (FindPosition) {
+    FindPosition[FindPosition["ShortSideFit"] = 0] = "ShortSideFit";
+    FindPosition[FindPosition["BottomLeft"] = 1] = "BottomLeft";
+    FindPosition[FindPosition["ContactPoint"] = 2] = "ContactPoint";
+    FindPosition[FindPosition["LongSideFit"] = 3] = "LongSideFit";
+    FindPosition[FindPosition["AreaFit"] = 4] = "AreaFit";
+})(FindPosition || (FindPosition = {}));
+
+class Rect {
+    /**
+     * 起点 x 坐标
+     */
+    x = 0;
+    /**
+     * 起点 y 坐标
+     */
+    y = 0;
+    /**
+     * 宽度
+     */
+    width = 0;
+    /**
+     * 高度
+     */
+    height = 0;
+    /**
+     * 当前是否被旋转了
+     */
+    isRotated = false;
+    /**
+     * 自定义信息
+     */
+    info;
+    /**
+     * 克隆
+     */
+    Clone() {
+        const cloned = new Rect();
+        cloned.x = this.x;
+        cloned.y = this.y;
+        cloned.height = this.height;
+        cloned.width = this.width;
+        cloned.info = this.info;
+        return cloned;
+    }
+    /**
+     * 矩形是否在另一个矩形内部
+     * @param otherRect {Rect}
+     */
+    IsIn(otherRect) {
+        return (this.x >= otherRect.x &&
+            this.y >= otherRect.y &&
+            this.x + this.width <= otherRect.x + otherRect.width &&
+            this.y + this.height <= otherRect.y + otherRect.height);
+    }
+    get isEmpty() {
+        return this.x == 0 && this.y == 0 && this.width == 0 && this.height == 0;
+    }
+}
+
+class MaxRectBinPack {
+    containerHeight;
+    containerWidth;
+    allowRotate;
+    freeRects = [];
+    usedRects = [];
+    /**
+     * 构建方程
+     * @param width {number} 画板宽度
+     * @param height {number} 画板高度
+     * @param allowRotate {boolean} 允许旋转
+     */
+    constructor(width, height, allowRotate) {
+        this.containerHeight = height;
+        this.containerWidth = width;
+        this.allowRotate = allowRotate === true;
+        const rect = new Rect();
+        rect.x = 0;
+        rect.y = 0;
+        rect.width = width;
+        rect.height = height;
+        this.freeRects.push(rect);
+    }
+    /**
+     * 在线算法入口 插入矩形方法
+     * @param width {number}
+     * @param height {number}
+     * @param method {FindPosition}
+     */
+    Insert(width, height, method) {
+        // width height 参数合法性检查
+        if (width <= 0 || height <= 0) {
+            throw new Error(`width & height should greater than 0, but got width as ${width}, height as ${height}`);
+        }
+        // method 合法性检查
+        if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
+            method = FindPosition.ShortSideFit;
+        }
+        let newRect = new Rect();
+        const score1 = {
+            value: 0,
+        };
+        const score2 = {
+            value: 0,
+        };
+        switch (method) {
+            case FindPosition.ShortSideFit:
+                newRect = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
+                break;
+            case FindPosition.BottomLeft:
+                newRect = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
+                break;
+            case FindPosition.ContactPoint:
+                newRect = this.FindPositionForNewNodeContactPoint(width, height, score1);
+                break;
+            case FindPosition.LongSideFit:
+                newRect = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
+                break;
+            case FindPosition.AreaFit:
+                newRect = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
+                break;
+        }
+        if (newRect.height === 0) {
+            return newRect;
+        }
+        if (this.allowRotate) { // 更新旋转属性
+            if (newRect.height === height && newRect.width === width) {
+                newRect.isRotated = false;
+            }
+            else {
+                newRect.isRotated = true;
+            }
+        }
+        this.PlaceRectangle(newRect);
+        return newRect;
+    }
+    // /**
+    //  * 算法离线入口 插入一组举行
+    //  * @param rects {Rect[]} 矩形数组
+    //  * @param method {FindPosition} 查找位置的方法
+    //  */
+    // public insertRects(rects: Rect[], method: FindPosition): Rect[] {
+    //     // rects 参数合法性检查
+    //     if (rects && rects.length === 0) {
+    //         throw new Error('rects should be array with length greater than zero');
+    //     }
+    //     // method 合法性检查
+    //     if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
+    //         method = FindPosition.ShortSideFit;
+    //     }
+    //     const result: Rect[] = [];
+    //     while (rects.length > 0) {
+    //         const bestScore1: IScoreCounter = {
+    //             value: Infinity,
+    //         };
+    //         const bestScore2: IScoreCounter = {
+    //             value: Infinity,
+    //         };
+    //         let bestRectIndex = -1;
+    //         let bestNode: Rect;
+    //         for (let i = 0; i < rects.length; ++i) {
+    //             const score1: IScoreCounter = {
+    //                 value: 0,
+    //             };
+    //             const score2: IScoreCounter = {
+    //                 value: 0,
+    //             };
+    //             const newNode: Rect = this.scoreRectangle(
+    //                 rects[i].width,
+    //                 rects[i].height,
+    //                 method,
+    //                 score1,
+    //                 score2,
+    //             );
+    //             if (
+    //                 score1.value < bestScore1.value ||
+    //                 (score1.value === bestScore1.value && score2.value < bestScore2.value)
+    //             ) {
+    //                 bestScore1.value = score1.value;
+    //                 bestScore2.value = score2.value;
+    //                 bestNode = newNode;
+    //                 bestRectIndex = i;
+    //             }
+    //         }
+    //         if (bestRectIndex === -1) {
+    //             return result;
+    //         }
+    //         this.placeRectangle(bestNode);
+    //         bestNode.info = rects[bestRectIndex].info;
+    //         if (this.allowRotate) {
+    //             if (
+    //                 bestNode.height === rects[bestRectIndex].height &&
+    //                 bestNode.width === rects[bestRectIndex].width
+    //             ) {
+    //                 bestNode.isRotated = false;
+    //             } else {
+    //                 bestNode.isRotated = true;
+    //             }
+    //         }
+    //         rects.splice(bestRectIndex, 1);
+    //         result.push(bestNode);
+    //     }
+    //     return result;
+    // }
+    /**
+     * 占有率
+     * @returns
+     */
+    get occupancy() {
+        let usedSurfaceArea = 0;
+        for (const rect of this.usedRects) {
+            usedSurfaceArea += rect.width * rect.height;
+        }
+        return usedSurfaceArea / (this.containerWidth * this.containerHeight);
+    }
+    /**
+     * 擦除节点
+     * @param rect
+     */
+    EraseNoce(rect) {
+        let index = this.usedRects.indexOf(rect);
+        if (index != -1) {
+            this.usedRects.splice(index, 1);
+        }
+        index = this.freeRects.indexOf(rect);
+        if (index == -1) {
+            this.freeRects.push(rect);
+            this.PruneFreeList();
+        }
+    }
+    /**
+     *
+     * @param node
+     */
+    PlaceRectangle(node) {
+        let numRectanglesToProcess = this.freeRects.length;
+        for (let i = 0; i < numRectanglesToProcess; i++) {
+            if (this.SplitFreeNode(this.freeRects[i], node)) {
+                this.freeRects.splice(i, 1);
+                i--;
+                numRectanglesToProcess--;
+            }
+        }
+        this.PruneFreeList();
+        this.usedRects.push(node);
+    }
+    ScoreRectangle(width, height, method, score1, score2) {
+        let newNode = new Rect();
+        score1.value = Infinity;
+        score2.value = Infinity;
+        switch (method) {
+            case FindPosition.ShortSideFit:
+                newNode = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
+                break;
+            case FindPosition.BottomLeft:
+                newNode = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
+                break;
+            case FindPosition.ContactPoint:
+                newNode = this.FindPositionForNewNodeContactPoint(width, height, score1);
+                // todo: reverse
+                score1.value = -score1.value; // Reverse since we are minimizing, but for contact point score bigger is better.
+                break;
+            case FindPosition.LongSideFit:
+                newNode = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
+                break;
+            case FindPosition.AreaFit:
+                newNode = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
+                break;
+        }
+        // Cannot fit the current Rectangle.
+        if (newNode.height === 0) {
+            score1.value = Infinity;
+            score2.value = Infinity;
+        }
+        return newNode;
+    }
+    FindPositionForNewNodeBottomLeft(width, height, bestY, bestX) {
+        this.freeRects;
+        const bestNode = new Rect();
+        bestY.value = Infinity;
+        let topSideY;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                topSideY = rect.y + height;
+                if (topSideY < bestY.value ||
+                    (topSideY === bestY.value && rect.x < bestX.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestY.value = topSideY;
+                    bestX.value = rect.x;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                topSideY = rect.y + width;
+                if (topSideY < bestY.value ||
+                    (topSideY === bestY.value && rect.x < bestX.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestY.value = topSideY;
+                    bestX.value = rect.x;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestShortSideFit(width, height, bestShortSideFit, bestLongSideFit) {
+        const bestNode = new Rect();
+        bestShortSideFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let longSideFit;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (shortSideFit < bestShortSideFit.value ||
+                    (shortSideFit === bestShortSideFit.value &&
+                        longSideFit < bestLongSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+            let flippedLeftoverHoriz;
+            let flippedLeftoverVert;
+            let flippedShortSideFit;
+            let flippedLongSideFit;
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                flippedLeftoverHoriz = Math.abs(rect.width - height);
+                flippedLeftoverVert = Math.abs(rect.height - width);
+                flippedShortSideFit = Math.min(flippedLeftoverHoriz, flippedLeftoverVert);
+                flippedLongSideFit = Math.max(flippedLeftoverHoriz, flippedLeftoverVert);
+                if (flippedShortSideFit < bestShortSideFit.value ||
+                    (flippedShortSideFit === bestShortSideFit.value &&
+                        flippedLongSideFit < bestLongSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = flippedShortSideFit;
+                    bestLongSideFit.value = flippedLongSideFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestLongSideFit(width, height, bestShortSideFit, bestLongSideFit) {
+        const bestNode = new Rect();
+        bestLongSideFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let longSideFit;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (longSideFit < bestLongSideFit.value ||
+                    (longSideFit === bestLongSideFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                leftoverHoriz = Math.abs(rect.width - height);
+                leftoverVert = Math.abs(rect.height - width);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (longSideFit < bestLongSideFit.value ||
+                    (longSideFit === bestLongSideFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestAreaFit(width, height, bestAreaFit, bestShortSideFit) {
+        const bestNode = new Rect();
+        bestAreaFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let areaFit;
+        for (const rect of this.freeRects) {
+            areaFit = rect.width * rect.height - width * height;
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                if (areaFit < bestAreaFit.value ||
+                    (areaFit === bestAreaFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestAreaFit.value = areaFit;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                leftoverHoriz = Math.abs(rect.width - height);
+                leftoverVert = Math.abs(rect.height - width);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                if (areaFit < bestAreaFit.value ||
+                    (areaFit === bestAreaFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = shortSideFit;
+                    bestAreaFit.value = areaFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    CommonIntervalLength(i1start, i1end, i2start, i2end) {
+        if (i1end < i2start || i2end < i1start) {
+            return 0;
+        }
+        return Math.min(i1end, i2end) - Math.max(i1start, i2start);
+    }
+    ContactPointScoreNode(x, y, width, height) {
+        let score = 0;
+        if (x === 0 || x + width === this.containerWidth) {
+            score += height;
+        }
+        if (y === 0 || y + height === this.containerHeight) {
+            score += width;
+        }
+        for (const rect of this.usedRects) {
+            if (rect.x === x + width || rect.x + rect.width === x) {
+                score += this.CommonIntervalLength(rect.y, rect.y + rect.height, y, y + height);
+            }
+            if (rect.y === y + height || rect.y + rect.height === y) {
+                score += this.CommonIntervalLength(rect.x, rect.x + rect.width, x, x + width);
+            }
+        }
+        return score;
+    }
+    FindPositionForNewNodeContactPoint(width, height, bestContactScore) {
+        const bestNode = new Rect();
+        bestContactScore.value = -1;
+        let score;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                score = this.ContactPointScoreNode(rect.x, rect.y, width, height);
+                if (score > bestContactScore.value) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestContactScore.value = score;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                score = this.ContactPointScoreNode(rect.x, rect.y, height, width);
+                if (score > bestContactScore.value) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestContactScore.value = score;
+                }
+            }
+        }
+        return bestNode;
+    }
+    SplitFreeNode(freeNode, usedNode) {
+        const freeRectangles = this.freeRects;
+        // Test with SAT if the Rectangles even intersect.
+        if (usedNode.x >= freeNode.x + freeNode.width ||
+            usedNode.x + usedNode.width <= freeNode.x ||
+            usedNode.y >= freeNode.y + freeNode.height ||
+            usedNode.y + usedNode.height <= freeNode.y) {
+            return false;
+        }
+        let newNode;
+        if (usedNode.x < freeNode.x + freeNode.width &&
+            usedNode.x + usedNode.width > freeNode.x) {
+            // New node at the top side of the used node.
+            if (usedNode.y > freeNode.y &&
+                usedNode.y < freeNode.y + freeNode.height) {
+                newNode = freeNode.Clone();
+                newNode.height = usedNode.y - newNode.y;
+                freeRectangles.push(newNode);
+            }
+            // New node at the bottom side of the used node.
+            if (usedNode.y + usedNode.height < freeNode.y + freeNode.height) {
+                newNode = freeNode.Clone();
+                newNode.y = usedNode.y + usedNode.height;
+                newNode.height =
+                    freeNode.y + freeNode.height - (usedNode.y + usedNode.height);
+                freeRectangles.push(newNode);
+            }
+        }
+        if (usedNode.y < freeNode.y + freeNode.height &&
+            usedNode.y + usedNode.height > freeNode.y) {
+            // New node at the left side of the used node.
+            if (usedNode.x > freeNode.x && usedNode.x < freeNode.x + freeNode.width) {
+                newNode = freeNode.Clone();
+                newNode.width = usedNode.x - newNode.x;
+                freeRectangles.push(newNode);
+            }
+            // New node at the right side of the used node.
+            if (usedNode.x + usedNode.width < freeNode.x + freeNode.width) {
+                newNode = freeNode.Clone();
+                newNode.x = usedNode.x + usedNode.width;
+                newNode.width =
+                    freeNode.x + freeNode.width - (usedNode.x + usedNode.width);
+                freeRectangles.push(newNode);
+            }
+        }
+        return true;
+    }
+    PruneFreeList() {
+        const freeRectangles = this.freeRects;
+        for (let i = 0; i < freeRectangles.length; i++) {
+            for (let j = i + 1; j < freeRectangles.length; j++) {
+                if (freeRectangles[i].IsIn(freeRectangles[j])) {
+                    freeRectangles.splice(i, 1);
+                    break;
+                }
+                if (freeRectangles[j].IsIn(freeRectangles[i])) {
+                    freeRectangles.splice(j, 1);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 对象池
+ */
+class Pool {
+    static __pools = new Map();
+    /**
+     * 分配
+     * @param clazz
+     * @param maxCount
+     * @returns
+     */
+    static allocate(clazz, maxCount) {
+        let className = GetClassName(clazz);
+        let pool;
+        if (this.__pools.has(className)) {
+            pool = this.__pools.get(className);
+        }
+        else {
+            pool = new PoolImpl(clazz, maxCount);
+            this.__pools.set(className, pool);
+        }
+        return pool.allocate();
+    }
+    /**
+     * 回收
+     * @param value
+     */
+    static recycle(value) {
+        let className = GetClassName(value);
+        if (!this.__pools.has(className)) {
+            throw new Error("对象池不存在:" + className);
+        }
+        let pool = this.__pools.get(className);
+        pool.recycle(value);
+    }
+    /**
+     * 回收多个对象
+     * @param list
+     */
+    static recycleList(list) {
+        for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.recycle(element);
+        }
+    }
+    /**
+     * 回收该类型的所有对象
+     * @param clazz
+     */
+    static recycleAll(clazz) {
+        let className = GetClassName(clazz);
+        if (!this.__pools.has(className)) {
+            throw new Error("对象池不存在:" + className);
+        }
+        let pool = this.__pools.get(className);
+        pool.recycleAll();
+    }
+}
+class PoolImpl {
+    /**池中闲置对象 */
+    __cacheStack = new Array();
+    /**正在使用的对象 */
+    __usingArray = new Array();
+    /**池中对象最大数 */
+    __maxCount = 0;
+    __class;
+    constructor(clazz, maxCount) {
+        this.__class = clazz;
+        if (!this.__class) {
+            throw new Error("构造函数不能为空！");
+        }
+        this.__maxCount = maxCount == undefined ? Number.MAX_SAFE_INTEGER : maxCount;
+    }
+    /**
+    * 在池中的对象
+    */
+    get count() {
+        return this.__cacheStack.length;
+    }
+    /**
+     * 使用中的数量
+     */
+    get usingCount() {
+        return this.__usingArray.length;
+    }
+    /**
+     * 分配
+     * @returns
+     */
+    allocate() {
+        if (this.count + this.usingCount < this.__maxCount) {
+            let element = this.__cacheStack.length > 0 ? this.__cacheStack.pop() : new this.__class();
+            this.__usingArray.push(element);
+            return element;
+        }
+        throw new Error("对象池最大数量超出：" + this.__maxCount);
+    }
+    /**
+     * 回收到池中
+     * @param value
+     * @returns
+     */
+    recycle(value) {
+        if (this.__cacheStack.indexOf(value) > -1) {
+            throw new Error("重复回收！");
+        }
+        let index = this.__usingArray.indexOf(value);
+        if (index < 0) {
+            throw new Error("对象不属于该对象池！");
+        }
+        //重置
+        value.Reset();
+        this.__usingArray.splice(index, 1);
+        this.__cacheStack.push(value);
+    }
+    /**
+     * 批量回收
+     * @param list
+     */
+    recycleList(list) {
+        for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.recycle(element);
+        }
+    }
+    /**
+     * 将所有使用中的对象都回收到池中
+     */
+    recycleAll() {
+        for (let index = 0; index < this.__usingArray.length; index++) {
+            const element = this.__usingArray[index];
+            this.recycle(element);
+        }
+    }
+    destroy() {
+        this.recycleAll();
+        for (let index = 0; index < this.__cacheStack.length; index++) {
+            const element = this.__cacheStack[index];
+            element.Destroy();
+        }
+        this.__cacheStack.length = 0;
+        this.__cacheStack = null;
+        this.__usingArray.length = 0;
+        this.__usingArray = null;
+    }
+}
+
+class FGUIResource extends ResourceImpl {
+    constructor() {
+        super();
+    }
+    /**
+     * 销毁
+     */
+    Destroy() {
+        let url = Key2URL(this.key);
+        if (typeof url != "string") {
+            UIPackage.removePackage(url.url);
+            let bundle = assetManager.getBundle(Drongo.UIBundle);
+            let asset = bundle.get(url.url);
+            assetManager.releaseAsset(asset);
+            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
+        }
+        else {
+            throw new Error("未处理的Fguipackage销毁！");
+        }
+        super.Destroy();
+    }
+}
+
+class FGUILoader extends EventDispatcher {
+    url;
+    constructor() {
+        super();
+    }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        else {
+            let bundle = assetManager.getBundle(url.bundle);
+            let __this = this;
+            if (!bundle) {
+                assetManager.loadBundle(url.bundle, (err, bundle) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, { url, err });
+                        return;
+                    }
+                    __this.loadUIPackge(url, bundle);
+                });
+            }
+            else {
+                __this.loadUIPackge(url, bundle);
+            }
+        }
+    }
+    loadUIPackge(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        let __this = this;
+        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
+            const progress = finish / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, pkg) => {
+            if (err) {
+                __this.Emit(Event.ERROR, { url, err });
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let res = new FGUIResource();
+            res.key = urlKey;
+            res.content = pkg;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
+        });
+    }
+    Reset() {
+        this.url = null;
+    }
+}
+
+/**
+ *  服务基类
+ *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
+ *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
+ */
+class BaseService {
+    /**名称 */
+    name;
+    /**
+     * 依赖的配置表名称
+     */
+    $configs;
+    /**
+     * 依赖的资源
+     */
+    $assets;
+    $assetRefs;
+    __initCallback;
+    constructor() {
+    }
+    Init(callback) {
+        this.__initCallback = callback;
+        if (this.$configs == null || this.$configs.length <= 0) {
+            this.__configLoaded();
+        }
+        else {
+            this.__loadConfigs();
+        }
+    }
+    __loadConfigs() {
+        ConfigManager.Load(this.$configs, this.__configLoaded.bind(this));
+    }
+    __configLoaded(err) {
+        if (err) {
+            throw new Error("配置加载错误：" + err.message);
+        }
+        if (this.$assets == null || this.$assets.length <= 0) {
+            this.$configAndAssetReady();
+        }
+        else {
+            this.__loadAssets();
+        }
+    }
+    __loadAssets() {
+        Res.GetResRefList(this.$assets, this.name).then((value) => {
+            this.$assetRefs = value;
+            this.$configAndAssetReady();
+        }, (reason) => {
+            throw new Error(this.name + "依赖资源加载出错:" + reason);
+        });
+    }
+    /**
+     * 依赖的配置与资源准备完毕
+     */
+    $configAndAssetReady() {
+    }
+    /**
+     * 初始化完成时调用
+     */
+    $initComplete() {
+        if (this.__initCallback) {
+            this.__initCallback(null, this);
+            this.__initCallback = null;
+        }
+    }
+    Destroy() {
+        this.name = undefined;
+        this.__initCallback = null;
+        ConfigManager.Unload(this.$configs);
+        this.$configs = null;
+        this.$assets.length = 0;
+        this.$assets = null;
+        //将引用的资源释放
+        for (let index = 0; index < this.$assetRefs.length; index++) {
+            const element = this.$assetRefs[index];
+            element.Dispose();
+        }
+    }
+}
+
+/**
+ * 本地数据缓存
+ */
+class LocalStorage {
+    static KEY = "drongo.LocalStorage";
+    /**
+     * 初始化
+     * @param gameName
+     */
+    static Init(gameName) {
+        this.impl.Init(gameName);
+    }
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    static GetItem(key) {
+        this.impl.GetItem(key);
+    }
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    static SetItem(key, value) {
+        this.impl.SetItem(key, value);
+    }
+    /**
+     * 清理
+     * @param key
+     */
+    static ClearItem(key) {
+        this.impl.ClearItem(key);
+    }
+    /**
+     * 清理所有
+     */
+    static ClearAll() {
+        this.impl.ClearAll();
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            throw new Error(this.KEY + "未注入!");
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 本地数据缓存
+ */
+class LocalStorageImpl {
+    __gameName;
+    data;
+    /**
+     * 初始化
+     * @param gameName
+     */
+    Init(gameName) {
+        this.__gameName = gameName;
+        let localDataStr = sys.localStorage.getItem(this.__gameName);
+        if (!localDataStr) {
+            this.data = {};
+        }
+        else {
+            this.data = JSON.parse(localDataStr);
+        }
+    }
+    /**
+     * 获取指定数据
+     * @param key
+     * @returns
+     */
+    GetItem(key) {
+        return this.data[key];
+    }
+    /**
+     * 设置指定数据
+     * @param key
+     * @param value
+     */
+    SetItem(key, value) {
+        this.data[key] = value;
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 清理
+     * @param key
+     */
+    ClearItem(key) {
+        delete this.data[key];
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 清理所有
+     */
+    ClearAll() {
+        this.data = {};
+        TickerManager.CallNextFrame(this.__save, this);
+    }
+    /**
+     * 保存
+     */
+    __save() {
+        //保存到本地
+        let localDataStr = JSON.stringify(this.data);
+        sys.localStorage.setItem(this.__gameName, localDataStr);
+    }
+}
+
+/**
+ * 任务队列
+ */
+class TaskQueue extends EventDispatcher {
+    __taskList;
+    __index = 0;
+    constructor() {
+        super();
+        this.__taskList = [];
+    }
+    AddTask(value) {
+        if (this.__taskList.indexOf(value) >= 0) {
+            throw new Error("重复添加！");
+        }
+        this.__taskList.push(value);
+    }
+    RemoveTask(value) {
+        let index = this.__taskList.indexOf(value);
+        if (index < 0) {
+            throw new Error("未找到要删除的内容！");
+        }
+        this.__taskList.splice(index, 1);
+    }
+    Start(data) {
+        this.__index = 0;
+        this.__tryNext();
+    }
+    __tryNext() {
+        if (this.__index < this.__taskList.length) {
+            let task = this.__taskList[this.__index];
+            task.On(Event.COMPLETE, this.__subTaskEventHandler, this);
+            task.On(Event.PROGRESS, this.__subTaskEventHandler, this);
+            task.On(Event.ERROR, this.__subTaskEventHandler, this);
+            task.Start();
+        }
+        else {
+            //结束
+            this.Emit(Event.COMPLETE);
+        }
+    }
+    __subTaskEventHandler(key, target, data) {
+        if (key == Event.PROGRESS) {
+            let dataValue = Number(data) == undefined ? 0 : Number(data);
+            let progress = (this.__index + dataValue) / this.__taskList.length;
+            this.Emit(Event.PROGRESS, progress);
+            return;
+        }
+        target.OffAllEvent();
+        if (key == Event.ERROR) {
+            this.Emit(Event.ERROR, data);
+            return;
+        }
+        target.Destroy();
+        this.__index++;
+        this.__tryNext();
+    }
+    Destroy() {
+        super.Destroy();
+        this.__taskList.length = 0;
+        this.__index = 0;
+    }
+}
+
+/**
+ * 任务序列（并行）
+ */
+class TaskSequence extends EventDispatcher {
+    __taskList = new Array();
+    __index = 0;
+    constructor() {
+        super();
+    }
+    AddTask(value) {
+        if (this.__taskList.indexOf(value) >= 0) {
+            throw new Error("重复添加！");
+        }
+        this.__taskList.push(value);
+    }
+    RemoveTask(value) {
+        let index = this.__taskList.indexOf(value);
+        if (index < 0) {
+            throw new Error("找不到要删除的内容!");
+        }
+        this.__taskList.splice(index, 1);
+    }
+    Start(data) {
+        for (let index = 0; index < this.__taskList.length; index++) {
+            const element = this.__taskList[index];
+            element.On(Event.COMPLETE, this.__subTaskEventHandler, this);
+            element.On(Event.ERROR, this.__subTaskEventHandler, this);
+            element.On(Event.PROGRESS, this.__subTaskEventHandler, this);
+            element.Start();
+        }
+    }
+    __subTaskEventHandler(type, target, data) {
+        if (type == Event.PROGRESS) {
+            this.Emit(Event.PROGRESS, this.__index / this.__taskList.length);
+            return;
+        }
+        target.OffAllEvent();
+        if (type == Event.ERROR) {
+            this.Emit(Event.ERROR, data);
+            return;
+        }
+        this.__index++;
+        if (this.__index < this.__taskList.length) {
+            return;
+        }
+        target.Destroy();
+        //完成
+        this.Emit(Event.COMPLETE);
+    }
+    Destroy() {
+        super.Destroy();
+        this.__taskList.length = 0;
+        this.__index = 0;
+    }
+}
+
+/**
+ * bit位操作
+ */
+class BitFlag {
+    __flags = 0;
+    __elements;
+    constructor() {
+        this.__elements = [];
+    }
+    Add(flag) {
+        this.__flags |= flag;
+        if (this.__elements.indexOf(flag) < 0) {
+            this.__elements.push(flag);
+        }
+    }
+    Remove(flag) {
+        this.__flags ^= flag;
+        let index = this.__elements.indexOf(flag);
+        if (index >= 0) {
+            this.__elements.splice(index, 1);
+        }
+    }
+    /**
+     * 是否包含
+     * @param flag
+     * @returns
+     */
+    Has(flag) {
+        return (this.__flags & flag) == flag;
+    }
+    /**
+     * 位码
+     */
+    get flags() {
+        return this.__flags;
+    }
+    get elements() {
+        return this.__elements;
+    }
+    Destroy() {
+        this.__flags = 0;
+        this.__elements.length = 0;
+        this.__elements = null;
+    }
+}
+
+/**
+ * 处理器
+ */
+class Handler {
+    method;
+    caller;
+    once = true;
+    isOver = false;
+    /**
+     * 运行
+     * @param args
+     */
+    Run(...args) {
+        if (this.method && !this.isOver) {
+            this.method.apply(this.caller, args);
+            if (this.once) {
+                this.isOver = true;
+            }
+        }
+    }
+    /**
+     * 判断是否相同
+     * @param value
+     * @returns
+     */
+    Equal(value) {
+        if (this.method == value.method && this.caller == value.caller) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 创建一个实例
+     * @param caller
+     * @param method
+     * @param once
+     * @returns
+     */
+    static Create(caller, method, once = false) {
+        var h = new Handler();
+        h.caller = caller;
+        h.method = method;
+        h.once = once;
+        h.isOver = false;
+        return h;
+    }
+}
+
+class PopupMenu {
+    _contentPane;
+    _list;
+    constructor(url) {
+        if (!url) {
+            url = UIConfig.popupMenu;
+            if (!url)
+                throw "UIConfig.popupMenu not defined";
+        }
+        this._contentPane = UIPackage.createObjectFromURL(url);
+        this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
+        this._list = (this._contentPane.getChild("list"));
+        this._list.removeChildrenToPool();
+        this._list.addRelation(this._contentPane, RelationType.Width);
+        this._list.removeRelation(this._contentPane, RelationType.Height);
+        this._contentPane.addRelation(this._list, RelationType.Height);
+        this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
+    }
+    dispose() {
+        this._contentPane.dispose();
+    }
+    addItem(caption, callback) {
+        var item = this._list.addItemFromPool();
+        item.title = caption;
+        item.data = callback;
+        item.grayed = false;
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = 0;
+        return item;
+    }
+    addItemAt(caption, index, callback) {
+        var item = this._list.getFromPool();
+        this._list.addChildAt(item, index);
+        item.title = caption;
+        item.data = callback;
+        item.grayed = false;
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = 0;
+        return item;
+    }
+    addSeperator() {
+        if (UIConfig.popupMenu_seperator == null)
+            throw "UIConfig.popupMenu_seperator not defined";
+        this.list.addItemFromPool(UIConfig.popupMenu_seperator);
+    }
+    getItemName(index) {
+        var item = this._list.getChildAt(index);
+        return item.name;
+    }
+    setItemText(name, caption) {
+        var item = this._list.getChild(name);
+        item.title = caption;
+    }
+    setItemVisible(name, visible) {
+        var item = this._list.getChild(name);
+        if (item.visible != visible) {
+            item.visible = visible;
+            this._list.setBoundsChangedFlag();
+        }
+    }
+    setItemGrayed(name, grayed) {
+        var item = this._list.getChild(name);
+        item.grayed = grayed;
+    }
+    setItemCheckable(name, checkable) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c) {
+            if (checkable) {
+                if (c.selectedIndex == 0)
+                    c.selectedIndex = 1;
+            }
+            else
+                c.selectedIndex = 0;
+        }
+    }
+    setItemChecked(name, checked) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c)
+            c.selectedIndex = checked ? 2 : 1;
+    }
+    isItemChecked(name) {
+        var item = this._list.getChild(name);
+        var c = item.getController("checked");
+        if (c)
+            return c.selectedIndex == 2;
+        else
+            return false;
+    }
+    removeItem(name) {
+        var item = this._list.getChild(name);
+        if (item) {
+            var index = this._list.getChildIndex(item);
+            this._list.removeChildToPoolAt(index);
+            return true;
+        }
+        else
+            return false;
+    }
+    clearItems() {
+        this._list.removeChildrenToPool();
+    }
+    get itemCount() {
+        return this._list.numChildren;
+    }
+    get contentPane() {
+        return this._contentPane;
+    }
+    get list() {
+        return this._list;
+    }
+    show(target, dir) {
+        GRoot.inst.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
+    }
+    onClickItem(item, evt) {
+        this._list._partner.callLater((dt) => {
+            this.onClickItem2(item, evt);
+        }, 0.1);
+    }
+    onClickItem2(item, evt) {
+        if (!(item instanceof GButton))
+            return;
+        if (item.grayed) {
+            this._list.selectedIndex = -1;
+            return;
+        }
+        var c = item.getController("checked");
+        if (c && c.selectedIndex != 0) {
+            if (c.selectedIndex == 1)
+                c.selectedIndex = 2;
+            else
+                c.selectedIndex = 1;
+        }
+        var r = (this._contentPane.parent);
+        r.hidePopup(this.contentPane);
+        if (item.data instanceof Function)
+            item.data(item, evt);
+    }
+    onDisplay() {
+        this._list.selectedIndex = -1;
+        this._list.resizeToFit(100000, 10);
+    }
+}
+
+class DragDropManager {
+    _agent;
+    _sourceData;
+    static _inst;
+    static get inst() {
+        if (!DragDropManager._inst)
+            DragDropManager._inst = new DragDropManager();
+        return DragDropManager._inst;
+    }
+    constructor() {
+        this._agent = new GLoader();
+        this._agent.draggable = true;
+        this._agent.touchable = false; //important
+        this._agent.setSize(100, 100);
+        this._agent.setPivot(0.5, 0.5, true);
+        this._agent.align = AlignType.Center;
+        this._agent.verticalAlign = VertAlignType.Middle;
+        this._agent.sortingOrder = 1000000;
+        this._agent.on(FGUIEvent.DRAG_END, this.onDragEnd, this);
+    }
+    get dragAgent() {
+        return this._agent;
+    }
+    get dragging() {
+        return this._agent.parent != null;
+    }
+    startDrag(source, icon, sourceData, touchId) {
+        if (this._agent.parent)
+            return;
+        this._sourceData = sourceData;
+        this._agent.url = icon;
+        GRoot.inst.addChild(this._agent);
+        let pt = GRoot.inst.getTouchPosition(touchId);
+        pt = GRoot.inst.globalToLocal(pt.x, pt.y);
+        this._agent.setPosition(pt.x, pt.y);
+        this._agent.startDrag(touchId);
+    }
+    cancel() {
+        if (this._agent.parent) {
+            this._agent.stopDrag();
+            GRoot.inst.removeChild(this._agent);
+            this._sourceData = null;
+        }
+    }
+    onDragEnd() {
+        if (!this._agent.parent) //cancelled
+            return;
+        GRoot.inst.removeChild(this._agent);
+        var sourceData = this._sourceData;
+        this._sourceData = null;
+        var obj = GRoot.inst.touchTarget;
+        while (obj) {
+            if (obj.node.hasEventListener(FGUIEvent.DROP)) {
+                obj.requestFocus();
+                obj.node.emit(FGUIEvent.DROP, obj, sourceData);
+                return;
+            }
+            obj = obj.parent;
+        }
+    }
+}
+
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

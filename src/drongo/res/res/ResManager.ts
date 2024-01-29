@@ -1,8 +1,8 @@
-import { Injector } from "../utils/Injector";
-import { IResManager } from "./IResManager";
-import { IResource } from "./IResource";
-import { ResManagerImpl } from "../impls/ResManagerImpl";
-import { ResRef } from "./ResRef";
+import { Injector } from "../../utils/Injector";
+import { IResManager } from "../core/IResManager";
+import { IResource } from "../core/IResource";
+import { ResRef } from "../core/ResRef";
+import { ResManagerImpl } from "./ResManagerImpl";
 
 
 /**

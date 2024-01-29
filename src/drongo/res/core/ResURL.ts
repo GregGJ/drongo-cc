@@ -1,5 +1,5 @@
 import { Asset, SpriteFrame, Texture2D } from "cc";
-import { GetClassName } from "../exports/GetClassName";
+import { GetClassName } from "../../exports/GetClassName";
 
 
 /**
