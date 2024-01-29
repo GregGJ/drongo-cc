@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, sys, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, sys, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -4778,6 +4778,947 @@ class DebugerImpl {
 }
 
 /**
+ * 状态机
+ */
+class FSM extends EventDispatcher {
+    /**所属*/
+    owner;
+    debug;
+    __current;
+    __state;
+    __states;
+    __name;
+    constructor(owner, name) {
+        super();
+        this.owner = owner;
+        this.__name = name;
+        this.__states = new Map();
+    }
+    Tick(dt) {
+        if (this.__current) {
+            this.__current.Tick(dt);
+        }
+    }
+    /**
+     * 添加
+     * @param key
+     * @param v
+     */
+    AddState(key, v) {
+        this.__states.set(key, v);
+        v.Init(this);
+    }
+    /**
+     * 切换状态
+     * @param value
+     * @param data
+     * @returns
+     */
+    SwitchState(value, data) {
+        if (this.__state == value) {
+            return;
+        }
+        let oldKey = this.__state;
+        let old = this.__current;
+        if (old) {
+            if (this.debug) {
+                Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 退出状态==>" + this.__current.name);
+            }
+            old.Exit();
+        }
+        this.__current = null;
+        if (!this.__states.has(value)) {
+            throw new Error("状态机:" + this.__name + " 所属:" + this.owner.name + "未找到状态==>" + value);
+        }
+        this.__state = value;
+        this.__current = this.__states.get(value);
+        if (this.debug) {
+            Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
+        }
+        this.__current.Enter(data);
+        this.Emit(Event.State_Changed, oldKey);
+    }
+    get state() {
+        return this.__state;
+    }
+    get current() {
+        return this.__current;
+    }
+    Destroy() {
+        if (this.__current) {
+            this.__current.Exit();
+        }
+        this.__states.forEach(element => {
+            element.Destroy();
+        });
+        this.__states.clear();
+    }
+}
+
+var FindPosition;
+(function (FindPosition) {
+    FindPosition[FindPosition["ShortSideFit"] = 0] = "ShortSideFit";
+    FindPosition[FindPosition["BottomLeft"] = 1] = "BottomLeft";
+    FindPosition[FindPosition["ContactPoint"] = 2] = "ContactPoint";
+    FindPosition[FindPosition["LongSideFit"] = 3] = "LongSideFit";
+    FindPosition[FindPosition["AreaFit"] = 4] = "AreaFit";
+})(FindPosition || (FindPosition = {}));
+
+class Rect {
+    /**
+     * 起点 x 坐标
+     */
+    x = 0;
+    /**
+     * 起点 y 坐标
+     */
+    y = 0;
+    /**
+     * 宽度
+     */
+    width = 0;
+    /**
+     * 高度
+     */
+    height = 0;
+    /**
+     * 当前是否被旋转了
+     */
+    isRotated = false;
+    /**
+     * 自定义信息
+     */
+    info;
+    /**
+     * 克隆
+     */
+    Clone() {
+        const cloned = new Rect();
+        cloned.x = this.x;
+        cloned.y = this.y;
+        cloned.height = this.height;
+        cloned.width = this.width;
+        cloned.info = this.info;
+        return cloned;
+    }
+    /**
+     * 矩形是否在另一个矩形内部
+     * @param otherRect {Rect}
+     */
+    IsIn(otherRect) {
+        return (this.x >= otherRect.x &&
+            this.y >= otherRect.y &&
+            this.x + this.width <= otherRect.x + otherRect.width &&
+            this.y + this.height <= otherRect.y + otherRect.height);
+    }
+    get isEmpty() {
+        return this.x == 0 && this.y == 0 && this.width == 0 && this.height == 0;
+    }
+}
+
+class MaxRectBinPack {
+    containerHeight;
+    containerWidth;
+    allowRotate;
+    freeRects = [];
+    usedRects = [];
+    /**
+     * 构建方程
+     * @param width {number} 画板宽度
+     * @param height {number} 画板高度
+     * @param allowRotate {boolean} 允许旋转
+     */
+    constructor(width, height, allowRotate) {
+        this.containerHeight = height;
+        this.containerWidth = width;
+        this.allowRotate = allowRotate === true;
+        const rect = new Rect();
+        rect.x = 0;
+        rect.y = 0;
+        rect.width = width;
+        rect.height = height;
+        this.freeRects.push(rect);
+    }
+    /**
+     * 在线算法入口 插入矩形方法
+     * @param width {number}
+     * @param height {number}
+     * @param method {FindPosition}
+     */
+    Insert(width, height, method) {
+        // width height 参数合法性检查
+        if (width <= 0 || height <= 0) {
+            throw new Error(`width & height should greater than 0, but got width as ${width}, height as ${height}`);
+        }
+        // method 合法性检查
+        if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
+            method = FindPosition.ShortSideFit;
+        }
+        let newRect = new Rect();
+        const score1 = {
+            value: 0,
+        };
+        const score2 = {
+            value: 0,
+        };
+        switch (method) {
+            case FindPosition.ShortSideFit:
+                newRect = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
+                break;
+            case FindPosition.BottomLeft:
+                newRect = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
+                break;
+            case FindPosition.ContactPoint:
+                newRect = this.FindPositionForNewNodeContactPoint(width, height, score1);
+                break;
+            case FindPosition.LongSideFit:
+                newRect = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
+                break;
+            case FindPosition.AreaFit:
+                newRect = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
+                break;
+        }
+        if (newRect.height === 0) {
+            return newRect;
+        }
+        if (this.allowRotate) { // 更新旋转属性
+            if (newRect.height === height && newRect.width === width) {
+                newRect.isRotated = false;
+            }
+            else {
+                newRect.isRotated = true;
+            }
+        }
+        this.PlaceRectangle(newRect);
+        return newRect;
+    }
+    // /**
+    //  * 算法离线入口 插入一组举行
+    //  * @param rects {Rect[]} 矩形数组
+    //  * @param method {FindPosition} 查找位置的方法
+    //  */
+    // public insertRects(rects: Rect[], method: FindPosition): Rect[] {
+    //     // rects 参数合法性检查
+    //     if (rects && rects.length === 0) {
+    //         throw new Error('rects should be array with length greater than zero');
+    //     }
+    //     // method 合法性检查
+    //     if (method <= FindPosition.ShortSideFit || method >= FindPosition.AreaFit) {
+    //         method = FindPosition.ShortSideFit;
+    //     }
+    //     const result: Rect[] = [];
+    //     while (rects.length > 0) {
+    //         const bestScore1: IScoreCounter = {
+    //             value: Infinity,
+    //         };
+    //         const bestScore2: IScoreCounter = {
+    //             value: Infinity,
+    //         };
+    //         let bestRectIndex = -1;
+    //         let bestNode: Rect;
+    //         for (let i = 0; i < rects.length; ++i) {
+    //             const score1: IScoreCounter = {
+    //                 value: 0,
+    //             };
+    //             const score2: IScoreCounter = {
+    //                 value: 0,
+    //             };
+    //             const newNode: Rect = this.scoreRectangle(
+    //                 rects[i].width,
+    //                 rects[i].height,
+    //                 method,
+    //                 score1,
+    //                 score2,
+    //             );
+    //             if (
+    //                 score1.value < bestScore1.value ||
+    //                 (score1.value === bestScore1.value && score2.value < bestScore2.value)
+    //             ) {
+    //                 bestScore1.value = score1.value;
+    //                 bestScore2.value = score2.value;
+    //                 bestNode = newNode;
+    //                 bestRectIndex = i;
+    //             }
+    //         }
+    //         if (bestRectIndex === -1) {
+    //             return result;
+    //         }
+    //         this.placeRectangle(bestNode);
+    //         bestNode.info = rects[bestRectIndex].info;
+    //         if (this.allowRotate) {
+    //             if (
+    //                 bestNode.height === rects[bestRectIndex].height &&
+    //                 bestNode.width === rects[bestRectIndex].width
+    //             ) {
+    //                 bestNode.isRotated = false;
+    //             } else {
+    //                 bestNode.isRotated = true;
+    //             }
+    //         }
+    //         rects.splice(bestRectIndex, 1);
+    //         result.push(bestNode);
+    //     }
+    //     return result;
+    // }
+    /**
+     * 占有率
+     * @returns
+     */
+    get occupancy() {
+        let usedSurfaceArea = 0;
+        for (const rect of this.usedRects) {
+            usedSurfaceArea += rect.width * rect.height;
+        }
+        return usedSurfaceArea / (this.containerWidth * this.containerHeight);
+    }
+    /**
+     * 擦除节点
+     * @param rect
+     */
+    EraseNoce(rect) {
+        let index = this.usedRects.indexOf(rect);
+        if (index != -1) {
+            this.usedRects.splice(index, 1);
+        }
+        index = this.freeRects.indexOf(rect);
+        if (index == -1) {
+            this.freeRects.push(rect);
+            this.PruneFreeList();
+        }
+    }
+    /**
+     *
+     * @param node
+     */
+    PlaceRectangle(node) {
+        let numRectanglesToProcess = this.freeRects.length;
+        for (let i = 0; i < numRectanglesToProcess; i++) {
+            if (this.SplitFreeNode(this.freeRects[i], node)) {
+                this.freeRects.splice(i, 1);
+                i--;
+                numRectanglesToProcess--;
+            }
+        }
+        this.PruneFreeList();
+        this.usedRects.push(node);
+    }
+    ScoreRectangle(width, height, method, score1, score2) {
+        let newNode = new Rect();
+        score1.value = Infinity;
+        score2.value = Infinity;
+        switch (method) {
+            case FindPosition.ShortSideFit:
+                newNode = this.FindPositionForNewNodeBestShortSideFit(width, height, score1, score2);
+                break;
+            case FindPosition.BottomLeft:
+                newNode = this.FindPositionForNewNodeBottomLeft(width, height, score1, score2);
+                break;
+            case FindPosition.ContactPoint:
+                newNode = this.FindPositionForNewNodeContactPoint(width, height, score1);
+                // todo: reverse
+                score1.value = -score1.value; // Reverse since we are minimizing, but for contact point score bigger is better.
+                break;
+            case FindPosition.LongSideFit:
+                newNode = this.FindPositionForNewNodeBestLongSideFit(width, height, score2, score1);
+                break;
+            case FindPosition.AreaFit:
+                newNode = this.FindPositionForNewNodeBestAreaFit(width, height, score1, score2);
+                break;
+        }
+        // Cannot fit the current Rectangle.
+        if (newNode.height === 0) {
+            score1.value = Infinity;
+            score2.value = Infinity;
+        }
+        return newNode;
+    }
+    FindPositionForNewNodeBottomLeft(width, height, bestY, bestX) {
+        this.freeRects;
+        const bestNode = new Rect();
+        bestY.value = Infinity;
+        let topSideY;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                topSideY = rect.y + height;
+                if (topSideY < bestY.value ||
+                    (topSideY === bestY.value && rect.x < bestX.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestY.value = topSideY;
+                    bestX.value = rect.x;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                topSideY = rect.y + width;
+                if (topSideY < bestY.value ||
+                    (topSideY === bestY.value && rect.x < bestX.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestY.value = topSideY;
+                    bestX.value = rect.x;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestShortSideFit(width, height, bestShortSideFit, bestLongSideFit) {
+        const bestNode = new Rect();
+        bestShortSideFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let longSideFit;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (shortSideFit < bestShortSideFit.value ||
+                    (shortSideFit === bestShortSideFit.value &&
+                        longSideFit < bestLongSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+            let flippedLeftoverHoriz;
+            let flippedLeftoverVert;
+            let flippedShortSideFit;
+            let flippedLongSideFit;
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                flippedLeftoverHoriz = Math.abs(rect.width - height);
+                flippedLeftoverVert = Math.abs(rect.height - width);
+                flippedShortSideFit = Math.min(flippedLeftoverHoriz, flippedLeftoverVert);
+                flippedLongSideFit = Math.max(flippedLeftoverHoriz, flippedLeftoverVert);
+                if (flippedShortSideFit < bestShortSideFit.value ||
+                    (flippedShortSideFit === bestShortSideFit.value &&
+                        flippedLongSideFit < bestLongSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = flippedShortSideFit;
+                    bestLongSideFit.value = flippedLongSideFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestLongSideFit(width, height, bestShortSideFit, bestLongSideFit) {
+        const bestNode = new Rect();
+        bestLongSideFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let longSideFit;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (longSideFit < bestLongSideFit.value ||
+                    (longSideFit === bestLongSideFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                leftoverHoriz = Math.abs(rect.width - height);
+                leftoverVert = Math.abs(rect.height - width);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                longSideFit = Math.max(leftoverHoriz, leftoverVert);
+                if (longSideFit < bestLongSideFit.value ||
+                    (longSideFit === bestLongSideFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = shortSideFit;
+                    bestLongSideFit.value = longSideFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    FindPositionForNewNodeBestAreaFit(width, height, bestAreaFit, bestShortSideFit) {
+        const bestNode = new Rect();
+        bestAreaFit.value = Infinity;
+        let leftoverHoriz;
+        let leftoverVert;
+        let shortSideFit;
+        let areaFit;
+        for (const rect of this.freeRects) {
+            areaFit = rect.width * rect.height - width * height;
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                leftoverHoriz = Math.abs(rect.width - width);
+                leftoverVert = Math.abs(rect.height - height);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                if (areaFit < bestAreaFit.value ||
+                    (areaFit === bestAreaFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestShortSideFit.value = shortSideFit;
+                    bestAreaFit.value = areaFit;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                leftoverHoriz = Math.abs(rect.width - height);
+                leftoverVert = Math.abs(rect.height - width);
+                shortSideFit = Math.min(leftoverHoriz, leftoverVert);
+                if (areaFit < bestAreaFit.value ||
+                    (areaFit === bestAreaFit.value &&
+                        shortSideFit < bestShortSideFit.value)) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestShortSideFit.value = shortSideFit;
+                    bestAreaFit.value = areaFit;
+                }
+            }
+        }
+        return bestNode;
+    }
+    CommonIntervalLength(i1start, i1end, i2start, i2end) {
+        if (i1end < i2start || i2end < i1start) {
+            return 0;
+        }
+        return Math.min(i1end, i2end) - Math.max(i1start, i2start);
+    }
+    ContactPointScoreNode(x, y, width, height) {
+        let score = 0;
+        if (x === 0 || x + width === this.containerWidth) {
+            score += height;
+        }
+        if (y === 0 || y + height === this.containerHeight) {
+            score += width;
+        }
+        for (const rect of this.usedRects) {
+            if (rect.x === x + width || rect.x + rect.width === x) {
+                score += this.CommonIntervalLength(rect.y, rect.y + rect.height, y, y + height);
+            }
+            if (rect.y === y + height || rect.y + rect.height === y) {
+                score += this.CommonIntervalLength(rect.x, rect.x + rect.width, x, x + width);
+            }
+        }
+        return score;
+    }
+    FindPositionForNewNodeContactPoint(width, height, bestContactScore) {
+        const bestNode = new Rect();
+        bestContactScore.value = -1;
+        let score;
+        for (const rect of this.freeRects) {
+            // Try to place the Rectangle in upright (non-flipped) orientation.
+            if (rect.width >= width && rect.height >= height) {
+                score = this.ContactPointScoreNode(rect.x, rect.y, width, height);
+                if (score > bestContactScore.value) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = width;
+                    bestNode.height = height;
+                    bestContactScore.value = score;
+                }
+            }
+            if (this.allowRotate && rect.width >= height && rect.height >= width) {
+                score = this.ContactPointScoreNode(rect.x, rect.y, height, width);
+                if (score > bestContactScore.value) {
+                    bestNode.x = rect.x;
+                    bestNode.y = rect.y;
+                    bestNode.width = height;
+                    bestNode.height = width;
+                    bestContactScore.value = score;
+                }
+            }
+        }
+        return bestNode;
+    }
+    SplitFreeNode(freeNode, usedNode) {
+        const freeRectangles = this.freeRects;
+        // Test with SAT if the Rectangles even intersect.
+        if (usedNode.x >= freeNode.x + freeNode.width ||
+            usedNode.x + usedNode.width <= freeNode.x ||
+            usedNode.y >= freeNode.y + freeNode.height ||
+            usedNode.y + usedNode.height <= freeNode.y) {
+            return false;
+        }
+        let newNode;
+        if (usedNode.x < freeNode.x + freeNode.width &&
+            usedNode.x + usedNode.width > freeNode.x) {
+            // New node at the top side of the used node.
+            if (usedNode.y > freeNode.y &&
+                usedNode.y < freeNode.y + freeNode.height) {
+                newNode = freeNode.Clone();
+                newNode.height = usedNode.y - newNode.y;
+                freeRectangles.push(newNode);
+            }
+            // New node at the bottom side of the used node.
+            if (usedNode.y + usedNode.height < freeNode.y + freeNode.height) {
+                newNode = freeNode.Clone();
+                newNode.y = usedNode.y + usedNode.height;
+                newNode.height =
+                    freeNode.y + freeNode.height - (usedNode.y + usedNode.height);
+                freeRectangles.push(newNode);
+            }
+        }
+        if (usedNode.y < freeNode.y + freeNode.height &&
+            usedNode.y + usedNode.height > freeNode.y) {
+            // New node at the left side of the used node.
+            if (usedNode.x > freeNode.x && usedNode.x < freeNode.x + freeNode.width) {
+                newNode = freeNode.Clone();
+                newNode.width = usedNode.x - newNode.x;
+                freeRectangles.push(newNode);
+            }
+            // New node at the right side of the used node.
+            if (usedNode.x + usedNode.width < freeNode.x + freeNode.width) {
+                newNode = freeNode.Clone();
+                newNode.x = usedNode.x + usedNode.width;
+                newNode.width =
+                    freeNode.x + freeNode.width - (usedNode.x + usedNode.width);
+                freeRectangles.push(newNode);
+            }
+        }
+        return true;
+    }
+    PruneFreeList() {
+        const freeRectangles = this.freeRects;
+        for (let i = 0; i < freeRectangles.length; i++) {
+            for (let j = i + 1; j < freeRectangles.length; j++) {
+                if (freeRectangles[i].IsIn(freeRectangles[j])) {
+                    freeRectangles.splice(i, 1);
+                    break;
+                }
+                if (freeRectangles[j].IsIn(freeRectangles[i])) {
+                    freeRectangles.splice(j, 1);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 对象池
+ */
+let Pool$1 = class Pool {
+    static __pools = new Map();
+    /**
+     * 分配
+     * @param clazz
+     * @param maxCount
+     * @returns
+     */
+    static allocate(clazz, maxCount) {
+        let className = GetClassName(clazz);
+        let pool;
+        if (this.__pools.has(className)) {
+            pool = this.__pools.get(className);
+        }
+        else {
+            pool = new PoolImpl(clazz, maxCount);
+            this.__pools.set(className, pool);
+        }
+        return pool.allocate();
+    }
+    /**
+     * 回收
+     * @param value
+     */
+    static recycle(value) {
+        let className = GetClassName(value);
+        if (!this.__pools.has(className)) {
+            throw new Error("对象池不存在:" + className);
+        }
+        let pool = this.__pools.get(className);
+        pool.recycle(value);
+    }
+    /**
+     * 回收多个对象
+     * @param list
+     */
+    static recycleList(list) {
+        for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.recycle(element);
+        }
+    }
+    /**
+     * 回收该类型的所有对象
+     * @param clazz
+     */
+    static recycleAll(clazz) {
+        let className = GetClassName(clazz);
+        if (!this.__pools.has(className)) {
+            throw new Error("对象池不存在:" + className);
+        }
+        let pool = this.__pools.get(className);
+        pool.recycleAll();
+    }
+};
+class PoolImpl {
+    /**池中闲置对象 */
+    __cacheStack = new Array();
+    /**正在使用的对象 */
+    __usingArray = new Array();
+    /**池中对象最大数 */
+    __maxCount = 0;
+    __class;
+    constructor(clazz, maxCount) {
+        this.__class = clazz;
+        if (!this.__class) {
+            throw new Error("构造函数不能为空！");
+        }
+        this.__maxCount = maxCount == undefined ? Number.MAX_SAFE_INTEGER : maxCount;
+    }
+    /**
+    * 在池中的对象
+    */
+    get count() {
+        return this.__cacheStack.length;
+    }
+    /**
+     * 使用中的数量
+     */
+    get usingCount() {
+        return this.__usingArray.length;
+    }
+    /**
+     * 分配
+     * @returns
+     */
+    allocate() {
+        if (this.count + this.usingCount < this.__maxCount) {
+            let element = this.__cacheStack.length > 0 ? this.__cacheStack.pop() : new this.__class();
+            this.__usingArray.push(element);
+            return element;
+        }
+        throw new Error("对象池最大数量超出：" + this.__maxCount);
+    }
+    /**
+     * 回收到池中
+     * @param value
+     * @returns
+     */
+    recycle(value) {
+        if (this.__cacheStack.indexOf(value) > -1) {
+            throw new Error("重复回收！");
+        }
+        let index = this.__usingArray.indexOf(value);
+        if (index < 0) {
+            throw new Error("对象不属于该对象池！");
+        }
+        //重置
+        value.Reset();
+        this.__usingArray.splice(index, 1);
+        this.__cacheStack.push(value);
+    }
+    /**
+     * 批量回收
+     * @param list
+     */
+    recycleList(list) {
+        for (let index = 0; index < list.length; index++) {
+            const element = list[index];
+            this.recycle(element);
+        }
+    }
+    /**
+     * 将所有使用中的对象都回收到池中
+     */
+    recycleAll() {
+        for (let index = 0; index < this.__usingArray.length; index++) {
+            const element = this.__usingArray[index];
+            this.recycle(element);
+        }
+    }
+    destroy() {
+        this.recycleAll();
+        for (let index = 0; index < this.__cacheStack.length; index++) {
+            const element = this.__cacheStack[index];
+            element.Destroy();
+        }
+        this.__cacheStack.length = 0;
+        this.__cacheStack = null;
+        this.__usingArray.length = 0;
+        this.__usingArray = null;
+    }
+}
+
+/**
+ *  服务基类
+ *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
+ *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
+ */
+class BaseService {
+    /**名称 */
+    name;
+    /**
+     * 依赖的配置表名称
+     */
+    $configs;
+    /**
+     * 依赖的资源
+     */
+    $assets;
+    $assetRefs;
+    __initCallback;
+    constructor() {
+    }
+    Init(callback) {
+        this.__initCallback = callback;
+        if (this.$configs == null || this.$configs.length <= 0) {
+            this.__configLoaded();
+        }
+        else {
+            this.__loadConfigs();
+        }
+    }
+    __loadConfigs() {
+        ConfigManager.Load(this.$configs, this.__configLoaded.bind(this));
+    }
+    __configLoaded(err) {
+        if (err) {
+            throw new Error("配置加载错误：" + err.message);
+        }
+        if (this.$assets == null || this.$assets.length <= 0) {
+            this.$configAndAssetReady();
+        }
+        else {
+            this.__loadAssets();
+        }
+    }
+    __loadAssets() {
+        Res.GetResRefList(this.$assets, this.name).then((value) => {
+            this.$assetRefs = value;
+            this.$configAndAssetReady();
+        }, (reason) => {
+            throw new Error(this.name + "依赖资源加载出错:" + reason);
+        });
+    }
+    /**
+     * 依赖的配置与资源准备完毕
+     */
+    $configAndAssetReady() {
+    }
+    /**
+     * 初始化完成时调用
+     */
+    $initComplete() {
+        if (this.__initCallback) {
+            this.__initCallback(null, this);
+            this.__initCallback = null;
+        }
+    }
+    Destroy() {
+        this.name = undefined;
+        this.__initCallback = null;
+        ConfigManager.Unload(this.$configs);
+        this.$configs = null;
+        this.$assets.length = 0;
+        this.$assets = null;
+        //将引用的资源释放
+        for (let index = 0; index < this.$assetRefs.length; index++) {
+            const element = this.$assetRefs[index];
+            element.Dispose();
+        }
+    }
+}
+
+class ServiceStarter {
+    __name;
+    __serviceClass;
+    __result;
+    __service;
+    constructor(name, serviceClass) {
+        this.__name = name;
+        this.__serviceClass = serviceClass;
+    }
+    /**
+     * 启动
+     */
+    async Start() {
+        if (this.__result) {
+            return this.__result;
+        }
+        this.__result = new Promise((resolve, reject) => {
+            //创建服务
+            this.__service = new this.__serviceClass();
+            this.__service.name = this.__name;
+            //初始化服务
+            this.__service.Init((err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(result);
+                }
+            });
+        });
+        return this.__result;
+    }
+    Destroy() {
+        this.__name = undefined;
+        this.__serviceClass = undefined;
+        this.__result = undefined;
+        this.__service.Destroy();
+        this.__service = null;
+    }
+}
+
+class ServiceManager {
+    /**启动器 */
+    static __starters = new Map();
+    /**
+     * 获取服务
+     * @param key
+     * @returns
+     */
+    static GetService(value) {
+        const className = GetClassName(value);
+        //如果启动器存在
+        if (this.__starters.has(className)) {
+            return this.__starters.get(className).Start();
+        }
+        let starter = new ServiceStarter(className, value);
+        this.__starters.set(className, starter);
+        return starter.Start();
+    }
+    /**
+     * 卸载服务
+     * @param key
+     */
+    static Uninstall(value) {
+        const className = GetClassName(value);
+        if (!this.__starters.has(className)) {
+            return;
+        }
+        let starter = this.__starters.get(className);
+        starter.Destroy();
+        this.__starters.delete(className);
+    }
+}
+
+/**
  * 本地数据缓存
  */
 class LocalStorage {
@@ -8277,7 +9218,7 @@ class GObject {
         ay = ay || 0;
         aw = aw || 0;
         ah = ah || 0;
-        result = result || new Rect();
+        result = result || new Rect$1();
         var pt = this.localToGlobal(ax, ay);
         result.x = pt.x;
         result.y = pt.y;
@@ -8291,7 +9232,7 @@ class GObject {
         ay = ay || 0;
         aw = aw || 0;
         ah = ah || 0;
-        result = result || new Rect();
+        result = result || new Rect$1();
         var pt = this.globalToLocal(ax, ay);
         result.x = pt.x;
         result.y = pt.y;
@@ -8619,9 +9560,9 @@ function createGear(owner, index) {
 }
 var s_vec2$4 = new Vec2();
 var s_vec3$1 = new Vec3();
-var s_rect$1 = new Rect();
+var s_rect$1 = new Rect$1();
 var sGlobalDragStart = new Vec2();
-var sGlobalRect = new Rect();
+var sGlobalRect = new Rect$1();
 var s_dragging;
 var s_dragQuery;
 var Decls$1 = {};
@@ -10578,7 +11519,7 @@ class UIPackage {
                         pi.objectType = ObjectType.Image;
                         var scaleOption = buffer.readByte();
                         if (scaleOption == 1) {
-                            pi.scale9Grid = new Rect();
+                            pi.scale9Grid = new Rect$1();
                             pi.scale9Grid.x = buffer.readInt();
                             pi.scale9Grid.y = buffer.readInt();
                             pi.scale9Grid.width = buffer.readInt();
@@ -10658,7 +11599,7 @@ class UIPackage {
             nextPos += buffer.position;
             var itemId = buffer.readS();
             pi = this._itemsById[buffer.readS()];
-            let rect = new Rect();
+            let rect = new Rect$1();
             rect.x = buffer.readInt();
             rect.y = buffer.readInt();
             rect.width = buffer.readInt();
@@ -10847,7 +11788,7 @@ class UIPackage {
         for (var i = 0; i < frameCount; i++) {
             var nextPos = buffer.readShort();
             nextPos += buffer.position;
-            let rect = new Rect();
+            let rect = new Rect$1();
             rect.x = buffer.readInt();
             rect.y = buffer.readInt();
             rect.width = buffer.readInt();
@@ -10904,7 +11845,7 @@ class UIPackage {
             bg = {};
             var ch = buffer.readUshort();
             dict[ch] = bg;
-            let rect = new Rect();
+            let rect = new Rect$1();
             bg.rect = rect;
             var img = buffer.readS();
             rect.x = buffer.readInt();
@@ -14125,7 +15066,7 @@ const TWEEN_TIME_GO = 0.5; //调用SetPos(ani)时使用的缓动时间
 const TWEEN_TIME_DEFAULT = 0.3; //惯性滚动的最小缓动时间
 const PULL_RATIO = 0.5; //下拉过顶或者上拉过底时允许超过的距离占显示区域的比例
 var s_vec2$3 = new Vec2();
-var s_rect = new Rect();
+var s_rect = new Rect$1();
 var sEndPos = new Vec2();
 var sOldChange = new Vec2();
 function easeFunc(t, d) {
@@ -19633,16 +20574,16 @@ class GList extends GComponent {
             if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal) {
                 for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                     pos += this._virtualItems[i].height + this._lineGap;
-                rect = new Rect(0, pos, this._itemSize.width, ii.height);
+                rect = new Rect$1(0, pos, this._itemSize.width, ii.height);
             }
             else if (this._layout == ListLayoutType.SingleRow || this._layout == ListLayoutType.FlowVertical) {
                 for (i = this._curLineItemCount - 1; i < index; i += this._curLineItemCount)
                     pos += this._virtualItems[i].width + this._columnGap;
-                rect = new Rect(pos, 0, ii.width, this._itemSize.height);
+                rect = new Rect$1(pos, 0, ii.width, this._itemSize.height);
             }
             else {
                 var page = index / (this._curLineItemCount * this._curLineItemCount2);
-                rect = new Rect(page * this.viewWidth + (index % this._curLineItemCount) * (ii.width + this._columnGap), (index / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap), ii.width, ii.height);
+                rect = new Rect$1(page * this.viewWidth + (index % this._curLineItemCount) * (ii.width + this._columnGap), (index / this._curLineItemCount) % this._curLineItemCount2 * (ii.height + this._lineGap), ii.width, ii.height);
             }
             if (this._scrollPane)
                 this._scrollPane.scrollToView(rect, ani, setFirst);
@@ -22896,4 +23837,4 @@ class Drongo {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool$1 as Pool, PopupMenu, PropertyBinder, Rect, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

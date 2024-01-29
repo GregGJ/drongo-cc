@@ -34,6 +34,10 @@ export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 //exports
 export { GetClassName } from "./drongo/exports/GetClassName"
 
+//fsm
+export { FSM } from "./drongo/fsm/FSM"
+export { IState } from "./drongo/fsm/IState"
+
 //impls
 export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
 export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
@@ -49,6 +53,15 @@ export { Loader } from "./drongo/loaders/Loader"
 export { LoaderQueue } from "./drongo/loaders/LoaderQueue"
 export { ResRequest } from "./drongo/loaders/ResRequest"
 
+//maxRects
+export {FindPosition}  from "./drongo/maxRects/FindPosition"
+export {MaxRectBinPack}  from "./drongo/maxRects/MaxRectsBinPack"
+export {Rect}  from "./drongo/maxRects/Rect"
+
+//pools
+export {IRecyclable} from "./drongo/pools/IRecyclable"
+export {Pool} from "./drongo/pools/Pool"
+
 //res
 export { ILoader } from "./drongo/res/ILoader"
 export { IRes } from "./drongo/res/IRes"
@@ -58,6 +71,11 @@ export { Res } from "./drongo/res/Res"
 export { ResManager } from "./drongo/res/ResManager"
 export { ResRef } from "./drongo/res/ResRef"
 export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/ResURL"
+
+//services
+export {BaseService} from "./drongo/services/BaseService"
+export {IService} from "./drongo/services/IService"
+export {ServiceManager} from "./drongo/services/ServiceManager"
 
 //storages
 export {ILocalStorage} from "./drongo/storages/ILocalStorage"

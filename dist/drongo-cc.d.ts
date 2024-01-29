@@ -1,4 +1,4 @@
-import { Node, AudioSource, Color, Vec2, Component, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Node, AudioSource, Color, Vec2, Component, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
 
 /**
  * 资源地址
@@ -959,6 +959,54 @@ declare class Event$1 {
  */
 declare function GetClassName(clazz: any): string;
 
+/**
+ * 状态接口
+ */
+interface IState {
+    name: string;
+    /**初始化 */
+    Init(content: FSM): void;
+    /**进入 */
+    Enter(data?: any): void;
+    /**心跳 */
+    Tick(dt: number): void;
+    /**退出 */
+    Exit(): void;
+    /**销毁 */
+    Destroy(): void;
+}
+
+/**
+ * 状态机
+ */
+declare class FSM extends EventDispatcher {
+    /**所属*/
+    owner: any;
+    debug: boolean;
+    private __current;
+    private __state;
+    private __states;
+    private __name;
+    constructor(owner: any, name: string);
+    Tick(dt: number): void;
+    /**
+     * 添加
+     * @param key
+     * @param v
+     */
+    AddState(key: number, v: IState): void;
+    /**
+     * 切换状态
+     * @param value
+     * @param data
+     * @returns
+     */
+    SwitchState(value: number, data?: any): void;
+    get state(): number;
+    get current(): IState;
+    Destroy(): void;
+}
+
 declare class AudioChannelImpl implements IAudioChannel {
     private __node;
     private __source;
@@ -1433,6 +1481,145 @@ declare class ResRequest {
     Destroy(): void;
 }
 
+declare enum FindPosition {
+    ShortSideFit = 0,
+    BottomLeft = 1,
+    ContactPoint = 2,
+    LongSideFit = 3,
+    AreaFit = 4
+}
+
+declare class Rect {
+    /**
+     * 起点 x 坐标
+     */
+    x: number;
+    /**
+     * 起点 y 坐标
+     */
+    y: number;
+    /**
+     * 宽度
+     */
+    width: number;
+    /**
+     * 高度
+     */
+    height: number;
+    /**
+     * 当前是否被旋转了
+     */
+    isRotated: boolean;
+    /**
+     * 自定义信息
+     */
+    info: any;
+    /**
+     * 克隆
+     */
+    Clone(): Rect;
+    /**
+     * 矩形是否在另一个矩形内部
+     * @param otherRect {Rect}
+     */
+    IsIn(otherRect: Rect): boolean;
+    get isEmpty(): boolean;
+}
+
+declare class MaxRectBinPack {
+    private containerHeight;
+    private containerWidth;
+    private allowRotate;
+    private freeRects;
+    private usedRects;
+    /**
+     * 构建方程
+     * @param width {number} 画板宽度
+     * @param height {number} 画板高度
+     * @param allowRotate {boolean} 允许旋转
+     */
+    constructor(width: number, height: number, allowRotate?: boolean);
+    /**
+     * 在线算法入口 插入矩形方法
+     * @param width {number}
+     * @param height {number}
+     * @param method {FindPosition}
+     */
+    Insert(width: number, height: number, method: FindPosition): Rect;
+    /**
+     * 占有率
+     * @returns
+     */
+    get occupancy(): number;
+    /**
+     * 擦除节点
+     * @param rect
+     */
+    EraseNoce(rect: Rect): void;
+    /**
+     *
+     * @param node
+     */
+    private PlaceRectangle;
+    private ScoreRectangle;
+    private FindPositionForNewNodeBottomLeft;
+    private FindPositionForNewNodeBestShortSideFit;
+    private FindPositionForNewNodeBestLongSideFit;
+    private FindPositionForNewNodeBestAreaFit;
+    private CommonIntervalLength;
+    private ContactPointScoreNode;
+    private FindPositionForNewNodeContactPoint;
+    private SplitFreeNode;
+    private PruneFreeList;
+}
+
+/**
+ * 可重复利用对象接口
+ */
+interface IRecyclable {
+    /**
+     * 重置到可复用状态
+     */
+    Reset(): void;
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+/**
+ * 对象池
+ */
+declare class Pool {
+    private static __pools;
+    /**
+     * 分配
+     * @param clazz
+     * @param maxCount
+     * @returns
+     */
+    static allocate<T extends IRecyclable>(clazz: {
+        new (): T;
+    }, maxCount?: number): T;
+    /**
+     * 回收
+     * @param value
+     */
+    static recycle(value: IRecyclable): void;
+    /**
+     * 回收多个对象
+     * @param list
+     */
+    static recycleList(list: Array<IRecyclable>): void;
+    /**
+     * 回收该类型的所有对象
+     * @param clazz
+     */
+    static recycleAll<T extends IRecyclable>(clazz: {
+        new (): T;
+    }): void;
+}
+
 declare class Res {
     static KEY: string;
     /**
@@ -1531,6 +1718,77 @@ declare class ResManager {
     static get resList(): Array<IResource>;
     private static __impl;
     private static get impl();
+}
+
+/**
+ * 服务接口
+ */
+interface IService {
+    /**
+     * 名称
+     */
+    name: string;
+    /**
+     * 初始化
+     * @param callback
+     */
+    Init(callback: (err: Error, result: IService) => void): void;
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+/**
+ *  服务基类
+ *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
+ *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
+ */
+declare class BaseService implements IService {
+    /**名称 */
+    name: string;
+    /**
+     * 依赖的配置表名称
+     */
+    protected $configs: Array<string>;
+    /**
+     * 依赖的资源
+     */
+    protected $assets: Array<ResURL>;
+    protected $assetRefs: Array<ResRef>;
+    protected __initCallback: (err: Error, result: IService) => void;
+    constructor();
+    Init(callback: (err: Error, result: IService) => void): void;
+    private __loadConfigs;
+    private __configLoaded;
+    private __loadAssets;
+    /**
+     * 依赖的配置与资源准备完毕
+     */
+    protected $configAndAssetReady(): void;
+    /**
+     * 初始化完成时调用
+     */
+    protected $initComplete(): void;
+    Destroy(): void;
+}
+
+declare class ServiceManager {
+    /**启动器 */
+    private static __starters;
+    /**
+     * 获取服务
+     * @param key
+     * @returns
+     */
+    static GetService<T extends IService>(value: {
+        new (): IService;
+    }): Promise<T>;
+    /**
+     * 卸载服务
+     * @param key
+     */
+    static Uninstall(value: IService): void;
 }
 
 interface ILocalStorage {
@@ -3527,7 +3785,7 @@ declare class Image extends Sprite {
 }
 
 interface Frame {
-    rect: Rect;
+    rect: Rect$1;
     addDelay: number;
     texture: SpriteFrame | null;
 }
@@ -3666,7 +3924,7 @@ declare class PackageItem {
     asset?: Asset;
     highResolution?: Array<string>;
     branches?: Array<string>;
-    scale9Grid?: Rect;
+    scale9Grid?: Rect$1;
     scaleByTile?: boolean;
     tileGridIndice?: number;
     smoothing?: boolean;
@@ -3738,7 +3996,7 @@ declare class GObject {
     protected _group: GGroup | null;
     protected _gears: GearBase[];
     protected _node: Node;
-    protected _dragBounds?: Rect;
+    protected _dragBounds?: Rect$1;
     sourceWidth: number;
     sourceHeight: number;
     initWidth: number;
@@ -3865,15 +4123,15 @@ declare class GObject {
     off(type: string, listener?: Function, target?: any): void;
     get draggable(): boolean;
     set draggable(value: boolean);
-    get dragBounds(): Rect;
-    set dragBounds(value: Rect);
+    get dragBounds(): Rect$1;
+    set dragBounds(value: Rect$1);
     startDrag(touchId?: number): void;
     stopDrag(): void;
     get dragging(): boolean;
     localToGlobal(ax?: number, ay?: number, result?: Vec2): Vec2;
     globalToLocal(ax?: number, ay?: number, result?: Vec2): Vec2;
-    localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect): Rect;
-    globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect): Rect;
+    localToGlobalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
+    globalToLocalRect(ax?: number, ay?: number, aw?: number, ah?: number, result?: Rect$1): Rect$1;
     handleControllerChanged(c: Controller): void;
     protected handleAnchorChanged(): void;
     handlePositionChanged(): void;
@@ -4958,4 +5216,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, ILoader, ILocalStorage, IRes, IResManager, IResource, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, ILoader, ILocalStorage, IRecyclable, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
