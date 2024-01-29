@@ -1,30 +1,73 @@
-import { Color, Node } from "cc";
-import { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl";
-import { TimerImpl } from "./drongo/timer/TimerImpl";
+import { BufferAsset, Color, Node } from "cc";
+import { ConfigManager } from "./drongo/configs/ConfigManager";
+import { GUIManager } from "./drongo/gui/GUIManager";
+import { LayerManager } from "./drongo/gui/core/layer/LayerManager";
+import { Layer } from "./drongo/gui/layer/Layer";
 import { Res } from "./drongo/res/Res";
+import { ResRef } from "./drongo/res/core/ResRef";
+import { ResURL, URL2Key } from "./drongo/res/core/ResURL";
 import { TickerManager } from "./drongo/ticker/TickerManager";
-import { Timer } from "./drongo/timer/Timer";
-import { Injector } from "./drongo/utils/Injector";
 import { GRoot } from "./fairygui/GRoot";
 
 
 export class Drongo {
 
-    /**
-     * UI资源AssetBundle
-     */
-    static UIBundle: string = "UI";
+    /**UI资源AssetBundle */
+    public static UIBundle: string = "UI";
+
+    /**UI遮罩颜色值 */
+    public static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
 
     /**
-     * UI遮罩颜色值
+     * 初始化
+     * @param guiconfig     UI配置
+     * @param layer         层级配置
+     * @param sheetConfig   配置表配置
+     * @param callback      回调
      */
-    static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
-
-    // static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
-
-    static Init(root: Node,cb: () => void): void {
+    static Init(root:Node,guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
         GRoot.create(root);
         
-        cb();
+        //路径转换
+        if (sheetConfig) {
+            ConfigManager.configPath = (sheet: string) => {
+                return { url: sheetConfig.preURL + sheet, type: BufferAsset, bundle: sheetConfig.bundle };
+            }
+        }
+        //创建层级
+        if (layer) {
+            if (layer.layers && layer.layers.length > 0) {
+                for (let index = 0; index < layer.layers.length; index++) {
+                    const layerKey = layer.layers[index];
+                    if (layer.fullScrene && layer.fullScrene.length > 0) {
+                        LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
+                    } else {
+                        LayerManager.AddLayer(layerKey, new Layer(layerKey))
+                    }
+                }
+            }
+        }
+
+        //加载guiconfig.json
+        Res.GetResRef(guiconfig, "Drongo").then(
+            (result: ResRef) => {
+                let list = result.content.json;
+                for (let index = 0; index < list.length; index++) {
+                    const element = list[index];
+                    GUIManager.Register(element);
+                }
+                callback();
+            }, (reason) => {
+                throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
+            }
+        )
+    }
+
+    /**
+     * 总心跳驱动接口
+     * @param dt 
+     */
+    static Tick(dt:number):void{
+        TickerManager.Tick(dt);
     }
 }

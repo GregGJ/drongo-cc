@@ -284,6 +284,93 @@ class ResURLUtils {
     }
 }
 
+class DebugerImpl {
+    __logs = new Dictionary();
+    __debuger = new Map();
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    Debug(key, isOpen) {
+        this.__debuger.set(key, isOpen);
+    }
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    GetLogs(type) {
+        if (type == undefined || type == null) {
+            type = "all";
+        }
+        if (this.__logs.Has(type)) {
+            return this.__logs.Get(type);
+        }
+        return null;
+    }
+    __save(type, logType, msg) {
+        let list;
+        if (!this.__logs.Has(type)) {
+            list = [];
+            this.__logs.Set(type, list);
+        }
+        else {
+            list = this.__logs.Get(type);
+        }
+        let data = "[" + type + "]" + logType + ":" + msg;
+        if (list.length >= Debuger.MaxCount) {
+            list.unshift(); //删除最顶上的那条
+        }
+        list.push(data);
+        //保存到all
+        if (!this.__logs.Has("all")) {
+            list = [];
+            this.__logs.Set("all", list);
+        }
+        else {
+            list = this.__logs.Get("all");
+        }
+        if (list.length >= Debuger.MaxCount) {
+            list.unshift(); //删除最顶上的那条
+        }
+        list.push(data);
+        return data;
+    }
+    Log(type, msg) {
+        let data = this.__save(type, "Log", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.log(data);
+        }
+    }
+    Err(type, msg) {
+        let data = this.__save(type, "Error", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.error(data);
+        }
+    }
+    Warn(type, msg) {
+        let data = this.__save(type, "Warn", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.warn(data);
+        }
+    }
+    Info(type, msg) {
+        let data = this.__save(type, "Info", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.info(data);
+        }
+    }
+}
+
 class Debuger {
     static KEY = "drongo.Debuger";
     /**
@@ -328,7 +415,7 @@ class Debuger {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入!");
+            this.__impl = new DebugerImpl();
         }
         return this.__impl;
     }
@@ -4687,93 +4774,6 @@ class List extends EventDispatcher {
      */
     get elements() {
         return this.__element;
-    }
-}
-
-class DebugerImpl {
-    __logs = new Dictionary();
-    __debuger = new Map();
-    /**
-     * 设置过滤
-     * @param key
-     * @param isOpen
-     */
-    Debug(key, isOpen) {
-        this.__debuger.set(key, isOpen);
-    }
-    /**
-     * 获取已保存的日志
-     * @param type
-     * @returns
-     */
-    GetLogs(type) {
-        if (type == undefined || type == null) {
-            type = "all";
-        }
-        if (this.__logs.Has(type)) {
-            return this.__logs.Get(type);
-        }
-        return null;
-    }
-    __save(type, logType, msg) {
-        let list;
-        if (!this.__logs.Has(type)) {
-            list = [];
-            this.__logs.Set(type, list);
-        }
-        else {
-            list = this.__logs.Get(type);
-        }
-        let data = "[" + type + "]" + logType + ":" + msg;
-        if (list.length >= Debuger.MaxCount) {
-            list.unshift(); //删除最顶上的那条
-        }
-        list.push(data);
-        //保存到all
-        if (!this.__logs.Has("all")) {
-            list = [];
-            this.__logs.Set("all", list);
-        }
-        else {
-            list = this.__logs.Get("all");
-        }
-        if (list.length >= Debuger.MaxCount) {
-            list.unshift(); //删除最顶上的那条
-        }
-        list.push(data);
-        return data;
-    }
-    Log(type, msg) {
-        let data = this.__save(type, "Log", msg);
-        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
-        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
-        if (isAll || isOpen) {
-            console.log(data);
-        }
-    }
-    Err(type, msg) {
-        let data = this.__save(type, "Error", msg);
-        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
-        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
-        if (isAll || isOpen) {
-            console.error(data);
-        }
-    }
-    Warn(type, msg) {
-        let data = this.__save(type, "Warn", msg);
-        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
-        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
-        if (isAll || isOpen) {
-            console.warn(data);
-        }
-    }
-    Info(type, msg) {
-        let data = this.__save(type, "Info", msg);
-        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
-        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
-        if (isAll || isOpen) {
-            console.info(data);
-        }
     }
 }
 
@@ -16745,18 +16745,57 @@ class RelationManager {
 }
 
 class Drongo {
-    /**
-     * UI资源AssetBundle
-     */
+    /**UI资源AssetBundle */
     static UIBundle = "UI";
-    /**
-     * UI遮罩颜色值
-     */
+    /**UI遮罩颜色值 */
     static MaskColor = new Color(0, 0, 0, 255 * 0.5);
-    // static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
-    static Init(root, cb) {
+    /**
+     * 初始化
+     * @param guiconfig     UI配置
+     * @param layer         层级配置
+     * @param sheetConfig   配置表配置
+     * @param callback      回调
+     */
+    static Init(root, guiconfig, layer, sheetConfig, callback) {
         GRoot.create(root);
-        cb();
+        //路径转换
+        if (sheetConfig) {
+            ConfigManager.configPath = (sheet) => {
+                return { url: sheetConfig.preURL + sheet, type: BufferAsset, bundle: sheetConfig.bundle };
+            };
+        }
+        //创建层级
+        if (layer) {
+            if (layer.layers && layer.layers.length > 0) {
+                for (let index = 0; index < layer.layers.length; index++) {
+                    const layerKey = layer.layers[index];
+                    if (layer.fullScrene && layer.fullScrene.length > 0) {
+                        LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
+                    }
+                    else {
+                        LayerManager.AddLayer(layerKey, new Layer(layerKey));
+                    }
+                }
+            }
+        }
+        //加载guiconfig.json
+        Res.GetResRef(guiconfig, "Drongo").then((result) => {
+            let list = result.content.json;
+            for (let index = 0; index < list.length; index++) {
+                const element = list[index];
+                GUIManager.Register(element);
+            }
+            callback();
+        }, (reason) => {
+            throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
+        });
+    }
+    /**
+     * 总心跳驱动接口
+     * @param dt
+     */
+    static Tick(dt) {
+        TickerManager.Tick(dt);
     }
 }
 

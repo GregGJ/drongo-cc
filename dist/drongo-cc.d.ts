@@ -5961,15 +5961,29 @@ declare class UBBParser {
 }
 
 declare class Drongo {
-    /**
-     * UI资源AssetBundle
-     */
+    /**UI资源AssetBundle */
     static UIBundle: string;
-    /**
-     * UI遮罩颜色值
-     */
+    /**UI遮罩颜色值 */
     static MaskColor: Color;
-    static Init(root: Node, cb: () => void): void;
+    /**
+     * 初始化
+     * @param guiconfig     UI配置
+     * @param layer         层级配置
+     * @param sheetConfig   配置表配置
+     * @param callback      回调
+     */
+    static Init(root: Node, guiconfig: ResURL, layer: {
+        layers: Array<string>;
+        fullScrene: Array<string>;
+    }, sheetConfig: {
+        preURL: string;
+        bundle: string;
+    }, callback: () => void): void;
+    /**
+     * 总心跳驱动接口
+     * @param dt
+     */
+    static Tick(dt: number): void;
 }
 
 export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILayerManager, ILoader, ILoadingView, ILocalStorage, IRecyclable, IRelationInfo, IRelationList, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, ListItemRenderer, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
