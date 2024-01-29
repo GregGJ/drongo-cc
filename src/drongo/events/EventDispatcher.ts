@@ -1,6 +1,7 @@
 
 
 
+import { Debuger } from "../debugers/Debuger";
 import { TickerManager } from "../ticker/TickerManager";
 import { IEventDispatcher } from "./IEventDispatcher";
 
@@ -44,7 +45,7 @@ export class EventDispatcher implements IEventDispatcher {
             infoList = this.keyMap.get(key)!;
             for (const iterator of infoList) {
                 if (iterator.target == caller && iterator.handler == handler) {
-                    console.error("重复添加同一个事件监听：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO,"重复添加同一个事件监听：" + key + " " + caller + " " + handler);
                     return;
                 }
             }
@@ -62,7 +63,7 @@ export class EventDispatcher implements IEventDispatcher {
             infoList = this.callerMap.get(caller)!;
             for (const iterator of infoList) {
                 if (iterator.key == key && iterator.handler == handler) {
-                    console.error("事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO,"事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
                 }
             }
         } else {

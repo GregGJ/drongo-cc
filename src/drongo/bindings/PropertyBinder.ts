@@ -1,3 +1,4 @@
+import { Debuger } from "../debugers/Debuger";
 import { TickerManager } from "../ticker/TickerManager";
 
 /**
@@ -245,7 +246,7 @@ export class PropertyBinder {
                 if (value == newValue) {
                     return;
                 }
-                // console.log("绑定数据改变：", value, newValue);
+                // Debuger.Log(Debuger.DRONGO,"绑定数据改变:value+"+ value+" newValue:"+newValue);
                 value = newValue;
                 self.__propertyChanged(key);
             },

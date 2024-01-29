@@ -1,6 +1,7 @@
 import { Asset, Node, Prefab, assetManager, instantiate, isValid } from "cc";
 import { IResource } from "../res/IResource";
 import { ResRef } from "../res/ResRef";
+import { Debuger } from "../debugers/Debuger";
 
 
 export class ResourceImpl implements IResource {
@@ -81,7 +82,7 @@ export class ResourceImpl implements IResource {
         if (this.__content instanceof Asset) {
             this.__content.decRef();
             if (this.__content.refCount <= 0) {
-                console.log("Res", "资源销毁=>" + this.key);
+                Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
                 assetManager.releaseAsset(this.__content);
             }
         }

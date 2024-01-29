@@ -17,9 +17,14 @@ export {IConfigManager} from "./drongo/configs/core/IConfigManager"
 export {BaseConfigAccessor} from "./drongo/configs/BaseConfigAccessor"
 export {ConfigManager} from "./drongo/configs/ConfigManager"
 
-//datas
+//containers
 export { Dictionary } from "./drongo/containers/Dictionary"
 export { List } from "./drongo/containers/List"
+
+//debugers
+export {Debuger} from "./drongo/debugers/Debuger"
+export {DebugerImpl} from "./drongo/debugers/DebugerImpl"
+export {IDebuger} from "./drongo/debugers/IDebuger"
 
 //events
 export { Event } from "./drongo/events/Event"
@@ -30,14 +35,14 @@ export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 export { GetClassName } from "./drongo/exports/GetClassName"
 
 //impls
-export { AudioChannelImpl } from "./drongo/impls/audios/AudioChannelImpl"
-export { AudioManagerImpl } from "./drongo/impls/audios/AudioManagerImpl"
+export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
+export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
 export { CCLoaderImpl } from "./drongo/impls/CCLoaderImpl"
 export { ResImpl } from "./drongo/impls/ResImpl"
 export { ResManagerImpl } from "./drongo/impls/ResManagerImpl"
 export { ResourceImpl } from "./drongo/impls/ResourceImpl"
-export { TickerManagerImpl } from "./drongo/impls/TickerManagerImpl"
-export { TimerImpl } from "./drongo/impls/TimerImpl"
+export { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl"
+export { TimerImpl } from "./drongo/timer/TimerImpl"
 
 //loaders
 export { Loader } from "./drongo/loaders/Loader"

@@ -284,6 +284,56 @@ class ResURLUtils {
     }
 }
 
+class Debuger {
+    static KEY = "drongo.Debuger";
+    /**
+     * 引擎
+     */
+    static DRONGO = "drongo";
+    /**
+     * 最大保存条数
+     */
+    static MaxCount = 1000;
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    static Debug(type, isOpen) {
+        this.impl.Debug(type, isOpen);
+    }
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    static GetLogs(type) {
+        return this.impl.GetLogs(type);
+    }
+    static Log(type, msg) {
+        this.impl.Log(type, msg);
+    }
+    static Err(type, msg) {
+        this.impl.Err(type, msg);
+    }
+    static Warn(type, msg) {
+        this.impl.Warn(type, msg);
+    }
+    static Info(type, msg) {
+        this.impl.Info(type, msg);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            throw new Error(this.KEY + "未注入!");
+        }
+        return this.__impl;
+    }
+}
+
 /**
  * 事件分发器(只有一对多的情况下去使用)
  */
@@ -316,7 +366,7 @@ class EventDispatcher {
             infoList = this.keyMap.get(key);
             for (const iterator of infoList) {
                 if (iterator.target == caller && iterator.handler == handler) {
-                    console.error("重复添加同一个事件监听：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO, "重复添加同一个事件监听：" + key + " " + caller + " " + handler);
                     return;
                 }
             }
@@ -334,7 +384,7 @@ class EventDispatcher {
             infoList = this.callerMap.get(caller);
             for (const iterator of infoList) {
                 if (iterator.key == key && iterator.handler == handler) {
-                    console.error("事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO, "事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
                 }
             }
         }
@@ -1404,7 +1454,7 @@ class ResourceImpl {
         if (this.__content instanceof Asset) {
             this.__content.decRef();
             if (this.__content.refCount <= 0) {
-                console.log("Res", "资源销毁=>" + this.key);
+                Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
                 assetManager.releaseAsset(this.__content);
             }
         }
@@ -1705,7 +1755,7 @@ class AudioChannelImpl {
                 this.__play();
             }
         }, (reason) => {
-            console.error(reason);
+            Debuger.Err(Debuger.DRONGO, reason);
             this.__isPlaying = false;
             this.__source.stop();
             return;
@@ -1774,7 +1824,7 @@ class AudioChannelImpl {
     }
     __clipLoaded(err, result) {
         if (err) {
-            console.error(err.message);
+            Debuger.Err(Debuger.DRONGO, err.message);
             this.__isPlaying = false;
             this.__source.stop();
             return;
@@ -1870,7 +1920,7 @@ class AudioChannelImpl {
         let value = passTime / this.__time;
         if (value >= 1) {
             //播放完成
-            // console.log("播放完成！"+this.__url);
+            // Debuger.Log(Debuger.DRONGO, "播放完成！" + this.__url);
             this.__source.stop();
             this.__isPlaying = false;
             if (this.__playedComplete) {
@@ -2697,7 +2747,7 @@ class PropertyBinder {
                 if (value == newValue) {
                     return;
                 }
-                // console.log("绑定数据改变：", value, newValue);
+                // Debuger.Log(Debuger.DRONGO,"绑定数据改变:value+"+ value+" newValue:"+newValue);
                 value = newValue;
                 self.__propertyChanged(key);
             },
@@ -4382,7 +4432,7 @@ class ConfigManagerImpl {
             //存取器
             accessor = this.__accessors.get(sheet);
             if (!accessor) {
-                console.warn("配置表：" + sheet + "未注册存取器！");
+                Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
                 continue;
             }
             accessor.Save(data);
@@ -4637,6 +4687,93 @@ class List extends EventDispatcher {
      */
     get elements() {
         return this.__element;
+    }
+}
+
+class DebugerImpl {
+    __logs = new Dictionary();
+    __debuger = new Map();
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    Debug(key, isOpen) {
+        this.__debuger.set(key, isOpen);
+    }
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    GetLogs(type) {
+        if (type == undefined || type == null) {
+            type = "all";
+        }
+        if (this.__logs.Has(type)) {
+            return this.__logs.Get(type);
+        }
+        return null;
+    }
+    __save(type, logType, msg) {
+        let list;
+        if (!this.__logs.Has(type)) {
+            list = [];
+            this.__logs.Set(type, list);
+        }
+        else {
+            list = this.__logs.Get(type);
+        }
+        let data = "[" + type + "]" + logType + ":" + msg;
+        if (list.length >= Debuger.MaxCount) {
+            list.unshift(); //删除最顶上的那条
+        }
+        list.push(data);
+        //保存到all
+        if (!this.__logs.Has("all")) {
+            list = [];
+            this.__logs.Set("all", list);
+        }
+        else {
+            list = this.__logs.Get("all");
+        }
+        if (list.length >= Debuger.MaxCount) {
+            list.unshift(); //删除最顶上的那条
+        }
+        list.push(data);
+        return data;
+    }
+    Log(type, msg) {
+        let data = this.__save(type, "Log", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.log(data);
+        }
+    }
+    Err(type, msg) {
+        let data = this.__save(type, "Error", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.error(data);
+        }
+    }
+    Warn(type, msg) {
+        let data = this.__save(type, "Warn", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.warn(data);
+        }
+    }
+    Info(type, msg) {
+        let data = this.__save(type, "Info", msg);
+        let isAll = this.__debuger.has("all") ? this.__debuger.get("all") : false;
+        let isOpen = this.__debuger.has(type) ? this.__debuger.get(type) : false;
+        if (isAll || isOpen) {
+            console.info(data);
+        }
     }
 }
 
@@ -22759,4 +22896,4 @@ class Drongo {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

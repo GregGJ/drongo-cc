@@ -2,7 +2,7 @@ import { Injector } from "../utils/Injector";
 import { ResURL } from "../res/ResURL";
 import { IAudioChannel } from "./IAudioChannel";
 import { IAudioManager } from "./IAudioManager";
-import { AudioManagerImpl } from "../impls/audios/AudioManagerImpl";
+import { AudioManagerImpl } from "./AudioManagerImpl";
 
 
 

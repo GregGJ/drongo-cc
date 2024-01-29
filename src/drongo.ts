@@ -1,7 +1,7 @@
 import { Color, Node } from "cc";
 import { ResImpl } from "./drongo/impls/ResImpl";
-import { TickerManagerImpl } from "./drongo/impls/TickerManagerImpl";
-import { TimerImpl } from "./drongo/impls/TimerImpl";
+import { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl";
+import { TimerImpl } from "./drongo/timer/TimerImpl";
 import { Res } from "./drongo/res/Res";
 import { TickerManager } from "./drongo/ticker/TickerManager";
 import { Timer } from "./drongo/timer/Timer";

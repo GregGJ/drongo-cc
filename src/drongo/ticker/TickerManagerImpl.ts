@@ -1,8 +1,8 @@
 
 
 
-import { ITicker } from "../ticker/ITicker";
-import { ITickerManager } from "../ticker/ITickerManager";
+import { ITicker } from "./ITicker";
+import { ITickerManager } from "./ITickerManager";
 
 
 export class TickerManagerImpl implements ITickerManager {

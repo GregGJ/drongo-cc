@@ -1,3 +1,4 @@
+import { Debuger } from "../debugers/Debuger";
 import { Res } from "../res/Res";
 import { ResURL } from "../res/ResURL";
 import { ByteArray } from "../utils/ByteArray";
@@ -125,7 +126,7 @@ export class ConfigManagerImpl implements IConfigManager {
             //存取器
             accessor = this.__accessors.get(sheet);
             if (!accessor) {
-                console.warn("配置表：" + sheet + "未注册存取器！");
+                Debuger.Warn(Debuger.DRONGO,"配置表：" + sheet + "未注册存取器！");
                 continue;
             }
             accessor.Save(data);

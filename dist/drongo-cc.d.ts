@@ -801,6 +801,97 @@ declare class List<T> extends EventDispatcher {
     get elements(): Array<T>;
 }
 
+declare class Debuger {
+    static KEY: string;
+    /**
+     * 引擎
+     */
+    static DRONGO: string;
+    /**
+     * 最大保存条数
+     */
+    static MaxCount: number;
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    static Debug(type: string, isOpen: boolean): void;
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    static GetLogs(type?: string): Array<string>;
+    static Log(type: string, msg: any): void;
+    static Err(type: string, msg: any): void;
+    static Warn(type: string, msg: any): void;
+    static Info(type: string, msg: any): void;
+    private static __impl;
+    private static get impl();
+}
+
+interface IDebuger {
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    Debug(key: string, isOpen: boolean): void;
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    GetLogs(type?: string): Array<string>;
+    /**
+     * 日志
+     * @param type
+     * @param msg
+     */
+    Log(type: string, msg: any): void;
+    /**
+     * 错误
+     * @param type
+     * @param msg
+     */
+    Err(type: string, msg: any): void;
+    /**
+     * 警告
+     * @param type
+     * @param msg
+     */
+    Warn(type: string, msg: any): void;
+    /**
+     * 信息
+     * @param type
+     * @param msg
+     */
+    Info(type: string, msg: any): void;
+}
+
+declare class DebugerImpl implements IDebuger {
+    private __logs;
+    private __debuger;
+    /**
+     * 设置过滤
+     * @param key
+     * @param isOpen
+     */
+    Debug(key: string, isOpen: boolean): void;
+    /**
+     * 获取已保存的日志
+     * @param type
+     * @returns
+     */
+    GetLogs(type?: string): Array<string>;
+    private __save;
+    Log(type: string, msg: any): void;
+    Err(type: string, msg: any): void;
+    Warn(type: string, msg: any): void;
+    Info(type: string, msg: any): void;
+}
+
 declare class Event$1 {
     static readonly START: string;
     static readonly PROGRESS: string;
@@ -4867,4 +4958,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, ILoader, ILocalStorage, IRes, IResManager, IResource, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, ILoader, ILocalStorage, IRes, IResManager, IResource, ITask, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, LocalStorage, LocalStorageImpl, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

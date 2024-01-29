@@ -1,8 +1,9 @@
 import { AudioSource, Node, director } from "cc";
-import { IAudioChannel } from "../../audios/IAudioChannel";
-import { ResURL, URL2Key } from "../../res/ResURL";
-import { ResRef } from "../../res/ResRef";
-import { Res } from "../../res/Res";
+import { IAudioChannel } from "./IAudioChannel";
+import { ResURL, URL2Key } from "../res/ResURL";
+import { ResRef } from "../res/ResRef";
+import { Res } from "../res/Res";
+import { Debuger } from "../debugers/Debuger";
 
 
 
@@ -112,7 +113,7 @@ export class AudioChannelImpl implements IAudioChannel {
                 }
             },
             (reason) => {
-                console.error(reason);
+                Debuger.Err(Debuger.DRONGO, reason);
                 this.__isPlaying = false;
                 this.__source.stop();
                 return;
@@ -184,7 +185,7 @@ export class AudioChannelImpl implements IAudioChannel {
 
     private __clipLoaded(err: Error | null, result: ResRef): void {
         if (err) {
-            console.error(err.message);
+            Debuger.Err(Debuger.DRONGO, err.message);
             this.__isPlaying = false;
             this.__source.stop();
             return;
@@ -280,7 +281,7 @@ export class AudioChannelImpl implements IAudioChannel {
         let value: number = passTime / this.__time;
         if (value >= 1) {
             //播放完成
-            // console.log("播放完成！"+this.__url);
+            // Debuger.Log(Debuger.DRONGO, "播放完成！" + this.__url);
             this.__source.stop();
             this.__isPlaying = false;
             if (this.__playedComplete) {

@@ -1,10 +1,10 @@
 import { director, find, Node } from "cc";
-import { IAudioManager } from "../../audios/IAudioManager";
-import { IAudioChannel } from "../../audios/IAudioChannel";
-import { TickerManager } from "../../ticker/TickerManager";
+import { IAudioManager } from "./IAudioManager";
+import { IAudioChannel } from "./IAudioChannel";
+import { TickerManager } from "../ticker/TickerManager";
 import { AudioChannelImpl } from "./AudioChannelImpl";
-import { ResURL, URL2Key } from "../../res/ResURL";
-import { AudioManager } from "../../audios/AudioManager";
+import { ResURL, URL2Key } from "../res/ResURL";
+import { AudioManager } from "./AudioManager";
 
 
 /**

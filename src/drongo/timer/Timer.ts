@@ -1,4 +1,4 @@
-import { TimerImpl } from "../impls/TimerImpl";
+import { TimerImpl } from "./TimerImpl";
 import { Injector } from "../utils/Injector";
 import { ITimer } from "./ITimer";
 

@@ -1,6 +1,6 @@
 import { ITicker } from "../ticker/ITicker";
 import { TickerManager } from "../ticker/TickerManager";
-import { ITimer } from "../timer/ITimer";
+import { ITimer } from "./ITimer";
 
 
 

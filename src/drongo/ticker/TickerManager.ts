@@ -1,4 +1,4 @@
-import { TickerManagerImpl } from "../impls/TickerManagerImpl";
+import { TickerManagerImpl } from "./TickerManagerImpl";
 import { Injector } from "../utils/Injector";
 import { ITicker } from "./ITicker";
 import { ITickerManager } from "./ITickerManager";
