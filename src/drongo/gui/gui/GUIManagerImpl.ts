@@ -55,7 +55,7 @@ export class GUIManagerImpl implements IGUIManager {
      * 获取界面的mediator
      * @param key 
      */
-    GetMediatorByKey(key: string): IGUIMediator | null {
+    GetMediatorByKey(key: string): IGUIMediator{
         if (!this.__instances.has(key)) {
             return null;
         }
