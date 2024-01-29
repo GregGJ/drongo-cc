@@ -66,7 +66,7 @@ export class ResRequest {
             this.progress(progress);
         }
     }
-    
+
     private checkComplete(): void {
         let loaded: number = this.getLoaded();
         let progress: number = loaded / this.urls.length;
@@ -76,6 +76,7 @@ export class ResRequest {
         //完成
         if (progress == 1 && this.cb != null) {
             this.cb(null);
+            this.Destroy();
         }
     }
 

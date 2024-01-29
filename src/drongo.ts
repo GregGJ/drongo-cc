@@ -25,13 +25,7 @@ export class Drongo {
 
     static Init(root: Node,cb: () => void): void {
         GRoot.create(root);
-        //ticker
-        Injector.Inject(TickerManager.KEY, TickerManagerImpl);
-        //timer
-        Injector.Inject(Timer.KEY, TimerImpl);
-        //res
-        Injector.Inject(Res.KEY, ResImpl);
-
+        
         cb();
     }
 }

@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, gfx, RenderComponent, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -37,6 +37,72 @@ class Injector {
         instance = new clazz();
         this.__instanceMap.set(customKey, instance);
         return instance;
+    }
+}
+
+class TickerManagerImpl {
+    __tickerList = [];
+    __nextFrameCallBacks = [];
+    Tick(dt) {
+        let handler;
+        while (this.__nextFrameCallBacks.length) {
+            handler = this.__nextFrameCallBacks.shift();
+            handler.callBack.apply(handler.caller);
+        }
+        for (let index = 0; index < this.__tickerList.length; index++) {
+            const element = this.__tickerList[index];
+            element.Tick(dt);
+        }
+    }
+    AddTicker(value) {
+        let index = this.__tickerList.indexOf(value);
+        if (index >= 0) {
+            throw new Error("Ticker 重复添加！");
+        }
+        this.__tickerList.push(value);
+    }
+    RemoveTicker(value) {
+        let index = this.__tickerList.indexOf(value);
+        if (index < 0) {
+            throw new Error("找不到要删除的Tick！");
+        }
+        this.__tickerList.splice(index, 1);
+    }
+    CallNextFrame(value, caller) {
+        for (let index = 0; index < this.__nextFrameCallBacks.length; index++) {
+            const element = this.__nextFrameCallBacks[index];
+            //重复
+            if (element.Equal(value, caller)) {
+                return;
+            }
+        }
+        this.__nextFrameCallBacks.push(new NextFrameHandler(value, caller));
+    }
+    ClearNextFrame(value, caller) {
+        for (let index = 0; index < this.__nextFrameCallBacks.length; index++) {
+            const element = this.__nextFrameCallBacks[index];
+            //删除
+            if (element.Equal(value, caller)) {
+                this.__nextFrameCallBacks.splice(index, 1);
+            }
+        }
+    }
+}
+class NextFrameHandler {
+    callBack;
+    caller;
+    constructor(callBack, caller) {
+        this.callBack = callBack;
+        this.caller = caller;
+    }
+    Equal(callBack, caller) {
+        if (this.caller !== caller) {
+            return false;
+        }
+        if (this.callBack !== callBack) {
+            return false;
+        }
+        return true;
     }
 }
 
@@ -87,9 +153,134 @@ class TickerManager {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入!");
+            this.__impl = new TickerManagerImpl();
         }
         return this.__impl;
+    }
+}
+
+/**
+ * 获取类名
+ * @param clazz
+ * @returns
+ */
+function GetClassName(clazz) {
+    let className;
+    if (typeof clazz != "string") {
+        className = clazz.toString();
+        className = className.replace("function ", "");
+        let index = className.indexOf("()");
+        if (index < 0) {
+            throw new Error("获取类型名称错误：" + className);
+        }
+        className = className.substring(0, index);
+    }
+    else {
+        className = clazz;
+    }
+    return className;
+}
+
+/**
+ * 资源地址转唯一KEY
+ * @param url
+ * @returns
+ */
+function URL2Key(url) {
+    return ResURLUtils.URL2Key(url);
+}
+/**
+ * 唯一key转URL
+ * @param key
+ * @returns
+ */
+function Key2URL(key) {
+    return ResURLUtils.Key2URL(key);
+}
+/**
+ * 获取全路径
+ * @param url
+ * @returns
+ */
+function FullURL(url) {
+    if (typeof url == "string") {
+        return url;
+    }
+    if (url.type == Texture2D) {
+        return url.url + "/texture";
+    }
+    if (url.type == SpriteFrame) {
+        return url.url + "/spriteFrame";
+    }
+    return url.url;
+}
+class ResURLUtils {
+    static __assetTypes = new Map();
+    static getAssetType(key) {
+        if (!this.__assetTypes.has(key)) {
+            throw new Error("未找到对应资源类型：" + key);
+        }
+        return this.__assetTypes.get(key);
+    }
+    /**
+     * 获取全路径
+     * @param url
+     * @returns
+     */
+    static _getURL(key) {
+        let len = key.length;
+        let end = len - 8;
+        //texture
+        let t = key.substring(end);
+        if (t === "/texture") {
+            return key.substring(0, end);
+        }
+        //spriteFrame
+        end = len - 12;
+        t = key.substring(end);
+        if (t === "/spriteFrame") {
+            return key.substring(0, end);
+        }
+        return key;
+    }
+    /**
+     * 唯一key转URL
+     * @param key
+     * @returns
+     */
+    static Key2URL(key) {
+        if (key.indexOf("|")) {
+            let arr = key.split("|");
+            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
+        }
+        return key;
+    }
+    /**
+     * 资源地址转唯一KEY
+     * @param url
+     * @returns
+     */
+    static URL2Key(url) {
+        if (url == null || url == undefined) {
+            return "";
+        }
+        if (typeof url == "string") {
+            return url;
+        }
+        if (url.type == SpriteFrame) {
+            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+        }
+        if (url.type == Texture2D) {
+            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+        }
+        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+    }
+    static getAndSaveClassName(clazz) {
+        let className = GetClassName(clazz);
+        if (!this.__assetTypes.has(className)) {
+            this.__assetTypes.set(className, clazz);
+        }
+        return className;
     }
 }
 
@@ -511,299 +702,25 @@ class Dictionary extends EventDispatcher {
     }
 }
 
-/**
- * 列表
- */
-class List extends EventDispatcher {
-    __element;
-    /**
-     * 是否保证元素的唯一性
-     */
-    __only = false;
-    /**
-     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
-     */
-    count = 0;
-    constructor(only = true) {
-        super();
-        this.__only = only;
-        this.__element = [];
+class TimerImpl {
+    __lastTime = 0;
+    constructor() {
+        this.Reset();
+        TickerManager.AddTicker(this);
     }
-    /**
-     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
-     */
-    Push(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
-            }
-        }
-        this.__element.push(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
-        }
-        return true;
+    Reset() {
+        //当前时间转秒
+        this.__lastTime = Date.now() / 1000;
     }
-    /**
-     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
-     * @returns
-     */
-    Unshift(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
-            }
-        }
-        this.__element.unshift(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
-        }
-        return true;
+    Tick(dt) {
+        this.__lastTime += dt;
     }
-    /**
-     * 获取并删除最后一个元素
-     * @returns
-     */
-    Pop() {
-        if (this.__element.length > 0) {
-            const result = this.__element.pop();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
-            }
-            return result;
-        }
-        return null;
+    get currentTime() {
+        return this.__lastTime;
     }
-    /**
-     * 获取并删除第一个元素
-     * @returns
-     */
-    Shift() {
-        if (this.__element.length > 0) {
-            const result = this.__element.shift();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
-            }
-            return result;
-        }
-        return null;
-    }
-    /**
-     * 删除指定索引的元素
-     * @param index
-     */
-    RemoveAt(index) {
-        if (index >= this.__element.length) {
-            throw new Error("删除索引超出范围！");
-        }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
-        }
-        return result;
-    }
-    /**
-     * 删除元素
-     * @param value
-     */
-    Remove(value) {
-        let index = this.__element.indexOf(value);
-        if (index < 0) {
-            throw new Error("要删除的内容不在列表中！" + value);
-        }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
-        }
-    }
-    /**
-     * 移除所有元素
-     */
-    Clear() {
-        this.count = 0;
-        this.__element.length = 0;
-        if (this.HasEvent(Event.CLEAR)) {
-            this.Emit(Event.CLEAR);
-        }
-    }
-    /**
-     * 判断是否包含
-     * @param value
-     * @returns
-     */
-    Has(value) {
-        return this.Find(value) >= 0;
-    }
-    /**
-     * 查找元素下标
-     * @param value
-     * @returns
-     */
-    Find(value) {
-        return this.__element.indexOf(value);
-    }
-    /**
-     * 查找元素下标
-     * @param predicate
-     * @returns
-     */
-    FindIndex(predicate) {
-        let index = this.__element.findIndex(predicate);
-        return index;
-    }
-    /**
-     * 获取指定元素
-     * @param index
-     * @returns
-     */
-    Get(index) {
-        if (index >= this.__element.length) {
-            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
-        }
-        return this.__element[index];
-    }
-    /**
-     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
-     */
-    get elements() {
-        return this.__element;
-    }
-}
-
-/**
- * 获取类名
- * @param clazz
- * @returns
- */
-function GetClassName(clazz) {
-    let className;
-    if (typeof clazz != "string") {
-        className = clazz.toString();
-        className = className.replace("function ", "");
-        let index = className.indexOf("()");
-        if (index < 0) {
-            throw new Error("获取类型名称错误：" + className);
-        }
-        className = className.substring(0, index);
-    }
-    else {
-        className = clazz;
-    }
-    return className;
-}
-
-/**
- * 资源地址转唯一KEY
- * @param url
- * @returns
- */
-function URL2Key(url) {
-    return ResURLUtils.URL2Key(url);
-}
-/**
- * 唯一key转URL
- * @param key
- * @returns
- */
-function Key2URL(key) {
-    return ResURLUtils.Key2URL(key);
-}
-/**
- * 获取全路径
- * @param url
- * @returns
- */
-function FullURL(url) {
-    if (typeof url == "string") {
-        return url;
-    }
-    if (url.type == Texture2D) {
-        return url.url + "/texture";
-    }
-    if (url.type == SpriteFrame) {
-        return url.url + "/spriteFrame";
-    }
-    return url.url;
-}
-class ResURLUtils {
-    static __assetTypes = new Map();
-    static getAssetType(key) {
-        if (!this.__assetTypes.has(key)) {
-            throw new Error("未找到对应资源类型：" + key);
-        }
-        return this.__assetTypes.get(key);
-    }
-    /**
-     * 获取全路径
-     * @param url
-     * @returns
-     */
-    static _getURL(key) {
-        let len = key.length;
-        let end = len - 8;
-        //texture
-        let t = key.substring(end);
-        if (t === "/texture") {
-            return key.substring(0, end);
-        }
-        //spriteFrame
-        end = len - 12;
-        t = key.substring(end);
-        if (t === "/spriteFrame") {
-            return key.substring(0, end);
-        }
-        return key;
-    }
-    /**
-     * 唯一key转URL
-     * @param key
-     * @returns
-     */
-    static Key2URL(key) {
-        if (key.indexOf("|")) {
-            let arr = key.split("|");
-            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
-        }
-        return key;
-    }
-    /**
-     * 资源地址转唯一KEY
-     * @param url
-     * @returns
-     */
-    static URL2Key(url) {
-        if (url == null || url == undefined) {
-            return "";
-        }
-        if (typeof url == "string") {
-            return url;
-        }
-        if (url.type == SpriteFrame) {
-            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
-        }
-        if (url.type == Texture2D) {
-            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
-        }
-        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
-    }
-    static getAndSaveClassName(clazz) {
-        let className = GetClassName(clazz);
-        if (!this.__assetTypes.has(className)) {
-            this.__assetTypes.set(className, clazz);
-        }
-        return className;
+    get absTime() {
+        this.Reset();
+        return this.currentTime;
     }
 }
 
@@ -837,7 +754,7 @@ class Timer {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入！");
+            this.__impl = new TimerImpl();
         }
         return this.__impl;
     }
@@ -1052,144 +969,6 @@ class ResRef {
     }
 }
 
-class ResourceImpl {
-    /**
-     * 状态 0 正常 1待删除
-     */
-    state = 0;
-    key = "";
-    lastOpTime = 0;
-    /**
-     * @internal
-     */
-    __refs = [];
-    constructor() {
-    }
-    set content(value) {
-        this.__content = value;
-        if (this.__content instanceof Asset) {
-            //防止自动回收
-            this.__content.addRef();
-        }
-    }
-    __content = null;
-    get content() {
-        return this.__content;
-    }
-    AddRef(refKey) {
-        let rf = new ResRef();
-        rf.key = this.key;
-        rf.refKey = refKey;
-        if (this.content instanceof Asset) {
-            if (this.content instanceof Prefab) {
-                rf.content = instantiate(this.content);
-            }
-            else {
-                rf.content = this.content;
-            }
-            this.content.addRef();
-        }
-        else {
-            rf.content = this.content;
-        }
-        this.__refs.push(rf);
-        return rf;
-    }
-    RemoveRef(value) {
-        let index = this.__refs.indexOf(value);
-        if (index < 0) {
-            throw new Error("未找到需要删除的引用！");
-        }
-        if (this.content instanceof Asset) {
-            //预制体处理
-            if (this.content instanceof Prefab) {
-                let node = value.content;
-                if (isValid(node)) {
-                    node.destroy();
-                }
-            }
-            this.content.decRef();
-        }
-        this.__refs.splice(index, 1);
-        value.Destroy();
-    }
-    Destroy() {
-        if (this.refCount > 0 || this.refLength > 0) {
-            throw new Error("发现销毁资源时引用数量不为0");
-        }
-        //自身引用计数
-        if (this.__content instanceof Asset) {
-            this.__content.decRef();
-            if (this.__content.refCount <= 0) {
-                console.log("Res", "资源销毁=>" + this.key);
-                assetManager.releaseAsset(this.__content);
-            }
-        }
-        this.key = "";
-        this.__refs.length = 0;
-        this.__content = null;
-    }
-    /**
-     * 引用数量
-     */
-    get refCount() {
-        if (this.__content instanceof Asset) {
-            return this.__content.refCount - 1;
-        }
-        return this.__refs.length;
-    }
-    /**
-     * 引用列表长度
-     */
-    get refLength() {
-        return this.__refs.length;
-    }
-}
-
-/**
- * 加载器CC实现
- */
-class CCLoaderImpl extends EventDispatcher {
-    url;
-    constructor() {
-        super();
-    }
-    Load(url) {
-        this.url = url;
-        if (typeof url == "string") {
-            throw new Error("未实现！");
-        }
-        let bundle = assetManager.getBundle(url.bundle);
-        if (!bundle) {
-            let __this = this;
-            assetManager.loadBundle(url.bundle, (err, bundle) => {
-                if (err) {
-                    this.Emit(Event.ERROR, { url, err });
-                    return;
-                }
-                bundle.load(FullURL(url), url.type, (finished, total) => {
-                    const progress = finished / total;
-                    __this.Emit(Event.PROGRESS, { url, progress });
-                }, (err, asset) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, err);
-                        return;
-                    }
-                    const urlKey = URL2Key(url);
-                    let res = new ResourceImpl();
-                    res.key = urlKey;
-                    res.content = asset;
-                    ResManager.AddRes(res);
-                    __this.Emit(Event.COMPLETE, { url });
-                });
-            });
-        }
-    }
-    Reset() {
-        this.url = null;
-    }
-}
-
 class StringUtils {
     /**
      * 是否为空
@@ -1282,71 +1061,6 @@ class StringUtils {
         let suixx = url.substring(index + 1);
         let changeUrl = url.replace(suixx, suff);
         return changeUrl;
-    }
-}
-
-class Res {
-    static KEY = "drongo.Res";
-    /**
-     * 最大加载线程
-     */
-    static MAX_LOADER_THREAD = 5;
-    /**
-     * 设置资源加载器
-     * @param key
-     * @param loader
-     */
-    static SetResLoader(key, loader) {
-        this.impl.SetResLoader(key, loader);
-    }
-    /**
-     * 获取资源加载器
-     * @param key
-     * @returns
-     */
-    static GetResLoader(key) {
-        return this.impl.GetResLoader(key);
-    }
-    /**
-     * 获取资源
-     * @param url
-     * @param refKey
-     * @param cb
-     * @param progress
-     */
-    static GetResRef(url, refKey, progress) {
-        return this.impl.GetResRef(url, refKey, progress);
-    }
-    /**
-     * 获取资源列表
-     * @param url
-     * @param refKey
-     * @param cb
-     * @param progress
-     */
-    static GetResRefList(url, refKey, progress) {
-        return this.impl.GetResRefList(url, refKey, progress);
-    }
-    /**
-     * 获取资源列表并放入字典中
-     * @param url
-     * @param refKey
-     * @param result
-     * @param cb
-     * @param progress
-     */
-    static GetResRefMap(url, refKey, result, progress) {
-        return this.impl.GetResRefMap(url, refKey, result, progress);
-    }
-    static __impl;
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入！");
-        }
-        return this.__impl;
     }
 }
 
@@ -1499,6 +1213,7 @@ class ResRequest {
         //完成
         if (progress == 1 && this.cb != null) {
             this.cb(null);
+            this.Destroy();
         }
     }
     getLoaded() {
@@ -1613,6 +1328,144 @@ class Loader {
     }
 }
 
+class ResourceImpl {
+    /**
+     * 状态 0 正常 1待删除
+     */
+    state = 0;
+    key = "";
+    lastOpTime = 0;
+    /**
+     * @internal
+     */
+    __refs = [];
+    constructor() {
+    }
+    set content(value) {
+        this.__content = value;
+        if (this.__content instanceof Asset) {
+            //防止自动回收
+            this.__content.addRef();
+        }
+    }
+    __content = null;
+    get content() {
+        return this.__content;
+    }
+    AddRef(refKey) {
+        let rf = new ResRef();
+        rf.key = this.key;
+        rf.refKey = refKey;
+        if (this.content instanceof Asset) {
+            if (this.content instanceof Prefab) {
+                rf.content = instantiate(this.content);
+            }
+            else {
+                rf.content = this.content;
+            }
+            this.content.addRef();
+        }
+        else {
+            rf.content = this.content;
+        }
+        this.__refs.push(rf);
+        return rf;
+    }
+    RemoveRef(value) {
+        let index = this.__refs.indexOf(value);
+        if (index < 0) {
+            throw new Error("未找到需要删除的引用！");
+        }
+        if (this.content instanceof Asset) {
+            //预制体处理
+            if (this.content instanceof Prefab) {
+                let node = value.content;
+                if (isValid(node)) {
+                    node.destroy();
+                }
+            }
+            this.content.decRef();
+        }
+        this.__refs.splice(index, 1);
+        value.Destroy();
+    }
+    Destroy() {
+        if (this.refCount > 0 || this.refLength > 0) {
+            throw new Error("发现销毁资源时引用数量不为0");
+        }
+        //自身引用计数
+        if (this.__content instanceof Asset) {
+            this.__content.decRef();
+            if (this.__content.refCount <= 0) {
+                console.log("Res", "资源销毁=>" + this.key);
+                assetManager.releaseAsset(this.__content);
+            }
+        }
+        this.key = "";
+        this.__refs.length = 0;
+        this.__content = null;
+    }
+    /**
+     * 引用数量
+     */
+    get refCount() {
+        if (this.__content instanceof Asset) {
+            return this.__content.refCount - 1;
+        }
+        return this.__refs.length;
+    }
+    /**
+     * 引用列表长度
+     */
+    get refLength() {
+        return this.__refs.length;
+    }
+}
+
+/**
+ * 加载器CC实现
+ */
+class CCLoaderImpl extends EventDispatcher {
+    url;
+    constructor() {
+        super();
+    }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现！");
+        }
+        let bundle = assetManager.getBundle(url.bundle);
+        if (!bundle) {
+            let __this = this;
+            assetManager.loadBundle(url.bundle, (err, bundle) => {
+                if (err) {
+                    this.Emit(Event.ERROR, { url, err });
+                    return;
+                }
+                bundle.load(FullURL(url), url.type, (finished, total) => {
+                    const progress = finished / total;
+                    __this.Emit(Event.PROGRESS, { url, progress });
+                }, (err, asset) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, err);
+                        return;
+                    }
+                    const urlKey = URL2Key(url);
+                    let res = new ResourceImpl();
+                    res.key = urlKey;
+                    res.content = asset;
+                    ResManager.AddRes(res);
+                    __this.Emit(Event.COMPLETE, { url });
+                });
+            });
+        }
+    }
+    Reset() {
+        this.url = null;
+    }
+}
+
 class ResImpl {
     loaderClass;
     constructor() {
@@ -1688,91 +1541,900 @@ class ResImpl {
     }
 }
 
-class TickerManagerImpl {
-    __tickerList = [];
-    __nextFrameCallBacks = [];
-    Tick(dt) {
-        let handler;
-        while (this.__nextFrameCallBacks.length) {
-            handler = this.__nextFrameCallBacks.shift();
-            handler.callBack.apply(handler.caller);
-        }
-        for (let index = 0; index < this.__tickerList.length; index++) {
-            const element = this.__tickerList[index];
-            element.Tick(dt);
-        }
+class Res {
+    static KEY = "drongo.Res";
+    /**
+     * 最大加载线程
+     */
+    static MAX_LOADER_THREAD = 5;
+    /**
+     * 设置资源加载器
+     * @param key
+     * @param loader
+     */
+    static SetResLoader(key, loader) {
+        this.impl.SetResLoader(key, loader);
     }
-    AddTicker(value) {
-        let index = this.__tickerList.indexOf(value);
-        if (index >= 0) {
-            throw new Error("Ticker 重复添加！");
-        }
-        this.__tickerList.push(value);
+    /**
+     * 获取资源加载器
+     * @param key
+     * @returns
+     */
+    static GetResLoader(key) {
+        return this.impl.GetResLoader(key);
     }
-    RemoveTicker(value) {
-        let index = this.__tickerList.indexOf(value);
-        if (index < 0) {
-            throw new Error("找不到要删除的Tick！");
-        }
-        this.__tickerList.splice(index, 1);
+    /**
+     * 获取资源
+     * @param url
+     * @param refKey
+     * @param cb
+     * @param progress
+     */
+    static GetResRef(url, refKey, progress) {
+        return this.impl.GetResRef(url, refKey, progress);
     }
-    CallNextFrame(value, caller) {
-        for (let index = 0; index < this.__nextFrameCallBacks.length; index++) {
-            const element = this.__nextFrameCallBacks[index];
-            //重复
-            if (element.Equal(value, caller)) {
-                return;
-            }
-        }
-        this.__nextFrameCallBacks.push(new NextFrameHandler(value, caller));
+    /**
+     * 获取资源列表
+     * @param url
+     * @param refKey
+     * @param cb
+     * @param progress
+     */
+    static GetResRefList(url, refKey, progress) {
+        return this.impl.GetResRefList(url, refKey, progress);
     }
-    ClearNextFrame(value, caller) {
-        for (let index = 0; index < this.__nextFrameCallBacks.length; index++) {
-            const element = this.__nextFrameCallBacks[index];
-            //删除
-            if (element.Equal(value, caller)) {
-                this.__nextFrameCallBacks.splice(index, 1);
-            }
-        }
+    /**
+     * 获取资源列表并放入字典中
+     * @param url
+     * @param refKey
+     * @param result
+     * @param cb
+     * @param progress
+     */
+    static GetResRefMap(url, refKey, result, progress) {
+        return this.impl.GetResRefMap(url, refKey, result, progress);
     }
-}
-class NextFrameHandler {
-    callBack;
-    caller;
-    constructor(callBack, caller) {
-        this.callBack = callBack;
-        this.caller = caller;
-    }
-    Equal(callBack, caller) {
-        if (this.caller !== caller) {
-            return false;
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
         }
-        if (this.callBack !== callBack) {
-            return false;
+        if (this.__impl == null) {
+            this.__impl = new ResImpl();
         }
-        return true;
+        return this.__impl;
     }
 }
 
-class TimerImpl {
-    __lastTime = 0;
-    constructor() {
-        this.Reset();
-        TickerManager.AddTicker(this);
+class AudioChannelImpl {
+    __node;
+    __source;
+    __isPlaying;
+    __url;
+    __volume;
+    __speed;
+    __loop;
+    __startTime;
+    __time;
+    __fadeData;
+    __paused;
+    __pauseTime;
+    __playedComplete;
+    __ref;
+    __mute;
+    volume;
+    constructor(node, source) {
+        if (source == null) {
+            source = node.addComponent(AudioSource);
+        }
+        this.__node = node;
+        this.__source = source;
     }
-    Reset() {
-        //当前时间转秒
-        this.__lastTime = Date.now() / 1000;
+    get url() {
+        return this.__url;
+    }
+    get mute() {
+        return this.__mute;
+    }
+    set mute(value) {
+        if (this.__mute == value) {
+            return;
+        }
+        this.__mute = value;
+        if (this.__mute) {
+            //记录下来
+            this.__volume = this.__source.volume;
+            this.__source.volume = 0;
+        }
+        else {
+            //根据记录设置
+            this.__source.volume = this.__volume;
+        }
+    }
+    Play(url, playedComplete, volume, fade, loop = false, speed = 1) {
+        this.__reset();
+        this.__url = url;
+        this.__playedComplete = playedComplete;
+        this.__isPlaying = true;
+        this.__speed = speed;
+        this.__loop = loop;
+        if (fade) {
+            if (fade.time <= 0) {
+                if (this.mute) {
+                    this.__volume = volume;
+                }
+                else {
+                    this.__source.volume = volume;
+                }
+            }
+            if (this.__fadeData == null) {
+                this.__fadeData = new FadeData();
+            }
+            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startValue = fade.startVolume == undefined ? this.__source.volume : fade.startVolume;
+            this.__fadeData.time = fade.time;
+            this.__fadeData.endValue = volume;
+            this.__fadeData.complete = fade.complete;
+            this.__fadeData.completeStop = fade.completeStop;
+        }
+        else {
+            this.__volume = volume;
+        }
+        //未加载完成前，音频的结束时间为无穷大
+        this.__startTime = director.getTotalTime();
+        this.__time = Number.MAX_VALUE;
+        Res.GetResRef(this.url, "AudioChannel").then((value) => {
+            if (value instanceof ResRef) {
+                if (this.__isPlaying == false) {
+                    value.Dispose();
+                    return;
+                }
+                let resKey = URL2Key(this.url);
+                if (resKey != value.key) {
+                    value.Dispose();
+                    return;
+                }
+                this.__ref = value;
+                this.__play();
+            }
+        }, (reason) => {
+            console.error(reason);
+            this.__isPlaying = false;
+            this.__source.stop();
+            return;
+        });
+    }
+    Stop() {
+        if (this.__source.playing) {
+            this.__source.stop();
+        }
+        this.__isPlaying = false;
+        this.__reset();
+    }
+    get isPlaying() {
+        return this.__isPlaying || this.__source.playing;
+    }
+    /**
+     *
+     * @param time
+     * @param endVolume
+     * @param startVolume
+     * @param complete
+     * @param completeStop
+     * @returns
+     */
+    Fade(time, endVolume, startVolume, complete, completeStop) {
+        if (!this.isPlaying) {
+            return;
+        }
+        this.__paused = false;
+        //立刻
+        if (time <= 0) {
+            if (this.mute) {
+                this.__volume = endVolume;
+            }
+            else {
+                this.__source.volume = endVolume;
+            }
+            if (completeStop) {
+                this.Stop();
+                if (complete) {
+                    complete();
+                }
+            }
+        }
+        else {
+            if (this.__fadeData == null) {
+                this.__fadeData = new FadeData();
+            }
+            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startValue = startVolume == undefined ? this.__source.volume : startVolume;
+            this.__fadeData.time = time;
+            this.__fadeData.endValue = endVolume;
+            this.__fadeData.complete = complete;
+            this.__fadeData.completeStop = completeStop;
+        }
+    }
+    __reset() {
+        this.__url = null;
+        if (this.__ref) {
+            this.__ref.Dispose();
+            this.__ref = null;
+        }
+        this.__isPlaying = false;
+        this.__paused = false;
+        this.__fadeData = null;
+    }
+    __clipLoaded(err, result) {
+        if (err) {
+            console.error(err.message);
+            this.__isPlaying = false;
+            this.__source.stop();
+            return;
+        }
+        if (this.__isPlaying == false) {
+            result.Dispose();
+            return;
+        }
+        let resKey = URL2Key(this.url);
+        if (resKey != result.key) {
+            result.Dispose();
+            return;
+        }
+        this.__ref = result;
+        this.__play();
+    }
+    __play() {
+        this.__source.clip = this.__ref.content;
+        this.__source.loop = this.__loop;
+        this.__source.play();
+        let currentTime = director.getTotalTime();
+        if (this.__fadeData) {
+            this.__fadeData.startTime = currentTime;
+            if (this.mute) {
+                this.__volume = this.__fadeData.startValue;
+            }
+            else {
+                this.__source.volume = this.__fadeData.startValue;
+            }
+        }
+        else {
+            if (!this.mute) {
+                this.__source.volume = this.__volume;
+            }
+            else {
+                this.__source.volume = 0;
+            }
+        }
+        this.__startTime = director.getTotalTime();
+        this.__time = this.__source.duration * 1000;
+        // let audio = this.__source["audio"];
+        // if (audio) {
+        //     if ("_element" in audio) {
+        //         let element = audio["_element"];
+        //         if ("_currentSource" in element) {
+        //             let currentSource = element["_currentSource"];
+        //             if ("playbackRate" in currentSource) {
+        //                 let playbackRate = currentSource["playbackRate"];
+        //                 if ("value" in playbackRate) {
+        //                     playbackRate["value"] = this.__speed;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
     Tick(dt) {
-        this.__lastTime += dt;
+        if (this.__paused || this.__isPlaying == false || this.__url == null) {
+            return;
+        }
+        let currentTime = director.getTotalTime();
+        let passTime;
+        if (this.__fadeData) {
+            passTime = currentTime - this.__fadeData.startTime;
+            let value = passTime / this.__fadeData.time;
+            value = value > 1 ? 1 : value;
+            //音量设置
+            if (!this.mute) {
+                this.__source.volume = this.__fadeData.startValue + (this.__fadeData.endValue - this.__fadeData.startValue) * value;
+            }
+            else {
+                this.__volume = this.__fadeData.startValue + (this.__fadeData.endValue - this.__fadeData.startValue) * value;
+            }
+            if (value == 1) {
+                let complete = this.__fadeData.complete;
+                if (this.__fadeData.completeStop) {
+                    this.__source.stop();
+                    this.__isPlaying = false;
+                    this.__reset();
+                }
+                if (complete) {
+                    complete();
+                }
+                this.__fadeData = null;
+            }
+        }
+        //循环播放
+        if (this.__loop) {
+            return;
+        }
+        //检测是否结束
+        passTime = currentTime - this.__startTime;
+        let value = passTime / this.__time;
+        if (value >= 1) {
+            //播放完成
+            // console.log("播放完成！"+this.__url);
+            this.__source.stop();
+            this.__isPlaying = false;
+            if (this.__playedComplete) {
+                this.__playedComplete();
+            }
+            this.__reset();
+        }
     }
-    get currentTime() {
-        return this.__lastTime;
+    Resume() {
+        if (this.__paused == false) {
+            return;
+        }
+        let pTime = director.getTotalTime() - this.__pauseTime;
+        if (this.__fadeData) {
+            this.__fadeData.startTime += pTime;
+        }
+        this.__startTime += pTime;
+        this.__source.play();
+        this.__paused = false;
     }
-    get absTime() {
-        this.Reset();
-        return this.currentTime;
+    Pause() {
+        if (this.__paused) {
+            return;
+        }
+        this.__paused = true;
+        this.__pauseTime = director.getTotalTime();
+        this.__source.pause();
+    }
+    get curVolume() {
+        return this.__source.volume;
+    }
+}
+class FadeData {
+    time;
+    startTime;
+    startValue;
+    endValue;
+    complete;
+    completeStop;
+}
+
+/**
+ * 音频播放管理器
+ */
+class AudioManagerImpl {
+    __audioRoot;
+    __musicChannels;
+    __musicChannelIndex = 0;
+    __soundChannels;
+    constructor() {
+        this.__musicChannels = [];
+        this.__soundChannels = [];
+        TickerManager.AddTicker(this);
+        this.__audioRoot = find("AudioManager");
+        if (this.__audioRoot == null) {
+            this.__audioRoot = new Node("AudioManager");
+            director.getScene().addChild(this.__audioRoot);
+        }
+        //音乐用两个轨道来做淡入和淡出
+        let channel;
+        for (let index = 0; index < 2; index++) {
+            channel = new AudioChannelImpl(this.__audioRoot);
+            this.__musicChannels.push(channel);
+        }
+    }
+    /**
+     * 总音量
+     */
+    get volume() {
+        return this.__volume;
+    }
+    __volume = 1;
+    set volume(value) {
+        if (this.__volume == value) {
+            return;
+        }
+        this.__volume = value;
+        let channelVolume;
+        let channel;
+        for (let index = 0; index < this.__musicChannels.length; index++) {
+            channel = this.__musicChannels[index];
+            if (channel.isPlaying) {
+                channelVolume = channel.volume * this.__musicVolume * this.__volume;
+                channel.Fade(100, channelVolume, channel.curVolume);
+            }
+        }
+        for (let index = 0; index < this.__soundChannels.length; index++) {
+            channel = this.__soundChannels[index];
+            if (channel.isPlaying) {
+                channelVolume = channel.volume * this.__soundVolume * this.__volume;
+                channel.Fade(100, channelVolume, channel.curVolume);
+            }
+        }
+    }
+    /**
+     * 音乐总音量控制
+     */
+    set musicVolume(value) {
+        if (this.__musicVolume == value) {
+            return;
+        }
+        this.__musicVolume = value;
+        if (this.muteMusic) {
+            return;
+        }
+        let current = this.__musicChannels[this.__musicChannelIndex];
+        if (current && current.isPlaying) {
+            let channelVolume = current.volume * this.__musicVolume * this.__volume;
+            current.Fade(100, channelVolume, current.curVolume);
+        }
+    }
+    __musicVolume = 1;
+    get musicVolume() {
+        return this.__musicVolume;
+    }
+    /**
+     * 声音总音量
+     */
+    get soundVolume() {
+        return this.__soundVolume;
+    }
+    __soundVolume;
+    set soundVolume(value) {
+        if (this.__soundVolume == value) {
+            return;
+        }
+        this.__soundVolume = value;
+        let channel;
+        for (let index = 0; index < this.__soundChannels.length; index++) {
+            channel = this.__soundChannels[index];
+            if (channel.isPlaying) {
+                let channelVolume = channel.volume * this.__soundVolume * this.__volume;
+                channel.Fade(100, channelVolume, channel.curVolume);
+            }
+        }
+    }
+    set mute(value) {
+        if (this.__mute == value) {
+            return;
+        }
+        this.__mute = value;
+        this.__changedMutes();
+    }
+    __mute;
+    get mute() {
+        return this.__mute;
+    }
+    get muteMusic() {
+        return this.__muteMusic;
+    }
+    __muteMusic;
+    set muteMusic(value) {
+        if (this.__muteMusic == value) {
+            return;
+        }
+        this.__muteMusic = value;
+        this.__changedMutes();
+    }
+    get muteSound() {
+        return this.__muteSound;
+    }
+    __muteSound;
+    set muteSound(value) {
+        if (this.__muteSound == value) {
+            return;
+        }
+        this.__muteSound = value;
+        this.__changedMutes();
+    }
+    __changedMutes() {
+        for (let index = 0; index < this.__musicChannels.length; index++) {
+            const element = this.__musicChannels[index];
+            element.mute = this.muteMusic || this.mute;
+        }
+        for (let index = 0; index < this.__soundChannels.length; index++) {
+            const element = this.__soundChannels[index];
+            element.mute = this.muteSound || this.mute;
+        }
+    }
+    PlayMusic(url, volume, speed, loop) {
+        let playVolume;
+        if (this.muteMusic || this.mute) {
+            playVolume = 0;
+        }
+        else {
+            //音量=轨道音量*音乐音量*总音量
+            playVolume = volume * this.__musicVolume * this.__volume;
+        }
+        //正在播放的轨道
+        let current = this.__musicChannels[this.__musicChannelIndex];
+        if (current && current.isPlaying) {
+            if (URL2Key(current.url) == URL2Key(url)) {
+                //播放相同的音乐
+                return;
+            }
+        }
+        this.__musicChannelIndex++;
+        this.__musicChannelIndex = this.__musicChannelIndex % 2;
+        let last;
+        if (this.__musicChannelIndex == 0) {
+            current = this.__musicChannels[0];
+            last = this.__musicChannels[1];
+        }
+        else {
+            current = this.__musicChannels[1];
+            last = this.__musicChannels[0];
+        }
+        if (last.isPlaying) {
+            last.Fade(500, 0, undefined, null, true);
+        }
+        current.volume = volume;
+        current.Play(url, null, playVolume, { time: 500, startVolume: 0 }, true, speed);
+    }
+    StopMusic() {
+        let current = this.__musicChannels[this.__musicChannelIndex];
+        if (current && current.isPlaying) {
+            current.Stop();
+        }
+    }
+    PauseMusic() {
+        let current = this.__musicChannels[this.__musicChannelIndex];
+        if (current) {
+            current.Pause();
+        }
+    }
+    ResumeMusic() {
+        let current = this.__musicChannels[this.__musicChannelIndex];
+        if (current) {
+            current.Resume();
+        }
+    }
+    PlaySound(url, playedCallBack, volume, speed, loop) {
+        let playVolume;
+        if (this.muteSound || this.mute) {
+            playVolume = 0;
+        }
+        else {
+            playVolume = this.soundVolume * volume * this.__volume;
+        }
+        let channel = this.GetIdleChannel();
+        if (channel) {
+            channel.volume = volume;
+            channel.Play(url, playedCallBack, playVolume, null, loop, speed);
+        }
+    }
+    GetPlaying(url) {
+        for (let index = 0; index < this.__soundChannels.length; index++) {
+            const element = this.__soundChannels[index];
+            if (element.isPlaying && URL2Key(element.url) == URL2Key(url)) {
+                return element;
+            }
+        }
+        return null;
+    }
+    GetIdleChannel() {
+        let index;
+        let channel;
+        for (index = 0; index < this.__soundChannels.length; index++) {
+            channel = this.__soundChannels[index];
+            if (channel.isPlaying == false) {
+                return channel;
+            }
+        }
+        if (index < AudioManager.MAX_SOUND_CHANNEL_COUNT) {
+            channel = new AudioChannelImpl(this.__audioRoot);
+            this.__soundChannels.push(channel);
+            return channel;
+        }
+        return null;
+    }
+    Tick(dt) {
+        for (let index = 0; index < this.__musicChannels.length; index++) {
+            const element = this.__musicChannels[index];
+            if (element.isPlaying) {
+                element.Tick(dt);
+            }
+        }
+        for (let index = 0; index < this.__soundChannels.length; index++) {
+            const element = this.__soundChannels[index];
+            if (element.isPlaying) {
+                element.Tick(dt);
+            }
+        }
+    }
+}
+
+/**
+ * 音频管理器
+ */
+class AudioManager {
+    /**
+     * 全局唯一注入KEY
+     */
+    static KEY = "drongo.AudioManager";
+    /**
+     * 最大音频轨道数量
+     */
+    static MAX_SOUND_CHANNEL_COUNT = 30;
+    /**
+     * 总音量
+     */
+    static get volume() {
+        return this.impl.volume;
+    }
+    static set volume(value) {
+        this.impl.volume = value;
+    }
+    /**
+     * 音乐音量
+     */
+    static get musicVolume() {
+        return this.impl.musicVolume;
+    }
+    static set musicVolume(value) {
+        this.impl.musicVolume = value;
+    }
+    /**
+     * 声音音量
+     */
+    static get soundVolume() {
+        return this.impl.soundVolume;
+    }
+    static set soundVolume(value) {
+        this.impl.soundVolume = value;
+    }
+    /**
+     * 静音总开关
+     */
+    static get mute() {
+        return this.impl.mute;
+    }
+    static set mute(value) {
+        this.impl.mute = value;
+    }
+    /**
+     * 音乐静音开关
+     */
+    static get muteMusic() {
+        return this.impl.muteMusic;
+    }
+    static set muteMusic(value) {
+        this.impl.muteMusic = value;
+    }
+    /**
+     * 声音静音开关
+     */
+    static get muteSound() {
+        return this.impl.muteSound;
+    }
+    static set muteSound(value) {
+        this.impl.muteSound = value;
+    }
+    /**
+     * 播放音乐
+     * @param value
+     */
+    static PlayMusic(url, volume = 1, speed = 1, loop = false) {
+        this.impl.PlayMusic(url, volume, speed, loop);
+    }
+    /**
+     * 停止音乐
+     */
+    static StopMusic() {
+        this.impl.StopMusic();
+    }
+    /**
+     * 暂停
+     */
+    static PauseMusic() {
+        this.impl.PauseMusic();
+    }
+    /**
+     * 继续播放
+     */
+    static ResumeMusic() {
+        this.impl.ResumeMusic();
+    }
+    /**
+     * 播放声音
+     * @param value
+     */
+    static PlaySound(url, playedCallBack, volume, speed, loop) {
+        this.impl.PlaySound(url, playedCallBack, volume, speed, loop);
+    }
+    /**
+     * 获取正在播放指定音频的轨道
+     * @param url
+     */
+    static GetPlaying(url) {
+        return this.impl.GetPlaying(url);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new AudioManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 列表
+ */
+class List extends EventDispatcher {
+    __element;
+    /**
+     * 是否保证元素的唯一性
+     */
+    __only = false;
+    /**
+     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
+     */
+    count = 0;
+    constructor(only = true) {
+        super();
+        this.__only = only;
+        this.__element = [];
+    }
+    /**
+     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     */
+    Push(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.push(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     * @returns
+     */
+    Unshift(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.unshift(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 获取并删除最后一个元素
+     * @returns
+     */
+    Pop() {
+        if (this.__element.length > 0) {
+            const result = this.__element.pop();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 获取并删除第一个元素
+     * @returns
+     */
+    Shift() {
+        if (this.__element.length > 0) {
+            const result = this.__element.shift();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 删除指定索引的元素
+     * @param index
+     */
+    RemoveAt(index) {
+        if (index >= this.__element.length) {
+            throw new Error("删除索引超出范围！");
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+        return result;
+    }
+    /**
+     * 删除元素
+     * @param value
+     */
+    Remove(value) {
+        let index = this.__element.indexOf(value);
+        if (index < 0) {
+            throw new Error("要删除的内容不在列表中！" + value);
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+    }
+    /**
+     * 移除所有元素
+     */
+    Clear() {
+        this.count = 0;
+        this.__element.length = 0;
+        if (this.HasEvent(Event.CLEAR)) {
+            this.Emit(Event.CLEAR);
+        }
+    }
+    /**
+     * 判断是否包含
+     * @param value
+     * @returns
+     */
+    Has(value) {
+        return this.Find(value) >= 0;
+    }
+    /**
+     * 查找元素下标
+     * @param value
+     * @returns
+     */
+    Find(value) {
+        return this.__element.indexOf(value);
+    }
+    /**
+     * 查找元素下标
+     * @param predicate
+     * @returns
+     */
+    FindIndex(predicate) {
+        let index = this.__element.findIndex(predicate);
+        return index;
+    }
+    /**
+     * 获取指定元素
+     * @param index
+     * @returns
+     */
+    Get(index) {
+        if (index >= this.__element.length) {
+            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
+        }
+        return this.__element[index];
+    }
+    /**
+     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
+     */
+    get elements() {
+        return this.__element;
     }
 }
 
@@ -20780,14 +21442,8 @@ class Drongo {
     // static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
     static Init(root, cb) {
         GRoot.create(root);
-        //ticker
-        Injector.Inject(TickerManager.KEY, TickerManagerImpl);
-        //timer
-        Injector.Inject(Timer.KEY, TimerImpl);
-        //res
-        Injector.Inject(Res.KEY, ResImpl);
         cb();
     }
 }
 
-export { AsyncOperation, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

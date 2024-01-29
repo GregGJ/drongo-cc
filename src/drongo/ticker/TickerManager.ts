@@ -1,3 +1,4 @@
+import { TickerManagerImpl } from "../impls/TickerManagerImpl";
 import { Injector } from "../utils/Injector";
 import { ITicker } from "./ITicker";
 import { ITickerManager } from "./ITickerManager";
@@ -8,12 +9,12 @@ import { ITickerManager } from "./ITickerManager";
 export class TickerManager {
 
     static KEY: string = "drongo.TickerManager";
-    
+
     /**
      * 心跳驱动接口
      * @param dt 
      */
-    static Tick(dt:number):void{
+    static Tick(dt: number): void {
         this.impl.Tick(dt);
     }
     /**
@@ -55,7 +56,7 @@ export class TickerManager {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY+"未注入!");
+            this.__impl = new TickerManagerImpl();
         }
         return this.__impl;
     }

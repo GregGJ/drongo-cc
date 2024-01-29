@@ -1,4 +1,9 @@
 
+//audios
+export {AudioManager} from "./drongo/audios/AudioManager"
+export {IAudioChannel} from "./drongo/audios/IAudioChannel"
+export {IAudioGroup} from "./drongo/audios/IAudioGroup"
+export {IAudioManager} from "./drongo/audios/IAudioManager"
 
 //datas
 export { Dictionary } from "./drongo/containers/Dictionary"
@@ -13,6 +18,8 @@ export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 export { GetClassName } from "./drongo/exports/GetClassName"
 
 //impls
+export { AudioChannelImpl } from "./drongo/impls/audios/AudioChannelImpl"
+export { AudioManagerImpl } from "./drongo/impls/audios/AudioManagerImpl"
 export { CCLoaderImpl } from "./drongo/impls/CCLoaderImpl"
 export { ResImpl } from "./drongo/impls/ResImpl"
 export { ResManagerImpl } from "./drongo/impls/ResManagerImpl"
@@ -50,8 +57,6 @@ export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
 export { StringUtils } from "./drongo/utils/StringUtils"
-
-
 
 //fgui
 export { GGroup } from "./fairygui/GGroup";

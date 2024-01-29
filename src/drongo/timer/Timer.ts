@@ -1,3 +1,4 @@
+import { TimerImpl } from "../impls/TimerImpl";
 import { Injector } from "../utils/Injector";
 import { ITimer } from "./ITimer";
 
@@ -37,7 +38,7 @@ export class Timer {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY+"未注入！");
+            this.__impl=new TimerImpl();   
         }
         return this.__impl;
     }

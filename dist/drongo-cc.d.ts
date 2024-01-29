@@ -1,4 +1,221 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Node, AudioSource, Color, Vec2, Component, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+
+/**
+ * 资源地址
+ */
+type ResURL = string | {
+    url: string;
+    bundle: string;
+    type: string | any;
+};
+/**
+ * 资源地址转唯一KEY
+ * @param url
+ * @returns
+ */
+declare function URL2Key(url: ResURL): string;
+/**
+ * 唯一key转URL
+ * @param key
+ * @returns
+ */
+declare function Key2URL(key: string): ResURL;
+/**
+ * 获取全路径
+ * @param url
+ * @returns
+ */
+declare function FullURL(url: ResURL): string;
+
+/**
+ * 音频通道
+ */
+interface IAudioChannel {
+    readonly isPlaying: boolean;
+    readonly url: ResURL;
+    readonly curVolume: number;
+    /**
+     * 音量
+     */
+    volume: number;
+    mute: boolean;
+    /**
+     * 播放
+     * @param url
+     * @param playedComplete
+     * @param volume
+     * @param fade
+     * @param loop
+     * @param speed
+     */
+    Play(url: ResURL, playedComplete: Function, volume: number, fade: {
+        time: number;
+        startVolume: number;
+        complete?: Function;
+    }, loop: boolean, speed: number): void;
+    /**
+     * 停止
+     */
+    Stop(): void;
+    /**
+     *
+     * @param time
+     * @param startVolume
+     * @param endVolume
+     * @param complete
+     * @param completeStop  结束后是否停止播放
+     */
+    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
+    /**
+     * 心跳
+     * @param dt
+     */
+    Tick(dt: number): void;
+    /**
+     * 暂停
+     */
+    Pause(): void;
+    /**
+     * 继续播放
+     */
+    Resume(): void;
+}
+
+/**
+ * 音频管理器
+ */
+declare class AudioManager {
+    /**
+     * 全局唯一注入KEY
+     */
+    static KEY: string;
+    /**
+     * 最大音频轨道数量
+     */
+    static MAX_SOUND_CHANNEL_COUNT: number;
+    /**
+     * 总音量
+     */
+    static get volume(): number;
+    static set volume(value: number);
+    /**
+     * 音乐音量
+     */
+    static get musicVolume(): number;
+    static set musicVolume(value: number);
+    /**
+     * 声音音量
+     */
+    static get soundVolume(): number;
+    static set soundVolume(value: number);
+    /**
+     * 静音总开关
+     */
+    static get mute(): boolean;
+    static set mute(value: boolean);
+    /**
+     * 音乐静音开关
+     */
+    static get muteMusic(): boolean;
+    static set muteMusic(value: boolean);
+    /**
+     * 声音静音开关
+     */
+    static get muteSound(): boolean;
+    static set muteSound(value: boolean);
+    /**
+     * 播放音乐
+     * @param value
+     */
+    static PlayMusic(url: ResURL, volume?: number, speed?: number, loop?: boolean): void;
+    /**
+     * 停止音乐
+     */
+    static StopMusic(): void;
+    /**
+     * 暂停
+     */
+    static PauseMusic(): void;
+    /**
+     * 继续播放
+     */
+    static ResumeMusic(): void;
+    /**
+     * 播放声音
+     * @param value
+     */
+    static PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    /**
+     * 获取正在播放指定音频的轨道
+     * @param url
+     */
+    static GetPlaying(url: ResURL): IAudioChannel;
+    private static __impl;
+    private static get impl();
+}
+
+/**
+ * 音频组
+ */
+interface IAudioGroup {
+    key: number;
+    volume: number;
+    mute: boolean;
+    CalculateVolume(): void;
+    CalculateMute(): void;
+    Tick(dt: number): void;
+    Play(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    GetPlayingChannel(url: ResURL): IAudioChannel;
+    StopAll(): void;
+}
+
+/**
+ * 音频管理器
+ */
+interface IAudioManager {
+    /**
+     * 总音量
+     */
+    volume: number;
+    /**
+     * 音乐音量
+     */
+    musicVolume: number;
+    /**
+     * 声音音量
+     */
+    soundVolume: number;
+    mute: boolean;
+    muteMusic: boolean;
+    muteSound: boolean;
+    /**
+     * 播放音乐
+     * @param value
+     */
+    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
+    /**
+     * 停止音乐
+     */
+    StopMusic(): void;
+    /**
+     * 暂停
+     */
+    PauseMusic(): void;
+    /**
+     * 继续播放
+     */
+    ResumeMusic(): void;
+    /**
+     * 播放声音
+     * @param value
+     */
+    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    /**
+     * 获取正在播放指定音频的轨道
+     * @param url
+     */
+    GetPlaying(url: ResURL): IAudioChannel;
+}
 
 /**
  * 事件分发器
@@ -306,32 +523,100 @@ declare class Event$1 {
  */
 declare function GetClassName(clazz: any): string;
 
+declare class AudioChannelImpl implements IAudioChannel {
+    private __node;
+    private __source;
+    private __isPlaying;
+    private __url;
+    private __volume;
+    private __speed;
+    private __loop;
+    private __startTime;
+    private __time;
+    private __fadeData;
+    private __paused;
+    private __pauseTime;
+    private __playedComplete;
+    private __ref;
+    private __mute;
+    volume: number;
+    constructor(node: Node, source?: AudioSource);
+    get url(): ResURL;
+    get mute(): boolean;
+    set mute(value: boolean);
+    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
+        time: number;
+        startVolume?: number;
+        complete?: Function;
+        completeStop?: boolean;
+    }, loop?: boolean, speed?: number): void;
+    Stop(): void;
+    get isPlaying(): boolean;
+    /**
+     *
+     * @param time
+     * @param endVolume
+     * @param startVolume
+     * @param complete
+     * @param completeStop
+     * @returns
+     */
+    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
+    private __reset;
+    private __clipLoaded;
+    private __play;
+    Tick(dt: number): void;
+    Resume(): void;
+    Pause(): void;
+    get curVolume(): number;
+}
+
 /**
- * 资源地址
+ * 音频播放管理器
  */
-type ResURL = string | {
-    url: string;
-    bundle: string;
-    type: string | any;
-};
-/**
- * 资源地址转唯一KEY
- * @param url
- * @returns
- */
-declare function URL2Key(url: ResURL): string;
-/**
- * 唯一key转URL
- * @param key
- * @returns
- */
-declare function Key2URL(key: string): ResURL;
-/**
- * 获取全路径
- * @param url
- * @returns
- */
-declare function FullURL(url: ResURL): string;
+declare class AudioManagerImpl implements IAudioManager {
+    private __audioRoot;
+    private __musicChannels;
+    private __musicChannelIndex;
+    private __soundChannels;
+    constructor();
+    /**
+     * 总音量
+     */
+    get volume(): number;
+    private __volume;
+    set volume(value: number);
+    /**
+     * 音乐总音量控制
+     */
+    set musicVolume(value: number);
+    private __musicVolume;
+    get musicVolume(): number;
+    /**
+     * 声音总音量
+     */
+    get soundVolume(): number;
+    private __soundVolume;
+    set soundVolume(value: number);
+    set mute(value: boolean);
+    private __mute;
+    get mute(): boolean;
+    get muteMusic(): boolean;
+    private __muteMusic;
+    set muteMusic(value: boolean);
+    get muteSound(): boolean;
+    private __muteSound;
+    set muteSound(value: boolean);
+    private __changedMutes;
+    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
+    StopMusic(): void;
+    PauseMusic(): void;
+    ResumeMusic(): void;
+    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    GetPlaying(url: ResURL): IAudioChannel;
+    private GetIdleChannel;
+    Tick(dt: number): void;
+}
 
 interface ILoader extends IEventDispatcher {
     /**
@@ -4120,4 +4405,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

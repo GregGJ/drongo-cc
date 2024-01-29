@@ -3,6 +3,7 @@ import { IRes } from "./IRes";
 import { ResRef } from "./ResRef";
 import { ResURL } from "./ResURL";
 import { ILoader } from "./ILoader";
+import { ResImpl } from "../impls/ResImpl";
 
 
 
@@ -13,7 +14,7 @@ export class Res {
     /**
      * 最大加载线程
      */
-    static MAX_LOADER_THREAD:number=5;
+    static MAX_LOADER_THREAD: number = 5;
 
     /**
      * 设置资源加载器
@@ -73,7 +74,7 @@ export class Res {
             this.__impl = Injector.GetInject(this.KEY);
         }
         if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入！");
+            this.__impl = new ResImpl();
         }
         return this.__impl;
     }
