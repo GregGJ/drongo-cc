@@ -5,6 +5,18 @@ export {IAudioChannel} from "./drongo/audios/IAudioChannel"
 export {IAudioGroup} from "./drongo/audios/IAudioGroup"
 export {IAudioManager} from "./drongo/audios/IAudioManager"
 
+//bindings
+export {BinderUtils} from "./drongo/bindings/BinderUtils"
+export {BindingUtils} from "./drongo/bindings/BindingUtils"
+export {FunctionHook} from "./drongo/bindings/FunctionHook"
+export {PropertyBinder} from "./drongo/bindings/PropertyBinder"
+
+//configs
+export {IConfigAccessor} from "./drongo/configs/core/IConfigAccessor"
+export {IConfigManager} from "./drongo/configs/core/IConfigManager"
+export {BaseConfigAccessor} from "./drongo/configs/BaseConfigAccessor"
+export {ConfigManager} from "./drongo/configs/ConfigManager"
+
 //datas
 export { Dictionary } from "./drongo/containers/Dictionary"
 export { List } from "./drongo/containers/List"

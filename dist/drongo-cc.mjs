@@ -1179,7 +1179,14 @@ class ResRequest {
         this.__loadedMap.clear();
         for (let index = 0; index < this.urls.length; index++) {
             const url = this.urls[index];
-            LoaderQueue.single.Load(url);
+            const urlKey = URL2Key(url);
+            //如果已经加载完成
+            if (ResManager.HasRes(urlKey)) {
+                this.__loadedMap.set(urlKey, 1);
+            }
+            else {
+                LoaderQueue.single.Load(url);
+            }
         }
     }
     ChildComplete(resURL) {
@@ -2268,219 +2275,761 @@ class AudioManager {
 }
 
 /**
- * 列表
+ * 函数钩子信息
  */
-class List extends EventDispatcher {
-    __element;
+class FunctionHookInfo {
     /**
-     * 是否保证元素的唯一性
+     * 方法名
      */
-    __only = false;
+    functionName;
     /**
-     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
+     * 前置处理器
      */
-    count = 0;
-    constructor(only = true) {
-        super();
-        this.__only = only;
-        this.__element = [];
-    }
+    preHandler;
     /**
-     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
+     * 后置处理器
      */
-    Push(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
-            }
+    laterHandler;
+    Equal(functionName, preHandler, laterHandler) {
+        if (this.functionName != functionName) {
+            return false;
         }
-        this.__element.push(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
+        if (!preHandler.Equal(this.preHandler)) {
+            return false;
+        }
+        if (!laterHandler.Equal(this.laterHandler)) {
+            return false;
         }
         return true;
     }
+}
+class FunctionHook {
+    data;
     /**
-     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
-     * @returns
+     * 已添加好钩子的方法
      */
-    Unshift(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
+    __functions;
+    __preHandlerMap;
+    __laterHandlerMap;
+    __groupMap;
+    constructor(data) {
+        this.data = data;
+        this.__functions = [];
+        this.__preHandlerMap = new Map();
+        this.__laterHandlerMap = new Map();
+        this.__groupMap = new Map();
+    }
+    /**
+     * 添加钩子
+     * @param group
+     * @param functionName
+     * @param preHandlers
+     * @param laterHandlers
+     */
+    AddHook(group, functionName, preHandler, laterHandler) {
+        let groupList = this.__groupMap.get(group);
+        if (!groupList) {
+            groupList = [];
+            this.__groupMap.set(group, groupList);
+        }
+        for (let index = 0; index < groupList.length; index++) {
+            const element = groupList[index];
+            if (element.Equal(functionName, preHandler, laterHandler)) {
+                //重复添加
+                return;
             }
         }
-        this.__element.unshift(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
-        }
-        return true;
-    }
-    /**
-     * 获取并删除最后一个元素
-     * @returns
-     */
-    Pop() {
-        if (this.__element.length > 0) {
-            const result = this.__element.pop();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+        let info = new FunctionHookInfo();
+        info.functionName = functionName;
+        info.preHandler = preHandler;
+        info.laterHandler = laterHandler;
+        groupList.push(info);
+        //如果没有添加好钩子
+        if (this.__functions.indexOf(functionName) < 0) {
+            let oldFun = this.data[functionName];
+            if (!oldFun) {
+                throw new Error("方法不存在！");
             }
-            return result;
-        }
-        return null;
-    }
-    /**
-     * 获取并删除第一个元素
-     * @returns
-     */
-    Shift() {
-        if (this.__element.length > 0) {
-            const result = this.__element.shift();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+            let pres = this.__preHandlerMap.get(functionName);
+            if (!pres) {
+                pres = [];
+                this.__preHandlerMap.set(functionName, pres);
             }
-            return result;
+            let laters = this.__laterHandlerMap.get(functionName);
+            if (!laters) {
+                laters = [];
+                this.__laterHandlerMap.set(functionName, laters);
+            }
+            let newFun = function (...arg) {
+                //pre
+                if (pres && pres.length) {
+                    for (let index = 0; index < pres.length; index++) {
+                        const element = pres[index];
+                        element.Run(arg);
+                    }
+                }
+                //old
+                oldFun(arg);
+                //later
+                if (laters && laters.length) {
+                    for (let index = 0; index < laters.length; index++) {
+                        const element = laters[index];
+                        element.Run(arg);
+                    }
+                }
+            };
+            this.data[functionName] = newFun;
+            this.data["old_" + functionName] = oldFun;
+            this.__functions.push(functionName);
         }
-        return null;
-    }
-    /**
-     * 删除指定索引的元素
-     * @param index
-     */
-    RemoveAt(index) {
-        if (index >= this.__element.length) {
-            throw new Error("删除索引超出范围！");
+        let pres = this.__preHandlerMap.get(functionName);
+        if (!pres) {
+            pres = [];
+            this.__preHandlerMap.set(functionName, pres);
         }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (pres.indexOf(preHandler) < 0) {
+            pres.push(preHandler);
         }
-        return result;
-    }
-    /**
-     * 删除元素
-     * @param value
-     */
-    Remove(value) {
-        let index = this.__element.indexOf(value);
-        if (index < 0) {
-            throw new Error("要删除的内容不在列表中！" + value);
+        let laters = this.__laterHandlerMap.get(functionName);
+        if (!laters) {
+            laters = [];
+            this.__laterHandlerMap.set(functionName, laters);
         }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
-        }
-    }
-    /**
-     * 移除所有元素
-     */
-    Clear() {
-        this.count = 0;
-        this.__element.length = 0;
-        if (this.HasEvent(Event.CLEAR)) {
-            this.Emit(Event.CLEAR);
+        if (laters.indexOf(laterHandler) < 0) {
+            laters.push(laterHandler);
         }
     }
     /**
-     * 判断是否包含
-     * @param value
+     * 删除钩子
+     * @param group
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
      * @returns
      */
-    Has(value) {
-        return this.Find(value) >= 0;
-    }
-    /**
-     * 查找元素下标
-     * @param value
-     * @returns
-     */
-    Find(value) {
-        return this.__element.indexOf(value);
-    }
-    /**
-     * 查找元素下标
-     * @param predicate
-     * @returns
-     */
-    FindIndex(predicate) {
-        let index = this.__element.findIndex(predicate);
-        return index;
-    }
-    /**
-     * 获取指定元素
-     * @param index
-     * @returns
-     */
-    Get(index) {
-        if (index >= this.__element.length) {
-            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
+    RemoveHook(group, functionName, preHandler, laterHandler) {
+        let groupList = this.__groupMap.get(group);
+        if (!groupList) {
+            return;
         }
-        return this.__element[index];
-    }
-    /**
-     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
-     */
-    get elements() {
-        return this.__element;
+        let list;
+        let fIndex;
+        //编组删除
+        if (!functionName) {
+            for (let index = 0; index < groupList.length; index++) {
+                const element = groupList[index];
+                //pre
+                if (element.preHandler) {
+                    list = this.__preHandlerMap.get(element.functionName);
+                    fIndex = list.indexOf(element.preHandler);
+                    if (fIndex >= 0) {
+                        list.splice(fIndex, 1);
+                    }
+                    if (list.length == 0) {
+                        this.__preHandlerMap.delete(element.functionName);
+                    }
+                }
+                //later
+                if (element.laterHandler) {
+                    list = this.__laterHandlerMap.get(element.functionName);
+                    fIndex = list.indexOf(element.laterHandler);
+                    if (fIndex >= 0) {
+                        list.splice(fIndex, 1);
+                    }
+                    if (list.length == 0) {
+                        this.__laterHandlerMap.delete(element.functionName);
+                    }
+                }
+            }
+            groupList.length = 0;
+            this.__groupMap.delete(group);
+            return;
+        }
+        for (let index = 0; index < groupList.length; index++) {
+            const element = groupList[index];
+            if (element.Equal(functionName, preHandler, laterHandler)) {
+                //删除
+                groupList.splice(index, 1);
+                //pre
+                if (element.preHandler) {
+                    list = this.__preHandlerMap.get(functionName);
+                    fIndex = list.indexOf(element.preHandler);
+                    if (fIndex >= 0) {
+                        list.splice(fIndex, 1);
+                    }
+                }
+                //later
+                if (element.laterHandler) {
+                    list = this.__laterHandlerMap.get(functionName);
+                    fIndex = list.indexOf(element.laterHandler);
+                    if (fIndex >= 0) {
+                        list.splice(fIndex, 1);
+                    }
+                }
+                return;
+            }
+        }
     }
 }
 
 /**
- * bit位操作
+ * 绑定信息
  */
-class BitFlag {
-    __flags = 0;
-    __elements;
-    constructor() {
-        this.__elements = [];
-    }
-    Add(flag) {
-        this.__flags |= flag;
-        if (this.__elements.indexOf(flag) < 0) {
-            this.__elements.push(flag);
-        }
-    }
-    Remove(flag) {
-        this.__flags ^= flag;
-        let index = this.__elements.indexOf(flag);
-        if (index >= 0) {
-            this.__elements.splice(index, 1);
-        }
+class BindInfo {
+    /**
+     * 属性KEY
+     */
+    property;
+    /**
+     * 目标或回调函数
+     */
+    targetOrCallBack;
+    /**
+     * 目标属性或目标this引用
+     */
+    tPropertyOrCaller;
+    constructor(property, targetOrCallBack, tPropertyOrCaller) {
+        this.property = property;
+        this.targetOrCallBack = targetOrCallBack;
+        this.tPropertyOrCaller = tPropertyOrCaller;
     }
     /**
-     * 是否包含
-     * @param flag
+     * 判断是否相等
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
      * @returns
      */
-    Has(flag) {
-        return (this.__flags & flag) == flag;
+    Equal(property, targetOrCallBack, tPropertyOrCaller) {
+        if (property == this.property && this.targetOrCallBack == targetOrCallBack && this.tPropertyOrCaller == tPropertyOrCaller) {
+            return true;
+        }
+        return false;
+    }
+}
+/**
+ * 属性绑定器
+ */
+class PropertyBinder {
+    data;
+    /**
+     * 代理过的数据
+     */
+    __propertys;
+    /**
+     * 属性改变列表
+     */
+    __changedPropertys;
+    __bindedMap;
+    __bindedGroupMap;
+    constructor(data) {
+        this.data = data;
+        this.__propertys = [];
+        this.__changedPropertys = [];
+        this.__bindedMap = new Map();
+        this.__bindedGroupMap = new Map();
     }
     /**
-     * 位码
+     * 绑定
+     * @param group
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
      */
-    get flags() {
-        return this.__flags;
+    Bind(group, property, targetOrCallBack, tPropertyOrCaller) {
+        let info;
+        let groupList = this.__bindedGroupMap.get(group);
+        if (!groupList) {
+            groupList = [];
+            this.__bindedGroupMap.set(group, groupList);
+        }
+        let exist = false;
+        let bindInfos;
+        if (Array.isArray(property)) {
+            for (let pIndex = 0; pIndex < property.length; pIndex++) {
+                const propertyKey = property[pIndex];
+                this.__checkProperty(propertyKey);
+                for (let index = 0; index < groupList.length; index++) {
+                    info = groupList[index];
+                    if (info.Equal(propertyKey, targetOrCallBack, tPropertyOrCaller)) {
+                        exist = true;
+                        continue;
+                    }
+                }
+                //不存在
+                if (!exist) {
+                    info = new BindInfo(propertyKey, targetOrCallBack, tPropertyOrCaller);
+                    bindInfos = this.__bindedMap.get(propertyKey);
+                    if (!bindInfos) {
+                        bindInfos = [];
+                        this.__bindedMap.set(propertyKey, bindInfos);
+                    }
+                    bindInfos.push(info);
+                    groupList.push(info);
+                    //标记改变
+                    this.__propertyChanged(propertyKey);
+                }
+            }
+        }
+        else {
+            this.__checkProperty(property);
+            for (let index = 0; index < groupList.length; index++) {
+                info = groupList[index];
+                if (info.Equal(property, targetOrCallBack, tPropertyOrCaller)) {
+                    return;
+                }
+            }
+            info = new BindInfo(property, targetOrCallBack, tPropertyOrCaller);
+            bindInfos = this.__bindedMap.get(property);
+            if (!bindInfos) {
+                bindInfos = [];
+                this.__bindedMap.set(property, bindInfos);
+            }
+            bindInfos.push(info);
+            groupList.push(info);
+            //标记改变
+            this.__propertyChanged(property);
+        }
     }
-    get elements() {
-        return this.__elements;
+    /**
+     * 取消绑定
+     * @param group
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
+     */
+    Unbind(group, property, targetOrCallBack, tPropertyOrCaller) {
+        let info;
+        let groupList = this.__bindedGroupMap.get(group);
+        //如果记录中没有
+        if (!groupList) {
+            return;
+        }
+        let bindInfos;
+        let fIndex;
+        //取消所有该组的绑定
+        if (property == null) {
+            for (let index = 0; index < groupList.length; index++) {
+                info = groupList[index];
+                //从已绑定的列表中删除
+                bindInfos = this.__bindedMap.get(info.property);
+                if (bindInfos && bindInfos.length > 0) {
+                    fIndex = bindInfos.indexOf(info);
+                    if (fIndex >= 0) {
+                        bindInfos.splice(fIndex, 1);
+                    }
+                }
+                if (bindInfos.length == 0) {
+                    this.__bindedMap.delete(info.property);
+                }
+            }
+            groupList.length = 0;
+            this.__bindedGroupMap.delete(group);
+            return;
+        }
+        if (Array.isArray(property)) {
+            for (let pIndex = 0; pIndex < property.length; pIndex++) {
+                const propertyKey = property[pIndex];
+                //从组中找相对比较快一些，因为编组列表相对数据绑定列表通常会小一些
+                for (let gIndex = 0; gIndex < groupList.length; gIndex++) {
+                    info = groupList[gIndex];
+                    bindInfos = this.__bindedMap.get(info.property);
+                    if (info.Equal(propertyKey, targetOrCallBack, tPropertyOrCaller)) {
+                        fIndex = bindInfos.indexOf(info);
+                        if (fIndex >= 0) {
+                            bindInfos.splice(fIndex, 1);
+                        }
+                        groupList.splice(gIndex, 1);
+                        gIndex--;
+                    }
+                }
+            }
+            if (groupList.length == 0) {
+                this.__bindedGroupMap.delete(group);
+            }
+        }
+        else {
+            //从组中找相对比较快一些，因为编组列表相对数据绑定列表通常会小一些
+            for (let gIndex = 0; gIndex < groupList.length; gIndex++) {
+                info = groupList[gIndex];
+                bindInfos = this.__bindedMap.get(info.property);
+                if (info.Equal(property, targetOrCallBack, tPropertyOrCaller)) {
+                    fIndex = bindInfos.indexOf(info);
+                    if (fIndex >= 0) {
+                        bindInfos.splice(fIndex, 1);
+                    }
+                    groupList.splice(gIndex, 1);
+                    gIndex--;
+                }
+            }
+            if (groupList.length == 0) {
+                this.__bindedGroupMap.delete(group);
+            }
+        }
     }
+    //========================================属性绑定机制实现======================================//
+    /**
+    * 检测属性
+    * @param propertyKey
+    */
+    __checkProperty(propertyKey) {
+        let index = this.__propertys.indexOf(propertyKey);
+        //如果没有绑定过这个数据
+        if (index < 0) {
+            //数据绑定实现
+            let value = this.data[propertyKey];
+            this.__defineReactive(this.data, propertyKey, value);
+            this.__propertys.push(propertyKey);
+        }
+    }
+    /**定义 */
+    __defineReactive(data, key, value) {
+        let self = this;
+        Object.defineProperty(data, key, {
+            enumerable: true,
+            configurable: true,
+            get: function () {
+                return value;
+            },
+            set: function (newValue) {
+                if (value == newValue) {
+                    return;
+                }
+                // console.log("绑定数据改变：", value, newValue);
+                value = newValue;
+                self.__propertyChanged(key);
+            },
+        });
+    }
+    __propertyChanged(pKey, isInit = false) {
+        //标记改变
+        if (this.__changedPropertys.indexOf(pKey) < 0) {
+            this.__changedPropertys.push(pKey);
+            TickerManager.CallNextFrame(this.__nextFramePropertyUpdate, this);
+        }
+    }
+    __nextFramePropertyUpdate(isInit = false) {
+        let pKey;
+        for (let propsIndex = 0; propsIndex < this.__changedPropertys.length; propsIndex++) {
+            pKey = this.__changedPropertys[propsIndex];
+            this.__updateProperty(pKey);
+        }
+        this.__changedPropertys.length = 0;
+    }
+    /**
+     * 属性更新
+     * @param pKey
+     */
+    __updateProperty(pKey) {
+        let bindInfos = this.__bindedMap.get(pKey);
+        let info;
+        if (bindInfos && bindInfos.length) {
+            for (let index = 0; index < bindInfos.length; index++) {
+                info = bindInfos[index];
+                //属性绑定
+                if (typeof info.targetOrCallBack != "function") {
+                    info.targetOrCallBack[info.tPropertyOrCaller] = this.data[pKey];
+                }
+                else { //函数绑定
+                    info.targetOrCallBack.apply(info.tPropertyOrCaller, this.__changedPropertys);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 绑定器工具类
+ */
+class BinderUtils {
+    constructor() {
+    }
+    /**
+     * 绑定
+     * @param group
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     */
+    static Bind(group, source, property, targetOrCallBack, tPropertyOrCaller) {
+        let binder = source["$PropertyBinder"];
+        if (!binder) {
+            binder = new PropertyBinder(source);
+            source["$PropertyBinder"] = binder;
+        }
+        binder.Bind(group, property, targetOrCallBack, tPropertyOrCaller);
+    }
+    /**
+     * 取消绑定
+     * @param group
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
+     */
+    static Unbind(group, source, property, targetOrCallBack, tPropertyOrCaller) {
+        let binder = source["$PropertyBinder"];
+        if (!binder) {
+            return;
+        }
+        binder.Unbind(group, property, targetOrCallBack, tPropertyOrCaller);
+    }
+    /**
+     * 添加函数钩子
+     * @param group
+     * @param source
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
+     */
+    static AddHook(group, source, functionName, preHandler, laterHandler) {
+        let hook = source["$FunctionHook"];
+        if (!hook) {
+            hook = new FunctionHook(source);
+            source["$FunctionHook"] = hook;
+        }
+        hook.AddHook(group, functionName, preHandler, laterHandler);
+    }
+    /**
+     * 删除函数钩子
+     * @param group
+     * @param source
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
+     * @returns
+     */
+    static RemoveHook(group, source, functionName, preHandler, laterHandler) {
+        let hook = source["$FunctionHook"];
+        if (!hook) {
+            return;
+        }
+        hook.RemoveHook(group, functionName, preHandler, laterHandler);
+    }
+}
+
+/**
+ * 绑定工具类
+ */
+class BindingUtils {
+    /**属性绑定记录 */
+    __bindRecords;
+    /**方法绑定记录 */
+    __hookRecords;
+    constructor() {
+        this.__bindRecords = [];
+        this.__hookRecords = [];
+    }
+    /**
+     * 数据绑定
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyKeyOrCaller
+     */
+    __bind(source, property, targetOrCallBack, tPropertyKeyOrCaller) {
+        for (let index = 0; index < this.__bindRecords.length; index++) {
+            const element = this.__bindRecords[index];
+            if (element.source == source &&
+                element.property == property &&
+                element.targetOrCallback == targetOrCallBack &&
+                element.targetPropertyOrCaller == tPropertyKeyOrCaller) {
+                //重复绑定
+                throw new Error("重复绑定：" + source + property + targetOrCallBack + tPropertyKeyOrCaller);
+            }
+        }
+        this.__bindRecords.push({
+            source: source,
+            property: property,
+            targetOrCallback: targetOrCallBack,
+            targetPropertyOrCaller: tPropertyKeyOrCaller
+        });
+        BinderUtils.Bind(this, source, property, targetOrCallBack, tPropertyKeyOrCaller);
+    }
+    /**
+     * 取消绑定
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyKeyOrCaller
+     */
+    __unbind(source, property, targetOrCallBack, tPropertyKeyOrCaller) {
+        for (let index = 0; index < this.__bindRecords.length; index++) {
+            const element = this.__bindRecords[index];
+            if (element.source == source &&
+                element.property == property &&
+                element.targetOrCallback == targetOrCallBack &&
+                element.targetPropertyOrCaller == tPropertyKeyOrCaller) {
+                this.__bindRecords.splice(index, 1);
+            }
+        }
+        BinderUtils.Unbind(this, source, property, targetOrCallBack, tPropertyKeyOrCaller);
+    }
+    /**
+     * 添加函数钩子
+     * @param source
+     * @param functionName
+     * @param preHandles
+     * @param laterHandlers
+     */
+    __addHook(source, functionName, preHandle, laterHandler) {
+        for (let index = 0; index < this.__hookRecords.length; index++) {
+            const element = this.__hookRecords[index];
+            if (element.source == source &&
+                element.functionName == functionName &&
+                preHandle.Equal(element.preHandler) &&
+                laterHandler.Equal(element.laterHandler)) {
+                //重复绑定
+                throw new Error("重复绑定：" + source + " " + functionName);
+            }
+        }
+        //记录
+        this.__hookRecords.push({ source: source, functionName: functionName, preHandler: preHandle, laterHandler: laterHandler });
+        BinderUtils.AddHook(this, source, functionName, preHandle, laterHandler);
+    }
+    /**
+     * 删除函数钩子
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    __removeHook(source, functionName, preHandle, laterHandler) {
+        for (let index = 0; index < this.__hookRecords.length; index++) {
+            const element = this.__hookRecords[index];
+            if (element.source == source &&
+                element.functionName == functionName &&
+                preHandle.Equal(element.preHandler) &&
+                laterHandler.Equal(element.laterHandler)) {
+                this.__hookRecords.splice(index, 1);
+            }
+        }
+        BinderUtils.RemoveHook(this, source, functionName, preHandle, laterHandler);
+    }
+    /**
+     * 属性和属性的绑定
+     * @param source            数据源
+     * @param property          数据源属性名
+     * @param target            目标对象
+     * @param targetProperty    目标对象属性名
+     */
+    BindAA(source, property, target, targetProperty) {
+        this.__bind(source, property, target, targetProperty);
+    }
+    /**
+     * 取消属性和属性的绑定
+     * @param source
+     * @param property
+     * @param target
+     * @param targetProperty
+     */
+    UnbindAA(source, property, target, targetProperty) {
+        this.__unbind(source, property, target, targetProperty);
+    }
+    /**
+     * 属性和函数的绑定
+     * @param source
+     * @param property
+     * @param callBack
+     * @param caller
+     */
+    BindAM(source, property, callBack, caller) {
+        this.__bind(source, property, callBack, caller);
+    }
+    /**
+     * 取消属性和函数的绑定
+     * @param source
+     * @param propertys
+     * @param callBack
+     * @param caller
+     */
+    UnbidAM(source, propertys, callBack, caller) {
+        this.__unbind(source, propertys, callBack, caller);
+    }
+    /**
+     * 函数和函数的绑定
+     * @param source
+     * @param functionName  目标函数
+     * @param preHandle     该函数将在目标函数调用前调用
+     * @param laterHandler  该函数将在目标函数调用后调用
+     */
+    BindMM(source, functionName, preHandle, laterHandler) {
+        this.__addHook(source, functionName, preHandle, laterHandler);
+    }
+    /**
+     * 取消方法和方法的绑定关系
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    UnbindMM(source, functionName, preHandle, laterHandler) {
+        this.__removeHook(source, functionName, preHandle, laterHandler);
+    }
+    //根据记录添加绑定
+    BindByRecords() {
+        //bind
+        for (let index = 0; index < this.__bindRecords.length; index++) {
+            const element = this.__bindRecords[index];
+            BinderUtils.Bind(this, element.source, element.property, element.targetOrCallback, element.targetPropertyOrCaller);
+        }
+        //addHook
+        for (let index = 0; index < this.__hookRecords.length; index++) {
+            const element = this.__hookRecords[index];
+            BinderUtils.AddHook(this, element.source, element.functionName, element.preHandler, element.laterHandler);
+        }
+    }
+    //根据记录删除绑定
+    UnbindByRecords() {
+        //unbind
+        for (let index = 0; index < this.__bindRecords.length; index++) {
+            const element = this.__bindRecords[index];
+            BinderUtils.Unbind(this, element.source, element.property, element.targetOrCallback, element.targetPropertyOrCaller);
+        }
+        //removeHook
+        for (let index = 0; index < this.__hookRecords.length; index++) {
+            const element = this.__hookRecords[index];
+            BinderUtils.RemoveHook(this, element.source, element.functionName, element.preHandler, element.laterHandler);
+        }
+    }
+    /**
+     * 销毁
+     */
     Destroy() {
-        this.__flags = 0;
-        this.__elements.length = 0;
-        this.__elements = null;
+        if (this.__hookRecords) {
+            this.__hookRecords.length = 0;
+            this.__hookRecords = null;
+        }
+        if (this.__bindRecords) {
+            this.__bindRecords.length = 0;
+            this.__bindRecords = null;
+        }
+    }
+}
+
+/**
+ * 配置存取器基类
+ */
+class BaseConfigAccessor {
+    __configs = [];
+    constructor() {
+    }
+    Save(value) {
+        const index = this.__configs.indexOf(value);
+        if (index >= 0) {
+            return false;
+        }
+        this.__configs.push(value);
+    }
+    Get() {
+        return this.__configs;
+    }
+    Clear() {
+        this.__configs.length = 0;
     }
 }
 
@@ -3604,6 +4153,536 @@ class ByteArray {
             i += 1;
         }
         return cps;
+    }
+}
+
+class ConfigUtils {
+    /**
+     * 解析配置
+     * @param titleList
+     * @param typeList
+     * @param byte
+     * @returns
+     */
+    static ParseConfig(titleList, typeList, byte) {
+        let title;
+        let type;
+        let result = {};
+        for (let index = 0; index < typeList.length; index++) {
+            title = titleList[index];
+            type = typeList[index];
+            switch (type) {
+                case 0: //byte
+                case 1: //ubyte
+                case 2: //short
+                case 3: //ushort
+                case 4: //int
+                case 5: //uint
+                case 6: //float
+                case 7: //number
+                    this.__readNumber(title, type, result, byte);
+                    break;
+                case 8: //string
+                    result[title] = byte.ReadUTF();
+                    break;
+                case 9: //[byte]
+                case 10: //[ubyte]
+                case 11: //[short]
+                case 12: //[ushort]
+                case 13: //[int]
+                case 14: //[uint]
+                case 15: //[float]
+                case 16: //[number]
+                case 17: //[string]
+                    this.__readArray(title, type, result, byte);
+                    break;
+            }
+        }
+        return result;
+    }
+    static __readNumber(title, type, data, byte) {
+        switch (type) {
+            case 0: //byte
+                data[title] = byte.ReadByte();
+                break;
+            case 1: //ubyte
+                data[title] = byte.ReadUnsignedByte();
+                break;
+            case 2: //short
+                data[title] = byte.ReadShort();
+                break;
+            case 3: //ushort
+                data[title] = byte.ReadUnsignedShort();
+                break;
+            case 4: //int
+                data[title] = byte.ReadInt();
+                break;
+            case 5: //uint
+                data[title] = byte.ReadUnsignedInt();
+                break;
+            case 6: //float
+                data[title] = byte.ReadFloat();
+                break;
+            case 7: //number
+                data[title] = byte.ReadDouble();
+                break;
+            default:
+                throw new Error(title + ' 未知类型:' + type);
+        }
+    }
+    static __readArray(title, type, data, byte) {
+        let len = byte.ReadUnsignedInt();
+        let list = [];
+        for (let index = 0; index < len; index++) {
+            switch (type) {
+                case 9: //byte
+                    list.push(byte.ReadByte());
+                    break;
+                case 10: //ubyte
+                    list.push(byte.ReadUnsignedByte());
+                    break;
+                case 11: //short
+                    list.push(byte.ReadShort());
+                    break;
+                case 12: //ushort
+                    list.push(byte.ReadUnsignedShort());
+                    break;
+                case 13:
+                    list.push(byte.ReadInt());
+                    break;
+                case 14:
+                    list.push(byte.ReadUnsignedInt());
+                    break;
+                case 15:
+                    list.push(byte.ReadFloat());
+                    break;
+                case 16:
+                    list.push(byte.ReadDouble());
+                    break;
+                case 17:
+                    list.push(byte.ReadUTF());
+                    break;
+                default:
+                    throw new Error(title + ' 未知类型:' + type);
+            }
+        }
+        data[title] = list;
+    }
+}
+
+class ConfigManagerImpl {
+    /**
+     * 存取器
+     */
+    __accessors;
+    /**
+     * 标记配置表是否加载完成
+     */
+    __loaded;
+    constructor() {
+        this.__accessors = new Map();
+        this.__loaded = new Map();
+    }
+    /**
+     * 加载配置表
+     * @param sheets
+     * @param callback
+     */
+    Load(sheets, callback) {
+        if (Array.isArray(sheets)) {
+            let loadIndex = 0;
+            let loadTotal = sheets.length;
+            for (let index = 0; index < sheets.length; index++) {
+                const sheet = sheets[index];
+                this.__load(sheet, (err) => {
+                    loadIndex++;
+                    if (loadIndex >= loadTotal) {
+                        if (callback) {
+                            callback(err);
+                        }
+                    }
+                });
+            }
+        }
+        else {
+            this.__load(sheets, callback);
+        }
+    }
+    /**
+     * 卸载配置表
+     * @param sheets
+     */
+    Unload(sheets) {
+        if (Array.isArray(sheets)) {
+            for (let index = 0; index < sheets.length; index++) {
+                const sheet = sheets[index];
+                this.__unload(sheet);
+            }
+        }
+        else {
+            this.__unload(sheets);
+        }
+    }
+    __unload(sheet) {
+        if (this.__loaded.has(sheet)) {
+            this.__loaded.delete(sheet);
+            if (this.__accessors.has(sheet)) {
+                let acc = this.__accessors.get(sheet);
+                acc.Clear();
+            }
+        }
+    }
+    __load(sheet, callback) {
+        if (this.__loaded.has(sheet)) {
+            if (callback) {
+                callback();
+            }
+            return;
+        }
+        if (!ConfigManager.configPath) {
+            throw new Error("ConfigManager.configPath函数未设置！");
+        }
+        let url = ConfigManager.configPath(sheet);
+        Res.GetResRef(url, "ConfigManagerImpl").then(value => {
+            if (!this.__loaded.has(sheet)) {
+                let buffer = value.content['_buffer'];
+                //解析
+                this.__parseConfig(sheet, buffer);
+                this.__loaded.set(sheet, true);
+                //原始资源可以销毁了
+                value.Dispose();
+            }
+            if (callback)
+                callback();
+        }, reason => {
+            if (callback)
+                callback(reason);
+        });
+    }
+    __parseConfig(sheet, buffer) {
+        let byte = new ByteArray(buffer);
+        //解析表头
+        let len = byte.ReadUnsignedInt();
+        let titleList = [];
+        for (let index = 0; index < len; index++) {
+            titleList.push(byte.ReadUTF());
+        }
+        //类型
+        let typeList = [];
+        len = byte.ReadUnsignedInt();
+        for (let index = 0; index < len; index++) {
+            typeList.push(byte.ReadByte());
+        }
+        //数据数量
+        len = byte.ReadUnsignedInt();
+        let data;
+        let accessor;
+        for (let dataIndex = 0; dataIndex < len; dataIndex++) {
+            data = ConfigUtils.ParseConfig(titleList, typeList, byte);
+            //存取器
+            accessor = this.__accessors.get(sheet);
+            if (!accessor) {
+                console.warn("配置表：" + sheet + "未注册存取器！");
+                continue;
+            }
+            accessor.Save(data);
+        }
+    }
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    Register(sheet, accessors) {
+        this.__accessors.set(sheet, accessors);
+    }
+    /**
+     * 获取存取器
+     * @param sheet
+     * @returns
+     */
+    GetAccessor(sheet) {
+        if (!this.__accessors.has(sheet)) {
+            throw new Error("配置表：" + sheet + "未注册存取器");
+        }
+        return this.__accessors.get(sheet);
+    }
+}
+
+/**
+ * 配置表管理器
+ */
+class ConfigManager {
+    static KEY = "drongo.ConfigManager";
+    static __configPath;
+    static set configPath(value) {
+        this.__configPath = value;
+    }
+    /**
+     * 路径转化器
+     */
+    static get configPath() {
+        if (this.__configPath == null) {
+            throw new Error("配置表路径函数未设置！");
+        }
+        return this.__configPath;
+    }
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    static Register(sheet, accessors) {
+        this.impl.Register(sheet, accessors);
+    }
+    /**
+     * 加载配置文件
+     * @param sheet
+     * @param callback
+     */
+    static Load(sheet, callback) {
+        this.impl.Load(sheet, callback);
+    }
+    /**
+     * 卸载配置
+     * @param sheets
+     */
+    static Unload(sheets) {
+        this.impl.Unload(sheets);
+    }
+    /**
+     * 获取配置存取器
+     * @param sheet
+     */
+    static GetAccessor(sheet) {
+        return this.impl.GetAccessor(sheet);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new ConfigManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 列表
+ */
+class List extends EventDispatcher {
+    __element;
+    /**
+     * 是否保证元素的唯一性
+     */
+    __only = false;
+    /**
+     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
+     */
+    count = 0;
+    constructor(only = true) {
+        super();
+        this.__only = only;
+        this.__element = [];
+    }
+    /**
+     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     */
+    Push(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.push(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     * @returns
+     */
+    Unshift(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.unshift(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 获取并删除最后一个元素
+     * @returns
+     */
+    Pop() {
+        if (this.__element.length > 0) {
+            const result = this.__element.pop();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 获取并删除第一个元素
+     * @returns
+     */
+    Shift() {
+        if (this.__element.length > 0) {
+            const result = this.__element.shift();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 删除指定索引的元素
+     * @param index
+     */
+    RemoveAt(index) {
+        if (index >= this.__element.length) {
+            throw new Error("删除索引超出范围！");
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+        return result;
+    }
+    /**
+     * 删除元素
+     * @param value
+     */
+    Remove(value) {
+        let index = this.__element.indexOf(value);
+        if (index < 0) {
+            throw new Error("要删除的内容不在列表中！" + value);
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+    }
+    /**
+     * 移除所有元素
+     */
+    Clear() {
+        this.count = 0;
+        this.__element.length = 0;
+        if (this.HasEvent(Event.CLEAR)) {
+            this.Emit(Event.CLEAR);
+        }
+    }
+    /**
+     * 判断是否包含
+     * @param value
+     * @returns
+     */
+    Has(value) {
+        return this.Find(value) >= 0;
+    }
+    /**
+     * 查找元素下标
+     * @param value
+     * @returns
+     */
+    Find(value) {
+        return this.__element.indexOf(value);
+    }
+    /**
+     * 查找元素下标
+     * @param predicate
+     * @returns
+     */
+    FindIndex(predicate) {
+        let index = this.__element.findIndex(predicate);
+        return index;
+    }
+    /**
+     * 获取指定元素
+     * @param index
+     * @returns
+     */
+    Get(index) {
+        if (index >= this.__element.length) {
+            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
+        }
+        return this.__element[index];
+    }
+    /**
+     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
+     */
+    get elements() {
+        return this.__element;
+    }
+}
+
+/**
+ * bit位操作
+ */
+class BitFlag {
+    __flags = 0;
+    __elements;
+    constructor() {
+        this.__elements = [];
+    }
+    Add(flag) {
+        this.__flags |= flag;
+        if (this.__elements.indexOf(flag) < 0) {
+            this.__elements.push(flag);
+        }
+    }
+    Remove(flag) {
+        this.__flags ^= flag;
+        let index = this.__elements.indexOf(flag);
+        if (index >= 0) {
+            this.__elements.splice(index, 1);
+        }
+    }
+    /**
+     * 是否包含
+     * @param flag
+     * @returns
+     */
+    Has(flag) {
+        return (this.__flags & flag) == flag;
+    }
+    /**
+     * 位码
+     */
+    get flags() {
+        return this.__flags;
+    }
+    get elements() {
+        return this.__elements;
+    }
+    Destroy() {
+        this.__flags = 0;
+        this.__elements.length = 0;
+        this.__elements = null;
     }
 }
 
@@ -21446,4 +22525,4 @@ class Drongo {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, List, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

@@ -218,6 +218,351 @@ interface IAudioManager {
 }
 
 /**
+ * 处理器
+ */
+declare class Handler {
+    method?: Function;
+    caller: any;
+    once: boolean;
+    private isOver;
+    /**
+     * 运行
+     * @param args
+     */
+    Run(...args: any[]): void;
+    /**
+     * 判断是否相同
+     * @param value
+     * @returns
+     */
+    Equal(value: Handler): boolean;
+    /**
+     * 创建一个实例
+     * @param caller
+     * @param method
+     * @param once
+     * @returns
+     */
+    static Create(caller: any, method: Function | undefined, once?: boolean): Handler;
+}
+
+/**
+ * 绑定器工具类
+ */
+declare class BinderUtils {
+    constructor();
+    /**
+     * 绑定
+     * @param group
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     */
+    static Bind(group: any, source: any, property: string | Array<string>, targetOrCallBack: any | Function, tPropertyOrCaller: string | any): void;
+    /**
+     * 取消绑定
+     * @param group
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
+     */
+    static Unbind(group: any, source: any, property?: string | Array<string>, targetOrCallBack?: any | Function, tPropertyOrCaller?: string | any): void;
+    /**
+     * 添加函数钩子
+     * @param group
+     * @param source
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
+     */
+    static AddHook(group: any, source: any, functionName: string, preHandler: Handler, laterHandler: Handler): void;
+    /**
+     * 删除函数钩子
+     * @param group
+     * @param source
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
+     * @returns
+     */
+    static RemoveHook(group: any, source: any, functionName?: string, preHandler?: Handler, laterHandler?: Handler): void;
+}
+
+/**
+ * 绑定工具类
+ */
+declare class BindingUtils {
+    /**属性绑定记录 */
+    private __bindRecords;
+    /**方法绑定记录 */
+    private __hookRecords;
+    constructor();
+    /**
+     * 数据绑定
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyKeyOrCaller
+     */
+    private __bind;
+    /**
+     * 取消绑定
+     * @param source
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyKeyOrCaller
+     */
+    private __unbind;
+    /**
+     * 添加函数钩子
+     * @param source
+     * @param functionName
+     * @param preHandles
+     * @param laterHandlers
+     */
+    private __addHook;
+    /**
+     * 删除函数钩子
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    private __removeHook;
+    /**
+     * 属性和属性的绑定
+     * @param source            数据源
+     * @param property          数据源属性名
+     * @param target            目标对象
+     * @param targetProperty    目标对象属性名
+     */
+    BindAA(source: any, property: string, target: any, targetProperty: string): void;
+    /**
+     * 取消属性和属性的绑定
+     * @param source
+     * @param property
+     * @param target
+     * @param targetProperty
+     */
+    UnbindAA(source: any, property: string, target: any, targetProperty: string): void;
+    /**
+     * 属性和函数的绑定
+     * @param source
+     * @param property
+     * @param callBack
+     * @param caller
+     */
+    BindAM(source: any, property: string | Array<string>, callBack: (prepertys: Array<string>) => void, caller: any): void;
+    /**
+     * 取消属性和函数的绑定
+     * @param source
+     * @param propertys
+     * @param callBack
+     * @param caller
+     */
+    UnbidAM(source: any, propertys: string | Array<string>, callBack: (prepertys: Array<string>) => void, caller: any): void;
+    /**
+     * 函数和函数的绑定
+     * @param source
+     * @param functionName  目标函数
+     * @param preHandle     该函数将在目标函数调用前调用
+     * @param laterHandler  该函数将在目标函数调用后调用
+     */
+    BindMM(source: any, functionName: string, preHandle: Handler, laterHandler?: Handler): void;
+    /**
+     * 取消方法和方法的绑定关系
+     * @param source
+     * @param functionName
+     * @param preHandle
+     * @param laterHandler
+     */
+    UnbindMM(source: any, functionName: string, preHandle: Handler, laterHandler: Handler): void;
+    BindByRecords(): void;
+    UnbindByRecords(): void;
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+declare class FunctionHook {
+    data: any;
+    /**
+     * 已添加好钩子的方法
+     */
+    private __functions;
+    private __preHandlerMap;
+    private __laterHandlerMap;
+    private __groupMap;
+    constructor(data: any);
+    /**
+     * 添加钩子
+     * @param group
+     * @param functionName
+     * @param preHandlers
+     * @param laterHandlers
+     */
+    AddHook(group: any, functionName: string, preHandler: Handler, laterHandler: Handler): void;
+    /**
+     * 删除钩子
+     * @param group
+     * @param functionName
+     * @param preHandler
+     * @param laterHandler
+     * @returns
+     */
+    RemoveHook(group: any, functionName?: string, preHandler?: Handler, laterHandler?: Handler): void;
+}
+
+/**
+ * 属性绑定器
+ */
+declare class PropertyBinder {
+    data: any;
+    /**
+     * 代理过的数据
+     */
+    private __propertys;
+    /**
+     * 属性改变列表
+     */
+    private __changedPropertys;
+    private __bindedMap;
+    private __bindedGroupMap;
+    constructor(data: any);
+    /**
+     * 绑定
+     * @param group
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
+     */
+    Bind(group: any, property: string | Array<string>, targetOrCallBack: any | Function, tPropertyOrCaller: string | any): void;
+    /**
+     * 取消绑定
+     * @param group
+     * @param property
+     * @param targetOrCallBack
+     * @param tPropertyOrCaller
+     * @returns
+     */
+    Unbind(group: any, property?: string | Array<string>, targetOrCallBack?: any | Function, tPropertyOrCaller?: string | any): void;
+    /**
+    * 检测属性
+    * @param propertyKey
+    */
+    private __checkProperty;
+    /**定义 */
+    private __defineReactive;
+    private __propertyChanged;
+    private __nextFramePropertyUpdate;
+    /**
+     * 属性更新
+     * @param pKey
+     */
+    private __updateProperty;
+}
+
+/**
+ * 配置存取器接口
+ */
+interface IConfigAccessor {
+    /**
+     * 保存
+     * @param value
+     */
+    Save(value: any): boolean;
+    /**
+     * 获取列表形式存储的配置内容
+     */
+    Get<T>(): Array<T>;
+    /**
+     * 清理
+     */
+    Clear(): void;
+}
+
+/**
+ * 配置管理器接口
+ */
+interface IConfigManager {
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    Register(sheet: string, accessors?: IConfigAccessor): void;
+    /**
+     * 加载配置文件
+     * @param sheet
+     * @param callback
+     */
+    Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
+    /**
+     * 卸载配置文件
+     * @param sheets
+     */
+    Unload(sheets: string | Array<string>): void;
+    /**
+     * 获取配置存取器
+     * @param sheet
+     */
+    GetAccessor(sheet: string): IConfigAccessor;
+}
+
+/**
+ * 配置存取器基类
+ */
+declare class BaseConfigAccessor implements IConfigAccessor {
+    private __configs;
+    constructor();
+    Save(value: any): boolean;
+    Get<T>(): Array<T>;
+    Clear(): void;
+}
+
+/**
+ * 配置表管理器
+ */
+declare class ConfigManager {
+    static KEY: string;
+    private static __configPath;
+    static set configPath(value: (sheet: string) => ResURL);
+    /**
+     * 路径转化器
+     */
+    static get configPath(): (sheet: string) => ResURL;
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    static Register(sheet: string, accessors?: IConfigAccessor): void;
+    /**
+     * 加载配置文件
+     * @param sheet
+     * @param callback
+     */
+    static Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
+    /**
+     * 卸载配置
+     * @param sheets
+     */
+    static Unload(sheets: string | Array<string>): void;
+    /**
+     * 获取配置存取器
+     * @param sheet
+     */
+    static GetAccessor(sheet: string): IConfigAccessor;
+    private static __impl;
+    private static get impl();
+}
+
+/**
  * 事件分发器
  */
 interface IEventDispatcher {
@@ -1782,35 +2127,6 @@ declare class ByteArray {
      * @param string
      */
     private StringToCodePoints;
-}
-
-/**
- * 处理器
- */
-declare class Handler {
-    method?: Function;
-    caller: any;
-    once: boolean;
-    private isOver;
-    /**
-     * 运行
-     * @param args
-     */
-    Run(...args: any[]): void;
-    /**
-     * 判断是否相同
-     * @param value
-     * @returns
-     */
-    Equal(value: Handler): boolean;
-    /**
-     * 创建一个实例
-     * @param caller
-     * @param method
-     * @param once
-     * @returns
-     */
-    static Create(caller: any, method: Function | undefined, once?: boolean): Handler;
 }
 
 /**
@@ -4405,4 +4721,4 @@ declare class Drongo {
     static Init(root: Node, cb: () => void): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, ILoader, IRes, IResManager, IResource, ITicker, ITickerManager, ITimer, Image, Injector, Key2URL, List, ListItemRenderer, Loader, LoaderQueue, MovieClip, PackageItem, PopupMenu, PropertyBinder, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, StringUtils, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

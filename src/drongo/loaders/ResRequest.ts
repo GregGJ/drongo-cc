@@ -1,3 +1,4 @@
+import { ResManager } from "../res/ResManager";
 import { ResURL, URL2Key } from "../res/ResURL";
 import { Timer } from "../timer/Timer";
 import { LoaderQueue } from "./LoaderQueue";
@@ -37,7 +38,13 @@ export class ResRequest {
         this.__loadedMap.clear();
         for (let index = 0; index < this.urls.length; index++) {
             const url = this.urls[index];
-            LoaderQueue.single.Load(url);
+            const urlKey = URL2Key(url);
+            //如果已经加载完成
+            if (ResManager.HasRes(urlKey)) {
+                this.__loadedMap.set(urlKey, 1);
+            } else {
+                LoaderQueue.single.Load(url);
+            }
         }
     }
 
