@@ -8,6 +8,7 @@ import { ResRef } from "./drongo/res/core/ResRef";
 import { ResURL, URL2Key } from "./drongo/res/core/ResURL";
 import { TickerManager } from "./drongo/ticker/TickerManager";
 import { GRoot } from "./fairygui/GRoot";
+import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
 
 
 export class Drongo {
@@ -28,6 +29,8 @@ export class Drongo {
     static Init(root:Node,guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
         GRoot.create(root);
         
+        //注册fgui加载器
+        Res.SetResLoader("fgui",FGUILoader);
         //路径转换
         if (sheetConfig) {
             ConfigManager.configPath = (sheet: string) => {

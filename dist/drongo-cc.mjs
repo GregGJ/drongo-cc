@@ -22887,6 +22887,82 @@ class RelationManager {
     }
 }
 
+class FGUIResource extends ResourceImpl {
+    constructor() {
+        super();
+    }
+    /**
+     * 销毁
+     */
+    Destroy() {
+        let url = Key2URL(this.key);
+        if (typeof url != "string") {
+            UIPackage.removePackage(url.url);
+            let bundle = assetManager.getBundle(Drongo.UIBundle);
+            let asset = bundle.get(url.url);
+            assetManager.releaseAsset(asset);
+            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
+        }
+        else {
+            throw new Error("未处理的Fguipackage销毁！");
+        }
+        super.Destroy();
+    }
+}
+
+class FGUILoader extends EventDispatcher {
+    url;
+    constructor() {
+        super();
+    }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        else {
+            let bundle = assetManager.getBundle(url.bundle);
+            let __this = this;
+            if (!bundle) {
+                assetManager.loadBundle(url.bundle, (err, bundle) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, { url, err });
+                        return;
+                    }
+                    __this.loadUIPackge(url, bundle);
+                });
+            }
+            else {
+                __this.loadUIPackge(url, bundle);
+            }
+        }
+    }
+    loadUIPackge(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        let __this = this;
+        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
+            const progress = finish / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, pkg) => {
+            if (err) {
+                __this.Emit(Event.ERROR, { url, err });
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let res = new FGUIResource();
+            res.key = urlKey;
+            res.content = pkg;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
+        });
+    }
+    Reset() {
+        this.url = null;
+    }
+}
+
 class Drongo {
     /**UI资源AssetBundle */
     static UIBundle = "UI";
@@ -22901,6 +22977,8 @@ class Drongo {
      */
     static Init(root, guiconfig, layer, sheetConfig, callback) {
         GRoot.create(root);
+        //注册fgui加载器
+        Res.SetResLoader("fgui", FGUILoader);
         //路径转换
         if (sheetConfig) {
             ConfigManager.configPath = (sheet) => {
@@ -24645,82 +24723,6 @@ class PoolImpl {
         this.__cacheStack = null;
         this.__usingArray.length = 0;
         this.__usingArray = null;
-    }
-}
-
-class FGUIResource extends ResourceImpl {
-    constructor() {
-        super();
-    }
-    /**
-     * 销毁
-     */
-    Destroy() {
-        let url = Key2URL(this.key);
-        if (typeof url != "string") {
-            UIPackage.removePackage(url.url);
-            let bundle = assetManager.getBundle(Drongo.UIBundle);
-            let asset = bundle.get(url.url);
-            assetManager.releaseAsset(asset);
-            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
-        }
-        else {
-            throw new Error("未处理的Fguipackage销毁！");
-        }
-        super.Destroy();
-    }
-}
-
-class FGUILoader extends EventDispatcher {
-    url;
-    constructor() {
-        super();
-    }
-    Load(url) {
-        this.url = url;
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        else {
-            let bundle = assetManager.getBundle(url.bundle);
-            let __this = this;
-            if (!bundle) {
-                assetManager.loadBundle(url.bundle, (err, bundle) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, { url, err });
-                        return;
-                    }
-                    __this.loadUIPackge(url, bundle);
-                });
-            }
-            else {
-                __this.loadUIPackge(url, bundle);
-            }
-        }
-    }
-    loadUIPackge(url, bundle) {
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        let __this = this;
-        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
-            const progress = finish / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
-        }, (err, pkg) => {
-            if (err) {
-                __this.Emit(Event.ERROR, { url, err });
-                return;
-            }
-            const urlKey = URL2Key(url);
-            let res = new FGUIResource();
-            res.key = urlKey;
-            res.content = pkg;
-            ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
-        });
-    }
-    Reset() {
-        this.url = null;
     }
 }
 
