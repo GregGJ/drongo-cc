@@ -3109,29 +3109,22 @@ declare class BaseConfigAccessor implements IConfigAccessor {
  */
 declare class ConfigManager {
     static KEY: string;
-    private static __configPath;
-    static set configPath(value: (sheet: string) => ResURL);
-    /**
-     * 路径转化器
-     */
-    static get configPath(): (sheet: string) => ResURL;
+    /**配置表名转地址 */
+    static Sheet2URL: (sheet: string) => ResURL;
+    /**地址转配置表名 */
+    static URL2Sheet: (url: ResURL) => string;
     /**
      * 注册存取器
      * @param sheet
      * @param accessors
      */
-    static Register(sheet: string, accessors?: IConfigAccessor): void;
+    static Register(sheet: string, accessors: new () => IConfigAccessor): void;
     /**
-     * 加载配置文件
+     * 获取存取器类
      * @param sheet
-     * @param callback
+     * @returns
      */
-    static Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
-    /**
-     * 卸载配置
-     * @param sheets
-     */
-    static Unload(sheets: string | Array<string>): void;
+    static GetAccessorClass(sheet: string): new () => IConfigAccessor;
     /**
      * 获取配置存取器
      * @param sheet
@@ -3150,18 +3143,12 @@ interface IConfigManager {
      * @param sheet
      * @param accessors
      */
-    Register(sheet: string, accessors?: IConfigAccessor): void;
+    Register(sheet: string, accessors: new () => IConfigAccessor): void;
     /**
-     * 加载配置文件
+     * 获取存取器类
      * @param sheet
-     * @param callback
      */
-    Load(sheet: string | Array<string>, callback: (err: Error) => void): void;
-    /**
-     * 卸载配置文件
-     * @param sheets
-     */
-    Unload(sheets: string | Array<string>): void;
+    GetAccessorClass(sheet: string): new () => IConfigAccessor;
     /**
      * 获取配置存取器
      * @param sheet
@@ -4227,6 +4214,26 @@ declare class SubGUIMediator extends BaseMediator {
     Destroy(): void;
 }
 
+declare class ResRef {
+    /**唯一KEY */
+    key: string;
+    /**引用KEY */
+    refKey: string | undefined;
+    /**资源内容 */
+    content: any;
+    /**是否已释放 */
+    private __isDispose;
+    constructor();
+    /**释放 */
+    Dispose(): void;
+    get isDispose(): boolean;
+    Reset(): void;
+    /**
+     * 彻底销毁(注意内部接口，请勿调用)
+     */
+    Destroy(): void;
+}
+
 /**
  * UI中介者
  */
@@ -4236,6 +4243,11 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     services: Array<{
         new (): IService;
     }>;
+    /**
+     * 依赖的配置表名称
+     */
+    protected $configs: Array<string>;
+    protected $configRefs: Array<ResRef>;
     /**根节点 */
     viewComponent: GComponent | null;
     /**遮罩 */
@@ -4251,6 +4263,7 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
      * @param created
      */
     CreateUI(info: any, created: Function): void;
+    private __loadConfigs;
     private __asyncCreator;
     private __createUI;
     private __uiCreated;
@@ -4510,26 +4523,6 @@ declare class Pool {
     static recycleAll<T extends IRecyclable>(clazz: {
         new (): T;
     }): void;
-}
-
-declare class ResRef {
-    /**唯一KEY */
-    key: string;
-    /**引用KEY */
-    refKey: string | undefined;
-    /**资源内容 */
-    content: any;
-    /**是否已释放 */
-    private __isDispose;
-    constructor();
-    /**释放 */
-    Dispose(): void;
-    get isDispose(): boolean;
-    Reset(): void;
-    /**
-     * 彻底销毁(注意内部接口，请勿调用)
-     */
-    Destroy(): void;
 }
 
 interface ILoader extends IEventDispatcher {
@@ -4949,6 +4942,7 @@ declare class BaseService implements IService {
      * 依赖的配置表名称
      */
     protected $configs: Array<string>;
+    protected $configRefs: Array<ResRef>;
     /**
      * 依赖的资源
      */

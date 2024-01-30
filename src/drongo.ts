@@ -9,6 +9,7 @@ import { ResURL, URL2Key } from "./drongo/res/core/ResURL";
 import { TickerManager } from "./drongo/ticker/TickerManager";
 import { GRoot } from "./fairygui/GRoot";
 import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
+import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
 
 
 export class Drongo {
@@ -26,15 +27,28 @@ export class Drongo {
      * @param sheetConfig   配置表配置
      * @param callback      回调
      */
-    static Init(root:Node,guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
+    static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
         GRoot.create(root);
-        
+
         //注册fgui加载器
-        Res.SetResLoader("fgui",FGUILoader);
+        Res.SetResLoader("fgui", FGUILoader);
+        Res.SetResLoader("config", ConfigLoader);
         //路径转换
         if (sheetConfig) {
-            ConfigManager.configPath = (sheet: string) => {
-                return { url: sheetConfig.preURL + sheet, type: BufferAsset, bundle: sheetConfig.bundle };
+            ConfigManager.Sheet2URL = (sheet: string) => {
+                return { url: sheetConfig.preURL + sheet, type: "config", bundle: sheetConfig.bundle };
+            }
+            ConfigManager.URL2Sheet = (url: ResURL) => {
+                if (typeof url == "string") {
+                    return url;
+                }
+                let src: string;
+                if (url.url.indexOf(sheetConfig.preURL) >= 0) {
+                    src = url.url.replace(sheetConfig.preURL, "");
+                } else {
+                    src = url.url;
+                }
+                return src;
             }
         }
         //创建层级
@@ -70,7 +84,7 @@ export class Drongo {
      * 总心跳驱动接口
      * @param dt 
      */
-    static Tick(dt:number):void{
+    static Tick(dt: number): void {
         TickerManager.Tick(dt);
     }
 }

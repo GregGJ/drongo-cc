@@ -17,11 +17,11 @@ export class BaseService implements IService {
      * 依赖的配置表名称
      */
     protected $configs: Array<string>;
+    protected $configRefs: Array<ResRef>;
     /**
      * 依赖的资源
      */
     protected $assets: Array<ResURL>;
-
     protected $assetRefs: Array<ResRef>;
 
     protected __initCallback: (err: Error, result: IService) => void;
@@ -40,13 +40,23 @@ export class BaseService implements IService {
     }
 
     private __loadConfigs(): void {
-        ConfigManager.Load(this.$configs, this.__configLoaded.bind(this));
+        let urls: Array<ResURL> = [];
+        for (let index = 0; index < this.$configs.length; index++) {
+            const sheet = this.$configs[index];
+            const url = ConfigManager.Sheet2URL(sheet);
+            urls.push(url);
+        }
+        Res.GetResRefList(urls, this.name).then(
+            (value) => {
+                this.$configRefs = value;
+                this.__configLoaded();
+            }, (reason) => {
+                throw new Error(this.name + "依赖的配置加载出错:" + reason);
+            }
+        )
     }
 
-    private __configLoaded(err?: Error): void {
-        if (err) {
-            throw new Error("配置加载错误：" + err.message);
-        }
+    private __configLoaded(): void {
         if (this.$assets == null || this.$assets.length <= 0) {
             this.$configAndAssetReady();
         } else {
@@ -61,7 +71,8 @@ export class BaseService implements IService {
                 this.$configAndAssetReady();
             }, (reason) => {
                 throw new Error(this.name + "依赖资源加载出错:" + reason);
-            });
+            }
+        );
     }
 
     /**
@@ -84,14 +95,22 @@ export class BaseService implements IService {
     Destroy(): void {
         this.name = undefined;
         this.__initCallback = null;
-        ConfigManager.Unload(this.$configs)
         this.$configs = null;
         this.$assets.length = 0;
         this.$assets = null;
+
+        //配置资源引用
+        for (let index = 0; index < this.$configRefs.length; index++) {
+            const element = this.$configRefs[index];
+            element.Dispose();
+        }
+        this.$configRefs = null;
+        
         //将引用的资源释放
         for (let index = 0; index < this.$assetRefs.length; index++) {
             const element = this.$assetRefs[index];
             element.Dispose();
         }
+        this.$assetRefs = null;
     }
 }

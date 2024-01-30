@@ -13,21 +13,13 @@ export interface IConfigManager {
      * @param sheet 
      * @param accessors 
      */
-    Register(sheet: string, accessors?: IConfigAccessor): void;
-
-
+    Register(sheet: string, accessors: new()=>IConfigAccessor): void;
+    
     /**
-     * 加载配置文件
+     * 获取存取器类
      * @param sheet 
-     * @param callback 
      */
-    Load(sheet:string|Array<string>,callback:(err:Error)=>void):void;
-
-    /**
-     * 卸载配置文件
-     * @param sheets
-     */
-    Unload(sheets:string|Array<string>):void;
+    GetAccessorClass(sheet:string):new()=>IConfigAccessor;
     
     /**
      * 获取配置存取器

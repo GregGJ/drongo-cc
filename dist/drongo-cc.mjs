@@ -20970,6 +20970,789 @@ class BaseConfigAccessor {
     }
 }
 
+class ConfigManagerImpl {
+    /**
+     * 存取器
+     */
+    __accessors;
+    constructor() {
+        this.__accessors = new Map();
+    }
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessor
+     */
+    Register(sheet, accessor) {
+        this.__accessors.set(sheet, accessor);
+    }
+    /**
+     * 获取存取器类
+     * @param sheet
+     * @returns
+     */
+    GetAccessorClass(sheet) {
+        if (!this.__accessors.has(sheet)) {
+            throw new Error(sheet + "未注册！");
+        }
+        return this.__accessors.get(sheet);
+    }
+    /**
+     * 获取存取器
+     * @param sheet
+     * @returns
+     */
+    GetAccessor(sheet) {
+        const url = ConfigManager.Sheet2URL(sheet);
+        const urlKey = URL2Key(url);
+        if (!ResManager.HasRes(urlKey)) {
+            throw new Error(sheet + "未加载!");
+        }
+        let res = ResManager._getRes(urlKey);
+        return res.content;
+    }
+}
+
+/**
+ * 配置表管理器
+ */
+class ConfigManager {
+    static KEY = "drongo.ConfigManager";
+    /**配置表名转地址 */
+    static Sheet2URL;
+    /**地址转配置表名 */
+    static URL2Sheet;
+    /**
+     * 注册存取器
+     * @param sheet
+     * @param accessors
+     */
+    static Register(sheet, accessors) {
+        this.impl.Register(sheet, accessors);
+    }
+    /**
+     * 获取存取器类
+     * @param sheet
+     * @returns
+     */
+    static GetAccessorClass(sheet) {
+        return this.impl.GetAccessorClass(sheet);
+    }
+    /**
+     * 获取配置存取器
+     * @param sheet
+     */
+    static GetAccessor(sheet) {
+        return this.impl.GetAccessor(sheet);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new ConfigManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 列表
+ */
+class List extends EventDispatcher {
+    __element;
+    /**
+     * 是否保证元素的唯一性
+     */
+    __only = false;
+    /**
+     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
+     */
+    count = 0;
+    constructor(only = true) {
+        super();
+        this.__only = only;
+        this.__element = [];
+    }
+    /**
+     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     */
+    Push(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.push(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
+     * @param value
+     * @returns
+     */
+    Unshift(value) {
+        if (this.__only) {
+            let index = this.__element.indexOf(value);
+            if (index >= 0) {
+                return false;
+            }
+        }
+        this.__element.unshift(value);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.ADD)) {
+            this.Emit(Event.ADD, value);
+        }
+        return true;
+    }
+    /**
+     * 获取并删除最后一个元素
+     * @returns
+     */
+    Pop() {
+        if (this.__element.length > 0) {
+            const result = this.__element.pop();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 获取并删除第一个元素
+     * @returns
+     */
+    Shift() {
+        if (this.__element.length > 0) {
+            const result = this.__element.shift();
+            this.count = this.__element.length;
+            if (this.HasEvent(Event.REMOVE)) {
+                this.Emit(Event.REMOVE, result);
+            }
+            return result;
+        }
+        return null;
+    }
+    /**
+     * 删除指定索引的元素
+     * @param index
+     */
+    RemoveAt(index) {
+        if (index >= this.__element.length) {
+            throw new Error("删除索引超出范围！");
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+        return result;
+    }
+    /**
+     * 删除元素
+     * @param value
+     */
+    Remove(value) {
+        let index = this.__element.indexOf(value);
+        if (index < 0) {
+            throw new Error("要删除的内容不在列表中！" + value);
+        }
+        const result = this.__element[index];
+        this.__element.splice(index, 1);
+        this.count = this.__element.length;
+        if (this.HasEvent(Event.REMOVE)) {
+            this.Emit(Event.REMOVE, result);
+        }
+    }
+    /**
+     * 移除所有元素
+     */
+    Clear() {
+        this.count = 0;
+        this.__element.length = 0;
+        if (this.HasEvent(Event.CLEAR)) {
+            this.Emit(Event.CLEAR);
+        }
+    }
+    /**
+     * 判断是否包含
+     * @param value
+     * @returns
+     */
+    Has(value) {
+        return this.Find(value) >= 0;
+    }
+    /**
+     * 查找元素下标
+     * @param value
+     * @returns
+     */
+    Find(value) {
+        return this.__element.indexOf(value);
+    }
+    /**
+     * 查找元素下标
+     * @param predicate
+     * @returns
+     */
+    FindIndex(predicate) {
+        let index = this.__element.findIndex(predicate);
+        return index;
+    }
+    /**
+     * 获取指定元素
+     * @param index
+     * @returns
+     */
+    Get(index) {
+        if (index >= this.__element.length) {
+            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
+        }
+        return this.__element[index];
+    }
+    /**
+     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
+     */
+    get elements() {
+        return this.__element;
+    }
+}
+
+/**
+ * 状态机
+ */
+class FSM extends EventDispatcher {
+    /**所属*/
+    owner;
+    debug;
+    __current;
+    __state;
+    __states;
+    __name;
+    constructor(owner, name) {
+        super();
+        this.owner = owner;
+        this.__name = name;
+        this.__states = new Map();
+    }
+    Tick(dt) {
+        if (this.__current) {
+            this.__current.Tick(dt);
+        }
+    }
+    /**
+     * 添加
+     * @param key
+     * @param v
+     */
+    AddState(key, v) {
+        this.__states.set(key, v);
+        v.Init(this);
+    }
+    /**
+     * 切换状态
+     * @param value
+     * @param data
+     * @returns
+     */
+    SwitchState(value, data) {
+        if (this.__state == value) {
+            return;
+        }
+        let oldKey = this.__state;
+        let old = this.__current;
+        if (old) {
+            if (this.debug) {
+                Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 退出状态==>" + this.__current.name);
+            }
+            old.Exit();
+        }
+        this.__current = null;
+        if (!this.__states.has(value)) {
+            throw new Error("状态机:" + this.__name + " 所属:" + this.owner.name + "未找到状态==>" + value);
+        }
+        this.__state = value;
+        this.__current = this.__states.get(value);
+        if (this.debug) {
+            Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
+        }
+        this.__current.Enter(data);
+        this.Emit(Event.State_Changed, oldKey);
+    }
+    get state() {
+        return this.__state;
+    }
+    get current() {
+        return this.__current;
+    }
+    Destroy() {
+        if (this.__current) {
+            this.__current.Exit();
+        }
+        this.__states.forEach(element => {
+            element.Destroy();
+        });
+        this.__states.clear();
+    }
+}
+
+var GUIState;
+(function (GUIState) {
+    /**
+     * 未使用状态
+     */
+    GUIState[GUIState["Null"] = 0] = "Null";
+    /**
+     * 显示处理中
+     */
+    GUIState[GUIState["Showing"] = 1] = "Showing";
+    /**
+     * 已显示
+     */
+    GUIState[GUIState["Showed"] = 2] = "Showed";
+    /**
+     * 关闭处理中
+     */
+    GUIState[GUIState["Closeing"] = 3] = "Closeing";
+    /**
+     * 已关闭
+     */
+    GUIState[GUIState["Closed"] = 4] = "Closed";
+})(GUIState || (GUIState = {}));
+
+class Layer extends GComponent {
+    isFullScrene;
+    openRecord;
+    constructor(name, isFullScrene = false) {
+        super();
+        this.node.name = name;
+        this.isFullScrene = isFullScrene;
+        this.openRecord = [];
+        this.makeFullScreen();
+    }
+    AddChild(child) {
+        this.addChild(child);
+    }
+    AddChildAt(child, index) {
+        this.addChildAt(child, index);
+    }
+    RemoveChild(child) {
+        this.removeChild(child);
+    }
+    RemoveChildAt(index) {
+        this.removeChildAt(index);
+    }
+    GetChildAt(index) {
+        return this.getChildAt(index);
+    }
+    GetCount() {
+        return this.numChildren;
+    }
+}
+
+/**
+ * cocos fgui 层管理器
+ */
+class LayerManagerImpl {
+    __layerMap = new Map();
+    constructor() {
+    }
+    /**
+     * 添加层
+     * @param key
+     * @param layer
+     */
+    AddLayer(key, layer) {
+        if (layer instanceof Layer) {
+            GRoot.inst.addChild(layer);
+            this.__layerMap.set(key, layer);
+        }
+        else {
+            throw new Error("层必须是Layer");
+        }
+    }
+    /**
+     * 删除层
+     * @param key
+     */
+    RemoveLayer(key) {
+        let layer = this.__layerMap.get(key);
+        if (layer) {
+            GRoot.inst.removeChild(layer);
+            this.__layerMap.delete(key);
+        }
+        else {
+            throw new Error("找不到要删除的层：" + key);
+        }
+    }
+    GetLayer(layerKey) {
+        return this.__layerMap.get(layerKey);
+    }
+    /**
+     * 获得所有层
+     */
+    GetAllLayer() {
+        let _values = [];
+        this.__layerMap.forEach(function (v, key) {
+            _values.push(v);
+        });
+        return _values;
+    }
+}
+
+/**
+ * 层管理器
+ */
+class LayerManager {
+    static KEY = "drongo.LayerManager";
+    /**
+     * 添加一个层
+     * @param key
+     * @param layer
+     */
+    static AddLayer(key, layer) {
+        this.impl.AddLayer(key, layer);
+    }
+    /**
+     * 删除层
+     * @param key
+     */
+    static RemoveLayer(key) {
+        this.impl.RemoveLayer(key);
+    }
+    /**
+     * 获取层对象
+     * @param key
+     */
+    static GetLayer(key) {
+        return this.impl.GetLayer(key);
+    }
+    /**
+     * 获得所有层
+     */
+    static GetAllLayer() {
+        return this.impl.GetAllLayer();
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            this.__impl = new LayerManagerImpl();
+        }
+        return this.__impl;
+    }
+}
+
+/**
+ * 加载界面
+ */
+class LoadingView {
+    static KEY = "drongo.LoadingView";
+    static Show() {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.Show();
+    }
+    static Hide() {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.Hide();
+    }
+    static ChangeData(data) {
+        if (!this.impl) {
+            return;
+        }
+        this.impl.ChangeData(data);
+    }
+    static __impl;
+    static get impl() {
+        if (this.__impl == null) {
+            this.__impl = Injector.GetInject(this.KEY);
+        }
+        if (this.__impl == null) {
+            console.warn(this.KEY + "未注入");
+        }
+        return this.__impl;
+    }
+}
+
+/**
+* GUI 关联关系
+*/
+class RelationManager {
+    static DEBUG = false;
+    static __map = new Map();
+    constructor() {
+    }
+    /**
+     * 添加UI关联关系
+     * @param key
+     * @param value
+     */
+    static AddRelation(key, value) {
+        if (this.DEBUG) {
+            this.__checkValidity(key, value);
+        }
+        if (this.__map.has(key)) {
+            throw new Error("重复注册！");
+        }
+        this.__map.set(key, value);
+    }
+    static RemoveRelation(key) {
+        if (!this.__map.has(key)) {
+            throw new Error("找不到要删除的内容！");
+        }
+        this.__map.delete(key);
+    }
+    /**
+     * 检测合法性
+     * @param value
+     */
+    static __checkValidity(key, value) {
+        let guiKey = key;
+        let showList = value.show;
+        let hideList = value.hide;
+        let findex;
+        findex = showList.show.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show:中不能包含自身！");
+        }
+        findex = showList.hide.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.hide:中不能包含自身！");
+        }
+        findex = hideList.show.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show:中不能包含自身！");
+        }
+        findex = hideList.hide.indexOf(guiKey);
+        if (findex >= 0) {
+            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.hide:中不能包含自身！");
+        }
+        for (let index = 0; index < showList.show.length; index++) {
+            const showkey = showList.show[index];
+            const findex = showList.hide.indexOf(showkey);
+            if (findex >= 0) {
+                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show和show.hide中包含相同的guikey:" + showkey);
+            }
+        }
+        for (let index = 0; index < hideList.show.length; index++) {
+            const showkey = hideList.show[index];
+            const findex = hideList.hide.indexOf(showkey);
+            if (findex >= 0) {
+                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show和hide.hide中包含相同的guikey:" + showkey);
+            }
+        }
+    }
+    static GetRelation(key) {
+        return this.__map.get(key);
+    }
+}
+
+class FGUIResource extends ResourceImpl {
+    constructor() {
+        super();
+    }
+    /**
+     * 销毁
+     */
+    Destroy() {
+        let url = Key2URL(this.key);
+        if (typeof url != "string") {
+            UIPackage.removePackage(url.url);
+            let bundle = assetManager.getBundle(Drongo.UIBundle);
+            let asset = bundle.get(url.url);
+            assetManager.releaseAsset(asset);
+            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
+        }
+        else {
+            throw new Error("未处理的Fguipackage销毁！");
+        }
+        super.Destroy();
+    }
+}
+
+class FGUILoader extends EventDispatcher {
+    url;
+    constructor() {
+        super();
+    }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        else {
+            let bundle = assetManager.getBundle(url.bundle);
+            let __this = this;
+            if (!bundle) {
+                assetManager.loadBundle(url.bundle, (err, bundle) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, { url, err });
+                        return;
+                    }
+                    __this.loadUIPackge(url, bundle);
+                });
+            }
+            else {
+                __this.loadUIPackge(url, bundle);
+            }
+        }
+    }
+    loadUIPackge(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        let __this = this;
+        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
+            const progress = finish / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, pkg) => {
+            if (err) {
+                __this.Emit(Event.ERROR, { url, err });
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let res = new FGUIResource();
+            res.key = urlKey;
+            res.content = pkg;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
+        });
+    }
+    Reset() {
+        this.url = null;
+    }
+}
+
+class ConfigUtils {
+    /**
+     * 解析配置
+     * @param titleList
+     * @param typeList
+     * @param byte
+     * @returns
+     */
+    static ParseConfig(titleList, typeList, byte) {
+        let title;
+        let type;
+        let result = {};
+        for (let index = 0; index < typeList.length; index++) {
+            title = titleList[index];
+            type = typeList[index];
+            switch (type) {
+                case 0: //byte
+                case 1: //ubyte
+                case 2: //short
+                case 3: //ushort
+                case 4: //int
+                case 5: //uint
+                case 6: //float
+                case 7: //number
+                    this.__readNumber(title, type, result, byte);
+                    break;
+                case 8: //string
+                    result[title] = byte.ReadUTF();
+                    break;
+                case 9: //[byte]
+                case 10: //[ubyte]
+                case 11: //[short]
+                case 12: //[ushort]
+                case 13: //[int]
+                case 14: //[uint]
+                case 15: //[float]
+                case 16: //[number]
+                case 17: //[string]
+                    this.__readArray(title, type, result, byte);
+                    break;
+            }
+        }
+        return result;
+    }
+    static __readNumber(title, type, data, byte) {
+        switch (type) {
+            case 0: //byte
+                data[title] = byte.ReadByte();
+                break;
+            case 1: //ubyte
+                data[title] = byte.ReadUnsignedByte();
+                break;
+            case 2: //short
+                data[title] = byte.ReadShort();
+                break;
+            case 3: //ushort
+                data[title] = byte.ReadUnsignedShort();
+                break;
+            case 4: //int
+                data[title] = byte.ReadInt();
+                break;
+            case 5: //uint
+                data[title] = byte.ReadUnsignedInt();
+                break;
+            case 6: //float
+                data[title] = byte.ReadFloat();
+                break;
+            case 7: //number
+                data[title] = byte.ReadDouble();
+                break;
+            default:
+                throw new Error(title + ' 未知类型:' + type);
+        }
+    }
+    static __readArray(title, type, data, byte) {
+        let len = byte.ReadUnsignedInt();
+        let list = [];
+        for (let index = 0; index < len; index++) {
+            switch (type) {
+                case 9: //byte
+                    list.push(byte.ReadByte());
+                    break;
+                case 10: //ubyte
+                    list.push(byte.ReadUnsignedByte());
+                    break;
+                case 11: //short
+                    list.push(byte.ReadShort());
+                    break;
+                case 12: //ushort
+                    list.push(byte.ReadUnsignedShort());
+                    break;
+                case 13:
+                    list.push(byte.ReadInt());
+                    break;
+                case 14:
+                    list.push(byte.ReadUnsignedInt());
+                    break;
+                case 15:
+                    list.push(byte.ReadFloat());
+                    break;
+                case 16:
+                    list.push(byte.ReadDouble());
+                    break;
+                case 17:
+                    list.push(byte.ReadUTF());
+                    break;
+                default:
+                    throw new Error(title + ' 未知类型:' + type);
+            }
+        }
+        data[title] = list;
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014-present, Egret Technology.
@@ -22093,208 +22876,43 @@ class ByteArray {
     }
 }
 
-class ConfigUtils {
-    /**
-     * 解析配置
-     * @param titleList
-     * @param typeList
-     * @param byte
-     * @returns
-     */
-    static ParseConfig(titleList, typeList, byte) {
-        let title;
-        let type;
-        let result = {};
-        for (let index = 0; index < typeList.length; index++) {
-            title = titleList[index];
-            type = typeList[index];
-            switch (type) {
-                case 0: //byte
-                case 1: //ubyte
-                case 2: //short
-                case 3: //ushort
-                case 4: //int
-                case 5: //uint
-                case 6: //float
-                case 7: //number
-                    this.__readNumber(title, type, result, byte);
-                    break;
-                case 8: //string
-                    result[title] = byte.ReadUTF();
-                    break;
-                case 9: //[byte]
-                case 10: //[ubyte]
-                case 11: //[short]
-                case 12: //[ushort]
-                case 13: //[int]
-                case 14: //[uint]
-                case 15: //[float]
-                case 16: //[number]
-                case 17: //[string]
-                    this.__readArray(title, type, result, byte);
-                    break;
-            }
-        }
-        return result;
-    }
-    static __readNumber(title, type, data, byte) {
-        switch (type) {
-            case 0: //byte
-                data[title] = byte.ReadByte();
-                break;
-            case 1: //ubyte
-                data[title] = byte.ReadUnsignedByte();
-                break;
-            case 2: //short
-                data[title] = byte.ReadShort();
-                break;
-            case 3: //ushort
-                data[title] = byte.ReadUnsignedShort();
-                break;
-            case 4: //int
-                data[title] = byte.ReadInt();
-                break;
-            case 5: //uint
-                data[title] = byte.ReadUnsignedInt();
-                break;
-            case 6: //float
-                data[title] = byte.ReadFloat();
-                break;
-            case 7: //number
-                data[title] = byte.ReadDouble();
-                break;
-            default:
-                throw new Error(title + ' 未知类型:' + type);
-        }
-    }
-    static __readArray(title, type, data, byte) {
-        let len = byte.ReadUnsignedInt();
-        let list = [];
-        for (let index = 0; index < len; index++) {
-            switch (type) {
-                case 9: //byte
-                    list.push(byte.ReadByte());
-                    break;
-                case 10: //ubyte
-                    list.push(byte.ReadUnsignedByte());
-                    break;
-                case 11: //short
-                    list.push(byte.ReadShort());
-                    break;
-                case 12: //ushort
-                    list.push(byte.ReadUnsignedShort());
-                    break;
-                case 13:
-                    list.push(byte.ReadInt());
-                    break;
-                case 14:
-                    list.push(byte.ReadUnsignedInt());
-                    break;
-                case 15:
-                    list.push(byte.ReadFloat());
-                    break;
-                case 16:
-                    list.push(byte.ReadDouble());
-                    break;
-                case 17:
-                    list.push(byte.ReadUTF());
-                    break;
-                default:
-                    throw new Error(title + ' 未知类型:' + type);
-            }
-        }
-        data[title] = list;
-    }
-}
-
-class ConfigManagerImpl {
-    /**
-     * 存取器
-     */
-    __accessors;
-    /**
-     * 标记配置表是否加载完成
-     */
-    __loaded;
+class ConfigLoader extends EventDispatcher {
+    url;
     constructor() {
-        this.__accessors = new Map();
-        this.__loaded = new Map();
+        super();
     }
-    /**
-     * 加载配置表
-     * @param sheets
-     * @param callback
-     */
-    Load(sheets, callback) {
-        if (Array.isArray(sheets)) {
-            let loadIndex = 0;
-            let loadTotal = sheets.length;
-            for (let index = 0; index < sheets.length; index++) {
-                const sheet = sheets[index];
-                this.__load(sheet, (err) => {
-                    loadIndex++;
-                    if (loadIndex >= loadTotal) {
-                        if (callback) {
-                            callback(err);
-                        }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现！");
+        }
+        let bundle = assetManager.getBundle(url.bundle);
+        if (!bundle) {
+            let __this = this;
+            assetManager.loadBundle(url.bundle, (err, bundle) => {
+                if (err) {
+                    this.Emit(Event.ERROR, { url, err });
+                    return;
+                }
+                bundle.load(FullURL(url), BufferAsset, (finished, total) => {
+                    const progress = finished / total;
+                    __this.Emit(Event.PROGRESS, { url, progress });
+                }, (err, asset) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, err);
+                        return;
                     }
+                    const urlKey = URL2Key(url);
+                    let buffer = asset['_buffer'];
+                    let accessor = this.__parseConfig(url.url, buffer);
+                    let res = new ResourceImpl();
+                    res.key = urlKey;
+                    res.content = accessor;
+                    ResManager.AddRes(res);
+                    __this.Emit(Event.COMPLETE, { url });
                 });
-            }
+            });
         }
-        else {
-            this.__load(sheets, callback);
-        }
-    }
-    /**
-     * 卸载配置表
-     * @param sheets
-     */
-    Unload(sheets) {
-        if (Array.isArray(sheets)) {
-            for (let index = 0; index < sheets.length; index++) {
-                const sheet = sheets[index];
-                this.__unload(sheet);
-            }
-        }
-        else {
-            this.__unload(sheets);
-        }
-    }
-    __unload(sheet) {
-        if (this.__loaded.has(sheet)) {
-            this.__loaded.delete(sheet);
-            if (this.__accessors.has(sheet)) {
-                let acc = this.__accessors.get(sheet);
-                acc.Clear();
-            }
-        }
-    }
-    __load(sheet, callback) {
-        if (this.__loaded.has(sheet)) {
-            if (callback) {
-                callback();
-            }
-            return;
-        }
-        if (!ConfigManager.configPath) {
-            throw new Error("ConfigManager.configPath函数未设置！");
-        }
-        let url = ConfigManager.configPath(sheet);
-        Res.GetResRef(url, "ConfigManagerImpl").then(value => {
-            if (!this.__loaded.has(sheet)) {
-                let buffer = value.content['_buffer'];
-                //解析
-                this.__parseConfig(sheet, buffer);
-                this.__loaded.set(sheet, true);
-                //原始资源可以销毁了
-                value.Dispose();
-            }
-            if (callback)
-                callback();
-        }, reason => {
-            if (callback)
-                callback(reason);
-        });
     }
     __parseConfig(sheet, buffer) {
         let byte = new ByteArray(buffer);
@@ -22313,675 +22931,20 @@ class ConfigManagerImpl {
         //数据数量
         len = byte.ReadUnsignedInt();
         let data;
+        let accessorClass;
         let accessor;
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
             data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             //存取器
-            accessor = this.__accessors.get(sheet);
+            accessorClass = ConfigManager.GetAccessorClass(sheet);
+            accessor = new accessorClass();
             if (!accessor) {
                 Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
                 continue;
             }
             accessor.Save(data);
         }
-    }
-    /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
-     */
-    Register(sheet, accessors) {
-        this.__accessors.set(sheet, accessors);
-    }
-    /**
-     * 获取存取器
-     * @param sheet
-     * @returns
-     */
-    GetAccessor(sheet) {
-        if (!this.__accessors.has(sheet)) {
-            throw new Error("配置表：" + sheet + "未注册存取器");
-        }
-        return this.__accessors.get(sheet);
-    }
-}
-
-/**
- * 配置表管理器
- */
-class ConfigManager {
-    static KEY = "drongo.ConfigManager";
-    static __configPath;
-    static set configPath(value) {
-        this.__configPath = value;
-    }
-    /**
-     * 路径转化器
-     */
-    static get configPath() {
-        if (this.__configPath == null) {
-            throw new Error("配置表路径函数未设置！");
-        }
-        return this.__configPath;
-    }
-    /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
-     */
-    static Register(sheet, accessors) {
-        this.impl.Register(sheet, accessors);
-    }
-    /**
-     * 加载配置文件
-     * @param sheet
-     * @param callback
-     */
-    static Load(sheet, callback) {
-        this.impl.Load(sheet, callback);
-    }
-    /**
-     * 卸载配置
-     * @param sheets
-     */
-    static Unload(sheets) {
-        this.impl.Unload(sheets);
-    }
-    /**
-     * 获取配置存取器
-     * @param sheet
-     */
-    static GetAccessor(sheet) {
-        return this.impl.GetAccessor(sheet);
-    }
-    static __impl;
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            this.__impl = new ConfigManagerImpl();
-        }
-        return this.__impl;
-    }
-}
-
-/**
- * 列表
- */
-class List extends EventDispatcher {
-    __element;
-    /**
-     * 是否保证元素的唯一性
-     */
-    __only = false;
-    /**
-     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
-     */
-    count = 0;
-    constructor(only = true) {
-        super();
-        this.__only = only;
-        this.__element = [];
-    }
-    /**
-     * 添加到末尾(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
-     */
-    Push(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
-            }
-        }
-        this.__element.push(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
-        }
-        return true;
-    }
-    /**
-     * 添加到列表头部(注意如果保证唯一性，那么重复时就直接返回)
-     * @param value
-     * @returns
-     */
-    Unshift(value) {
-        if (this.__only) {
-            let index = this.__element.indexOf(value);
-            if (index >= 0) {
-                return false;
-            }
-        }
-        this.__element.unshift(value);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
-        }
-        return true;
-    }
-    /**
-     * 获取并删除最后一个元素
-     * @returns
-     */
-    Pop() {
-        if (this.__element.length > 0) {
-            const result = this.__element.pop();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
-            }
-            return result;
-        }
-        return null;
-    }
-    /**
-     * 获取并删除第一个元素
-     * @returns
-     */
-    Shift() {
-        if (this.__element.length > 0) {
-            const result = this.__element.shift();
-            this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
-            }
-            return result;
-        }
-        return null;
-    }
-    /**
-     * 删除指定索引的元素
-     * @param index
-     */
-    RemoveAt(index) {
-        if (index >= this.__element.length) {
-            throw new Error("删除索引超出范围！");
-        }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
-        }
-        return result;
-    }
-    /**
-     * 删除元素
-     * @param value
-     */
-    Remove(value) {
-        let index = this.__element.indexOf(value);
-        if (index < 0) {
-            throw new Error("要删除的内容不在列表中！" + value);
-        }
-        const result = this.__element[index];
-        this.__element.splice(index, 1);
-        this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
-        }
-    }
-    /**
-     * 移除所有元素
-     */
-    Clear() {
-        this.count = 0;
-        this.__element.length = 0;
-        if (this.HasEvent(Event.CLEAR)) {
-            this.Emit(Event.CLEAR);
-        }
-    }
-    /**
-     * 判断是否包含
-     * @param value
-     * @returns
-     */
-    Has(value) {
-        return this.Find(value) >= 0;
-    }
-    /**
-     * 查找元素下标
-     * @param value
-     * @returns
-     */
-    Find(value) {
-        return this.__element.indexOf(value);
-    }
-    /**
-     * 查找元素下标
-     * @param predicate
-     * @returns
-     */
-    FindIndex(predicate) {
-        let index = this.__element.findIndex(predicate);
-        return index;
-    }
-    /**
-     * 获取指定元素
-     * @param index
-     * @returns
-     */
-    Get(index) {
-        if (index >= this.__element.length) {
-            throw new Error("超出索引范围:" + index + "/" + this.__element.length);
-        }
-        return this.__element[index];
-    }
-    /**
-     * 源列表数据(注意不要直接进行增删操作，而是通过List.push....等接口进行操作)
-     */
-    get elements() {
-        return this.__element;
-    }
-}
-
-/**
- * 状态机
- */
-class FSM extends EventDispatcher {
-    /**所属*/
-    owner;
-    debug;
-    __current;
-    __state;
-    __states;
-    __name;
-    constructor(owner, name) {
-        super();
-        this.owner = owner;
-        this.__name = name;
-        this.__states = new Map();
-    }
-    Tick(dt) {
-        if (this.__current) {
-            this.__current.Tick(dt);
-        }
-    }
-    /**
-     * 添加
-     * @param key
-     * @param v
-     */
-    AddState(key, v) {
-        this.__states.set(key, v);
-        v.Init(this);
-    }
-    /**
-     * 切换状态
-     * @param value
-     * @param data
-     * @returns
-     */
-    SwitchState(value, data) {
-        if (this.__state == value) {
-            return;
-        }
-        let oldKey = this.__state;
-        let old = this.__current;
-        if (old) {
-            if (this.debug) {
-                Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 退出状态==>" + this.__current.name);
-            }
-            old.Exit();
-        }
-        this.__current = null;
-        if (!this.__states.has(value)) {
-            throw new Error("状态机:" + this.__name + " 所属:" + this.owner.name + "未找到状态==>" + value);
-        }
-        this.__state = value;
-        this.__current = this.__states.get(value);
-        if (this.debug) {
-            Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
-        }
-        this.__current.Enter(data);
-        this.Emit(Event.State_Changed, oldKey);
-    }
-    get state() {
-        return this.__state;
-    }
-    get current() {
-        return this.__current;
-    }
-    Destroy() {
-        if (this.__current) {
-            this.__current.Exit();
-        }
-        this.__states.forEach(element => {
-            element.Destroy();
-        });
-        this.__states.clear();
-    }
-}
-
-var GUIState;
-(function (GUIState) {
-    /**
-     * 未使用状态
-     */
-    GUIState[GUIState["Null"] = 0] = "Null";
-    /**
-     * 显示处理中
-     */
-    GUIState[GUIState["Showing"] = 1] = "Showing";
-    /**
-     * 已显示
-     */
-    GUIState[GUIState["Showed"] = 2] = "Showed";
-    /**
-     * 关闭处理中
-     */
-    GUIState[GUIState["Closeing"] = 3] = "Closeing";
-    /**
-     * 已关闭
-     */
-    GUIState[GUIState["Closed"] = 4] = "Closed";
-})(GUIState || (GUIState = {}));
-
-class Layer extends GComponent {
-    isFullScrene;
-    openRecord;
-    constructor(name, isFullScrene = false) {
-        super();
-        this.node.name = name;
-        this.isFullScrene = isFullScrene;
-        this.openRecord = [];
-        this.makeFullScreen();
-    }
-    AddChild(child) {
-        this.addChild(child);
-    }
-    AddChildAt(child, index) {
-        this.addChildAt(child, index);
-    }
-    RemoveChild(child) {
-        this.removeChild(child);
-    }
-    RemoveChildAt(index) {
-        this.removeChildAt(index);
-    }
-    GetChildAt(index) {
-        return this.getChildAt(index);
-    }
-    GetCount() {
-        return this.numChildren;
-    }
-}
-
-/**
- * cocos fgui 层管理器
- */
-class LayerManagerImpl {
-    __layerMap = new Map();
-    constructor() {
-    }
-    /**
-     * 添加层
-     * @param key
-     * @param layer
-     */
-    AddLayer(key, layer) {
-        if (layer instanceof Layer) {
-            GRoot.inst.addChild(layer);
-            this.__layerMap.set(key, layer);
-        }
-        else {
-            throw new Error("层必须是Layer");
-        }
-    }
-    /**
-     * 删除层
-     * @param key
-     */
-    RemoveLayer(key) {
-        let layer = this.__layerMap.get(key);
-        if (layer) {
-            GRoot.inst.removeChild(layer);
-            this.__layerMap.delete(key);
-        }
-        else {
-            throw new Error("找不到要删除的层：" + key);
-        }
-    }
-    GetLayer(layerKey) {
-        return this.__layerMap.get(layerKey);
-    }
-    /**
-     * 获得所有层
-     */
-    GetAllLayer() {
-        let _values = [];
-        this.__layerMap.forEach(function (v, key) {
-            _values.push(v);
-        });
-        return _values;
-    }
-}
-
-/**
- * 层管理器
- */
-class LayerManager {
-    static KEY = "drongo.LayerManager";
-    /**
-     * 添加一个层
-     * @param key
-     * @param layer
-     */
-    static AddLayer(key, layer) {
-        this.impl.AddLayer(key, layer);
-    }
-    /**
-     * 删除层
-     * @param key
-     */
-    static RemoveLayer(key) {
-        this.impl.RemoveLayer(key);
-    }
-    /**
-     * 获取层对象
-     * @param key
-     */
-    static GetLayer(key) {
-        return this.impl.GetLayer(key);
-    }
-    /**
-     * 获得所有层
-     */
-    static GetAllLayer() {
-        return this.impl.GetAllLayer();
-    }
-    static __impl;
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            this.__impl = new LayerManagerImpl();
-        }
-        return this.__impl;
-    }
-}
-
-/**
- * 加载界面
- */
-class LoadingView {
-    static KEY = "drongo.LoadingView";
-    static Show() {
-        if (!this.impl) {
-            return;
-        }
-        this.impl.Show();
-    }
-    static Hide() {
-        if (!this.impl) {
-            return;
-        }
-        this.impl.Hide();
-    }
-    static ChangeData(data) {
-        if (!this.impl) {
-            return;
-        }
-        this.impl.ChangeData(data);
-    }
-    static __impl;
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            console.warn(this.KEY + "未注入");
-        }
-        return this.__impl;
-    }
-}
-
-/**
-* GUI 关联关系
-*/
-class RelationManager {
-    static DEBUG = false;
-    static __map = new Map();
-    constructor() {
-    }
-    /**
-     * 添加UI关联关系
-     * @param key
-     * @param value
-     */
-    static AddRelation(key, value) {
-        if (this.DEBUG) {
-            this.__checkValidity(key, value);
-        }
-        if (this.__map.has(key)) {
-            throw new Error("重复注册！");
-        }
-        this.__map.set(key, value);
-    }
-    static RemoveRelation(key) {
-        if (!this.__map.has(key)) {
-            throw new Error("找不到要删除的内容！");
-        }
-        this.__map.delete(key);
-    }
-    /**
-     * 检测合法性
-     * @param value
-     */
-    static __checkValidity(key, value) {
-        let guiKey = key;
-        let showList = value.show;
-        let hideList = value.hide;
-        let findex;
-        findex = showList.show.indexOf(guiKey);
-        if (findex >= 0) {
-            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show:中不能包含自身！");
-        }
-        findex = showList.hide.indexOf(guiKey);
-        if (findex >= 0) {
-            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.hide:中不能包含自身！");
-        }
-        findex = hideList.show.indexOf(guiKey);
-        if (findex >= 0) {
-            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show:中不能包含自身！");
-        }
-        findex = hideList.hide.indexOf(guiKey);
-        if (findex >= 0) {
-            throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.hide:中不能包含自身！");
-        }
-        for (let index = 0; index < showList.show.length; index++) {
-            const showkey = showList.show[index];
-            const findex = showList.hide.indexOf(showkey);
-            if (findex >= 0) {
-                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " show.show和show.hide中包含相同的guikey:" + showkey);
-            }
-        }
-        for (let index = 0; index < hideList.show.length; index++) {
-            const showkey = hideList.show[index];
-            const findex = hideList.hide.indexOf(showkey);
-            if (findex >= 0) {
-                throw new Error("GuiRelation.config配置错误：gui:" + guiKey + " hide.show和hide.hide中包含相同的guikey:" + showkey);
-            }
-        }
-    }
-    static GetRelation(key) {
-        return this.__map.get(key);
-    }
-}
-
-class FGUIResource extends ResourceImpl {
-    constructor() {
-        super();
-    }
-    /**
-     * 销毁
-     */
-    Destroy() {
-        let url = Key2URL(this.key);
-        if (typeof url != "string") {
-            UIPackage.removePackage(url.url);
-            let bundle = assetManager.getBundle(Drongo.UIBundle);
-            let asset = bundle.get(url.url);
-            assetManager.releaseAsset(asset);
-            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
-        }
-        else {
-            throw new Error("未处理的Fguipackage销毁！");
-        }
-        super.Destroy();
-    }
-}
-
-class FGUILoader extends EventDispatcher {
-    url;
-    constructor() {
-        super();
-    }
-    Load(url) {
-        this.url = url;
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        else {
-            let bundle = assetManager.getBundle(url.bundle);
-            let __this = this;
-            if (!bundle) {
-                assetManager.loadBundle(url.bundle, (err, bundle) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, { url, err });
-                        return;
-                    }
-                    __this.loadUIPackge(url, bundle);
-                });
-            }
-            else {
-                __this.loadUIPackge(url, bundle);
-            }
-        }
-    }
-    loadUIPackge(url, bundle) {
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        let __this = this;
-        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
-            const progress = finish / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
-        }, (err, pkg) => {
-            if (err) {
-                __this.Emit(Event.ERROR, { url, err });
-                return;
-            }
-            const urlKey = URL2Key(url);
-            let res = new FGUIResource();
-            res.key = urlKey;
-            res.content = pkg;
-            ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
-        });
+        return accessor;
     }
     Reset() {
         this.url = null;
@@ -23004,10 +22967,24 @@ class Drongo {
         GRoot.create(root);
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
+        Res.SetResLoader("config", ConfigLoader);
         //路径转换
         if (sheetConfig) {
-            ConfigManager.configPath = (sheet) => {
-                return { url: sheetConfig.preURL + sheet, type: BufferAsset, bundle: sheetConfig.bundle };
+            ConfigManager.Sheet2URL = (sheet) => {
+                return { url: sheetConfig.preURL + sheet, type: "config", bundle: sheetConfig.bundle };
+            };
+            ConfigManager.URL2Sheet = (url) => {
+                if (typeof url == "string") {
+                    return url;
+                }
+                let src;
+                if (url.url.indexOf(sheetConfig.preURL) >= 0) {
+                    src = url.url.replace(sheetConfig.preURL, "");
+                }
+                else {
+                    src = url.url;
+                }
+                return src;
             };
         }
         //创建层级
@@ -23890,6 +23867,11 @@ class GUIMediator extends BaseMediator {
     info = null;
     /**依赖的服务 */
     services;
+    /**
+     * 依赖的配置表名称
+     */
+    $configs;
+    $configRefs;
     /**根节点 */
     viewComponent = null;
     /**遮罩 */
@@ -23912,7 +23894,26 @@ class GUIMediator extends BaseMediator {
             throw new Error("GUI 信息不能为空");
         }
         this.__createdCallBack = created;
-        this.__createUI(true);
+        if (this.$configs != null && this.$configs.length != 0) {
+            this.__loadConfigs();
+        }
+        else {
+            this.__createUI(true);
+        }
+    }
+    __loadConfigs() {
+        let urls = [];
+        for (let index = 0; index < this.$configs.length; index++) {
+            const sheet = this.$configs[index];
+            const url = ConfigManager.Sheet2URL(sheet);
+            urls.push(url);
+        }
+        Res.GetResRefList(urls, this.info.comName).then((value) => {
+            this.$configRefs = value;
+            this.__createUI(true);
+        }, (reason) => {
+            throw new Error("UI:" + this.info.comName + "依赖的配置加载出错:" + reason);
+        });
     }
     __asyncCreator;
     __createUI(async) {
@@ -24019,6 +24020,12 @@ class GUIMediator extends BaseMediator {
                 element.Destroy();
             }
         }
+        for (let index = 0; index < this.$configRefs.length; index++) {
+            const element = this.$configRefs[index];
+            element.Dispose();
+        }
+        this.$configs = null;
+        this.$configRefs = null;
     }
 }
 
@@ -24763,6 +24770,7 @@ class BaseService {
      * 依赖的配置表名称
      */
     $configs;
+    $configRefs;
     /**
      * 依赖的资源
      */
@@ -24781,12 +24789,20 @@ class BaseService {
         }
     }
     __loadConfigs() {
-        ConfigManager.Load(this.$configs, this.__configLoaded.bind(this));
-    }
-    __configLoaded(err) {
-        if (err) {
-            throw new Error("配置加载错误：" + err.message);
+        let urls = [];
+        for (let index = 0; index < this.$configs.length; index++) {
+            const sheet = this.$configs[index];
+            const url = ConfigManager.Sheet2URL(sheet);
+            urls.push(url);
         }
+        Res.GetResRefList(urls, this.name).then((value) => {
+            this.$configRefs = value;
+            this.__configLoaded();
+        }, (reason) => {
+            throw new Error(this.name + "依赖的配置加载出错:" + reason);
+        });
+    }
+    __configLoaded() {
         if (this.$assets == null || this.$assets.length <= 0) {
             this.$configAndAssetReady();
         }
@@ -24819,15 +24835,21 @@ class BaseService {
     Destroy() {
         this.name = undefined;
         this.__initCallback = null;
-        ConfigManager.Unload(this.$configs);
         this.$configs = null;
         this.$assets.length = 0;
         this.$assets = null;
+        //配置资源引用
+        for (let index = 0; index < this.$configRefs.length; index++) {
+            const element = this.$configRefs[index];
+            element.Dispose();
+        }
+        this.$configRefs = null;
         //将引用的资源释放
         for (let index = 0; index < this.$assetRefs.length; index++) {
             const element = this.$assetRefs[index];
             element.Dispose();
         }
+        this.$assetRefs = null;
     }
 }
 
