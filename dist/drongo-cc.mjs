@@ -18893,7 +18893,7 @@ class LoaderQueue {
     /**
      * 对象池
      */
-    pool = new Array();
+    pool = new Map();
     constructor() {
         TickerManager.AddTicker(this);
     }
@@ -18905,8 +18905,20 @@ class LoaderQueue {
             this.waiting.Delete(urlKey);
             let loader;
             let loaderClass;
-            if (this.pool.length > 0) {
-                loader = this.pool.shift();
+            let type;
+            if (typeof url == "string") {
+                type = "string";
+            }
+            else {
+                type = url.type;
+            }
+            let list = this.pool.get(type);
+            if (list == null) {
+                list = [];
+                this.pool.set(type, list);
+            }
+            if (list.length > 0) {
+                loader = list.shift();
             }
             else {
                 if (typeof url == "string") {
@@ -18943,7 +18955,19 @@ class LoaderQueue {
             Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();
-            this.pool.push(target);
+            let type;
+            if (typeof data.url == "string") {
+                type = "string";
+            }
+            else {
+                type = data.url.type;
+            }
+            let list = this.pool.get(type);
+            if (list == null) {
+                list = [];
+                this.pool.set(type, list);
+            }
+            list.push(target);
         }
     }
     Load(url) {

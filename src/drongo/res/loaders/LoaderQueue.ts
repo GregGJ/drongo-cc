@@ -25,8 +25,7 @@ export class LoaderQueue implements ITicker {
     /**
      * 对象池
      */
-    private pool: Array<ILoader> = new Array<ILoader>();
-
+    private pool: Map<any, Array<ILoader>> = new Map<any, Array<ILoader>>();
 
     constructor() {
         TickerManager.AddTicker(this);
@@ -41,8 +40,19 @@ export class LoaderQueue implements ITicker {
 
             let loader: ILoader;
             let loaderClass: new () => ILoader;
-            if (this.pool.length > 0) {
-                loader = this.pool.shift();
+            let type: any;
+            if (typeof url == "string") {
+                type = "string";
+            } else {
+                type = url.type;
+            }
+            let list = this.pool.get(type);
+            if (list == null) {
+                list = [];
+                this.pool.set(type, list);
+            }
+            if (list.length > 0) {
+                loader = list.shift();
             } else {
                 if (typeof url == "string") {
                     loaderClass = Res.GetResLoader("string");
@@ -79,7 +89,18 @@ export class LoaderQueue implements ITicker {
             Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();
-            this.pool.push(target);
+            let type: any;
+            if (typeof data.url == "string") {
+                type = "string";
+            } else {
+                type = data.url.type;
+            }
+            let list = this.pool.get(type);
+            if (list == null) {
+                list = [];
+                this.pool.set(type, list);
+            }
+            list.push(target);
         }
     }
 
