@@ -1,5 +1,6 @@
 import { URL2Key } from "../res/core/ResURL";
 import { ResManager } from "../res/res/ResManager";
+import { BaseConfigAccessor } from "./BaseConfigAccessor";
 import { ConfigManager } from "./ConfigManager";
 import { IConfigAccessor } from "./core/IConfigAccessor";
 import { IConfigManager } from "./core/IConfigManager";
@@ -33,7 +34,7 @@ export class ConfigManagerImpl implements IConfigManager {
      */
     GetAccessorClass(sheet: string): new () => IConfigAccessor {
         if (!this.__accessors.has(sheet)) {
-            throw new Error(sheet + "未注册！");
+            return BaseConfigAccessor;
         }
         return this.__accessors.get(sheet);
     }

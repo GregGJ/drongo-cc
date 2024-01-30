@@ -21002,7 +21002,7 @@ class ConfigManagerImpl {
      */
     GetAccessorClass(sheet) {
         if (!this.__accessors.has(sheet)) {
-            throw new Error(sheet + "未注册！");
+            return BaseConfigAccessor;
         }
         return this.__accessors.get(sheet);
     }
