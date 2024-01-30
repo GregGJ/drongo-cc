@@ -1,4 +1,4 @@
-import { Node, AudioSource, Color, EventTarget, Vec2, Component, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Mask, Constructor, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Node, AudioSource, Color, EventTarget, Component, Vec2, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Mask, Constructor, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
 
 /**
  * 资源地址
@@ -1591,213 +1591,6 @@ declare class Controller extends EventTarget {
     setup(buffer: ByteBuffer): void;
 }
 
-declare enum BlendMode {
-    Normal = 0,
-    None = 1,
-    Add = 2,
-    Multiply = 3,
-    Screen = 4,
-    Erase = 5,
-    Mask = 6,
-    Below = 7,
-    Off = 8,
-    Custom1 = 9,
-    Custom2 = 10,
-    Custom3 = 11
-}
-
-declare class GPathPoint {
-    x: number;
-    y: number;
-    control1_x: number;
-    control1_y: number;
-    control2_x: number;
-    control2_y: number;
-    curveType: number;
-    constructor();
-    static newPoint(x: number, y: number, curveType: number): GPathPoint;
-    static newBezierPoint(x: number, y: number, control1_x: number, control1_y: number): GPathPoint;
-    static newCubicBezierPoint(x: number, y: number, control1_x: number, control1_y: number, control2_x: number, control2_y: number): GPathPoint;
-    clone(): GPathPoint;
-}
-
-declare class GPath {
-    private _segments;
-    private _points;
-    private _fullLength;
-    constructor();
-    get length(): number;
-    create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
-    create(points: Array<GPathPoint>): void;
-    private createSplineSegment;
-    clear(): void;
-    getPointAt(t: number, result?: Vec2): Vec2;
-    get segmentCount(): number;
-    getAnchorsInSegment(segmentIndex: number, points?: Array<Vec2>): Array<Vec2>;
-    getPointsInSegment(segmentIndex: number, t0: number, t1: number, points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
-    getAllPoints(points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
-    private onCRSplineCurve;
-    private onBezierCurve;
-}
-
-declare class TweenValue {
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-    constructor();
-    get color(): number;
-    set color(value: number);
-    getField(index: number): number;
-    setField(index: number, value: number): void;
-    setZero(): void;
-}
-
-declare class GTweener {
-    _target: any;
-    _propType: any;
-    _killed: boolean;
-    _paused: boolean;
-    private _delay;
-    private _duration;
-    private _breakpoint;
-    private _easeType;
-    private _easeOvershootOrAmplitude;
-    private _easePeriod;
-    private _repeat;
-    private _yoyo;
-    private _timeScale;
-    private _snapping;
-    private _userData;
-    private _path;
-    private _onUpdate;
-    private _onStart;
-    private _onComplete;
-    private _onUpdateCaller;
-    private _onStartCaller;
-    private _onCompleteCaller;
-    private _startValue;
-    private _endValue;
-    private _value;
-    private _deltaValue;
-    private _valueSize;
-    private _started;
-    private _ended;
-    private _elapsedTime;
-    private _normalizedTime;
-    constructor();
-    setDelay(value: number): GTweener;
-    get delay(): number;
-    setDuration(value: number): GTweener;
-    get duration(): number;
-    setBreakpoint(value: number): GTweener;
-    setEase(value: number): GTweener;
-    setEasePeriod(value: number): GTweener;
-    setEaseOvershootOrAmplitude(value: number): GTweener;
-    setRepeat(repeat: number, yoyo?: boolean): GTweener;
-    get repeat(): number;
-    setTimeScale(value: number): GTweener;
-    setSnapping(value: boolean): GTweener;
-    setTarget(value: any, propType?: any): GTweener;
-    get target(): any;
-    setPath(value: GPath): GTweener;
-    setUserData(value: any): GTweener;
-    get userData(): any;
-    onUpdate(callback: Function, target?: any): GTweener;
-    onStart(callback: Function, target?: any): GTweener;
-    onComplete(callback: Function, target?: any): GTweener;
-    get startValue(): TweenValue;
-    get endValue(): TweenValue;
-    get value(): TweenValue;
-    get deltaValue(): TweenValue;
-    get normalizedTime(): number;
-    get completed(): boolean;
-    get allCompleted(): boolean;
-    setPaused(paused: boolean): GTweener;
-    /**
-     * seek position of the tween, in seconds.
-     */
-    seek(time: number): void;
-    kill(complete?: boolean): void;
-    _to(start: number, end: number, duration: number): GTweener;
-    _to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
-    _to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
-    _to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
-    _toColor(start: number, end: number, duration: number): GTweener;
-    _shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
-    _init(): void;
-    _reset(): void;
-    _update(dt: number): void;
-    private update;
-    private callStartCallback;
-    private callUpdateCallback;
-    private callCompleteCallback;
-}
-
-declare class GearBase {
-    static disableAllTweenEffect?: boolean;
-    _owner: GObject;
-    protected _controller: Controller;
-    protected _tweenConfig: GearTweenConfig;
-    dispose(): void;
-    get controller(): Controller;
-    set controller(val: Controller);
-    get tweenConfig(): GearTweenConfig;
-    protected get allowTween(): boolean;
-    setup(buffer: ByteBuffer): void;
-    updateFromRelations(dx: number, dy: number): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    protected init(): void;
-    apply(): void;
-    updateState(): void;
-}
-declare class GearTweenConfig {
-    tween: boolean;
-    easeType: number;
-    duration: number;
-    delay: number;
-    _displayLockToken: number;
-    _tweener: GTweener;
-    constructor();
-}
-
-declare class GearLook extends GearBase {
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-}
-
-declare class GearSize extends GearBase {
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-    updateFromRelations(dx: number, dy: number): void;
-}
-
-declare class GearXY extends GearBase {
-    positionsInPercent: boolean;
-    private _storage;
-    private _default;
-    protected init(): void;
-    protected addStatus(pageId: string, buffer: ByteBuffer): void;
-    addExtStatus(pageId: string, buffer: ByteBuffer): void;
-    apply(): void;
-    private __tweenUpdate;
-    private __tweenComplete;
-    updateState(): void;
-    updateFromRelations(dx: number, dy: number): void;
-}
-
 declare class GGroup extends GObject {
     private _layout;
     private _lineGap;
@@ -2466,6 +2259,213 @@ declare class Relations {
     ensureRelationsSizeCorrect(): void;
     get empty(): boolean;
     setup(buffer: ByteBuffer, parentToChild: boolean): void;
+}
+
+declare enum BlendMode {
+    Normal = 0,
+    None = 1,
+    Add = 2,
+    Multiply = 3,
+    Screen = 4,
+    Erase = 5,
+    Mask = 6,
+    Below = 7,
+    Off = 8,
+    Custom1 = 9,
+    Custom2 = 10,
+    Custom3 = 11
+}
+
+declare class GPathPoint {
+    x: number;
+    y: number;
+    control1_x: number;
+    control1_y: number;
+    control2_x: number;
+    control2_y: number;
+    curveType: number;
+    constructor();
+    static newPoint(x: number, y: number, curveType: number): GPathPoint;
+    static newBezierPoint(x: number, y: number, control1_x: number, control1_y: number): GPathPoint;
+    static newCubicBezierPoint(x: number, y: number, control1_x: number, control1_y: number, control2_x: number, control2_y: number): GPathPoint;
+    clone(): GPathPoint;
+}
+
+declare class GPath {
+    private _segments;
+    private _points;
+    private _fullLength;
+    constructor();
+    get length(): number;
+    create2(pt1: GPathPoint, pt2: GPathPoint, pt3?: GPathPoint, pt4?: GPathPoint): void;
+    create(points: Array<GPathPoint>): void;
+    private createSplineSegment;
+    clear(): void;
+    getPointAt(t: number, result?: Vec2): Vec2;
+    get segmentCount(): number;
+    getAnchorsInSegment(segmentIndex: number, points?: Array<Vec2>): Array<Vec2>;
+    getPointsInSegment(segmentIndex: number, t0: number, t1: number, points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
+    getAllPoints(points?: Array<Vec2>, ts?: Array<number>, pointDensity?: number): Array<Vec2>;
+    private onCRSplineCurve;
+    private onBezierCurve;
+}
+
+declare class TweenValue {
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+    constructor();
+    get color(): number;
+    set color(value: number);
+    getField(index: number): number;
+    setField(index: number, value: number): void;
+    setZero(): void;
+}
+
+declare class GTweener {
+    _target: any;
+    _propType: any;
+    _killed: boolean;
+    _paused: boolean;
+    private _delay;
+    private _duration;
+    private _breakpoint;
+    private _easeType;
+    private _easeOvershootOrAmplitude;
+    private _easePeriod;
+    private _repeat;
+    private _yoyo;
+    private _timeScale;
+    private _snapping;
+    private _userData;
+    private _path;
+    private _onUpdate;
+    private _onStart;
+    private _onComplete;
+    private _onUpdateCaller;
+    private _onStartCaller;
+    private _onCompleteCaller;
+    private _startValue;
+    private _endValue;
+    private _value;
+    private _deltaValue;
+    private _valueSize;
+    private _started;
+    private _ended;
+    private _elapsedTime;
+    private _normalizedTime;
+    constructor();
+    setDelay(value: number): GTweener;
+    get delay(): number;
+    setDuration(value: number): GTweener;
+    get duration(): number;
+    setBreakpoint(value: number): GTweener;
+    setEase(value: number): GTweener;
+    setEasePeriod(value: number): GTweener;
+    setEaseOvershootOrAmplitude(value: number): GTweener;
+    setRepeat(repeat: number, yoyo?: boolean): GTweener;
+    get repeat(): number;
+    setTimeScale(value: number): GTweener;
+    setSnapping(value: boolean): GTweener;
+    setTarget(value: any, propType?: any): GTweener;
+    get target(): any;
+    setPath(value: GPath): GTweener;
+    setUserData(value: any): GTweener;
+    get userData(): any;
+    onUpdate(callback: Function, target?: any): GTweener;
+    onStart(callback: Function, target?: any): GTweener;
+    onComplete(callback: Function, target?: any): GTweener;
+    get startValue(): TweenValue;
+    get endValue(): TweenValue;
+    get value(): TweenValue;
+    get deltaValue(): TweenValue;
+    get normalizedTime(): number;
+    get completed(): boolean;
+    get allCompleted(): boolean;
+    setPaused(paused: boolean): GTweener;
+    /**
+     * seek position of the tween, in seconds.
+     */
+    seek(time: number): void;
+    kill(complete?: boolean): void;
+    _to(start: number, end: number, duration: number): GTweener;
+    _to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
+    _to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
+    _to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
+    _toColor(start: number, end: number, duration: number): GTweener;
+    _shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
+    _init(): void;
+    _reset(): void;
+    _update(dt: number): void;
+    private update;
+    private callStartCallback;
+    private callUpdateCallback;
+    private callCompleteCallback;
+}
+
+declare class GearBase {
+    static disableAllTweenEffect?: boolean;
+    _owner: GObject;
+    protected _controller: Controller;
+    protected _tweenConfig: GearTweenConfig;
+    dispose(): void;
+    get controller(): Controller;
+    set controller(val: Controller);
+    get tweenConfig(): GearTweenConfig;
+    protected get allowTween(): boolean;
+    setup(buffer: ByteBuffer): void;
+    updateFromRelations(dx: number, dy: number): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    protected init(): void;
+    apply(): void;
+    updateState(): void;
+}
+declare class GearTweenConfig {
+    tween: boolean;
+    easeType: number;
+    duration: number;
+    delay: number;
+    _displayLockToken: number;
+    _tweener: GTweener;
+    constructor();
+}
+
+declare class GearLook extends GearBase {
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+}
+
+declare class GearSize extends GearBase {
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+    updateFromRelations(dx: number, dy: number): void;
+}
+
+declare class GearXY extends GearBase {
+    positionsInPercent: boolean;
+    private _storage;
+    private _default;
+    protected init(): void;
+    protected addStatus(pageId: string, buffer: ByteBuffer): void;
+    addExtStatus(pageId: string, buffer: ByteBuffer): void;
+    apply(): void;
+    private __tweenUpdate;
+    private __tweenComplete;
+    updateState(): void;
+    updateFromRelations(dx: number, dy: number): void;
 }
 
 /**

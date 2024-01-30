@@ -1,10 +1,15 @@
-import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3, Constructor } from "cc";
+import { Component, Node, Rect, UIOpacity, UITransform, Vec2, Vec3, director } from "cc";
 import { ResURL } from "../drongo/res/core/ResURL";
 import { Controller } from "./Controller";
+import { ObjectPropID, RelationType } from "./FieldTypes";
+import { GComponent } from "./GComponent";
+import { GGroup } from "./GGroup";
+import { GTreeNode } from "./GTreeNode";
+import { PackageItem } from "./PackageItem";
+import { Relations } from "./Relations";
+import { UIConfig } from "./UIConfig";
 import { BlendMode, BlendModeUtils } from "./display/BlendMode";
 import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
-import { RelationType, ObjectPropID } from "./FieldTypes";
-import { GComponent } from "./GComponent";
 import { GearAnimation } from "./gears/GearAnimation";
 import { GearBase } from "./gears/GearBase";
 import { GearColor } from "./gears/GearColor";
@@ -16,12 +21,7 @@ import { GearLook } from "./gears/GearLook";
 import { GearSize } from "./gears/GearSize";
 import { GearText } from "./gears/GearText";
 import { GearXY } from "./gears/GearXY";
-import { GGroup } from "./GGroup";
-import { GTreeNode } from "./GTreeNode";
-import { PackageItem } from "./PackageItem";
-import { Relations } from "./Relations";
 import { TooltipsData } from "./tooltips/TooltipsData";
-import { UIConfig } from "./UIConfig";
 import { ByteBuffer } from "./utils/ByteBuffer";
 
 export class GObject {

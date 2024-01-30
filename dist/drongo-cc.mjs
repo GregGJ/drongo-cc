@@ -1,4 +1,4 @@
-import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, gfx, RenderComponent, Event as Event$1, Vec2, game, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Graphics, misc, Sprite, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
+import { Texture2D, SpriteFrame, Asset, Prefab, instantiate, isValid, assetManager, AudioSource, director, find, Node, Event as Event$1, Vec2, Color, Layers, Font, resources, gfx, RenderComponent, game, macro, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Size, view, ImageAsset, AudioClip, BufferAsset, AssetManager, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Graphics, misc, Sprite, Mask, math, View, AudioSourceComponent, EditBox } from 'cc';
 import { EDITOR } from 'cc/env';
 
 /**
@@ -4879,122 +4879,6 @@ var GUIState;
     GUIState[GUIState["Closed"] = 4] = "Closed";
 })(GUIState || (GUIState = {}));
 
-var BlendMode;
-(function (BlendMode) {
-    BlendMode[BlendMode["Normal"] = 0] = "Normal";
-    BlendMode[BlendMode["None"] = 1] = "None";
-    BlendMode[BlendMode["Add"] = 2] = "Add";
-    BlendMode[BlendMode["Multiply"] = 3] = "Multiply";
-    BlendMode[BlendMode["Screen"] = 4] = "Screen";
-    BlendMode[BlendMode["Erase"] = 5] = "Erase";
-    BlendMode[BlendMode["Mask"] = 6] = "Mask";
-    BlendMode[BlendMode["Below"] = 7] = "Below";
-    BlendMode[BlendMode["Off"] = 8] = "Off";
-    BlendMode[BlendMode["Custom1"] = 9] = "Custom1";
-    BlendMode[BlendMode["Custom2"] = 10] = "Custom2";
-    BlendMode[BlendMode["Custom3"] = 11] = "Custom3";
-})(BlendMode || (BlendMode = {}));
-class BlendModeUtils {
-    static apply(node, blendMode) {
-        let f = factors[blendMode];
-        let renderers = node.getComponentsInChildren(RenderComponent);
-        renderers.forEach(element => {
-            element.srcBlendFactor = f[0];
-            element.dstBlendFactor = f[1];
-        });
-    }
-    static override(blendMode, srcFactor, dstFactor) {
-        factors[blendMode][0] = srcFactor;
-        factors[blendMode][1] = dstFactor;
-    }
-}
-const factors = [
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //normal
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE], //none
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE], //add
-    [gfx.BlendFactor.DST_COLOR, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //mul
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE_MINUS_SRC_COLOR], //screen
-    [gfx.BlendFactor.ZERO, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //erase
-    [gfx.BlendFactor.ZERO, gfx.BlendFactor.SRC_ALPHA], //mask
-    [gfx.BlendFactor.ONE_MINUS_DST_ALPHA, gfx.BlendFactor.DST_ALPHA], //below
-    [gfx.BlendFactor.ONE, gfx.BlendFactor.ZERO], //off
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom1
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
-    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
-];
-
-class FGUIEvent extends Event$1 {
-    static TOUCH_BEGIN = "fui_touch_begin";
-    static TOUCH_MOVE = "fui_touch_move";
-    static TOUCH_END = "fui_touch_end";
-    static CLICK = "fui_click";
-    static ROLL_OVER = "fui_roll_over";
-    static ROLL_OUT = "fui_roll_out";
-    static MOUSE_WHEEL = "fui_mouse_wheel";
-    static DISPLAY = "fui_display";
-    static UNDISPLAY = "fui_undisplay";
-    static GEAR_STOP = "fui_gear_stop";
-    static LINK = "fui_text_link";
-    static Submit = "editing-return";
-    static TEXT_CHANGE = "text-changed";
-    static STATUS_CHANGED = "fui_status_changed";
-    static XY_CHANGED = "fui_xy_changed";
-    static SIZE_CHANGED = "fui_size_changed";
-    static SIZE_DELAY_CHANGE = "fui_size_delay_change";
-    static DRAG_START = "fui_drag_start";
-    static DRAG_MOVE = "fui_drag_move";
-    static DRAG_END = "fui_drag_end";
-    static DROP = "fui_drop";
-    static SCROLL = "fui_scroll";
-    static SCROLL_END = "fui_scroll_end";
-    static PULL_DOWN_RELEASE = "fui_pull_down_release";
-    static PULL_UP_RELEASE = "fui_pull_up_release";
-    static CLICK_ITEM = "fui_click_item";
-    initiator;
-    pos = new Vec2();
-    touchId = 0;
-    clickCount = 0;
-    button = 0;
-    keyModifiers = 0;
-    mouseWheelDelta = 0;
-    _processor;
-    constructor(type, bubbles) {
-        super(type, bubbles);
-    }
-    get sender() {
-        return GObject.cast(this.currentTarget);
-    }
-    get isShiftDown() {
-        return false;
-    }
-    get isCtrlDown() {
-        return false;
-    }
-    captureTouch() {
-        let obj = GObject.cast(this.currentTarget);
-        if (obj)
-            this._processor.addTouchMonitor(this.touchId, obj);
-    }
-}
-var eventPool = new Array();
-function borrowEvent(type, bubbles) {
-    let evt;
-    if (eventPool.length) {
-        evt = eventPool.pop();
-        evt.type = type;
-        evt.bubbles = bubbles;
-    }
-    else {
-        evt = new FGUIEvent(type, bubbles);
-    }
-    return evt;
-}
-function returnEvent(evt) {
-    evt.initiator = null;
-    evt.unuse();
-    eventPool.push(evt);
-}
-
 var ButtonMode;
 (function (ButtonMode) {
     ButtonMode[ButtonMode["Common"] = 0] = "Common";
@@ -5188,6 +5072,1261 @@ var ObjectPropID;
     ObjectPropID[ObjectPropID["FontSize"] = 8] = "FontSize";
     ObjectPropID[ObjectPropID["Selected"] = 9] = "Selected";
 })(ObjectPropID || (ObjectPropID = {}));
+
+class GGroup extends GObject {
+    _layout = 0;
+    _lineGap = 0;
+    _columnGap = 0;
+    _excludeInvisibles;
+    _autoSizeDisabled;
+    _mainGridIndex = -1;
+    _mainGridMinSize = 50;
+    _boundsChanged;
+    _percentReady;
+    _mainChildIndex = -1;
+    _totalSize = 0;
+    _numChildren = 0;
+    _updating = 0;
+    constructor() {
+        super();
+        this._node.name = "GGroup";
+        this._touchDisabled = true;
+    }
+    dispose() {
+        this._boundsChanged = false;
+        super.dispose();
+    }
+    get layout() {
+        return this._layout;
+    }
+    set layout(value) {
+        if (this._layout != value) {
+            this._layout = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get lineGap() {
+        return this._lineGap;
+    }
+    set lineGap(value) {
+        if (this._lineGap != value) {
+            this._lineGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get columnGap() {
+        return this._columnGap;
+    }
+    set columnGap(value) {
+        if (this._columnGap != value) {
+            this._columnGap = value;
+            this.setBoundsChangedFlag(true);
+        }
+    }
+    get excludeInvisibles() {
+        return this._excludeInvisibles;
+    }
+    set excludeInvisibles(value) {
+        if (this._excludeInvisibles != value) {
+            this._excludeInvisibles = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get autoSizeDisabled() {
+        return this._autoSizeDisabled;
+    }
+    set autoSizeDisabled(value) {
+        this._autoSizeDisabled = value;
+    }
+    get mainGridMinSize() {
+        return this._mainGridMinSize;
+    }
+    set mainGridMinSize(value) {
+        if (this._mainGridMinSize != value) {
+            this._mainGridMinSize = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    get mainGridIndex() {
+        return this._mainGridIndex;
+    }
+    set mainGridIndex(value) {
+        if (this._mainGridIndex != value) {
+            this._mainGridIndex = value;
+            this.setBoundsChangedFlag();
+        }
+    }
+    setBoundsChangedFlag(positionChangedOnly = false) {
+        if (this._updating == 0 && this._parent) {
+            if (!positionChangedOnly)
+                this._percentReady = false;
+            if (!this._boundsChanged) {
+                this._boundsChanged = true;
+                if (this._layout != GroupLayoutType.None)
+                    this._partner.callLater(this._ensureBoundsCorrect);
+            }
+        }
+    }
+    _ensureBoundsCorrect() {
+        let _t = GObject.cast(this.node);
+        _t.ensureBoundsCorrect();
+    }
+    ensureSizeCorrect() {
+        if (this._parent == null || !this._boundsChanged || this._layout == 0)
+            return;
+        this._boundsChanged = false;
+        if (this._autoSizeDisabled)
+            this.resizeChildren(0, 0);
+        else {
+            this.handleLayout();
+            this.updateBounds();
+        }
+    }
+    ensureBoundsCorrect() {
+        if (this._parent == null || !this._boundsChanged)
+            return;
+        this._boundsChanged = false;
+        if (this._layout == 0)
+            this.updateBounds();
+        else {
+            if (this._autoSizeDisabled)
+                this.resizeChildren(0, 0);
+            else {
+                this.handleLayout();
+                this.updateBounds();
+            }
+        }
+    }
+    updateBounds() {
+        this._partner.unschedule(this._ensureBoundsCorrect);
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
+        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
+        var tmp;
+        var empty = true;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
+                continue;
+            tmp = child.xMin;
+            if (tmp < ax)
+                ax = tmp;
+            tmp = child.yMin;
+            if (tmp < ay)
+                ay = tmp;
+            tmp = child.xMin + child.width;
+            if (tmp > ar)
+                ar = tmp;
+            tmp = child.yMin + child.height;
+            if (tmp > ab)
+                ab = tmp;
+            empty = false;
+        }
+        var w = 0, h = 0;
+        if (!empty) {
+            this._updating |= 1;
+            this.setPosition(ax, ay);
+            this._updating &= 2;
+            w = ar - ax;
+            h = ab - ay;
+        }
+        if ((this._updating & 2) == 0) {
+            this._updating |= 2;
+            this.setSize(w, h);
+            this._updating &= 1;
+        }
+        else {
+            this._updating &= 1;
+            this.resizeChildren(this._width - w, this._height - h);
+        }
+    }
+    handleLayout() {
+        this._updating |= 1;
+        var child;
+        var i;
+        var cnt;
+        if (this._layout == GroupLayoutType.Horizontal) {
+            var curX = this.x;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else if (this._layout == GroupLayoutType.Vertical) {
+            var curY = this.y;
+            cnt = this._parent.numChildren;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 2;
+    }
+    moveChildren(dx, dy) {
+        if ((this._updating & 1) != 0 || this._parent == null)
+            return;
+        this._updating |= 1;
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        for (i = 0; i < cnt; i++) {
+            child = this._parent.getChildAt(i);
+            if (child.group == this) {
+                child.setPosition(child.x + dx, child.y + dy);
+            }
+        }
+        this._updating &= 2;
+    }
+    resizeChildren(dw, dh) {
+        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
+            return;
+        this._updating |= 2;
+        if (this._boundsChanged) {
+            this._boundsChanged = false;
+            if (!this._autoSizeDisabled) {
+                this.updateBounds();
+                return;
+            }
+        }
+        var cnt = this._parent.numChildren;
+        var i;
+        var child;
+        if (!this._percentReady) {
+            this._percentReady = true;
+            this._numChildren = 0;
+            this._totalSize = 0;
+            this._mainChildIndex = -1;
+            var j = 0;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (!this._excludeInvisibles || child.internalVisible3) {
+                    if (j == this._mainGridIndex)
+                        this._mainChildIndex = i;
+                    this._numChildren++;
+                    if (this._layout == 1)
+                        this._totalSize += child.width;
+                    else
+                        this._totalSize += child.height;
+                }
+                j++;
+            }
+            if (this._mainChildIndex != -1) {
+                if (this._layout == 1) {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.width;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+                else {
+                    child = this._parent.getChildAt(this._mainChildIndex);
+                    this._totalSize += this._mainGridMinSize - child.height;
+                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
+                }
+            }
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (i == this._mainChildIndex)
+                    continue;
+                if (this._totalSize > 0)
+                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
+                else
+                    child._sizePercentInGroup = 0;
+            }
+        }
+        var remainSize = 0;
+        var remainPercent = 1;
+        var priorHandled = false;
+        if (this._layout == 1) {
+            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
+                remainSize -= child.width;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curX = this.x;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.width;
+                }
+                child.xMin = curX;
+                if (child.width != 0)
+                    curX += child.width + this._columnGap;
+            }
+        }
+        else {
+            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
+            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
+                child = this._parent.getChildAt(this._mainChildIndex);
+                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
+                remainSize -= child.height;
+                remainPercent -= child._sizePercentInGroup;
+                priorHandled = true;
+            }
+            var curY = this.y;
+            for (i = 0; i < cnt; i++) {
+                child = this._parent.getChildAt(i);
+                if (child.group != this)
+                    continue;
+                if (this._excludeInvisibles && !child.internalVisible3) {
+                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
+                    continue;
+                }
+                if (!priorHandled || i != this._mainChildIndex) {
+                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
+                    remainPercent -= child._sizePercentInGroup;
+                    remainSize -= child.height;
+                }
+                child.yMin = curY;
+                if (child.height != 0)
+                    curY += child.height + this._lineGap;
+            }
+        }
+        this._updating &= 1;
+    }
+    handleAlphaChanged() {
+        if (this._underConstruct)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.alpha = this.alpha;
+        }
+    }
+    handleVisibleChanged() {
+        if (!this._parent)
+            return;
+        var cnt = this._parent.numChildren;
+        for (var i = 0; i < cnt; i++) {
+            var child = this._parent.getChildAt(i);
+            if (child.group == this)
+                child.handleVisibleChanged();
+        }
+    }
+    setup_beforeAdd(buffer, beginPos) {
+        super.setup_beforeAdd(buffer, beginPos);
+        buffer.seek(beginPos, 5);
+        this._layout = buffer.readByte();
+        this._lineGap = buffer.readInt();
+        this._columnGap = buffer.readInt();
+        if (buffer.version >= 2) {
+            this._excludeInvisibles = buffer.readBool();
+            this._autoSizeDisabled = buffer.readBool();
+            this._mainGridIndex = buffer.readShort();
+        }
+    }
+    setup_afterAdd(buffer, beginPos) {
+        super.setup_afterAdd(buffer, beginPos);
+        if (!this.visible)
+            this.handleVisibleChanged();
+    }
+}
+
+class FGUIEvent extends Event$1 {
+    static TOUCH_BEGIN = "fui_touch_begin";
+    static TOUCH_MOVE = "fui_touch_move";
+    static TOUCH_END = "fui_touch_end";
+    static CLICK = "fui_click";
+    static ROLL_OVER = "fui_roll_over";
+    static ROLL_OUT = "fui_roll_out";
+    static MOUSE_WHEEL = "fui_mouse_wheel";
+    static DISPLAY = "fui_display";
+    static UNDISPLAY = "fui_undisplay";
+    static GEAR_STOP = "fui_gear_stop";
+    static LINK = "fui_text_link";
+    static Submit = "editing-return";
+    static TEXT_CHANGE = "text-changed";
+    static STATUS_CHANGED = "fui_status_changed";
+    static XY_CHANGED = "fui_xy_changed";
+    static SIZE_CHANGED = "fui_size_changed";
+    static SIZE_DELAY_CHANGE = "fui_size_delay_change";
+    static DRAG_START = "fui_drag_start";
+    static DRAG_MOVE = "fui_drag_move";
+    static DRAG_END = "fui_drag_end";
+    static DROP = "fui_drop";
+    static SCROLL = "fui_scroll";
+    static SCROLL_END = "fui_scroll_end";
+    static PULL_DOWN_RELEASE = "fui_pull_down_release";
+    static PULL_UP_RELEASE = "fui_pull_up_release";
+    static CLICK_ITEM = "fui_click_item";
+    initiator;
+    pos = new Vec2();
+    touchId = 0;
+    clickCount = 0;
+    button = 0;
+    keyModifiers = 0;
+    mouseWheelDelta = 0;
+    _processor;
+    constructor(type, bubbles) {
+        super(type, bubbles);
+    }
+    get sender() {
+        return GObject.cast(this.currentTarget);
+    }
+    get isShiftDown() {
+        return false;
+    }
+    get isCtrlDown() {
+        return false;
+    }
+    captureTouch() {
+        let obj = GObject.cast(this.currentTarget);
+        if (obj)
+            this._processor.addTouchMonitor(this.touchId, obj);
+    }
+}
+var eventPool = new Array();
+function borrowEvent(type, bubbles) {
+    let evt;
+    if (eventPool.length) {
+        evt = eventPool.pop();
+        evt.type = type;
+        evt.bubbles = bubbles;
+    }
+    else {
+        evt = new FGUIEvent(type, bubbles);
+    }
+    return evt;
+}
+function returnEvent(evt) {
+    evt.initiator = null;
+    evt.unuse();
+    eventPool.push(evt);
+}
+
+class RelationItem {
+    _owner;
+    _target;
+    _defs;
+    _targetX;
+    _targetY;
+    _targetWidth;
+    _targetHeight;
+    constructor(owner) {
+        this._owner = owner;
+        this._defs = new Array();
+    }
+    get owner() {
+        return this._owner;
+    }
+    set target(value) {
+        if (this._target != value) {
+            if (this._target)
+                this.releaseRefTarget(this._target);
+            this._target = value;
+            if (this._target)
+                this.addRefTarget(this._target);
+        }
+    }
+    get target() {
+        return this._target;
+    }
+    add(relationType, usePercent) {
+        if (relationType == RelationType.Size) {
+            this.add(RelationType.Width, usePercent);
+            this.add(RelationType.Height, usePercent);
+            return;
+        }
+        var length = this._defs.length;
+        for (var i = 0; i < length; i++) {
+            var def = this._defs[i];
+            if (def.type == relationType)
+                return;
+        }
+        this.internalAdd(relationType, usePercent);
+    }
+    internalAdd(relationType, usePercent) {
+        if (relationType == RelationType.Size) {
+            this.internalAdd(RelationType.Width, usePercent);
+            this.internalAdd(RelationType.Height, usePercent);
+            return;
+        }
+        var info = new RelationDef();
+        info.percent = usePercent;
+        info.type = relationType;
+        info.axis = (relationType <= RelationType.Right_Right || relationType == RelationType.Width || relationType >= RelationType.LeftExt_Left && relationType <= RelationType.RightExt_Right) ? 0 : 1;
+        this._defs.push(info);
+    }
+    remove(relationType) {
+        if (relationType == RelationType.Size) {
+            this.remove(RelationType.Width);
+            this.remove(RelationType.Height);
+            return;
+        }
+        var dc = this._defs.length;
+        for (var k = 0; k < dc; k++) {
+            if (this._defs[k].type == relationType) {
+                this._defs.splice(k, 1);
+                break;
+            }
+        }
+    }
+    copyFrom(source) {
+        this.target = source.target;
+        this._defs.length = 0;
+        var length = source._defs.length;
+        for (var i = 0; i < length; i++) {
+            var info = source._defs[i];
+            var info2 = new RelationDef();
+            info2.copyFrom(info);
+            this._defs.push(info2);
+        }
+    }
+    dispose() {
+        if (this._target) {
+            this.releaseRefTarget(this._target);
+            this._target = null;
+        }
+    }
+    get isEmpty() {
+        return this._defs.length == 0;
+    }
+    applyOnSelfResized(dWidth, dHeight, applyPivot) {
+        var ox = this._owner.x;
+        var oy = this._owner.y;
+        var length = this._defs.length;
+        for (var i = 0; i < length; i++) {
+            var info = this._defs[i];
+            switch (info.type) {
+                case RelationType.Center_Center:
+                    this._owner.x -= (0.5 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
+                    break;
+                case RelationType.Right_Center:
+                case RelationType.Right_Left:
+                case RelationType.Right_Right:
+                    this._owner.x -= (1 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
+                    break;
+                case RelationType.Middle_Middle:
+                    this._owner.y -= (0.5 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
+                    break;
+                case RelationType.Bottom_Middle:
+                case RelationType.Bottom_Top:
+                case RelationType.Bottom_Bottom:
+                    this._owner.y -= (1 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
+                    break;
+            }
+        }
+        if (ox != this._owner.x || oy != this._owner.y) {
+            ox = this._owner.x - ox;
+            oy = this._owner.y - oy;
+            this._owner.updateGearFromRelations(1, ox, oy);
+            if (this._owner.parent) {
+                var len = this._owner.parent._transitions.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; ++i) {
+                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                    }
+                }
+            }
+        }
+    }
+    applyOnXYChanged(info, dx, dy) {
+        var tmp;
+        switch (info.type) {
+            case RelationType.Left_Left:
+            case RelationType.Left_Center:
+            case RelationType.Left_Right:
+            case RelationType.Center_Center:
+            case RelationType.Right_Left:
+            case RelationType.Right_Center:
+            case RelationType.Right_Right:
+                this._owner.x += dx;
+                break;
+            case RelationType.Top_Top:
+            case RelationType.Top_Middle:
+            case RelationType.Top_Bottom:
+            case RelationType.Middle_Middle:
+            case RelationType.Bottom_Top:
+            case RelationType.Bottom_Middle:
+            case RelationType.Bottom_Bottom:
+                this._owner.y += dy;
+                break;
+            case RelationType.Width:
+            case RelationType.Height:
+                break;
+            case RelationType.LeftExt_Left:
+            case RelationType.LeftExt_Right:
+                if (this._owner != this._target.parent) {
+                    tmp = this._owner.xMin;
+                    this._owner.width = this._owner._rawWidth - dx;
+                    this._owner.xMin = tmp + dx;
+                }
+                else
+                    this._owner.width = this._owner._rawWidth - dx;
+                break;
+            case RelationType.RightExt_Left:
+            case RelationType.RightExt_Right:
+                if (this._owner != this._target.parent) {
+                    tmp = this._owner.xMin;
+                    this._owner.width = this._owner._rawWidth + dx;
+                    this._owner.xMin = tmp;
+                }
+                else
+                    this._owner.width = this._owner._rawWidth + dx;
+                break;
+            case RelationType.TopExt_Top:
+            case RelationType.TopExt_Bottom:
+                if (this._owner != this._target.parent) {
+                    tmp = this._owner.yMin;
+                    this._owner.height = this._owner._rawHeight - dy;
+                    this._owner.yMin = tmp + dy;
+                }
+                else
+                    this._owner.height = this._owner._rawHeight - dy;
+                break;
+            case RelationType.BottomExt_Top:
+            case RelationType.BottomExt_Bottom:
+                if (this._owner != this._target.parent) {
+                    tmp = this._owner.yMin;
+                    this._owner.height = this._owner._rawHeight + dy;
+                    this._owner.yMin = tmp;
+                }
+                else
+                    this._owner.height = this._owner._rawHeight + dy;
+                break;
+        }
+    }
+    applyOnSizeChanged(info) {
+        var pos = 0, pivot = 0, delta = 0;
+        var v, tmp;
+        if (info.axis == 0) {
+            if (this._target != this._owner.parent) {
+                pos = this._target.x;
+                if (this._target.pivotAsAnchor)
+                    pivot = this._target.pivotX;
+            }
+            if (info.percent) {
+                if (this._targetWidth != 0)
+                    delta = this._target._width / this._targetWidth;
+            }
+            else
+                delta = this._target._width - this._targetWidth;
+        }
+        else {
+            if (this._target != this._owner.parent) {
+                pos = this._target.y;
+                if (this._target.pivotAsAnchor)
+                    pivot = this._target.pivotY;
+            }
+            if (info.percent) {
+                if (this._targetHeight != 0)
+                    delta = this._target._height / this._targetHeight;
+            }
+            else
+                delta = this._target._height - this._targetHeight;
+        }
+        switch (info.type) {
+            case RelationType.Left_Left:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                else if (pivot != 0)
+                    this._owner.x += delta * (-pivot);
+                break;
+            case RelationType.Left_Center:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                else
+                    this._owner.x += delta * (0.5 - pivot);
+                break;
+            case RelationType.Left_Right:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                else
+                    this._owner.x += delta * (1 - pivot);
+                break;
+            case RelationType.Center_Center:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth * 0.5 - pos) * delta - this._owner._rawWidth * 0.5;
+                else
+                    this._owner.x += delta * (0.5 - pivot);
+                break;
+            case RelationType.Right_Left:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                else if (pivot != 0)
+                    this._owner.x += delta * (-pivot);
+                break;
+            case RelationType.Right_Center:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                else
+                    this._owner.x += delta * (0.5 - pivot);
+                break;
+            case RelationType.Right_Right:
+                if (info.percent)
+                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                else
+                    this._owner.x += delta * (1 - pivot);
+                break;
+            case RelationType.Top_Top:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                else if (pivot != 0)
+                    this._owner.y += delta * (-pivot);
+                break;
+            case RelationType.Top_Middle:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                else
+                    this._owner.y += delta * (0.5 - pivot);
+                break;
+            case RelationType.Top_Bottom:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                else
+                    this._owner.y += delta * (1 - pivot);
+                break;
+            case RelationType.Middle_Middle:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight * 0.5 - pos) * delta - this._owner._rawHeight * 0.5;
+                else
+                    this._owner.y += delta * (0.5 - pivot);
+                break;
+            case RelationType.Bottom_Top:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                else if (pivot != 0)
+                    this._owner.y += delta * (-pivot);
+                break;
+            case RelationType.Bottom_Middle:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                else
+                    this._owner.y += delta * (0.5 - pivot);
+                break;
+            case RelationType.Bottom_Bottom:
+                if (info.percent)
+                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                else
+                    this._owner.y += delta * (1 - pivot);
+                break;
+            case RelationType.Width:
+                if (this._owner._underConstruct && this._owner == this._target.parent)
+                    v = this._owner.sourceWidth - this._target.initWidth;
+                else
+                    v = this._owner._rawWidth - this._targetWidth;
+                if (info.percent)
+                    v = v * delta;
+                if (this._target == this._owner.parent) {
+                    if (this._owner.pivotAsAnchor) {
+                        tmp = this._owner.xMin;
+                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                        this._owner.xMin = tmp;
+                    }
+                    else
+                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                }
+                else
+                    this._owner.width = this._target._width + v;
+                break;
+            case RelationType.Height:
+                if (this._owner._underConstruct && this._owner == this._target.parent)
+                    v = this._owner.sourceHeight - this._target.initHeight;
+                else
+                    v = this._owner._rawHeight - this._targetHeight;
+                if (info.percent)
+                    v = v * delta;
+                if (this._target == this._owner.parent) {
+                    if (this._owner.pivotAsAnchor) {
+                        tmp = this._owner.yMin;
+                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                        this._owner.yMin = tmp;
+                    }
+                    else
+                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                }
+                else
+                    this._owner.height = this._target._height + v;
+                break;
+            case RelationType.LeftExt_Left:
+                tmp = this._owner.xMin;
+                if (info.percent)
+                    v = pos + (tmp - pos) * delta - tmp;
+                else
+                    v = delta * (-pivot);
+                this._owner.width = this._owner._rawWidth - v;
+                this._owner.xMin = tmp + v;
+                break;
+            case RelationType.LeftExt_Right:
+                tmp = this._owner.xMin;
+                if (info.percent)
+                    v = pos + (tmp - pos) * delta - tmp;
+                else
+                    v = delta * (1 - pivot);
+                this._owner.width = this._owner._rawWidth - v;
+                this._owner.xMin = tmp + v;
+                break;
+            case RelationType.RightExt_Left:
+                tmp = this._owner.xMin;
+                if (info.percent)
+                    v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                else
+                    v = delta * (-pivot);
+                this._owner.width = this._owner._rawWidth + v;
+                this._owner.xMin = tmp;
+                break;
+            case RelationType.RightExt_Right:
+                tmp = this._owner.xMin;
+                if (info.percent) {
+                    if (this._owner == this._target.parent) {
+                        if (this._owner._underConstruct)
+                            this._owner.width = pos + this._target._width - this._target._width * pivot +
+                                (this._owner.sourceWidth - pos - this._target.initWidth + this._target.initWidth * pivot) * delta;
+                        else
+                            this._owner.width = pos + (this._owner._rawWidth - pos) * delta;
+                    }
+                    else {
+                        v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                        this._owner.width = this._owner._rawWidth + v;
+                        this._owner.xMin = tmp;
+                    }
+                }
+                else {
+                    if (this._owner == this._target.parent) {
+                        if (this._owner._underConstruct)
+                            this._owner.width = this._owner.sourceWidth + (this._target._width - this._target.initWidth) * (1 - pivot);
+                        else
+                            this._owner.width = this._owner._rawWidth + delta * (1 - pivot);
+                    }
+                    else {
+                        v = delta * (1 - pivot);
+                        this._owner.width = this._owner._rawWidth + v;
+                        this._owner.xMin = tmp;
+                    }
+                }
+                break;
+            case RelationType.TopExt_Top:
+                tmp = this._owner.yMin;
+                if (info.percent)
+                    v = pos + (tmp - pos) * delta - tmp;
+                else
+                    v = delta * (-pivot);
+                this._owner.height = this._owner._rawHeight - v;
+                this._owner.yMin = tmp + v;
+                break;
+            case RelationType.TopExt_Bottom:
+                tmp = this._owner.yMin;
+                if (info.percent)
+                    v = pos + (tmp - pos) * delta - tmp;
+                else
+                    v = delta * (1 - pivot);
+                this._owner.height = this._owner._rawHeight - v;
+                this._owner.yMin = tmp + v;
+                break;
+            case RelationType.BottomExt_Top:
+                tmp = this._owner.yMin;
+                if (info.percent)
+                    v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                else
+                    v = delta * (-pivot);
+                this._owner.height = this._owner._rawHeight + v;
+                this._owner.yMin = tmp;
+                break;
+            case RelationType.BottomExt_Bottom:
+                tmp = this._owner.yMin;
+                if (info.percent) {
+                    if (this._owner == this._target.parent) {
+                        if (this._owner._underConstruct)
+                            this._owner.height = pos + this._target._height - this._target._height * pivot +
+                                (this._owner.sourceHeight - pos - this._target.initHeight + this._target.initHeight * pivot) * delta;
+                        else
+                            this._owner.height = pos + (this._owner._rawHeight - pos) * delta;
+                    }
+                    else {
+                        v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                        this._owner.height = this._owner._rawHeight + v;
+                        this._owner.yMin = tmp;
+                    }
+                }
+                else {
+                    if (this._owner == this._target.parent) {
+                        if (this._owner._underConstruct)
+                            this._owner.height = this._owner.sourceHeight + (this._target._height - this._target.initHeight) * (1 - pivot);
+                        else
+                            this._owner.height = this._owner._rawHeight + delta * (1 - pivot);
+                    }
+                    else {
+                        v = delta * (1 - pivot);
+                        this._owner.height = this._owner._rawHeight + v;
+                        this._owner.yMin = tmp;
+                    }
+                }
+                break;
+        }
+    }
+    addRefTarget(target) {
+        if (target != this._owner.parent)
+            target.on(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
+        target.on(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+        target.on(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
+        this._targetX = this._target.x;
+        this._targetY = this._target.y;
+        this._targetWidth = this._target._width;
+        this._targetHeight = this._target._height;
+    }
+    releaseRefTarget(target) {
+        if (!target.node)
+            return;
+        target.off(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
+        target.off(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+        target.off(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
+    }
+    __targetXYChanged(evt) {
+        if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
+            this._targetX = this._target.x;
+            this._targetY = this._target.y;
+            return;
+        }
+        this._owner.relations.handling = this._target;
+        var ox = this._owner.x;
+        var oy = this._owner.y;
+        var dx = this._target.x - this._targetX;
+        var dy = this._target.y - this._targetY;
+        var length = this._defs.length;
+        for (var i = 0; i < length; i++) {
+            var info = this._defs[i];
+            this.applyOnXYChanged(info, dx, dy);
+        }
+        this._targetX = this._target.x;
+        this._targetY = this._target.y;
+        if (ox != this._owner.x || oy != this._owner.y) {
+            ox = this._owner.x - ox;
+            oy = this._owner.y - oy;
+            this._owner.updateGearFromRelations(1, ox, oy);
+            if (this._owner.parent) {
+                var len = this._owner.parent._transitions.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; ++i) {
+                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                    }
+                }
+            }
+        }
+        this._owner.relations.handling = null;
+    }
+    __targetSizeChanged(evt) {
+        if (this._owner.relations.handling != null)
+            return;
+        this._owner.relations.handling = this._target;
+        var ox = this._owner.x;
+        var oy = this._owner.y;
+        var ow = this._owner._rawWidth;
+        var oh = this._owner._rawHeight;
+        var length = this._defs.length;
+        for (var i = 0; i < length; i++) {
+            var info = this._defs[i];
+            this.applyOnSizeChanged(info);
+        }
+        this._targetWidth = this._target._width;
+        this._targetHeight = this._target._height;
+        if (ox != this._owner.x || oy != this._owner.y) {
+            ox = this._owner.x - ox;
+            oy = this._owner.y - oy;
+            this._owner.updateGearFromRelations(1, ox, oy);
+            if (this._owner.parent) {
+                var len = this._owner.parent._transitions.length;
+                if (len > 0) {
+                    for (var i = 0; i < len; ++i) {
+                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                    }
+                }
+            }
+        }
+        if (ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
+            ow = this._owner._rawWidth - ow;
+            oh = this._owner._rawHeight - oh;
+            this._owner.updateGearFromRelations(2, ow, oh);
+        }
+        this._owner.relations.handling = null;
+    }
+    __targetSizeWillChange(evt) {
+        this._owner.relations.sizeDirty = true;
+    }
+}
+class RelationDef {
+    percent = false;
+    type = 0;
+    axis = 0;
+    constructor() {
+    }
+    copyFrom(source) {
+        this.percent = source.percent;
+        this.type = source.type;
+        this.axis = source.axis;
+    }
+}
+
+class Relations {
+    _owner;
+    _items;
+    handling;
+    sizeDirty = false;
+    constructor(owner) {
+        this._owner = owner;
+        this._items = new Array();
+    }
+    add(target, relationType, usePercent) {
+        var length = this._items.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._items[i];
+            if (item.target == target) {
+                item.add(relationType, usePercent);
+                return;
+            }
+        }
+        var newItem = new RelationItem(this._owner);
+        newItem.target = target;
+        newItem.add(relationType, usePercent);
+        this._items.push(newItem);
+    }
+    remove(target, relationType) {
+        relationType = relationType || 0;
+        var cnt = this._items.length;
+        var i = 0;
+        while (i < cnt) {
+            var item = this._items[i];
+            if (item.target == target) {
+                item.remove(relationType);
+                if (item.isEmpty) {
+                    item.dispose();
+                    this._items.splice(i, 1);
+                    cnt--;
+                }
+                else
+                    i++;
+            }
+            else
+                i++;
+        }
+    }
+    contains(target) {
+        var length = this._items.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._items[i];
+            if (item.target == target)
+                return true;
+        }
+        return false;
+    }
+    clearFor(target) {
+        var cnt = this._items.length;
+        var i = 0;
+        while (i < cnt) {
+            var item = this._items[i];
+            if (item.target == target) {
+                item.dispose();
+                this._items.splice(i, 1);
+                cnt--;
+            }
+            else
+                i++;
+        }
+    }
+    clearAll() {
+        var length = this._items.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._items[i];
+            item.dispose();
+        }
+        this._items.length = 0;
+    }
+    copyFrom(source) {
+        this.clearAll();
+        var arr = source._items;
+        var length = arr.length;
+        for (var i = 0; i < length; i++) {
+            var ri = arr[i];
+            var item = new RelationItem(this._owner);
+            item.copyFrom(ri);
+            this._items.push(item);
+        }
+    }
+    dispose() {
+        this.clearAll();
+    }
+    onOwnerSizeChanged(dWidth, dHeight, applyPivot) {
+        if (this._items.length == 0)
+            return;
+        var length = this._items.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._items[i];
+            item.applyOnSelfResized(dWidth, dHeight, applyPivot);
+        }
+    }
+    ensureRelationsSizeCorrect() {
+        if (this._items.length == 0)
+            return;
+        this.sizeDirty = false;
+        var length = this._items.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._items[i];
+            item.target.ensureSizeCorrect();
+        }
+    }
+    get empty() {
+        return this._items.length == 0;
+    }
+    setup(buffer, parentToChild) {
+        var cnt = buffer.readByte();
+        var target;
+        for (var i = 0; i < cnt; i++) {
+            var targetIndex = buffer.readShort();
+            if (targetIndex == -1)
+                target = this._owner.parent;
+            else if (parentToChild)
+                target = this._owner.getChildAt(targetIndex);
+            else
+                target = this._owner.parent.getChildAt(targetIndex);
+            var newItem = new RelationItem(this._owner);
+            newItem.target = target;
+            this._items.push(newItem);
+            var cnt2 = buffer.readByte();
+            for (var j = 0; j < cnt2; j++) {
+                var rt = buffer.readByte();
+                var usePercent = buffer.readBool();
+                newItem.internalAdd(rt, usePercent);
+            }
+        }
+    }
+}
+
+class UIConfig {
+    constructor() {
+    }
+    //Default font name
+    static defaultFont = "Arial";
+    //Resource using in Window.ShowModalWait for locking the window.
+    static windowModalWaiting;
+    //Resource using in GRoot.ShowModalWait for locking the screen.
+    static globalModalWaiting;
+    //When a modal window is in front, the background becomes dark.
+    static modalLayerColor = new Color(0x33, 0x33, 0x33, 0x33);
+    //Default button click sound
+    static buttonSound;
+    static buttonSoundVolumeScale = 1;
+    static horizontalScrollBar;
+    static verticalScrollBar;
+    //Scrolling step in pixels
+    static defaultScrollStep = 25;
+    //Deceleration ratio of scrollpane when its in touch dragging.
+    static defaultScrollDecelerationRate = 0.967;
+    //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
+    static defaultScrollBarDisplay = ScrollBarDisplayType.Visible;
+    //Allow dragging the content to scroll. Recommeded true for mobile.
+    static defaultScrollTouchEffect = true;
+    //The "rebound" effect in the scolling container. Recommeded true for mobile.
+    static defaultScrollBounceEffect = true;
+    //Resources for PopupMenu.
+    static popupMenu;
+    //Resources for seperator of PopupMenu.
+    static popupMenu_seperator;
+    //In case of failure of loading content for GLoader, use this sign to indicate an error.
+    static loaderErrorSign;
+    //Resources for tooltips.
+    static tooltipsWin;
+    /**提示管理器 */
+    static tooltipsManager;
+    //Max items displayed in combobox without scrolling.
+    static defaultComboBoxVisibleItemCount = 10;
+    // Pixel offsets of finger to trigger scrolling.
+    static touchScrollSensitivity = 20;
+    // Pixel offsets of finger to trigger dragging.
+    static touchDragSensitivity = 10;
+    // Pixel offsets of mouse pointer to trigger dragging.
+    static clickDragSensitivity = 2;
+    // When click the window, brings to front automatically.
+    static bringWindowToFrontOnClick = true;
+    static frameTimeForAsyncUIConstruction = 0.002;
+    static linkUnderline = true;
+    //Default group name of UI node.<br/>
+    static defaultUILayer = Layers.Enum.UI_2D;
+}
+let _fontRegistry = {};
+function registerFont(name, font, bundle) {
+    if (font instanceof Font)
+        _fontRegistry[name] = font;
+    else {
+        (bundle || resources).load(name, Font, (err, asset) => {
+            _fontRegistry[name] = asset;
+        });
+    }
+}
+function getFontByName(name) {
+    return _fontRegistry[name];
+}
+
+var BlendMode;
+(function (BlendMode) {
+    BlendMode[BlendMode["Normal"] = 0] = "Normal";
+    BlendMode[BlendMode["None"] = 1] = "None";
+    BlendMode[BlendMode["Add"] = 2] = "Add";
+    BlendMode[BlendMode["Multiply"] = 3] = "Multiply";
+    BlendMode[BlendMode["Screen"] = 4] = "Screen";
+    BlendMode[BlendMode["Erase"] = 5] = "Erase";
+    BlendMode[BlendMode["Mask"] = 6] = "Mask";
+    BlendMode[BlendMode["Below"] = 7] = "Below";
+    BlendMode[BlendMode["Off"] = 8] = "Off";
+    BlendMode[BlendMode["Custom1"] = 9] = "Custom1";
+    BlendMode[BlendMode["Custom2"] = 10] = "Custom2";
+    BlendMode[BlendMode["Custom3"] = 11] = "Custom3";
+})(BlendMode || (BlendMode = {}));
+class BlendModeUtils {
+    static apply(node, blendMode) {
+        let f = factors[blendMode];
+        let renderers = node.getComponentsInChildren(RenderComponent);
+        renderers.forEach(element => {
+            element.srcBlendFactor = f[0];
+            element.dstBlendFactor = f[1];
+        });
+    }
+    static override(blendMode, srcFactor, dstFactor) {
+        factors[blendMode][0] = srcFactor;
+        factors[blendMode][1] = dstFactor;
+    }
+}
+const factors = [
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //normal
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE], //none
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE], //add
+    [gfx.BlendFactor.DST_COLOR, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //mul
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ONE_MINUS_SRC_COLOR], //screen
+    [gfx.BlendFactor.ZERO, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //erase
+    [gfx.BlendFactor.ZERO, gfx.BlendFactor.SRC_ALPHA], //mask
+    [gfx.BlendFactor.ONE_MINUS_DST_ALPHA, gfx.BlendFactor.DST_ALPHA], //below
+    [gfx.BlendFactor.ONE, gfx.BlendFactor.ZERO], //off
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom1
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
+    [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
+];
 
 var EaseType;
 (function (EaseType) {
@@ -6685,1145 +7824,6 @@ class GearXY extends GearBase {
         this._default.y += dy;
         this.updateState();
     }
-}
-
-class GGroup extends GObject {
-    _layout = 0;
-    _lineGap = 0;
-    _columnGap = 0;
-    _excludeInvisibles;
-    _autoSizeDisabled;
-    _mainGridIndex = -1;
-    _mainGridMinSize = 50;
-    _boundsChanged;
-    _percentReady;
-    _mainChildIndex = -1;
-    _totalSize = 0;
-    _numChildren = 0;
-    _updating = 0;
-    constructor() {
-        super();
-        this._node.name = "GGroup";
-        this._touchDisabled = true;
-    }
-    dispose() {
-        this._boundsChanged = false;
-        super.dispose();
-    }
-    get layout() {
-        return this._layout;
-    }
-    set layout(value) {
-        if (this._layout != value) {
-            this._layout = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get lineGap() {
-        return this._lineGap;
-    }
-    set lineGap(value) {
-        if (this._lineGap != value) {
-            this._lineGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get columnGap() {
-        return this._columnGap;
-    }
-    set columnGap(value) {
-        if (this._columnGap != value) {
-            this._columnGap = value;
-            this.setBoundsChangedFlag(true);
-        }
-    }
-    get excludeInvisibles() {
-        return this._excludeInvisibles;
-    }
-    set excludeInvisibles(value) {
-        if (this._excludeInvisibles != value) {
-            this._excludeInvisibles = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get autoSizeDisabled() {
-        return this._autoSizeDisabled;
-    }
-    set autoSizeDisabled(value) {
-        this._autoSizeDisabled = value;
-    }
-    get mainGridMinSize() {
-        return this._mainGridMinSize;
-    }
-    set mainGridMinSize(value) {
-        if (this._mainGridMinSize != value) {
-            this._mainGridMinSize = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    get mainGridIndex() {
-        return this._mainGridIndex;
-    }
-    set mainGridIndex(value) {
-        if (this._mainGridIndex != value) {
-            this._mainGridIndex = value;
-            this.setBoundsChangedFlag();
-        }
-    }
-    setBoundsChangedFlag(positionChangedOnly = false) {
-        if (this._updating == 0 && this._parent) {
-            if (!positionChangedOnly)
-                this._percentReady = false;
-            if (!this._boundsChanged) {
-                this._boundsChanged = true;
-                if (this._layout != GroupLayoutType.None)
-                    this._partner.callLater(this._ensureBoundsCorrect);
-            }
-        }
-    }
-    _ensureBoundsCorrect() {
-        let _t = GObject.cast(this.node);
-        _t.ensureBoundsCorrect();
-    }
-    ensureSizeCorrect() {
-        if (this._parent == null || !this._boundsChanged || this._layout == 0)
-            return;
-        this._boundsChanged = false;
-        if (this._autoSizeDisabled)
-            this.resizeChildren(0, 0);
-        else {
-            this.handleLayout();
-            this.updateBounds();
-        }
-    }
-    ensureBoundsCorrect() {
-        if (this._parent == null || !this._boundsChanged)
-            return;
-        this._boundsChanged = false;
-        if (this._layout == 0)
-            this.updateBounds();
-        else {
-            if (this._autoSizeDisabled)
-                this.resizeChildren(0, 0);
-            else {
-                this.handleLayout();
-                this.updateBounds();
-            }
-        }
-    }
-    updateBounds() {
-        this._partner.unschedule(this._ensureBoundsCorrect);
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        var ax = Number.POSITIVE_INFINITY, ay = Number.POSITIVE_INFINITY;
-        var ar = Number.NEGATIVE_INFINITY, ab = Number.NEGATIVE_INFINITY;
-        var tmp;
-        var empty = true;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group != this || this._excludeInvisibles && !child.internalVisible3)
-                continue;
-            tmp = child.xMin;
-            if (tmp < ax)
-                ax = tmp;
-            tmp = child.yMin;
-            if (tmp < ay)
-                ay = tmp;
-            tmp = child.xMin + child.width;
-            if (tmp > ar)
-                ar = tmp;
-            tmp = child.yMin + child.height;
-            if (tmp > ab)
-                ab = tmp;
-            empty = false;
-        }
-        var w = 0, h = 0;
-        if (!empty) {
-            this._updating |= 1;
-            this.setPosition(ax, ay);
-            this._updating &= 2;
-            w = ar - ax;
-            h = ab - ay;
-        }
-        if ((this._updating & 2) == 0) {
-            this._updating |= 2;
-            this.setSize(w, h);
-            this._updating &= 1;
-        }
-        else {
-            this._updating &= 1;
-            this.resizeChildren(this._width - w, this._height - h);
-        }
-    }
-    handleLayout() {
-        this._updating |= 1;
-        var child;
-        var i;
-        var cnt;
-        if (this._layout == GroupLayoutType.Horizontal) {
-            var curX = this.x;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else if (this._layout == GroupLayoutType.Vertical) {
-            var curY = this.y;
-            cnt = this._parent.numChildren;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 2;
-    }
-    moveChildren(dx, dy) {
-        if ((this._updating & 1) != 0 || this._parent == null)
-            return;
-        this._updating |= 1;
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        for (i = 0; i < cnt; i++) {
-            child = this._parent.getChildAt(i);
-            if (child.group == this) {
-                child.setPosition(child.x + dx, child.y + dy);
-            }
-        }
-        this._updating &= 2;
-    }
-    resizeChildren(dw, dh) {
-        if (this._layout == GroupLayoutType.None || (this._updating & 2) != 0 || this._parent == null)
-            return;
-        this._updating |= 2;
-        if (this._boundsChanged) {
-            this._boundsChanged = false;
-            if (!this._autoSizeDisabled) {
-                this.updateBounds();
-                return;
-            }
-        }
-        var cnt = this._parent.numChildren;
-        var i;
-        var child;
-        if (!this._percentReady) {
-            this._percentReady = true;
-            this._numChildren = 0;
-            this._totalSize = 0;
-            this._mainChildIndex = -1;
-            var j = 0;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (!this._excludeInvisibles || child.internalVisible3) {
-                    if (j == this._mainGridIndex)
-                        this._mainChildIndex = i;
-                    this._numChildren++;
-                    if (this._layout == 1)
-                        this._totalSize += child.width;
-                    else
-                        this._totalSize += child.height;
-                }
-                j++;
-            }
-            if (this._mainChildIndex != -1) {
-                if (this._layout == 1) {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.width;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-                else {
-                    child = this._parent.getChildAt(this._mainChildIndex);
-                    this._totalSize += this._mainGridMinSize - child.height;
-                    child._sizePercentInGroup = this._mainGridMinSize / this._totalSize;
-                }
-            }
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (i == this._mainChildIndex)
-                    continue;
-                if (this._totalSize > 0)
-                    child._sizePercentInGroup = (this._layout == 1 ? child.width : child.height) / this._totalSize;
-                else
-                    child._sizePercentInGroup = 0;
-            }
-        }
-        var remainSize = 0;
-        var remainPercent = 1;
-        var priorHandled = false;
-        if (this._layout == 1) {
-            remainSize = this.width - (this._numChildren - 1) * this._columnGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(remainSize - (this._totalSize - this._mainGridMinSize), child._rawHeight + dh, true);
-                remainSize -= child.width;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curX = this.x;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth, child._rawHeight + dh, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(Math.round(child._sizePercentInGroup / remainPercent * remainSize), child._rawHeight + dh, true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.width;
-                }
-                child.xMin = curX;
-                if (child.width != 0)
-                    curX += child.width + this._columnGap;
-            }
-        }
-        else {
-            remainSize = this.height - (this._numChildren - 1) * this._lineGap;
-            if (this._mainChildIndex != -1 && remainSize >= this._totalSize) {
-                child = this._parent.getChildAt(this._mainChildIndex);
-                child.setSize(child._rawWidth + dw, remainSize - (this._totalSize - this._mainGridMinSize), true);
-                remainSize -= child.height;
-                remainPercent -= child._sizePercentInGroup;
-                priorHandled = true;
-            }
-            var curY = this.y;
-            for (i = 0; i < cnt; i++) {
-                child = this._parent.getChildAt(i);
-                if (child.group != this)
-                    continue;
-                if (this._excludeInvisibles && !child.internalVisible3) {
-                    child.setSize(child._rawWidth + dw, child._rawHeight, true);
-                    continue;
-                }
-                if (!priorHandled || i != this._mainChildIndex) {
-                    child.setSize(child._rawWidth + dw, Math.round(child._sizePercentInGroup / remainPercent * remainSize), true);
-                    remainPercent -= child._sizePercentInGroup;
-                    remainSize -= child.height;
-                }
-                child.yMin = curY;
-                if (child.height != 0)
-                    curY += child.height + this._lineGap;
-            }
-        }
-        this._updating &= 1;
-    }
-    handleAlphaChanged() {
-        if (this._underConstruct)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.alpha = this.alpha;
-        }
-    }
-    handleVisibleChanged() {
-        if (!this._parent)
-            return;
-        var cnt = this._parent.numChildren;
-        for (var i = 0; i < cnt; i++) {
-            var child = this._parent.getChildAt(i);
-            if (child.group == this)
-                child.handleVisibleChanged();
-        }
-    }
-    setup_beforeAdd(buffer, beginPos) {
-        super.setup_beforeAdd(buffer, beginPos);
-        buffer.seek(beginPos, 5);
-        this._layout = buffer.readByte();
-        this._lineGap = buffer.readInt();
-        this._columnGap = buffer.readInt();
-        if (buffer.version >= 2) {
-            this._excludeInvisibles = buffer.readBool();
-            this._autoSizeDisabled = buffer.readBool();
-            this._mainGridIndex = buffer.readShort();
-        }
-    }
-    setup_afterAdd(buffer, beginPos) {
-        super.setup_afterAdd(buffer, beginPos);
-        if (!this.visible)
-            this.handleVisibleChanged();
-    }
-}
-
-class RelationItem {
-    _owner;
-    _target;
-    _defs;
-    _targetX;
-    _targetY;
-    _targetWidth;
-    _targetHeight;
-    constructor(owner) {
-        this._owner = owner;
-        this._defs = new Array();
-    }
-    get owner() {
-        return this._owner;
-    }
-    set target(value) {
-        if (this._target != value) {
-            if (this._target)
-                this.releaseRefTarget(this._target);
-            this._target = value;
-            if (this._target)
-                this.addRefTarget(this._target);
-        }
-    }
-    get target() {
-        return this._target;
-    }
-    add(relationType, usePercent) {
-        if (relationType == RelationType.Size) {
-            this.add(RelationType.Width, usePercent);
-            this.add(RelationType.Height, usePercent);
-            return;
-        }
-        var length = this._defs.length;
-        for (var i = 0; i < length; i++) {
-            var def = this._defs[i];
-            if (def.type == relationType)
-                return;
-        }
-        this.internalAdd(relationType, usePercent);
-    }
-    internalAdd(relationType, usePercent) {
-        if (relationType == RelationType.Size) {
-            this.internalAdd(RelationType.Width, usePercent);
-            this.internalAdd(RelationType.Height, usePercent);
-            return;
-        }
-        var info = new RelationDef();
-        info.percent = usePercent;
-        info.type = relationType;
-        info.axis = (relationType <= RelationType.Right_Right || relationType == RelationType.Width || relationType >= RelationType.LeftExt_Left && relationType <= RelationType.RightExt_Right) ? 0 : 1;
-        this._defs.push(info);
-    }
-    remove(relationType) {
-        if (relationType == RelationType.Size) {
-            this.remove(RelationType.Width);
-            this.remove(RelationType.Height);
-            return;
-        }
-        var dc = this._defs.length;
-        for (var k = 0; k < dc; k++) {
-            if (this._defs[k].type == relationType) {
-                this._defs.splice(k, 1);
-                break;
-            }
-        }
-    }
-    copyFrom(source) {
-        this.target = source.target;
-        this._defs.length = 0;
-        var length = source._defs.length;
-        for (var i = 0; i < length; i++) {
-            var info = source._defs[i];
-            var info2 = new RelationDef();
-            info2.copyFrom(info);
-            this._defs.push(info2);
-        }
-    }
-    dispose() {
-        if (this._target) {
-            this.releaseRefTarget(this._target);
-            this._target = null;
-        }
-    }
-    get isEmpty() {
-        return this._defs.length == 0;
-    }
-    applyOnSelfResized(dWidth, dHeight, applyPivot) {
-        var ox = this._owner.x;
-        var oy = this._owner.y;
-        var length = this._defs.length;
-        for (var i = 0; i < length; i++) {
-            var info = this._defs[i];
-            switch (info.type) {
-                case RelationType.Center_Center:
-                    this._owner.x -= (0.5 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
-                    break;
-                case RelationType.Right_Center:
-                case RelationType.Right_Left:
-                case RelationType.Right_Right:
-                    this._owner.x -= (1 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
-                    break;
-                case RelationType.Middle_Middle:
-                    this._owner.y -= (0.5 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
-                    break;
-                case RelationType.Bottom_Middle:
-                case RelationType.Bottom_Top:
-                case RelationType.Bottom_Bottom:
-                    this._owner.y -= (1 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
-                    break;
-            }
-        }
-        if (ox != this._owner.x || oy != this._owner.y) {
-            ox = this._owner.x - ox;
-            oy = this._owner.y - oy;
-            this._owner.updateGearFromRelations(1, ox, oy);
-            if (this._owner.parent) {
-                var len = this._owner.parent._transitions.length;
-                if (len > 0) {
-                    for (var i = 0; i < len; ++i) {
-                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
-                    }
-                }
-            }
-        }
-    }
-    applyOnXYChanged(info, dx, dy) {
-        var tmp;
-        switch (info.type) {
-            case RelationType.Left_Left:
-            case RelationType.Left_Center:
-            case RelationType.Left_Right:
-            case RelationType.Center_Center:
-            case RelationType.Right_Left:
-            case RelationType.Right_Center:
-            case RelationType.Right_Right:
-                this._owner.x += dx;
-                break;
-            case RelationType.Top_Top:
-            case RelationType.Top_Middle:
-            case RelationType.Top_Bottom:
-            case RelationType.Middle_Middle:
-            case RelationType.Bottom_Top:
-            case RelationType.Bottom_Middle:
-            case RelationType.Bottom_Bottom:
-                this._owner.y += dy;
-                break;
-            case RelationType.Width:
-            case RelationType.Height:
-                break;
-            case RelationType.LeftExt_Left:
-            case RelationType.LeftExt_Right:
-                if (this._owner != this._target.parent) {
-                    tmp = this._owner.xMin;
-                    this._owner.width = this._owner._rawWidth - dx;
-                    this._owner.xMin = tmp + dx;
-                }
-                else
-                    this._owner.width = this._owner._rawWidth - dx;
-                break;
-            case RelationType.RightExt_Left:
-            case RelationType.RightExt_Right:
-                if (this._owner != this._target.parent) {
-                    tmp = this._owner.xMin;
-                    this._owner.width = this._owner._rawWidth + dx;
-                    this._owner.xMin = tmp;
-                }
-                else
-                    this._owner.width = this._owner._rawWidth + dx;
-                break;
-            case RelationType.TopExt_Top:
-            case RelationType.TopExt_Bottom:
-                if (this._owner != this._target.parent) {
-                    tmp = this._owner.yMin;
-                    this._owner.height = this._owner._rawHeight - dy;
-                    this._owner.yMin = tmp + dy;
-                }
-                else
-                    this._owner.height = this._owner._rawHeight - dy;
-                break;
-            case RelationType.BottomExt_Top:
-            case RelationType.BottomExt_Bottom:
-                if (this._owner != this._target.parent) {
-                    tmp = this._owner.yMin;
-                    this._owner.height = this._owner._rawHeight + dy;
-                    this._owner.yMin = tmp;
-                }
-                else
-                    this._owner.height = this._owner._rawHeight + dy;
-                break;
-        }
-    }
-    applyOnSizeChanged(info) {
-        var pos = 0, pivot = 0, delta = 0;
-        var v, tmp;
-        if (info.axis == 0) {
-            if (this._target != this._owner.parent) {
-                pos = this._target.x;
-                if (this._target.pivotAsAnchor)
-                    pivot = this._target.pivotX;
-            }
-            if (info.percent) {
-                if (this._targetWidth != 0)
-                    delta = this._target._width / this._targetWidth;
-            }
-            else
-                delta = this._target._width - this._targetWidth;
-        }
-        else {
-            if (this._target != this._owner.parent) {
-                pos = this._target.y;
-                if (this._target.pivotAsAnchor)
-                    pivot = this._target.pivotY;
-            }
-            if (info.percent) {
-                if (this._targetHeight != 0)
-                    delta = this._target._height / this._targetHeight;
-            }
-            else
-                delta = this._target._height - this._targetHeight;
-        }
-        switch (info.type) {
-            case RelationType.Left_Left:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
-                else if (pivot != 0)
-                    this._owner.x += delta * (-pivot);
-                break;
-            case RelationType.Left_Center:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
-                else
-                    this._owner.x += delta * (0.5 - pivot);
-                break;
-            case RelationType.Left_Right:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
-                else
-                    this._owner.x += delta * (1 - pivot);
-                break;
-            case RelationType.Center_Center:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth * 0.5 - pos) * delta - this._owner._rawWidth * 0.5;
-                else
-                    this._owner.x += delta * (0.5 - pivot);
-                break;
-            case RelationType.Right_Left:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
-                else if (pivot != 0)
-                    this._owner.x += delta * (-pivot);
-                break;
-            case RelationType.Right_Center:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
-                else
-                    this._owner.x += delta * (0.5 - pivot);
-                break;
-            case RelationType.Right_Right:
-                if (info.percent)
-                    this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
-                else
-                    this._owner.x += delta * (1 - pivot);
-                break;
-            case RelationType.Top_Top:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
-                else if (pivot != 0)
-                    this._owner.y += delta * (-pivot);
-                break;
-            case RelationType.Top_Middle:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
-                else
-                    this._owner.y += delta * (0.5 - pivot);
-                break;
-            case RelationType.Top_Bottom:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
-                else
-                    this._owner.y += delta * (1 - pivot);
-                break;
-            case RelationType.Middle_Middle:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight * 0.5 - pos) * delta - this._owner._rawHeight * 0.5;
-                else
-                    this._owner.y += delta * (0.5 - pivot);
-                break;
-            case RelationType.Bottom_Top:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
-                else if (pivot != 0)
-                    this._owner.y += delta * (-pivot);
-                break;
-            case RelationType.Bottom_Middle:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
-                else
-                    this._owner.y += delta * (0.5 - pivot);
-                break;
-            case RelationType.Bottom_Bottom:
-                if (info.percent)
-                    this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
-                else
-                    this._owner.y += delta * (1 - pivot);
-                break;
-            case RelationType.Width:
-                if (this._owner._underConstruct && this._owner == this._target.parent)
-                    v = this._owner.sourceWidth - this._target.initWidth;
-                else
-                    v = this._owner._rawWidth - this._targetWidth;
-                if (info.percent)
-                    v = v * delta;
-                if (this._target == this._owner.parent) {
-                    if (this._owner.pivotAsAnchor) {
-                        tmp = this._owner.xMin;
-                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
-                        this._owner.xMin = tmp;
-                    }
-                    else
-                        this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
-                }
-                else
-                    this._owner.width = this._target._width + v;
-                break;
-            case RelationType.Height:
-                if (this._owner._underConstruct && this._owner == this._target.parent)
-                    v = this._owner.sourceHeight - this._target.initHeight;
-                else
-                    v = this._owner._rawHeight - this._targetHeight;
-                if (info.percent)
-                    v = v * delta;
-                if (this._target == this._owner.parent) {
-                    if (this._owner.pivotAsAnchor) {
-                        tmp = this._owner.yMin;
-                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
-                        this._owner.yMin = tmp;
-                    }
-                    else
-                        this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
-                }
-                else
-                    this._owner.height = this._target._height + v;
-                break;
-            case RelationType.LeftExt_Left:
-                tmp = this._owner.xMin;
-                if (info.percent)
-                    v = pos + (tmp - pos) * delta - tmp;
-                else
-                    v = delta * (-pivot);
-                this._owner.width = this._owner._rawWidth - v;
-                this._owner.xMin = tmp + v;
-                break;
-            case RelationType.LeftExt_Right:
-                tmp = this._owner.xMin;
-                if (info.percent)
-                    v = pos + (tmp - pos) * delta - tmp;
-                else
-                    v = delta * (1 - pivot);
-                this._owner.width = this._owner._rawWidth - v;
-                this._owner.xMin = tmp + v;
-                break;
-            case RelationType.RightExt_Left:
-                tmp = this._owner.xMin;
-                if (info.percent)
-                    v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
-                else
-                    v = delta * (-pivot);
-                this._owner.width = this._owner._rawWidth + v;
-                this._owner.xMin = tmp;
-                break;
-            case RelationType.RightExt_Right:
-                tmp = this._owner.xMin;
-                if (info.percent) {
-                    if (this._owner == this._target.parent) {
-                        if (this._owner._underConstruct)
-                            this._owner.width = pos + this._target._width - this._target._width * pivot +
-                                (this._owner.sourceWidth - pos - this._target.initWidth + this._target.initWidth * pivot) * delta;
-                        else
-                            this._owner.width = pos + (this._owner._rawWidth - pos) * delta;
-                    }
-                    else {
-                        v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
-                        this._owner.width = this._owner._rawWidth + v;
-                        this._owner.xMin = tmp;
-                    }
-                }
-                else {
-                    if (this._owner == this._target.parent) {
-                        if (this._owner._underConstruct)
-                            this._owner.width = this._owner.sourceWidth + (this._target._width - this._target.initWidth) * (1 - pivot);
-                        else
-                            this._owner.width = this._owner._rawWidth + delta * (1 - pivot);
-                    }
-                    else {
-                        v = delta * (1 - pivot);
-                        this._owner.width = this._owner._rawWidth + v;
-                        this._owner.xMin = tmp;
-                    }
-                }
-                break;
-            case RelationType.TopExt_Top:
-                tmp = this._owner.yMin;
-                if (info.percent)
-                    v = pos + (tmp - pos) * delta - tmp;
-                else
-                    v = delta * (-pivot);
-                this._owner.height = this._owner._rawHeight - v;
-                this._owner.yMin = tmp + v;
-                break;
-            case RelationType.TopExt_Bottom:
-                tmp = this._owner.yMin;
-                if (info.percent)
-                    v = pos + (tmp - pos) * delta - tmp;
-                else
-                    v = delta * (1 - pivot);
-                this._owner.height = this._owner._rawHeight - v;
-                this._owner.yMin = tmp + v;
-                break;
-            case RelationType.BottomExt_Top:
-                tmp = this._owner.yMin;
-                if (info.percent)
-                    v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
-                else
-                    v = delta * (-pivot);
-                this._owner.height = this._owner._rawHeight + v;
-                this._owner.yMin = tmp;
-                break;
-            case RelationType.BottomExt_Bottom:
-                tmp = this._owner.yMin;
-                if (info.percent) {
-                    if (this._owner == this._target.parent) {
-                        if (this._owner._underConstruct)
-                            this._owner.height = pos + this._target._height - this._target._height * pivot +
-                                (this._owner.sourceHeight - pos - this._target.initHeight + this._target.initHeight * pivot) * delta;
-                        else
-                            this._owner.height = pos + (this._owner._rawHeight - pos) * delta;
-                    }
-                    else {
-                        v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
-                        this._owner.height = this._owner._rawHeight + v;
-                        this._owner.yMin = tmp;
-                    }
-                }
-                else {
-                    if (this._owner == this._target.parent) {
-                        if (this._owner._underConstruct)
-                            this._owner.height = this._owner.sourceHeight + (this._target._height - this._target.initHeight) * (1 - pivot);
-                        else
-                            this._owner.height = this._owner._rawHeight + delta * (1 - pivot);
-                    }
-                    else {
-                        v = delta * (1 - pivot);
-                        this._owner.height = this._owner._rawHeight + v;
-                        this._owner.yMin = tmp;
-                    }
-                }
-                break;
-        }
-    }
-    addRefTarget(target) {
-        if (target != this._owner.parent)
-            target.on(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
-        target.on(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
-        target.on(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
-        this._targetX = this._target.x;
-        this._targetY = this._target.y;
-        this._targetWidth = this._target._width;
-        this._targetHeight = this._target._height;
-    }
-    releaseRefTarget(target) {
-        if (!target.node)
-            return;
-        target.off(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
-        target.off(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
-        target.off(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
-    }
-    __targetXYChanged(evt) {
-        if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
-            this._targetX = this._target.x;
-            this._targetY = this._target.y;
-            return;
-        }
-        this._owner.relations.handling = this._target;
-        var ox = this._owner.x;
-        var oy = this._owner.y;
-        var dx = this._target.x - this._targetX;
-        var dy = this._target.y - this._targetY;
-        var length = this._defs.length;
-        for (var i = 0; i < length; i++) {
-            var info = this._defs[i];
-            this.applyOnXYChanged(info, dx, dy);
-        }
-        this._targetX = this._target.x;
-        this._targetY = this._target.y;
-        if (ox != this._owner.x || oy != this._owner.y) {
-            ox = this._owner.x - ox;
-            oy = this._owner.y - oy;
-            this._owner.updateGearFromRelations(1, ox, oy);
-            if (this._owner.parent) {
-                var len = this._owner.parent._transitions.length;
-                if (len > 0) {
-                    for (var i = 0; i < len; ++i) {
-                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
-                    }
-                }
-            }
-        }
-        this._owner.relations.handling = null;
-    }
-    __targetSizeChanged(evt) {
-        if (this._owner.relations.handling != null)
-            return;
-        this._owner.relations.handling = this._target;
-        var ox = this._owner.x;
-        var oy = this._owner.y;
-        var ow = this._owner._rawWidth;
-        var oh = this._owner._rawHeight;
-        var length = this._defs.length;
-        for (var i = 0; i < length; i++) {
-            var info = this._defs[i];
-            this.applyOnSizeChanged(info);
-        }
-        this._targetWidth = this._target._width;
-        this._targetHeight = this._target._height;
-        if (ox != this._owner.x || oy != this._owner.y) {
-            ox = this._owner.x - ox;
-            oy = this._owner.y - oy;
-            this._owner.updateGearFromRelations(1, ox, oy);
-            if (this._owner.parent) {
-                var len = this._owner.parent._transitions.length;
-                if (len > 0) {
-                    for (var i = 0; i < len; ++i) {
-                        this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
-                    }
-                }
-            }
-        }
-        if (ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
-            ow = this._owner._rawWidth - ow;
-            oh = this._owner._rawHeight - oh;
-            this._owner.updateGearFromRelations(2, ow, oh);
-        }
-        this._owner.relations.handling = null;
-    }
-    __targetSizeWillChange(evt) {
-        this._owner.relations.sizeDirty = true;
-    }
-}
-class RelationDef {
-    percent = false;
-    type = 0;
-    axis = 0;
-    constructor() {
-    }
-    copyFrom(source) {
-        this.percent = source.percent;
-        this.type = source.type;
-        this.axis = source.axis;
-    }
-}
-
-class Relations {
-    _owner;
-    _items;
-    handling;
-    sizeDirty = false;
-    constructor(owner) {
-        this._owner = owner;
-        this._items = new Array();
-    }
-    add(target, relationType, usePercent) {
-        var length = this._items.length;
-        for (var i = 0; i < length; i++) {
-            var item = this._items[i];
-            if (item.target == target) {
-                item.add(relationType, usePercent);
-                return;
-            }
-        }
-        var newItem = new RelationItem(this._owner);
-        newItem.target = target;
-        newItem.add(relationType, usePercent);
-        this._items.push(newItem);
-    }
-    remove(target, relationType) {
-        relationType = relationType || 0;
-        var cnt = this._items.length;
-        var i = 0;
-        while (i < cnt) {
-            var item = this._items[i];
-            if (item.target == target) {
-                item.remove(relationType);
-                if (item.isEmpty) {
-                    item.dispose();
-                    this._items.splice(i, 1);
-                    cnt--;
-                }
-                else
-                    i++;
-            }
-            else
-                i++;
-        }
-    }
-    contains(target) {
-        var length = this._items.length;
-        for (var i = 0; i < length; i++) {
-            var item = this._items[i];
-            if (item.target == target)
-                return true;
-        }
-        return false;
-    }
-    clearFor(target) {
-        var cnt = this._items.length;
-        var i = 0;
-        while (i < cnt) {
-            var item = this._items[i];
-            if (item.target == target) {
-                item.dispose();
-                this._items.splice(i, 1);
-                cnt--;
-            }
-            else
-                i++;
-        }
-    }
-    clearAll() {
-        var length = this._items.length;
-        for (var i = 0; i < length; i++) {
-            var item = this._items[i];
-            item.dispose();
-        }
-        this._items.length = 0;
-    }
-    copyFrom(source) {
-        this.clearAll();
-        var arr = source._items;
-        var length = arr.length;
-        for (var i = 0; i < length; i++) {
-            var ri = arr[i];
-            var item = new RelationItem(this._owner);
-            item.copyFrom(ri);
-            this._items.push(item);
-        }
-    }
-    dispose() {
-        this.clearAll();
-    }
-    onOwnerSizeChanged(dWidth, dHeight, applyPivot) {
-        if (this._items.length == 0)
-            return;
-        var length = this._items.length;
-        for (var i = 0; i < length; i++) {
-            var item = this._items[i];
-            item.applyOnSelfResized(dWidth, dHeight, applyPivot);
-        }
-    }
-    ensureRelationsSizeCorrect() {
-        if (this._items.length == 0)
-            return;
-        this.sizeDirty = false;
-        var length = this._items.length;
-        for (var i = 0; i < length; i++) {
-            var item = this._items[i];
-            item.target.ensureSizeCorrect();
-        }
-    }
-    get empty() {
-        return this._items.length == 0;
-    }
-    setup(buffer, parentToChild) {
-        var cnt = buffer.readByte();
-        var target;
-        for (var i = 0; i < cnt; i++) {
-            var targetIndex = buffer.readShort();
-            if (targetIndex == -1)
-                target = this._owner.parent;
-            else if (parentToChild)
-                target = this._owner.getChildAt(targetIndex);
-            else
-                target = this._owner.parent.getChildAt(targetIndex);
-            var newItem = new RelationItem(this._owner);
-            newItem.target = target;
-            this._items.push(newItem);
-            var cnt2 = buffer.readByte();
-            for (var j = 0; j < cnt2; j++) {
-                var rt = buffer.readByte();
-                var usePercent = buffer.readBool();
-                newItem.internalAdd(rt, usePercent);
-            }
-        }
-    }
-}
-
-class UIConfig {
-    constructor() {
-    }
-    //Default font name
-    static defaultFont = "Arial";
-    //Resource using in Window.ShowModalWait for locking the window.
-    static windowModalWaiting;
-    //Resource using in GRoot.ShowModalWait for locking the screen.
-    static globalModalWaiting;
-    //When a modal window is in front, the background becomes dark.
-    static modalLayerColor = new Color(0x33, 0x33, 0x33, 0x33);
-    //Default button click sound
-    static buttonSound;
-    static buttonSoundVolumeScale = 1;
-    static horizontalScrollBar;
-    static verticalScrollBar;
-    //Scrolling step in pixels
-    static defaultScrollStep = 25;
-    //Deceleration ratio of scrollpane when its in touch dragging.
-    static defaultScrollDecelerationRate = 0.967;
-    //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
-    static defaultScrollBarDisplay = ScrollBarDisplayType.Visible;
-    //Allow dragging the content to scroll. Recommeded true for mobile.
-    static defaultScrollTouchEffect = true;
-    //The "rebound" effect in the scolling container. Recommeded true for mobile.
-    static defaultScrollBounceEffect = true;
-    //Resources for PopupMenu.
-    static popupMenu;
-    //Resources for seperator of PopupMenu.
-    static popupMenu_seperator;
-    //In case of failure of loading content for GLoader, use this sign to indicate an error.
-    static loaderErrorSign;
-    //Resources for tooltips.
-    static tooltipsWin;
-    /**提示管理器 */
-    static tooltipsManager;
-    //Max items displayed in combobox without scrolling.
-    static defaultComboBoxVisibleItemCount = 10;
-    // Pixel offsets of finger to trigger scrolling.
-    static touchScrollSensitivity = 20;
-    // Pixel offsets of finger to trigger dragging.
-    static touchDragSensitivity = 10;
-    // Pixel offsets of mouse pointer to trigger dragging.
-    static clickDragSensitivity = 2;
-    // When click the window, brings to front automatically.
-    static bringWindowToFrontOnClick = true;
-    static frameTimeForAsyncUIConstruction = 0.002;
-    static linkUnderline = true;
-    //Default group name of UI node.<br/>
-    static defaultUILayer = Layers.Enum.UI_2D;
-}
-let _fontRegistry = {};
-function registerFont(name, font, bundle) {
-    if (font instanceof Font)
-        _fontRegistry[name] = font;
-    else {
-        (bundle || resources).load(name, Font, (err, asset) => {
-            _fontRegistry[name] = asset;
-        });
-    }
-}
-function getFontByName(name) {
-    return _fontRegistry[name];
 }
 
 class GObject {
