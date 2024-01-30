@@ -19613,7 +19613,7 @@ class AudioChannelImpl {
             if (this.__fadeData == null) {
                 this.__fadeData = new FadeData();
             }
-            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startTime = Timer.currentTime;
             this.__fadeData.startValue = fade.startVolume == undefined ? this.__source.volume : fade.startVolume;
             this.__fadeData.time = fade.time;
             this.__fadeData.endValue = volume;
@@ -19624,7 +19624,7 @@ class AudioChannelImpl {
             this.__volume = volume;
         }
         //未加载完成前，音频的结束时间为无穷大
-        this.__startTime = director.getTotalTime();
+        this.__startTime = Timer.currentTime;
         this.__time = Number.MAX_VALUE;
         Res.GetResRef(this.url, "AudioChannel").then((value) => {
             if (value instanceof ResRef) {
@@ -19690,7 +19690,7 @@ class AudioChannelImpl {
             if (this.__fadeData == null) {
                 this.__fadeData = new FadeData();
             }
-            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startTime = Timer.currentTime;
             this.__fadeData.startValue = startVolume == undefined ? this.__source.volume : startVolume;
             this.__fadeData.time = time;
             this.__fadeData.endValue = endVolume;
@@ -19731,7 +19731,7 @@ class AudioChannelImpl {
         this.__source.clip = this.__ref.content;
         this.__source.loop = this.__loop;
         this.__source.play();
-        let currentTime = director.getTotalTime();
+        let currentTime = Timer.currentTime;
         if (this.__fadeData) {
             this.__fadeData.startTime = currentTime;
             if (this.mute) {
@@ -19749,7 +19749,7 @@ class AudioChannelImpl {
                 this.__source.volume = 0;
             }
         }
-        this.__startTime = director.getTotalTime();
+        this.__startTime = Timer.currentTime;
         this.__time = this.__source.duration * 1000;
         // let audio = this.__source["audio"];
         // if (audio) {
@@ -19771,7 +19771,7 @@ class AudioChannelImpl {
         if (this.__paused || this.__isPlaying == false || this.__url == null) {
             return;
         }
-        let currentTime = director.getTotalTime();
+        let currentTime = Timer.currentTime;
         let passTime;
         if (this.__fadeData) {
             passTime = currentTime - this.__fadeData.startTime;
@@ -19819,7 +19819,7 @@ class AudioChannelImpl {
         if (this.__paused == false) {
             return;
         }
-        let pTime = director.getTotalTime() - this.__pauseTime;
+        let pTime = Timer.currentTime - this.__pauseTime;
         if (this.__fadeData) {
             this.__fadeData.startTime += pTime;
         }
@@ -19832,7 +19832,7 @@ class AudioChannelImpl {
             return;
         }
         this.__paused = true;
-        this.__pauseTime = director.getTotalTime();
+        this.__pauseTime = Timer.currentTime;
         this.__source.pause();
     }
     get curVolume() {

@@ -4,6 +4,7 @@ import { ResURL, URL2Key } from "../res/core/ResURL";
 import { ResRef } from "../res/core/ResRef";
 import { Res } from "../res/Res";
 import { Debuger } from "../debugers/Debuger";
+import { Timer } from "../timer/Timer";
 
 
 
@@ -83,7 +84,7 @@ export class AudioChannelImpl implements IAudioChannel {
             if (this.__fadeData == null) {
                 this.__fadeData = new FadeData();
             }
-            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startTime = Timer.currentTime;
             this.__fadeData.startValue = fade.startVolume == undefined ? this.__source.volume : fade.startVolume;
             this.__fadeData.time = fade.time;
             this.__fadeData.endValue = volume;
@@ -93,7 +94,7 @@ export class AudioChannelImpl implements IAudioChannel {
             this.__volume = volume;
         }
         //未加载完成前，音频的结束时间为无穷大
-        this.__startTime = director.getTotalTime();
+        this.__startTime = Timer.currentTime;
         this.__time = Number.MAX_VALUE;
 
         Res.GetResRef(this.url, "AudioChannel").then(
@@ -163,7 +164,7 @@ export class AudioChannelImpl implements IAudioChannel {
             if (this.__fadeData == null) {
                 this.__fadeData = new FadeData();
             }
-            this.__fadeData.startTime = director.getTotalTime();
+            this.__fadeData.startTime = Timer.currentTime;
             this.__fadeData.startValue = startVolume == undefined ? this.__source.volume : startVolume;
             this.__fadeData.time = time;
             this.__fadeData.endValue = endVolume;
@@ -208,7 +209,7 @@ export class AudioChannelImpl implements IAudioChannel {
         this.__source.loop = this.__loop;
         this.__source.play();
 
-        let currentTime: number = director.getTotalTime();
+        let currentTime: number = Timer.currentTime;
         if (this.__fadeData) {
             this.__fadeData.startTime = currentTime;
             if (this.mute) {
@@ -223,7 +224,7 @@ export class AudioChannelImpl implements IAudioChannel {
                 this.__source.volume = 0;
             }
         }
-        this.__startTime = director.getTotalTime();
+        this.__startTime = Timer.currentTime;
         this.__time = this.__source.duration * 1000;
         // let audio = this.__source["audio"];
         // if (audio) {
@@ -246,7 +247,7 @@ export class AudioChannelImpl implements IAudioChannel {
         if (this.__paused || this.__isPlaying == false || this.__url == null) {
             return;
         }
-        let currentTime: number = director.getTotalTime();
+        let currentTime: number = Timer.currentTime;
         let passTime: number;
         if (this.__fadeData) {
             passTime = currentTime - this.__fadeData.startTime;
@@ -295,7 +296,7 @@ export class AudioChannelImpl implements IAudioChannel {
         if (this.__paused == false) {
             return;
         }
-        let pTime: number = director.getTotalTime() - this.__pauseTime;
+        let pTime: number = Timer.currentTime - this.__pauseTime;
         if (this.__fadeData) {
             this.__fadeData.startTime += pTime;
         }
@@ -309,7 +310,7 @@ export class AudioChannelImpl implements IAudioChannel {
             return;
         }
         this.__paused = true;
-        this.__pauseTime = director.getTotalTime();
+        this.__pauseTime = Timer.currentTime;
         this.__source.pause();
     }
 
