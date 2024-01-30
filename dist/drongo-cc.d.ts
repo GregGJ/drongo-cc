@@ -4716,6 +4716,7 @@ declare class CCLoaderImpl extends EventDispatcher implements ILoader {
     url: ResURL;
     constructor();
     Load(url: ResURL): void;
+    private __load;
     Reset(): void;
 }
 

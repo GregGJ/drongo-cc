@@ -19286,29 +19286,38 @@ class CCLoaderImpl extends EventDispatcher {
         }
         let bundle = assetManager.getBundle(url.bundle);
         if (!bundle) {
-            let __this = this;
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
                     this.Emit(Event.ERROR, { url, err });
                     return;
                 }
-                bundle.load(FullURL(url), url.type, (finished, total) => {
-                    const progress = finished / total;
-                    __this.Emit(Event.PROGRESS, { url, progress });
-                }, (err, asset) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, err);
-                        return;
-                    }
-                    const urlKey = URL2Key(url);
-                    let res = new ResourceImpl();
-                    res.key = urlKey;
-                    res.content = asset;
-                    ResManager.AddRes(res);
-                    __this.Emit(Event.COMPLETE, { url });
-                });
+                this.__load(url, bundle);
             });
         }
+        else {
+            this.__load(url, bundle);
+        }
+    }
+    __load(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现！");
+        }
+        let __this = this;
+        bundle.load(FullURL(url), url.type, (finished, total) => {
+            const progress = finished / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, asset) => {
+            if (err) {
+                __this.Emit(Event.ERROR, err);
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let res = new ResourceImpl();
+            res.key = urlKey;
+            res.content = asset;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
+        });
     }
     Reset() {
         this.url = null;
@@ -22888,31 +22897,40 @@ class ConfigLoader extends EventDispatcher {
         }
         let bundle = assetManager.getBundle(url.bundle);
         if (!bundle) {
-            let __this = this;
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
                     this.Emit(Event.ERROR, { url, err });
                     return;
                 }
-                bundle.load(FullURL(url), BufferAsset, (finished, total) => {
-                    const progress = finished / total;
-                    __this.Emit(Event.PROGRESS, { url, progress });
-                }, (err, asset) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, err);
-                        return;
-                    }
-                    const urlKey = URL2Key(url);
-                    let buffer = asset['_buffer'];
-                    let accessor = this.__parseConfig(url.url, buffer);
-                    let res = new ResourceImpl();
-                    res.key = urlKey;
-                    res.content = accessor;
-                    ResManager.AddRes(res);
-                    __this.Emit(Event.COMPLETE, { url });
-                });
+                this.__load(url, bundle);
             });
         }
+        else {
+            this.__load(url, bundle);
+        }
+    }
+    __load(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现！");
+        }
+        let __this = this;
+        bundle.load(FullURL(url), BufferAsset, (finished, total) => {
+            const progress = finished / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, asset) => {
+            if (err) {
+                __this.Emit(Event.ERROR, err);
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let buffer = asset['_buffer'];
+            let accessor = this.__parseConfig(url.url, buffer);
+            let res = new ResourceImpl();
+            res.key = urlKey;
+            res.content = accessor;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
+        });
     }
     __parseConfig(sheet, buffer) {
         let byte = new ByteArray(buffer);

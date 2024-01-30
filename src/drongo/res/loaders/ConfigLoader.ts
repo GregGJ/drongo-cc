@@ -33,26 +33,36 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
                     this.Emit(Event.ERROR, { url, err });
                     return;
                 }
-                bundle.load(FullURL(url), BufferAsset,
-                    (finished: number, total: number) => {
-                        const progress = finished / total;
-                        __this.Emit(Event.PROGRESS, { url, progress });
-                    }, (err: Error, asset: any) => {
-                        if (err) {
-                            __this.Emit(Event.ERROR, err);
-                            return;
-                        }
-                        const urlKey = URL2Key(url);
-                        let buffer = asset['_buffer'];
-                        let accessor = this.__parseConfig(url.url, buffer);
-                        let res: ResourceImpl = new ResourceImpl();
-                        res.key = urlKey;
-                        res.content = accessor;
-                        ResManager.AddRes(res);
-                        __this.Emit(Event.COMPLETE, { url });
-                    });
+                this.__load(url, bundle);
             });
+        } else {
+            this.__load(url, bundle);
         }
+    }
+
+    private __load(url: ResURL, bundle: AssetManager.Bundle): void {
+        if (typeof url == "string") {
+            throw new Error("未实现！");
+        }
+        let __this = this;
+        bundle.load(FullURL(url), BufferAsset,
+            (finished: number, total: number) => {
+                const progress = finished / total;
+                __this.Emit(Event.PROGRESS, { url, progress });
+            }, (err: Error, asset: any) => {
+                if (err) {
+                    __this.Emit(Event.ERROR, err);
+                    return;
+                }
+                const urlKey = URL2Key(url);
+                let buffer = asset['_buffer'];
+                let accessor = this.__parseConfig(url.url, buffer);
+                let res: ResourceImpl = new ResourceImpl();
+                res.key = urlKey;
+                res.content = accessor;
+                ResManager.AddRes(res);
+                __this.Emit(Event.COMPLETE, { url });
+            });
     }
 
     private __parseConfig(sheet: string, buffer: ArrayBuffer): IConfigAccessor {
@@ -77,7 +87,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
             data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             //存取器
-            accessorClass=ConfigManager.GetAccessorClass(sheet);
+            accessorClass = ConfigManager.GetAccessorClass(sheet);
             accessor = new accessorClass();
             if (!accessor) {
                 Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
