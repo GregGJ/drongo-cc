@@ -85,6 +85,10 @@ export class ResourceImpl implements IResource {
                 Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
                 assetManager.releaseAsset(this.__content);
             }
+        } else {
+            if (this.__content["Destroy"]) {
+                this.__content["Destroy"]();
+            }
         }
         this.key = "";
         this.__refs.length = 0;

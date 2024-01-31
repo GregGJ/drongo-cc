@@ -51,7 +51,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
                 __this.Emit(Event.PROGRESS, { url, progress });
             }, (err: Error, asset: any) => {
                 if (err) {
-                    __this.Emit(Event.ERROR, err);
+                    __this.Emit(Event.ERROR, { url, err });
                     return;
                 }
                 const urlKey = URL2Key(url);

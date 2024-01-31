@@ -12,7 +12,7 @@ export class BaseConfigAccessor implements IConfigAccessor {
     constructor() {
 
     }
-    
+
     Save(value: any): boolean {
         const index = this.__configs.indexOf(value);
         if (index >= 0) {
@@ -25,7 +25,7 @@ export class BaseConfigAccessor implements IConfigAccessor {
         return this.__configs;
     }
 
-    Clear(): void {
-        this.__configs.length = 0;
+    Destroy(): void {
+        this.__configs = null;
     }
 }

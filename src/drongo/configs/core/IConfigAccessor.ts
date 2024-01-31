@@ -20,5 +20,5 @@ export interface IConfigAccessor {
     /**
      * 清理
      */
-    Clear(): void;
+    Destroy(): void;
 }

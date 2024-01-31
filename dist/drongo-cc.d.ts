@@ -3090,7 +3090,7 @@ interface IConfigAccessor {
     /**
      * 清理
      */
-    Clear(): void;
+    Destroy(): void;
 }
 
 /**
@@ -3101,7 +3101,7 @@ declare class BaseConfigAccessor implements IConfigAccessor {
     constructor();
     Save(value: any): boolean;
     Get<T>(): Array<T>;
-    Clear(): void;
+    Destroy(): void;
 }
 
 /**

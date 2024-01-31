@@ -19250,6 +19250,11 @@ class ResourceImpl {
                 assetManager.releaseAsset(this.__content);
             }
         }
+        else {
+            if (this.__content["Destroy"]) {
+                this.__content["Destroy"]();
+            }
+        }
         this.key = "";
         this.__refs.length = 0;
         this.__content = null;
@@ -20974,8 +20979,8 @@ class BaseConfigAccessor {
     Get() {
         return this.__configs;
     }
-    Clear() {
-        this.__configs.length = 0;
+    Destroy() {
+        this.__configs = null;
     }
 }
 
@@ -22919,7 +22924,7 @@ class ConfigLoader extends EventDispatcher {
             __this.Emit(Event.PROGRESS, { url, progress });
         }, (err, asset) => {
             if (err) {
-                __this.Emit(Event.ERROR, err);
+                __this.Emit(Event.ERROR, { url, err });
                 return;
             }
             const urlKey = URL2Key(url);
