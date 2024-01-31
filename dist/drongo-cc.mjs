@@ -22954,17 +22954,14 @@ class ConfigLoader extends EventDispatcher {
         //数据数量
         len = byte.ReadUnsignedInt();
         let data;
-        let accessorClass;
-        let accessor;
+        //存取器
+        let accessorClass = ConfigManager.GetAccessorClass(sheet);
+        if (accessorClass == null) {
+            Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
+        }
+        let accessor = new accessorClass();
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
             data = ConfigUtils.ParseConfig(titleList, typeList, byte);
-            //存取器
-            accessorClass = ConfigManager.GetAccessorClass(sheet);
-            accessor = new accessorClass();
-            if (!accessor) {
-                Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
-                continue;
-            }
             accessor.Save(data);
         }
         return accessor;
