@@ -19274,6 +19274,12 @@ class ResourceImpl {
     get refLength() {
         return this.__refs.length;
     }
+    /**
+     * 引用列表
+     */
+    get refList() {
+        return this.__refs;
+    }
 }
 
 /**

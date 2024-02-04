@@ -4667,6 +4667,10 @@ interface IResource {
     RemoveRef(value: ResRef): void;
     /**销毁*/
     Destroy(): void;
+    /**
+     * 资源的引用列表
+     */
+    readonly refList: Array<ResRef>;
 }
 
 /**
@@ -4829,6 +4833,10 @@ declare class ResourceImpl implements IResource {
      * 引用列表长度
      */
     get refLength(): number;
+    /**
+     * 引用列表
+     */
+    get refList(): Array<ResRef>;
 }
 
 declare class FGUIResource extends ResourceImpl {

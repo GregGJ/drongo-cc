@@ -42,7 +42,12 @@ export interface IResource {
      * @param value 
      */
     RemoveRef(value: ResRef): void;
-    
+
     /**销毁*/
     Destroy(): void;
+
+    /**
+     * 资源的引用列表
+     */
+    readonly refList: Array<ResRef>;
 }

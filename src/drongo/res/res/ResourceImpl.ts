@@ -111,4 +111,11 @@ export class ResourceImpl implements IResource {
     get refLength(): number {
         return this.__refs.length;
     }
+
+    /**
+     * 引用列表
+     */
+    get refList(): Array<ResRef> {
+        return this.__refs;
+    }
 }
