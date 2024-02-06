@@ -24,13 +24,18 @@ export class BaseService implements IService {
     protected $assets: Array<ResURL>;
     protected $assetRefs: Array<ResRef>;
 
-    protected __initCallback: (err: Error, result: IService) => void;
+    /**
+     * 引用计数
+     */
+    refCount: number=0;
+
+    protected __initCallback: (err: Error) => void;
 
     constructor() {
-
+        
     }
 
-    Init(callback: (err: Error, result: IService) => void): void {
+    Init(callback: (err: Error) => void): void {
         this.__initCallback = callback;
         if (this.$configs == null || this.$configs.length <= 0) {
             this.__configLoaded();
@@ -87,7 +92,7 @@ export class BaseService implements IService {
      */
     protected $initComplete(): void {
         if (this.__initCallback) {
-            this.__initCallback(null, this);
+            this.__initCallback(null);
             this.__initCallback = null;
         }
     }
@@ -112,5 +117,13 @@ export class BaseService implements IService {
             element.Dispose();
         }
         this.$assetRefs = null;
+    }
+
+    AddRef(): void {
+        this.refCount++;
+    }
+
+    RemoveRef(): void {
+        this.refCount--;
     }
 }

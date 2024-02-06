@@ -13,6 +13,7 @@ import { GUIManager } from "../GUIManager";
 import { Event } from "../../events/Event";
 import { LayerManager } from "../core/layer/LayerManager";
 import { ILayer } from "../core/layer/ILayer";
+import { IService } from "../../services/IService";
 
 
 
@@ -139,12 +140,18 @@ export class GUIProxy {
     /**
     * 初始化服务
     */
-    private async __initServices(): Promise<void> {
-        for (let index = 0; index < this.mediator.services.length; index++) {
-            const serviceClass = this.mediator.services[index];
-            await ServiceManager.GetService(serviceClass);
-        }
-        this.__createUI();
+    private __initServices(): void {
+        ServiceManager.InitService(this.mediator.services,
+            (err: Error, services?: Array<IService>) => {
+                if (err) {
+                    throw err;
+                }
+                for (let index = 0; index < services.length; index++) {
+                    const service = services[index];
+                    service.AddRef();
+                }
+                this.__createUI();
+            });
     }
 
     /**

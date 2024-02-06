@@ -3715,11 +3715,17 @@ interface IService {
      * 初始化
      * @param callback
      */
-    Init(callback: (err: Error, result: IService) => void): void;
+    Init(callback: (err: Error) => void): void;
     /**
-     * 销毁
+     * 销毁(内部接口，请在不需要该服务时调用ServiceManager.Dispose()接口)
      */
     Destroy(): void;
+    AddRef(): void;
+    RemoveRef(): void;
+    /**
+     * 引用计数器
+     */
+    readonly refCount: number;
 }
 
 interface IViewComponent {
@@ -4283,16 +4289,6 @@ declare class GUIManagerImpl implements IGUIManager {
     IsOpen(key: string): boolean;
 }
 
-/**
- * 子UI 逻辑划分
- */
-declare class SubGUIMediator extends BaseMediator {
-    /**所属GUI*/
-    owner: GUIMediator;
-    constructor(ui: GComponent, owner: GUIMediator);
-    Destroy(): void;
-}
-
 declare class ResRef {
     /**唯一KEY */
     key: string;
@@ -4310,6 +4306,16 @@ declare class ResRef {
     /**
      * 彻底销毁(注意内部接口，请勿调用)
      */
+    Destroy(): void;
+}
+
+/**
+ * 子UI 逻辑划分
+ */
+declare class SubGUIMediator extends BaseMediator {
+    /**所属GUI*/
+    owner: GUIMediator;
+    constructor(ui: GComponent, owner: GUIMediator);
     Destroy(): void;
 }
 
@@ -4357,6 +4363,14 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
      */
     Close(checkLayer?: boolean): void;
     Tick(dt: number): void;
+    /**
+     * 获取服务
+     * @param clazz
+     * @returns
+     */
+    GetService(clazz: {
+        new (): IService;
+    }): IService;
     Destroy(): void;
 }
 
@@ -5036,9 +5050,13 @@ declare class BaseService implements IService {
      */
     protected $assets: Array<ResURL>;
     protected $assetRefs: Array<ResRef>;
-    protected __initCallback: (err: Error, result: IService) => void;
+    /**
+     * 引用计数
+     */
+    refCount: number;
+    protected __initCallback: (err: Error) => void;
     constructor();
-    Init(callback: (err: Error, result: IService) => void): void;
+    Init(callback: (err: Error) => void): void;
     private __loadConfigs;
     private __configLoaded;
     private __loadAssets;
@@ -5051,24 +5069,38 @@ declare class BaseService implements IService {
      */
     protected $initComplete(): void;
     Destroy(): void;
+    AddRef(): void;
+    RemoveRef(): void;
 }
 
 declare class ServiceManager {
     /**启动器 */
-    private static __starters;
+    private static __services;
     /**
-     * 获取服务
+     * 初始化服务
      * @param key
      * @returns
      */
-    static GetService<T extends IService>(value: {
+    static InitService(services: {
         new (): IService;
-    }): Promise<T>;
+    } | Array<{
+        new (): IService;
+    }>, callback: (err: Error, services?: Array<IService>) => void): void;
+    private static __InitService;
     /**
-     * 卸载服务
-     * @param key
+     * 获取服务
+     * @param clazz
      */
-    static Uninstall(value: IService): void;
+    static GetService(clazz: {
+        new (): IService;
+    }): IService;
+    /**
+     * 尝试销毁服务
+     * @param clazz
+     */
+    static Dispose(clazz: {
+        new (): IService;
+    }): void;
 }
 
 interface ILocalStorage {

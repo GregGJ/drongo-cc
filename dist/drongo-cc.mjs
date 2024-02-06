@@ -23226,77 +23226,78 @@ Drongo.UIBundle = "UI";
 /**UI遮罩颜色值 */
 Drongo.MaskColor = new Color(0, 0, 0, 255 * 0.5);
 
-class ServiceStarter {
-    constructor(name, serviceClass) {
-        this.__name = name;
-        this.__serviceClass = serviceClass;
-    }
-    /**
-     * 启动
-     */
-    Start() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.__result) {
-                return this.__result;
-            }
-            this.__result = new Promise((resolve, reject) => {
-                //创建服务
-                this.__service = new this.__serviceClass();
-                this.__service.name = this.__name;
-                //初始化服务
-                this.__service.Init((err, result) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(result);
-                    }
-                });
-            });
-            return this.__result;
-        });
-    }
-    Destroy() {
-        this.__name = undefined;
-        this.__serviceClass = undefined;
-        this.__result = undefined;
-        this.__service.Destroy();
-        this.__service = null;
-    }
-}
-
 class ServiceManager {
     /**
-     * 获取服务
+     * 初始化服务
      * @param key
      * @returns
      */
-    static GetService(value) {
-        const className = GetClassName(value);
-        //如果启动器存在
-        if (this.__starters.has(className)) {
-            return this.__starters.get(className).Start();
+    static InitService(services, callback) {
+        let result = [];
+        if (Array.isArray(services)) {
+            let inited = 0;
+            for (let index = 0; index < services.length; index++) {
+                const serviceClass = services[index];
+                this.__InitService(serviceClass, (err, service) => {
+                    result.push(service);
+                    inited++;
+                    if (inited >= services.length) {
+                        callback(err, result);
+                    }
+                });
+            }
         }
-        let starter = new ServiceStarter(className, value);
-        this.__starters.set(className, starter);
-        return starter.Start();
+        else {
+            this.__InitService(services, (err, service) => {
+                result.push(service);
+                callback(err, result);
+            });
+        }
+    }
+    static __InitService(serviceClass, callback) {
+        const className = GetClassName(serviceClass);
+        let service;
+        if (this.__services.has(className)) {
+            service = this.__services.get(className);
+            callback(null, service);
+        }
+        else {
+            service = new serviceClass();
+            service.name = className;
+            this.__services.set(className, service);
+            service.Init((err) => {
+                callback(err, service);
+            });
+        }
     }
     /**
-     * 卸载服务
-     * @param key
+     * 获取服务
+     * @param clazz
      */
-    static Uninstall(value) {
-        const className = GetClassName(value);
-        if (!this.__starters.has(className)) {
-            return;
+    static GetService(clazz) {
+        const className = GetClassName(clazz);
+        if (!this.__services.has(className)) {
+            throw new Error(className + "未初始化!");
         }
-        let starter = this.__starters.get(className);
-        starter.Destroy();
-        this.__starters.delete(className);
+        let service = this.__services.get(className);
+        return service;
+    }
+    /**
+     * 尝试销毁服务
+     * @param clazz
+     */
+    static Dispose(clazz) {
+        let service = this.GetService(clazz);
+        service.RemoveRef();
+        if (service.refCount <= 0) {
+            const serviceName = GetClassName(clazz);
+            this.__services.delete(serviceName);
+            service.Destroy();
+        }
     }
 }
 /**启动器 */
-ServiceManager.__starters = new Map();
+ServiceManager.__services = new Map();
 
 var LoadState;
 (function (LoadState) {
@@ -23390,10 +23391,13 @@ class GUIProxy {
     * 初始化服务
     */
     __initServices() {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let index = 0; index < this.mediator.services.length; index++) {
-                const serviceClass = this.mediator.services[index];
-                yield ServiceManager.GetService(serviceClass);
+        ServiceManager.InitService(this.mediator.services, (err, services) => {
+            if (err) {
+                throw err;
+            }
+            for (let index = 0; index < services.length; index++) {
+                const service = services[index];
+                service.AddRef();
             }
             this.__createUI();
         });
@@ -24188,6 +24192,14 @@ class GUIMediator extends BaseMediator {
             }
         }
     }
+    /**
+     * 获取服务
+     * @param clazz
+     * @returns
+     */
+    GetService(clazz) {
+        return ServiceManager.GetService(clazz);
+    }
     Destroy() {
         super.Destroy();
         if (this.__mask) {
@@ -24197,18 +24209,29 @@ class GUIMediator extends BaseMediator {
         }
         this.viewComponent.dispose();
         this.info = null;
+        //子界面逻辑类
         if (this.$subMediators) {
             for (let index = 0; index < this.$subMediators.length; index++) {
                 const element = this.$subMediators[index];
                 element.Destroy();
             }
         }
-        for (let index = 0; index < this.$configRefs.length; index++) {
-            const element = this.$configRefs[index];
-            element.Dispose();
+        //依赖的配置
+        if (this.$configRefs) {
+            for (let index = 0; index < this.$configRefs.length; index++) {
+                const element = this.$configRefs[index];
+                element.Dispose();
+            }
+            this.$configRefs = null;
         }
         this.$configs = null;
-        this.$configRefs = null;
+        if (this.services) {
+            for (let index = 0; index < this.services.length; index++) {
+                const element = this.services[index];
+                ServiceManager.Dispose(element);
+            }
+            this.services = null;
+        }
     }
 }
 
@@ -24940,6 +24963,10 @@ class PoolImpl {
  */
 class BaseService {
     constructor() {
+        /**
+         * 引用计数
+         */
+        this.refCount = 0;
     }
     Init(callback) {
         this.__initCallback = callback;
@@ -24990,7 +25017,7 @@ class BaseService {
      */
     $initComplete() {
         if (this.__initCallback) {
-            this.__initCallback(null, this);
+            this.__initCallback(null);
             this.__initCallback = null;
         }
     }
@@ -25012,6 +25039,12 @@ class BaseService {
             element.Dispose();
         }
         this.$assetRefs = null;
+    }
+    AddRef() {
+        this.refCount++;
+    }
+    RemoveRef() {
+        this.refCount--;
     }
 }
 

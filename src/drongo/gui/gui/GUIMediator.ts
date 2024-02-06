@@ -1,20 +1,21 @@
 import { Color } from "cc";
+import { Drongo } from "../../../drongo";
+import { AsyncOperation } from "../../../fairygui/AsyncOperation";
+import { GComponent } from "../../../fairygui/GComponent";
+import { GGraph } from "../../../fairygui/GGraph";
+import { GObject } from "../../../fairygui/GObject";
+import { UIPackage } from "../../../fairygui/UIPackage";
+import { ConfigManager } from "../../configs/ConfigManager";
+import { Res } from "../../res/Res";
+import { ResRef } from "../../res/core/ResRef";
+import { ResURL } from "../../res/core/ResURL";
+import { IService } from "../../services/IService";
+import { ServiceManager } from "../../services/ServiceManager";
+import { GUIManager } from "../GUIManager";
+import { IGUIMediator } from "../core/IGUIMediator";
 import { BaseMediator } from "./BaseMediator";
 import { IGUIInfo } from "./IGUIInfo";
 import { SubGUIMediator } from "./SubGUIMediator";
-import { IGUIMediator } from "../core/IGUIMediator";
-import { IService } from "../../services/IService";
-import { GComponent } from "../../../fairygui/GComponent";
-import { GGraph } from "../../../fairygui/GGraph";
-import { AsyncOperation } from "../../../fairygui/AsyncOperation";
-import { UIPackage } from "../../../fairygui/UIPackage";
-import { GObject } from "../../../fairygui/GObject";
-import { Drongo } from "../../../drongo";
-import { GUIManager } from "../GUIManager";
-import { ResRef } from "../../res/core/ResRef";
-import { ResURL } from "../../res/core/ResURL";
-import { ConfigManager } from "../../configs/ConfigManager";
-import { Res } from "../../res/Res";
 
 
 /**
@@ -185,6 +186,15 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
         }
     }
 
+    /**
+     * 获取服务
+     * @param clazz 
+     * @returns 
+     */
+    GetService(clazz: { new(): IService }): IService {
+        return ServiceManager.GetService(clazz);
+    }
+
     Destroy(): void {
         super.Destroy();
         if (this.__mask) {
@@ -194,17 +204,28 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
         }
         (<GComponent>this.viewComponent).dispose();
         this.info = null;
+        //子界面逻辑类
         if (this.$subMediators) {
             for (let index = 0; index < this.$subMediators.length; index++) {
                 const element = this.$subMediators[index];
                 element.Destroy();
             }
         }
-        for (let index = 0; index < this.$configRefs.length; index++) {
-            const element = this.$configRefs[index];
-            element.Dispose();
+        //依赖的配置
+        if (this.$configRefs) {
+            for (let index = 0; index < this.$configRefs.length; index++) {
+                const element = this.$configRefs[index];
+                element.Dispose();
+            }
+            this.$configRefs = null;
         }
         this.$configs = null;
-        this.$configRefs = null;
+        if (this.services) {
+            for (let index = 0; index < this.services.length; index++) {
+                const element = this.services[index];
+                ServiceManager.Dispose(element);
+            }
+            this.services = null;
+        }
     }
 }
