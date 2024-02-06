@@ -24189,6 +24189,7 @@ class GUIMediator extends BaseMediator {
         }
     }
     Destroy() {
+        super.Destroy();
         if (this.__mask) {
             this.__mask.offClick(this._maskClickHandler, this);
             this.__mask.dispose();

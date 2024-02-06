@@ -186,6 +186,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     }
 
     Destroy(): void {
+        super.Destroy();
         if (this.__mask) {
             this.__mask.offClick(this._maskClickHandler, this);
             this.__mask.dispose();
