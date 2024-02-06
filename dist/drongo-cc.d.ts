@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, Graphics, sp, RichText, AudioClip, EditBox, AudioSource } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, AudioSource } from 'cc';
 
 /**
  * 资源地址
@@ -211,50 +211,6 @@ declare enum FillOrigin {
     Bottom = 1,
     Left = 2,
     Right = 3
-}
-
-declare class GGroup extends GObject {
-    private _layout;
-    private _lineGap;
-    private _columnGap;
-    private _excludeInvisibles;
-    private _autoSizeDisabled;
-    private _mainGridIndex;
-    private _mainGridMinSize;
-    private _boundsChanged;
-    private _percentReady;
-    private _mainChildIndex;
-    private _totalSize;
-    private _numChildren;
-    _updating: number;
-    constructor();
-    dispose(): void;
-    get layout(): number;
-    set layout(value: number);
-    get lineGap(): number;
-    set lineGap(value: number);
-    get columnGap(): number;
-    set columnGap(value: number);
-    get excludeInvisibles(): boolean;
-    set excludeInvisibles(value: boolean);
-    get autoSizeDisabled(): boolean;
-    set autoSizeDisabled(value: boolean);
-    get mainGridMinSize(): number;
-    set mainGridMinSize(value: number);
-    get mainGridIndex(): number;
-    set mainGridIndex(value: number);
-    setBoundsChangedFlag(positionChangedOnly?: boolean): void;
-    private _ensureBoundsCorrect;
-    ensureSizeCorrect(): void;
-    ensureBoundsCorrect(): void;
-    private updateBounds;
-    private handleLayout;
-    moveChildren(dx: number, dy: number): void;
-    resizeChildren(dw: number, dh: number): void;
-    handleAlphaChanged(): void;
-    handleVisibleChanged(): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
 declare class Margin {
@@ -1543,27 +1499,235 @@ declare class GObjectPartner extends Component {
     protected onDestroy(): void;
 }
 
-declare class AsyncOperation {
-    callback: (obj: GObject) => void;
-    private _node;
-    createObject(pkgName: string, resName: string): void;
-    createObjectFromURL(url: string): void;
-    cancel(): void;
-    private internalCreateObject;
-    private completed;
+declare class GGroup extends GObject {
+    private _layout;
+    private _lineGap;
+    private _columnGap;
+    private _excludeInvisibles;
+    private _autoSizeDisabled;
+    private _mainGridIndex;
+    private _mainGridMinSize;
+    private _boundsChanged;
+    private _percentReady;
+    private _mainChildIndex;
+    private _totalSize;
+    private _numChildren;
+    _updating: number;
+    constructor();
+    dispose(): void;
+    get layout(): number;
+    set layout(value: number);
+    get lineGap(): number;
+    set lineGap(value: number);
+    get columnGap(): number;
+    set columnGap(value: number);
+    get excludeInvisibles(): boolean;
+    set excludeInvisibles(value: boolean);
+    get autoSizeDisabled(): boolean;
+    set autoSizeDisabled(value: boolean);
+    get mainGridMinSize(): number;
+    set mainGridMinSize(value: number);
+    get mainGridIndex(): number;
+    set mainGridIndex(value: number);
+    setBoundsChangedFlag(positionChangedOnly?: boolean): void;
+    private _ensureBoundsCorrect;
+    ensureSizeCorrect(): void;
+    ensureBoundsCorrect(): void;
+    private updateBounds;
+    private handleLayout;
+    moveChildren(dx: number, dy: number): void;
+    resizeChildren(dw: number, dh: number): void;
+    handleAlphaChanged(): void;
+    handleVisibleChanged(): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
-declare class DragDropManager {
-    private _agent;
-    private _sourceData;
-    private static _inst;
-    static get inst(): DragDropManager;
+declare class GGraph extends GObject {
+    _content: Graphics;
+    private _type;
+    private _lineSize;
+    private _lineColor;
+    private _fillColor;
+    private _cornerRadius?;
+    private _sides?;
+    private _startAngle?;
+    private _polygonPoints?;
+    private _distances?;
+    private _hasContent;
     constructor();
-    get dragAgent(): GObject;
-    get dragging(): boolean;
-    startDrag(source: GObject, icon: string | null, sourceData?: any, touchId?: number): void;
-    cancel(): void;
-    private onDragEnd;
+    drawRect(lineSize: number, lineColor: Color, fillColor: Color, corner?: Array<number>): void;
+    drawEllipse(lineSize: number, lineColor: Color, fillColor: Color): void;
+    drawRegularPolygon(lineSize: number, lineColor: Color, fillColor: Color, sides: number, startAngle?: number, distances?: number[]): void;
+    drawPolygon(lineSize: number, lineColor: Color, fillColor: Color, points: Array<number>): void;
+    get distances(): number[];
+    set distances(value: number[]);
+    clearGraphics(): void;
+    get type(): number;
+    get color(): Color;
+    set color(value: Color);
+    private updateGraph;
+    private drawPath;
+    protected handleSizeChanged(): void;
+    protected handleAnchorChanged(): void;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    protected _hitTest(pt: Vec2): GObject;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+}
+
+declare class GImage extends GObject {
+    _content: Image;
+    constructor();
+    get color(): Color;
+    set color(value: Color);
+    get flip(): FlipType;
+    set flip(value: FlipType);
+    get fillMethod(): FillMethod;
+    set fillMethod(value: FillMethod);
+    get fillOrigin(): FillOrigin;
+    set fillOrigin(value: FillOrigin);
+    get fillClockwise(): boolean;
+    set fillClockwise(value: boolean);
+    get fillAmount(): number;
+    set fillAmount(value: number);
+    constructFromResource(): void;
+    protected handleGrayedChanged(): void;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+}
+
+declare class GMovieClip extends GObject {
+    _content: MovieClip;
+    constructor();
+    get color(): Color;
+    set color(value: Color);
+    get playing(): boolean;
+    set playing(value: boolean);
+    get frame(): number;
+    set frame(value: number);
+    get timeScale(): number;
+    set timeScale(value: number);
+    rewind(): void;
+    syncStatus(anotherMc: GMovieClip): void;
+    advance(timeInSeconds: number): void;
+    setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: (() => void) | null): void;
+    protected handleGrayedChanged(): void;
+    protected handleSizeChanged(): void;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    constructFromResource(): void;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+}
+
+interface IUISource {
+    fileName: string;
+    loaded: boolean;
+    load(callback: () => void, target: any): void;
+}
+declare class Window extends GComponent {
+    private _contentPane;
+    private _modalWaitPane;
+    private _closeButton;
+    private _dragArea;
+    private _contentArea;
+    private _frame;
+    private _modal;
+    private _uiSources?;
+    private _inited?;
+    private _loading?;
+    protected _requestingCmd: number;
+    bringToFontOnClick: boolean;
+    constructor();
+    addUISource(source: IUISource): void;
+    set contentPane(val: GComponent);
+    get contentPane(): GComponent;
+    get frame(): GComponent;
+    get closeButton(): GObject;
+    set closeButton(value: GObject);
+    get dragArea(): GObject;
+    set dragArea(value: GObject);
+    get contentArea(): GObject;
+    set contentArea(value: GObject);
+    show(): void;
+    showOn(root: GRoot): void;
+    hide(): void;
+    hideImmediately(): void;
+    centerOn(r: GRoot, restraint?: boolean): void;
+    toggleStatus(): void;
+    get isShowing(): boolean;
+    get isTop(): boolean;
+    get modal(): boolean;
+    set modal(val: boolean);
+    bringToFront(): void;
+    showModalWait(requestingCmd?: number): void;
+    protected layoutModalWaitPane(): void;
+    closeModalWait(requestingCmd?: number): boolean;
+    get modalWaiting(): boolean;
+    init(): void;
+    protected onInit(): void;
+    protected onShown(): void;
+    protected onHide(): void;
+    protected doShowAnimation(): void;
+    protected doHideAnimation(): void;
+    private __uiLoadComplete;
+    private _init;
+    dispose(): void;
+    protected closeEventHandler(evt: Event): void;
+    protected onEnable(): void;
+    protected onDisable(): void;
+    private onTouchBegin_1;
+    private onDragStart_1;
+}
+
+declare class GRoot extends GComponent {
+    private _modalLayer;
+    private _popupStack;
+    private _justClosedPopups;
+    private _modalWaitPane;
+    private _tooltipWin;
+    private _defaultTooltipWin;
+    private _volumeScale;
+    private _inputProcessor;
+    private _thisOnResized;
+    private audioEngine;
+    private static _inst;
+    static get inst(): GRoot;
+    static create(root?: Node): GRoot;
+    constructor();
+    protected onDestroy(): void;
+    getTouchPosition(touchId?: number): Vec2;
+    get touchTarget(): GObject;
+    get inputProcessor(): InputProcessor;
+    showWindow(win: Window): void;
+    hideWindow(win: Window): void;
+    hideWindowImmediately(win: Window): void;
+    bringToFront(win: Window): void;
+    showModalWait(msg?: string): void;
+    closeModalWait(): void;
+    closeAllExceptModals(): void;
+    closeAllWindows(): void;
+    getTopWindow(): Window;
+    get modalLayer(): GGraph;
+    get hasModalWindow(): boolean;
+    get modalWaiting(): boolean;
+    getPopupPosition(popup: GObject, target?: GObject, dir?: PopupDirection | boolean, result?: Vec2): Vec2;
+    showPopup(popup: GObject, target?: GObject | null, dir?: PopupDirection | boolean): void;
+    togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
+    hidePopup(popup?: GObject): void;
+    get hasAnyPopup(): boolean;
+    private closePopup;
+    showTooltips(msg: string): void;
+    showTooltipsWin(tooltipWin: GObject): void;
+    hideTooltips(): void;
+    get volumeScale(): number;
+    set volumeScale(value: number);
+    playOneShotSound(clip: AudioClip, volumeScale?: number): void;
+    private adjustModalLayer;
+    private onTouchBegin_1;
+    onWinResize(): void;
+    handlePositionChanged(): void;
 }
 
 declare class GTextField extends GObject {
@@ -1654,221 +1818,63 @@ declare class GTextField extends GObject {
     setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
-declare class GButton extends GComponent {
-    protected _titleObject: GObject;
-    protected _iconObject: GObject;
-    private _mode;
-    private _selected;
-    private _title;
-    private _selectedTitle;
-    private _icon;
-    private _selectedIcon;
-    private _sound;
-    private _soundVolumeScale;
-    private _buttonController;
-    private _relatedController?;
-    private _relatedPageId;
-    private _changeStateOnClick;
-    private _linkedPopup?;
-    private _downEffect;
-    private _downEffectValue;
-    private _downColor?;
-    private _downScaled?;
-    private _down;
-    private _over;
-    static UP: string;
-    static DOWN: string;
-    static OVER: string;
-    static SELECTED_OVER: string;
-    static DISABLED: string;
-    static SELECTED_DISABLED: string;
+declare class GRichTextField extends GTextField {
+    _richText: RichText;
+    private _bold;
+    private _italics;
+    private _underline;
+    linkUnderline: boolean;
+    linkColor: string;
     constructor();
-    get icon(): ResURL | null;
-    set icon(value: ResURL | null);
-    get selectedIcon(): ResURL | null;
-    set selectedIcon(value: ResURL | null);
-    get title(): string | null;
-    set title(value: string | null);
-    get text(): string | null;
-    set text(value: string | null);
-    get selectedTitle(): string | null;
-    set selectedTitle(value: string | null);
-    get titleColor(): Color;
-    set titleColor(value: Color);
-    get titleFontSize(): number;
-    set titleFontSize(value: number);
-    get sound(): string | null;
-    set sound(val: string | null);
-    get soundVolumeScale(): number;
-    set soundVolumeScale(value: number);
-    set selected(val: boolean);
-    get selected(): boolean;
-    get mode(): ButtonMode;
-    set mode(value: ButtonMode);
-    get relatedController(): Controller;
-    set relatedController(val: Controller);
-    get relatedPageId(): string | null;
-    set relatedPageId(val: string | null);
-    get changeStateOnClick(): boolean;
-    set changeStateOnClick(value: boolean);
-    get linkedPopup(): GObject;
-    set linkedPopup(value: GObject);
-    getTextField(): GTextField;
-    fireClick(): void;
-    protected setState(val: string): void;
-    protected setCurrentState(): void;
-    handleControllerChanged(c: Controller): void;
-    protected handleGrayedChanged(): void;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    protected constructExtension(buffer: ByteBuffer): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-    private onRollOver_1;
-    private onRollOut_1;
-    private onTouchBegin_1;
-    private onTouchEnd_1;
-    private onClick_1;
-}
-
-declare class GComboBox extends GComponent {
-    dropdown: GComponent;
-    protected _titleObject: GObject;
-    protected _iconObject: GObject;
-    protected _list: GList;
-    private _items;
-    private _values;
-    private _icons?;
-    private _visibleItemCount;
-    private _itemsUpdated;
-    private _selectedIndex;
-    private _buttonController;
-    private _popupDirection;
-    private _selectionController;
-    private _over;
-    private _down;
-    constructor();
-    get text(): string | null;
-    set text(value: string | null);
-    get icon(): ResURL | null;
-    set icon(value: ResURL | null);
-    get titleColor(): Color;
-    set titleColor(value: Color);
-    get titleFontSize(): number;
-    set titleFontSize(value: number);
-    get visibleItemCount(): number;
-    set visibleItemCount(value: number);
-    get popupDirection(): PopupDirection;
-    set popupDirection(value: PopupDirection);
-    get items(): Array<string>;
-    set items(value: Array<string>);
-    get icons(): Array<string>;
-    set icons(value: Array<string>);
-    get values(): Array<string>;
-    set values(value: Array<string>);
-    get selectedIndex(): number;
-    set selectedIndex(val: number);
-    get value(): string | null;
-    set value(val: string | null);
-    get selectionController(): Controller;
-    set selectionController(value: Controller);
-    getTextField(): GTextField;
-    protected setState(val: string): void;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    protected constructExtension(buffer: ByteBuffer): void;
-    handleControllerChanged(c: Controller): void;
-    private updateSelectionController;
-    dispose(): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-    protected showDropdown(): void;
-    private onPopupClosed;
-    private onClickItem;
-    private onClickItem2;
-    private onRollOver_1;
-    private onRollOut_1;
-    private onTouchBegin_1;
-    private onTouchEnd_1;
-}
-
-declare class GGraph extends GObject {
-    _content: Graphics;
-    private _type;
-    private _lineSize;
-    private _lineColor;
-    private _fillColor;
-    private _cornerRadius?;
-    private _sides?;
-    private _startAngle?;
-    private _polygonPoints?;
-    private _distances?;
-    private _hasContent;
-    constructor();
-    drawRect(lineSize: number, lineColor: Color, fillColor: Color, corner?: Array<number>): void;
-    drawEllipse(lineSize: number, lineColor: Color, fillColor: Color): void;
-    drawRegularPolygon(lineSize: number, lineColor: Color, fillColor: Color, sides: number, startAngle?: number, distances?: number[]): void;
-    drawPolygon(lineSize: number, lineColor: Color, fillColor: Color, points: Array<number>): void;
-    get distances(): number[];
-    set distances(value: number[]);
-    clearGraphics(): void;
-    get type(): number;
-    get color(): Color;
-    set color(value: Color);
-    private updateGraph;
-    private drawPath;
+    protected createRenderer(): void;
+    get align(): HorizontalTextAlignment;
+    set align(value: HorizontalTextAlignment);
+    get underline(): boolean;
+    set underline(value: boolean);
+    get bold(): boolean;
+    set bold(value: boolean);
+    get italic(): boolean;
+    set italic(value: boolean);
+    protected markSizeChanged(): void;
+    protected updateText(): void;
+    protected updateFont(): void;
+    protected updateFontColor(): void;
+    protected updateFontSize(): void;
+    protected updateOverflow(): void;
     protected handleSizeChanged(): void;
-    protected handleAnchorChanged(): void;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    protected _hitTest(pt: Vec2): GObject;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
-declare class GImage extends GObject {
-    _content: Image;
+declare class GTextInput extends GTextField {
+    _editBox: EditBox;
+    private _promptText;
     constructor();
-    get color(): Color;
-    set color(value: Color);
-    get flip(): FlipType;
-    set flip(value: FlipType);
-    get fillMethod(): FillMethod;
-    set fillMethod(value: FillMethod);
-    get fillOrigin(): FillOrigin;
-    set fillOrigin(value: FillOrigin);
-    get fillClockwise(): boolean;
-    set fillClockwise(value: boolean);
-    get fillAmount(): number;
-    set fillAmount(value: number);
-    constructFromResource(): void;
-    protected handleGrayedChanged(): void;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-}
-
-declare class GLabel extends GComponent {
-    protected _titleObject: GObject;
-    protected _iconObject: GObject;
-    private _sound;
-    private _soundVolumeScale;
-    constructor();
-    get icon(): ResURL | null;
-    set icon(value: ResURL | null);
-    get title(): string | null;
-    set title(value: string | null);
-    get text(): string | null;
-    set text(value: string | null);
-    get titleColor(): Color;
-    set titleColor(value: Color);
-    get titleFontSize(): number;
-    set titleFontSize(value: number);
+    protected createRenderer(): void;
     set editable(val: boolean);
     get editable(): boolean;
-    getTextField(): GTextField;
-    getProp(index: number): any;
-    setProp(index: number, value: any): void;
-    protected constructExtension(buffer: ByteBuffer): void;
-    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
-    private onClick_1;
+    set maxLength(val: number);
+    get maxLength(): number;
+    set promptText(val: string | null);
+    get promptText(): string | null;
+    set restrict(value: string | null);
+    get restrict(): string | null;
+    get password(): boolean;
+    set password(val: boolean);
+    get align(): HorizontalTextAlignment;
+    set align(value: HorizontalTextAlignment);
+    get verticalAlign(): VerticalTextAlignment;
+    set verticalAlign(value: VerticalTextAlignment);
+    get singleLine(): boolean;
+    set singleLine(value: boolean);
+    requestFocus(): void;
+    protected markSizeChanged(): void;
+    protected updateText(): void;
+    protected updateFont(): void;
+    protected updateFontColor(): void;
+    protected updateFontSize(): void;
+    protected updateOverflow(): void;
+    private onTextChanged;
+    private onTouchEnd1;
+    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
 declare class GLoader extends GObject {
@@ -2011,195 +2017,166 @@ declare class GLoader3D extends GObject {
     setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
-declare class GMovieClip extends GObject {
-    _content: MovieClip;
+declare class GLabel extends GComponent {
+    protected _titleObject: GObject;
+    protected _iconObject: GObject;
+    private _sound;
+    private _soundVolumeScale;
     constructor();
-    get color(): Color;
-    set color(value: Color);
-    get playing(): boolean;
-    set playing(value: boolean);
-    get frame(): number;
-    set frame(value: number);
-    get timeScale(): number;
-    set timeScale(value: number);
-    rewind(): void;
-    syncStatus(anotherMc: GMovieClip): void;
-    advance(timeInSeconds: number): void;
-    setPlaySettings(start?: number, end?: number, times?: number, endAt?: number, endCallback?: (() => void) | null): void;
-    protected handleGrayedChanged(): void;
-    protected handleSizeChanged(): void;
+    get icon(): ResURL | null;
+    set icon(value: ResURL | null);
+    get title(): string | null;
+    set title(value: string | null);
+    get text(): string | null;
+    set text(value: string | null);
+    get titleColor(): Color;
+    set titleColor(value: Color);
+    get titleFontSize(): number;
+    set titleFontSize(value: number);
+    set editable(val: boolean);
+    get editable(): boolean;
+    getTextField(): GTextField;
     getProp(index: number): any;
     setProp(index: number, value: any): void;
-    constructFromResource(): void;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
-}
-
-declare class GProgressBar extends GComponent {
-    private _min;
-    private _max;
-    private _value;
-    private _titleType;
-    private _reverse;
-    private _titleObject;
-    private _aniObject;
-    private _barObjectH;
-    private _barObjectV;
-    private _barMaxWidth;
-    private _barMaxHeight;
-    private _barMaxWidthDelta;
-    private _barMaxHeightDelta;
-    private _barStartX;
-    private _barStartY;
-    constructor();
-    get titleType(): ProgressTitleType;
-    set titleType(value: ProgressTitleType);
-    get min(): number;
-    set min(value: number);
-    get max(): number;
-    set max(value: number);
-    get value(): number;
-    set value(value: number);
-    tweenValue(value: number, duration: number): GTweener;
-    update(newValue: number): void;
-    private setFillAmount;
     protected constructExtension(buffer: ByteBuffer): void;
-    protected handleSizeChanged(): void;
     setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+    private onClick_1;
 }
 
-declare class GRichTextField extends GTextField {
-    _richText: RichText;
-    private _bold;
-    private _italics;
-    private _underline;
-    linkUnderline: boolean;
-    linkColor: string;
+declare class GButton extends GComponent {
+    protected _titleObject: GObject;
+    protected _iconObject: GObject;
+    private _mode;
+    private _selected;
+    private _title;
+    private _selectedTitle;
+    private _icon;
+    private _selectedIcon;
+    private _sound;
+    private _soundVolumeScale;
+    private _buttonController;
+    private _relatedController?;
+    private _relatedPageId;
+    private _changeStateOnClick;
+    private _linkedPopup?;
+    private _downEffect;
+    private _downEffectValue;
+    private _downColor?;
+    private _downScaled?;
+    private _down;
+    private _over;
+    static UP: string;
+    static DOWN: string;
+    static OVER: string;
+    static SELECTED_OVER: string;
+    static DISABLED: string;
+    static SELECTED_DISABLED: string;
     constructor();
-    protected createRenderer(): void;
-    get align(): HorizontalTextAlignment;
-    set align(value: HorizontalTextAlignment);
-    get underline(): boolean;
-    set underline(value: boolean);
-    get bold(): boolean;
-    set bold(value: boolean);
-    get italic(): boolean;
-    set italic(value: boolean);
-    protected markSizeChanged(): void;
-    protected updateText(): void;
-    protected updateFont(): void;
-    protected updateFontColor(): void;
-    protected updateFontSize(): void;
-    protected updateOverflow(): void;
-    protected handleSizeChanged(): void;
+    get icon(): ResURL | null;
+    set icon(value: ResURL | null);
+    get selectedIcon(): ResURL | null;
+    set selectedIcon(value: ResURL | null);
+    get title(): string | null;
+    set title(value: string | null);
+    get text(): string | null;
+    set text(value: string | null);
+    get selectedTitle(): string | null;
+    set selectedTitle(value: string | null);
+    get titleColor(): Color;
+    set titleColor(value: Color);
+    get titleFontSize(): number;
+    set titleFontSize(value: number);
+    get sound(): string | null;
+    set sound(val: string | null);
+    get soundVolumeScale(): number;
+    set soundVolumeScale(value: number);
+    set selected(val: boolean);
+    get selected(): boolean;
+    get mode(): ButtonMode;
+    set mode(value: ButtonMode);
+    get relatedController(): Controller;
+    set relatedController(val: Controller);
+    get relatedPageId(): string | null;
+    set relatedPageId(val: string | null);
+    get changeStateOnClick(): boolean;
+    set changeStateOnClick(value: boolean);
+    get linkedPopup(): GObject;
+    set linkedPopup(value: GObject);
+    getTextField(): GTextField;
+    fireClick(): void;
+    protected setState(val: string): void;
+    protected setCurrentState(): void;
+    handleControllerChanged(c: Controller): void;
+    protected handleGrayedChanged(): void;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    protected constructExtension(buffer: ByteBuffer): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+    private onRollOver_1;
+    private onRollOut_1;
+    private onTouchBegin_1;
+    private onTouchEnd_1;
+    private onClick_1;
 }
 
-interface IUISource {
-    fileName: string;
-    loaded: boolean;
-    load(callback: () => void, target: any): void;
-}
-declare class Window extends GComponent {
-    private _contentPane;
-    private _modalWaitPane;
-    private _closeButton;
-    private _dragArea;
-    private _contentArea;
-    private _frame;
-    private _modal;
-    private _uiSources?;
-    private _inited?;
-    private _loading?;
-    protected _requestingCmd: number;
-    bringToFontOnClick: boolean;
+declare class GComboBox extends GComponent {
+    dropdown: GComponent;
+    protected _titleObject: GObject;
+    protected _iconObject: GObject;
+    protected _list: GList;
+    private _items;
+    private _values;
+    private _icons?;
+    private _visibleItemCount;
+    private _itemsUpdated;
+    private _selectedIndex;
+    private _buttonController;
+    private _popupDirection;
+    private _selectionController;
+    private _over;
+    private _down;
     constructor();
-    addUISource(source: IUISource): void;
-    set contentPane(val: GComponent);
-    get contentPane(): GComponent;
-    get frame(): GComponent;
-    get closeButton(): GObject;
-    set closeButton(value: GObject);
-    get dragArea(): GObject;
-    set dragArea(value: GObject);
-    get contentArea(): GObject;
-    set contentArea(value: GObject);
-    show(): void;
-    showOn(root: GRoot): void;
-    hide(): void;
-    hideImmediately(): void;
-    centerOn(r: GRoot, restraint?: boolean): void;
-    toggleStatus(): void;
-    get isShowing(): boolean;
-    get isTop(): boolean;
-    get modal(): boolean;
-    set modal(val: boolean);
-    bringToFront(): void;
-    showModalWait(requestingCmd?: number): void;
-    protected layoutModalWaitPane(): void;
-    closeModalWait(requestingCmd?: number): boolean;
-    get modalWaiting(): boolean;
-    init(): void;
-    protected onInit(): void;
-    protected onShown(): void;
-    protected onHide(): void;
-    protected doShowAnimation(): void;
-    protected doHideAnimation(): void;
-    private __uiLoadComplete;
-    private _init;
+    get text(): string | null;
+    set text(value: string | null);
+    get icon(): ResURL | null;
+    set icon(value: ResURL | null);
+    get titleColor(): Color;
+    set titleColor(value: Color);
+    get titleFontSize(): number;
+    set titleFontSize(value: number);
+    get visibleItemCount(): number;
+    set visibleItemCount(value: number);
+    get popupDirection(): PopupDirection;
+    set popupDirection(value: PopupDirection);
+    get items(): Array<string>;
+    set items(value: Array<string>);
+    get icons(): Array<string>;
+    set icons(value: Array<string>);
+    get values(): Array<string>;
+    set values(value: Array<string>);
+    get selectedIndex(): number;
+    set selectedIndex(val: number);
+    get value(): string | null;
+    set value(val: string | null);
+    get selectionController(): Controller;
+    set selectionController(value: Controller);
+    getTextField(): GTextField;
+    protected setState(val: string): void;
+    getProp(index: number): any;
+    setProp(index: number, value: any): void;
+    protected constructExtension(buffer: ByteBuffer): void;
+    handleControllerChanged(c: Controller): void;
+    private updateSelectionController;
     dispose(): void;
-    protected closeEventHandler(evt: Event): void;
-    protected onEnable(): void;
-    protected onDisable(): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+    protected showDropdown(): void;
+    private onPopupClosed;
+    private onClickItem;
+    private onClickItem2;
+    private onRollOver_1;
+    private onRollOut_1;
     private onTouchBegin_1;
-    private onDragStart_1;
-}
-
-declare class GRoot extends GComponent {
-    private _modalLayer;
-    private _popupStack;
-    private _justClosedPopups;
-    private _modalWaitPane;
-    private _tooltipWin;
-    private _defaultTooltipWin;
-    private _volumeScale;
-    private _inputProcessor;
-    private _thisOnResized;
-    private audioEngine;
-    private static _inst;
-    static get inst(): GRoot;
-    static create(root?: Node): GRoot;
-    constructor();
-    protected onDestroy(): void;
-    getTouchPosition(touchId?: number): Vec2;
-    get touchTarget(): GObject;
-    get inputProcessor(): InputProcessor;
-    showWindow(win: Window): void;
-    hideWindow(win: Window): void;
-    hideWindowImmediately(win: Window): void;
-    bringToFront(win: Window): void;
-    showModalWait(msg?: string): void;
-    closeModalWait(): void;
-    closeAllExceptModals(): void;
-    closeAllWindows(): void;
-    getTopWindow(): Window;
-    get modalLayer(): GGraph;
-    get hasModalWindow(): boolean;
-    get modalWaiting(): boolean;
-    getPopupPosition(popup: GObject, target?: GObject, dir?: PopupDirection | boolean, result?: Vec2): Vec2;
-    showPopup(popup: GObject, target?: GObject | null, dir?: PopupDirection | boolean): void;
-    togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
-    hidePopup(popup?: GObject): void;
-    get hasAnyPopup(): boolean;
-    private closePopup;
-    showTooltips(msg: string): void;
-    showTooltipsWin(tooltipWin: GObject): void;
-    hideTooltips(): void;
-    get volumeScale(): number;
-    set volumeScale(value: number);
-    playOneShotSound(clip: AudioClip, volumeScale?: number): void;
-    private adjustModalLayer;
-    private onTouchBegin_1;
-    onWinResize(): void;
-    handlePositionChanged(): void;
+    private onTouchEnd_1;
 }
 
 declare class GSlider extends GComponent {
@@ -2244,37 +2221,37 @@ declare class GSlider extends GComponent {
     private onBarTouchBegin;
 }
 
-declare class GTextInput extends GTextField {
-    _editBox: EditBox;
-    private _promptText;
+declare class GProgressBar extends GComponent {
+    private _min;
+    private _max;
+    private _value;
+    private _titleType;
+    private _reverse;
+    private _titleObject;
+    private _aniObject;
+    private _barObjectH;
+    private _barObjectV;
+    private _barMaxWidth;
+    private _barMaxHeight;
+    private _barMaxWidthDelta;
+    private _barMaxHeightDelta;
+    private _barStartX;
+    private _barStartY;
     constructor();
-    protected createRenderer(): void;
-    set editable(val: boolean);
-    get editable(): boolean;
-    set maxLength(val: number);
-    get maxLength(): number;
-    set promptText(val: string | null);
-    get promptText(): string | null;
-    set restrict(value: string | null);
-    get restrict(): string | null;
-    get password(): boolean;
-    set password(val: boolean);
-    get align(): HorizontalTextAlignment;
-    set align(value: HorizontalTextAlignment);
-    get verticalAlign(): VerticalTextAlignment;
-    set verticalAlign(value: VerticalTextAlignment);
-    get singleLine(): boolean;
-    set singleLine(value: boolean);
-    requestFocus(): void;
-    protected markSizeChanged(): void;
-    protected updateText(): void;
-    protected updateFont(): void;
-    protected updateFontColor(): void;
-    protected updateFontSize(): void;
-    protected updateOverflow(): void;
-    private onTextChanged;
-    private onTouchEnd1;
-    setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+    get titleType(): ProgressTitleType;
+    set titleType(value: ProgressTitleType);
+    get min(): number;
+    set min(value: number);
+    get max(): number;
+    set max(value: number);
+    get value(): number;
+    set value(value: number);
+    tweenValue(value: number, duration: number): GTweener;
+    update(newValue: number): void;
+    private setFillAmount;
+    protected constructExtension(buffer: ByteBuffer): void;
+    protected handleSizeChanged(): void;
+    setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
 declare class PopupMenu {
@@ -2303,14 +2280,17 @@ declare class PopupMenu {
     private onDisplay;
 }
 
-declare class TranslationHelper {
-    static strings: {
-        [index: string]: {
-            [index: string]: string;
-        };
+declare class UIObjectFactory {
+    static counter: number;
+    static extensions: {
+        [index: string]: new () => GComponent;
     };
-    static loadFromXML(source: string): void;
-    static translateComponent(item: PackageItem): void;
+    static loaderType: new () => GLoader;
+    constructor();
+    static setExtension(url: string, type: new () => GComponent): void;
+    static setLoaderExtension(type: new () => GLoader): void;
+    static resolveExtension(pi: PackageItem): void;
+    static newObject(type: number | PackageItem, userClass?: new () => GObject): GObject;
 }
 
 interface ITooltipsView {
@@ -2391,17 +2371,37 @@ declare class UIConfig {
 }
 declare function registerFont(name: string, font: Font | string, bundle?: AssetManager.Bundle): void;
 
-declare class UIObjectFactory {
-    static counter: number;
-    static extensions: {
-        [index: string]: new () => GComponent;
-    };
-    static loaderType: new () => GLoader;
+declare class DragDropManager {
+    private _agent;
+    private _sourceData;
+    private static _inst;
+    static get inst(): DragDropManager;
     constructor();
-    static setExtension(url: string, type: new () => GComponent): void;
-    static setLoaderExtension(type: new () => GLoader): void;
-    static resolveExtension(pi: PackageItem): void;
-    static newObject(type: number | PackageItem, userClass?: new () => GObject): GObject;
+    get dragAgent(): GObject;
+    get dragging(): boolean;
+    startDrag(source: GObject, icon: string | null, sourceData?: any, touchId?: number): void;
+    cancel(): void;
+    private onDragEnd;
+}
+
+declare class AsyncOperation {
+    callback: (obj: GObject) => void;
+    private _node;
+    createObject(pkgName: string, resName: string): void;
+    createObjectFromURL(url: string): void;
+    cancel(): void;
+    private internalCreateObject;
+    private completed;
+}
+
+declare class TranslationHelper {
+    static strings: {
+        [index: string]: {
+            [index: string]: string;
+        };
+    };
+    static loadFromXML(source: string): void;
+    static translateComponent(item: PackageItem): void;
 }
 
 declare class GearAnimation extends GearBase {
@@ -2469,6 +2469,20 @@ declare class GearText extends GearBase {
     updateState(): void;
 }
 
+declare class GTween {
+    static catchCallbackExceptions: boolean;
+    static to(start: number, end: number, duration: number): GTweener;
+    static to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
+    static to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
+    static to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
+    static toColor(start: number, end: number, duration: number): GTweener;
+    static delayedCall(delay: number): GTweener;
+    static shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
+    static isTweening(target: any, propType?: any): Boolean;
+    static kill(target: any, complete?: boolean, propType?: any): void;
+    static getTween(target: any, propType?: any): GTweener;
+}
+
 declare enum EaseType {
     Linear = 0,
     SineIn = 1,
@@ -2502,20 +2516,6 @@ declare enum EaseType {
     BounceOut = 29,
     BounceInOut = 30,
     Custom = 31
-}
-
-declare class GTween {
-    static catchCallbackExceptions: boolean;
-    static to(start: number, end: number, duration: number): GTweener;
-    static to2(start: number, start2: number, end: number, end2: number, duration: number): GTweener;
-    static to3(start: number, start2: number, start3: number, end: number, end2: number, end3: number, duration: number): GTweener;
-    static to4(start: number, start2: number, start3: number, start4: number, end: number, end2: number, end3: number, end4: number, duration: number): GTweener;
-    static toColor(start: number, end: number, duration: number): GTweener;
-    static delayedCall(delay: number): GTweener;
-    static shake(startX: number, startY: number, amplitude: number, duration: number): GTweener;
-    static isTweening(target: any, propType?: any): Boolean;
-    static kill(target: any, complete?: boolean, propType?: any): void;
-    static getTween(target: any, propType?: any): GTweener;
 }
 
 declare class UBBParser {
@@ -2593,54 +2593,6 @@ interface IAudioChannel {
     Resume(): void;
 }
 
-declare class AudioChannelImpl implements IAudioChannel {
-    private __node;
-    private __source;
-    private __isPlaying;
-    private __url;
-    private __volume;
-    private __speed;
-    private __loop;
-    private __startTime;
-    private __time;
-    private __fadeData;
-    private __paused;
-    private __pauseTime;
-    private __playedComplete;
-    private __ref;
-    private __mute;
-    volume: number;
-    constructor(node: Node, source?: AudioSource);
-    get url(): ResURL;
-    get mute(): boolean;
-    set mute(value: boolean);
-    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
-        time: number;
-        startVolume?: number;
-        complete?: Function;
-        completeStop?: boolean;
-    }, loop?: boolean, speed?: number): void;
-    Stop(): void;
-    get isPlaying(): boolean;
-    /**
-     *
-     * @param time
-     * @param endVolume
-     * @param startVolume
-     * @param complete
-     * @param completeStop
-     * @returns
-     */
-    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
-    private __reset;
-    private __clipLoaded;
-    private __play;
-    Tick(dt: number): void;
-    Resume(): void;
-    Pause(): void;
-    get curVolume(): number;
-}
-
 /**
  * 音频管理器
  */
@@ -2715,6 +2667,21 @@ declare class AudioManager {
 }
 
 /**
+ * 音频组
+ */
+interface IAudioGroup {
+    key: number;
+    volume: number;
+    mute: boolean;
+    CalculateVolume(): void;
+    CalculateMute(): void;
+    Tick(dt: number): void;
+    Play(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    GetPlayingChannel(url: ResURL): IAudioChannel;
+    StopAll(): void;
+}
+
+/**
  * 音频管理器
  */
 interface IAudioManager {
@@ -2762,6 +2729,54 @@ interface IAudioManager {
     GetPlaying(url: ResURL): IAudioChannel;
 }
 
+declare class AudioChannelImpl implements IAudioChannel {
+    private __node;
+    private __source;
+    private __isPlaying;
+    private __url;
+    private __volume;
+    private __speed;
+    private __loop;
+    private __startTime;
+    private __time;
+    private __fadeData;
+    private __paused;
+    private __pauseTime;
+    private __playedComplete;
+    private __ref;
+    private __mute;
+    volume: number;
+    constructor(node: Node, source?: AudioSource);
+    get url(): ResURL;
+    get mute(): boolean;
+    set mute(value: boolean);
+    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
+        time: number;
+        startVolume?: number;
+        complete?: Function;
+        completeStop?: boolean;
+    }, loop?: boolean, speed?: number): void;
+    Stop(): void;
+    get isPlaying(): boolean;
+    /**
+     *
+     * @param time
+     * @param endVolume
+     * @param startVolume
+     * @param complete
+     * @param completeStop
+     * @returns
+     */
+    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
+    private __reset;
+    private __clipLoaded;
+    private __play;
+    Tick(dt: number): void;
+    Resume(): void;
+    Pause(): void;
+    get curVolume(): number;
+}
+
 /**
  * 音频播放管理器
  */
@@ -2807,21 +2822,6 @@ declare class AudioManagerImpl implements IAudioManager {
     GetPlaying(url: ResURL): IAudioChannel;
     private GetIdleChannel;
     Tick(dt: number): void;
-}
-
-/**
- * 音频组
- */
-interface IAudioGroup {
-    key: number;
-    volume: number;
-    mute: boolean;
-    CalculateVolume(): void;
-    CalculateMute(): void;
-    Tick(dt: number): void;
-    Play(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
-    GetPlayingChannel(url: ResURL): IAudioChannel;
-    StopAll(): void;
 }
 
 /**
@@ -4807,6 +4807,56 @@ declare class ResRequest {
     Destroy(): void;
 }
 
+declare class ResourceImpl implements IResource {
+    /**
+     * 状态 0 正常 1待删除
+     */
+    state: number;
+    key: string;
+    lastOpTime: number;
+    /**
+     * @internal
+     */
+    private __refs;
+    constructor();
+    set content(value: any);
+    private __content;
+    get content(): any;
+    AddRef(refKey?: string): ResRef;
+    RemoveRef(value: ResRef): void;
+    Destroy(): void;
+    /**
+     * 引用数量
+     */
+    get refCount(): number;
+    /**
+     * 引用列表长度
+     */
+    get refLength(): number;
+    /**
+     * 引用列表
+     */
+    get refList(): Array<ResRef>;
+}
+
+declare class FGUIResource extends ResourceImpl {
+    constructor();
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+declare class ResImpl implements IRes {
+    private loaderClass;
+    constructor();
+    SetResLoader(key: any, loader: new () => ILoader): void;
+    GetResLoader(key: any): new () => ILoader;
+    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
+    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]>;
+    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
+}
+
 /**
  * 资源管理器
  */
@@ -4887,56 +4937,6 @@ declare class ResManagerImpl implements IResManager {
      */
     protected DestroyRes(value: IResource): void;
     get resList(): Array<IResource>;
-}
-
-declare class ResourceImpl implements IResource {
-    /**
-     * 状态 0 正常 1待删除
-     */
-    state: number;
-    key: string;
-    lastOpTime: number;
-    /**
-     * @internal
-     */
-    private __refs;
-    constructor();
-    set content(value: any);
-    private __content;
-    get content(): any;
-    AddRef(refKey?: string): ResRef;
-    RemoveRef(value: ResRef): void;
-    Destroy(): void;
-    /**
-     * 引用数量
-     */
-    get refCount(): number;
-    /**
-     * 引用列表长度
-     */
-    get refLength(): number;
-    /**
-     * 引用列表
-     */
-    get refList(): Array<ResRef>;
-}
-
-declare class FGUIResource extends ResourceImpl {
-    constructor();
-    /**
-     * 销毁
-     */
-    Destroy(): void;
-}
-
-declare class ResImpl implements IRes {
-    private loaderClass;
-    constructor();
-    SetResLoader(key: any, loader: new () => ILoader): void;
-    GetResLoader(key: any): new () => ILoader;
-    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
-    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]>;
-    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
 }
 
 /**
