@@ -1,4 +1,4 @@
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { RelationType } from "./FieldTypes";
 import { GObject } from "./GObject";
 
@@ -502,9 +502,9 @@ export class RelationItem {
 
     private addRefTarget(target: GObject): void {
         if (target != this._owner.parent)
-            target.on(FUIEvent.XY_CHANGED, this.__targetXYChanged, this);
-        target.on(FUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
-        target.on(FUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
+            target.on(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
+        target.on(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+        target.on(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
 
         this._targetX = this._target.x;
         this._targetY = this._target.y;
@@ -515,9 +515,9 @@ export class RelationItem {
     private releaseRefTarget(target: GObject): void {
         if (!target.node)
             return;
-        target.off(FUIEvent.XY_CHANGED, this.__targetXYChanged, this);
-        target.off(FUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
-        target.off(FUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
+        target.off(FGUIEvent.XY_CHANGED, this.__targetXYChanged, this);
+        target.off(FGUIEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+        target.off(FGUIEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
     }
 
     private __targetXYChanged(evt: Event): void {

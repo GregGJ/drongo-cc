@@ -1,12 +1,15 @@
-import { Sprite, Color, SpriteFrame } from "cc";
+import { Sprite, Color, SpriteFrame, isValid } from "cc";
 import { Image } from "./display/Image";
 import { FlipType, FillMethod, FillOrigin, ObjectPropID } from "./FieldTypes";
 import { GObject } from "./GObject";
 import { PackageItem } from "./PackageItem";
 import { ByteBuffer } from "./utils/ByteBuffer";
+import { UIConfig } from "./UIConfig";
 
 export class GImage extends GObject {
     public _content: Image;
+    private _contentPackageItem?: PackageItem;
+    onReady: Function;
 
     public constructor() {
         super();
@@ -67,6 +70,23 @@ export class GImage extends GObject {
         this._content.fillAmount = value;
     }
 
+    private init(contentItem: PackageItem): void {
+        if(!isValid(this.node)) {
+            return;
+        }
+
+        this._content.spriteFrame = <SpriteFrame>contentItem.asset;
+        this._content.__update();
+    
+        this._contentPackageItem = contentItem;
+        this._contentPackageItem.addRef();
+
+        if(this.onReady) {
+            this.onReady();
+            this.onReady = null;
+        }
+    }
+
     public constructFromResource(): void {
         var contentItem: PackageItem = this.packageItem.getBranch();
         this.sourceWidth = contentItem.width;
@@ -76,13 +96,29 @@ export class GImage extends GObject {
         this.setSize(this.sourceWidth, this.sourceHeight);
 
         contentItem = contentItem.getHighResolution();
-        contentItem.load();
 
         if (contentItem.scale9Grid)
             this._content.type = Sprite.Type.SLICED;
         else if (contentItem.scaleByTile)
             this._content.type = Sprite.Type.TILED;
-        this._content.spriteFrame = <SpriteFrame>contentItem.asset;
+            
+        if(!UIConfig.enableDelayLoad || contentItem.__loaded && contentItem.decoded) {
+            contentItem.load();
+            this.init(contentItem);
+        }else{
+            contentItem.loadAsync().then(()=>{
+                this.init(contentItem);
+            });
+        }
+    }
+
+    dispose(): void {
+        if (this._contentPackageItem) {
+            this._contentPackageItem.decRef();
+            this._contentPackageItem = null;
+        }
+
+        super.dispose();
     }
 
     protected handleGrayedChanged(): void {

@@ -1,5 +1,5 @@
 import { Vec2 } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { AlignType, VertAlignType } from "./FieldTypes";
 import { GLoader } from "./GLoader";
 import { GObject } from "./GObject";
@@ -26,7 +26,7 @@ export class DragDropManager {
         this._agent.align = AlignType.Center;
         this._agent.verticalAlign = VertAlignType.Middle;
         this._agent.sortingOrder = 1000000;
-        this._agent.on(FUIEvent.DRAG_END, this.onDragEnd, this);
+        this._agent.on(FGUIEvent.DRAG_END, this.onDragEnd, this);
     }
 
     public get dragAgent(): GObject {
@@ -69,9 +69,9 @@ export class DragDropManager {
 
         var obj: GObject = GRoot.inst.touchTarget;
         while (obj) {
-            if (obj.node.hasEventListener(FUIEvent.DROP)) {
+            if (obj.node.hasEventListener(FGUIEvent.DROP)) {
                 obj.requestFocus();
-                obj.node.emit(FUIEvent.DROP, obj, sourceData);
+                obj.node.emit(FGUIEvent.DROP, obj, sourceData);
                 return;
             }
 

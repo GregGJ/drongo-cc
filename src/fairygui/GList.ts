@@ -1,6 +1,6 @@
 import { Size, Vec2, Rect, Node, Constructor } from "cc";
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { ListLayoutType, ListSelectionMode, AlignType, VertAlignType, ChildrenRenderOrder, OverflowType } from "./FieldTypes";
 import { GButton } from "./GButton";
 import { GComponent } from "./GComponent";
@@ -235,7 +235,7 @@ export class GList extends GComponent {
             child.selected = false;
             child.changeStateOnClick = false;
         }
-        child.on(FUIEvent.CLICK, this.onClickItem, this);
+        child.on(FGUIEvent.CLICK, this.onClickItem, this);
 
         return child;
     }
@@ -254,7 +254,7 @@ export class GList extends GComponent {
     public removeChildAt(index: number, dispose?: boolean): GObject {
         var child: GObject = super.removeChildAt(index, dispose);
         if (!dispose)
-            child.off(FUIEvent.CLICK, this.onClickItem, this);
+            child.off(FGUIEvent.CLICK, this.onClickItem, this);
 
         return child;
     }
@@ -629,7 +629,7 @@ export class GList extends GComponent {
         }
     }
 
-    private onClickItem(evt: FUIEvent): void {
+    private onClickItem(evt: FGUIEvent): void {
         if (this._scrollPane && this._scrollPane.isDragged)
             return;
 
@@ -642,11 +642,11 @@ export class GList extends GComponent {
         this.dispatchItemEvent(item, evt);
     }
 
-    protected dispatchItemEvent(item: GObject, evt: FUIEvent): void {
-        this._node.emit(FUIEvent.CLICK_ITEM, item, evt);
+    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void {
+        this._node.emit(FGUIEvent.CLICK_ITEM, item, evt);
     }
 
-    private setSelectionOnEvent(item: GObject, evt: FUIEvent): void {
+    private setSelectionOnEvent(item: GObject, evt: FGUIEvent): void {
         if (!(item instanceof GButton) || this._selectionMode == ListSelectionMode.None)
             return;
 
@@ -992,7 +992,7 @@ export class GList extends GComponent {
                     this._scrollPane._loop = 1;
             }
 
-            this._node.on(FUIEvent.SCROLL, this.__scrolled, this);
+            this._node.on(FGUIEvent.SCROLL, this.__scrolled, this);
             this.setVirtualListChangedFlag(true);
         }
     }

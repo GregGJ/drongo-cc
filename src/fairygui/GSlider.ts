@@ -1,5 +1,5 @@
 import { math, Vec2 } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { ProgressTitleType } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
@@ -106,7 +106,7 @@ export class GSlider extends GComponent {
 
             if (newValue != this._value) {
                 this._value = newValue;
-                this._node.emit(FUIEvent.STATUS_CHANGED, this);
+                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
             }
         }
 
@@ -176,11 +176,11 @@ export class GSlider extends GComponent {
             this._barStartY = this._barObjectV.y;
         }
         if (this._gripObject) {
-            this._gripObject.on(FUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
-            this._gripObject.on(FUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
+            this._gripObject.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchBegin, this);
+            this._gripObject.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
         }
 
-        this._node.on(FUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
     }
 
     protected handleSizeChanged(): void {
@@ -215,7 +215,7 @@ export class GSlider extends GComponent {
         this.update();
     }
 
-    private onGripTouchBegin(evt: FUIEvent): void {
+    private onGripTouchBegin(evt: FGUIEvent): void {
         this.canDrag = true;
         evt.propagationStopped = true;
         evt.captureTouch();
@@ -224,7 +224,7 @@ export class GSlider extends GComponent {
         this._clickPercent = math.clamp01((this._value - this._min) / (this._max - this._min));
     }
 
-    private onGripTouchMove(evt: FUIEvent): void {
+    private onGripTouchMove(evt: FGUIEvent): void {
         if (!this.canDrag) {
             return;
         }
@@ -245,7 +245,7 @@ export class GSlider extends GComponent {
         this.updateWithPercent(percent, true);
     }
 
-    private onBarTouchBegin(evt: FUIEvent): void {
+    private onBarTouchBegin(evt: FGUIEvent): void {
         if (!this.changeOnClick)
             return;
 

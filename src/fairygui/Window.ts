@@ -1,5 +1,5 @@
 import { Node, Vec2 } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { RelationType } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
@@ -36,7 +36,7 @@ export class Window extends GComponent {
         this._uiSources = new Array<IUISource>();
         this.bringToFontOnClick = UIConfig.bringWindowToFrontOnClick;
 
-        this._node.on(FUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this, true);
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this, true);
     }
 
     public addUISource(source: IUISource): void {
@@ -90,13 +90,13 @@ export class Window extends GComponent {
         if (this._dragArea != value) {
             if (this._dragArea) {
                 this._dragArea.draggable = false;
-                this._dragArea.off(FUIEvent.DRAG_START, this.onDragStart_1, this);
+                this._dragArea.off(FGUIEvent.DRAG_START, this.onDragStart_1, this);
             }
 
             this._dragArea = value;
             if (this._dragArea) {
                 this._dragArea.draggable = true;
-                this._dragArea.on(FUIEvent.DRAG_START, this.onDragStart_1, this);
+                this._dragArea.on(FGUIEvent.DRAG_START, this.onDragStart_1, this);
             }
         }
     }
@@ -293,12 +293,12 @@ export class Window extends GComponent {
         this.onHide();
     }
 
-    private onTouchBegin_1(evt: FUIEvent): void {
+    private onTouchBegin_1(evt: FGUIEvent): void {
         if (this.isShowing && this.bringToFontOnClick)
             this.bringToFront();
     }
 
-    private onDragStart_1(evt: FUIEvent): void {
+    private onDragStart_1(evt: FGUIEvent): void {
         var original: GObject = GObject.cast(<Node>evt.currentTarget);
         original.stopDrag();
 

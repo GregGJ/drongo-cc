@@ -1,5 +1,5 @@
-import { BitmapFont, Color, Font, HorizontalTextAlignment, Label, LabelOutline, LabelShadow, Node, SystemEventType, Vec2, VerticalTextAlignment } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { BitmapFont, Color, Font, HorizontalTextAlignment, InstanceMaterialType, Label, LabelOutline, LabelShadow, Node, SystemEventType, Vec2, VerticalTextAlignment, isValid } from "cc";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { AutoSizeType, ObjectPropID } from "./FieldTypes";
 import { GObject } from "./GObject";
 import { PackageItem } from "./PackageItem";
@@ -28,6 +28,8 @@ export class GTextField extends GObject {
     protected _sizeDirty: boolean;
     protected _outline?: LabelOutline;
     protected _shadow?: LabelShadow;
+    protected _fontPackageItem?: PackageItem;
+    private _dirtyVersion: number = 0;
 
     public constructor() {
         super();
@@ -52,6 +54,7 @@ export class GTextField extends GObject {
     protected createRenderer() {
         this._label = this._node.addComponent(Label);
         this._label.string = "";
+        // this._label.getComponent(UITransform).setAnchorPoint(0, 1);
         this.autoSize = AutoSizeType.Both;
     }
 
@@ -73,23 +76,61 @@ export class GTextField extends GObject {
         return this._font;
     }
 
+    private init(fontItem: PackageItem, font: any) {
+        this._fontPackageItem = fontItem;
+        if(fontItem) {
+            fontItem.addRef();
+        }
+        this._realFont = font;
+        this.updateFont();
+        this.updateFontSize();
+    }
+
     public set font(value: string | null) {
         if (this._font != value || !value) {
+            this._dirtyVersion++;
+            let dirtyVersion = this._dirtyVersion;
+
             this._font = value;
 
             this.markSizeChanged();
 
             let newFont: any = value ? value : UIConfig.defaultFont;
 
+            var pi: PackageItem = null;
             if (newFont.startsWith("ui://")) {
-                var pi: PackageItem = UIPackage.getItemByURL(newFont);
-                if (pi)
-                    newFont = <Font>pi.owner.getItemAsset(pi);
+                pi = UIPackage.getItemByURL(newFont);
+                if (pi) {
+                    if(!UIConfig.enableDelayLoad || pi.__loaded && pi.decoded) {
+                        newFont = pi.owner.getItemAsset(pi);       
+                    }else{
+                        newFont = pi.owner.getItemAssetAsync2(pi);
+                    }
+                }
                 else
                     newFont = UIConfig.defaultFont;
             }
-            this._realFont = newFont;
-            this.updateFont();
+
+            if(newFont instanceof Promise) {
+                newFont.then((asset)=>{     
+                    if(!isValid(this._node) || this._dirtyVersion != dirtyVersion){
+                        return;
+                    }
+                      
+                    this.init(pi!, asset);
+                })
+            }else{
+                this.init(pi, newFont);
+            }
+        }
+    }
+
+    public dispose(): void {
+        super.dispose();
+
+        if (this._fontPackageItem) {
+            this._fontPackageItem.decRef();
+            this._fontPackageItem = null;
         }
     }
 
@@ -393,6 +434,8 @@ export class GTextField extends GObject {
             else
                 label.font = font;
         }
+
+        this.updateFontColor();
     }
 
     protected assignFontColor(label: any, value: Color): void {
@@ -400,8 +443,23 @@ export class GTextField extends GObject {
         if ((font instanceof BitmapFont) && !(font.fntConfig.canTint))
             value = Color.WHITE;
 
-        if (this._grayed)
-            value = toGrayedColor(value);
+        if(label instanceof Label) {
+            if(font instanceof BitmapFont && this._grayed) {
+                //@ts-ignore
+                label._instanceMaterialType = InstanceMaterialType.GRAYSCALE;
+                //@ts-ignore
+                label.updateMaterial();
+            }else{
+                //@ts-ignore
+                label.changeMaterialForDefine();
+                if (this._grayed) 
+                    value = toGrayedColor(value);
+            }            
+        }else{
+            if (this._grayed) 
+                value = toGrayedColor(value);
+        }
+
         label.color = value;
     }
 
@@ -437,6 +495,7 @@ export class GTextField extends GObject {
 
     protected updateFontSize() {
         let font: any = this._label.font;
+        
         if (font instanceof BitmapFont) {
             let fntConfig = font.fntConfig;
             if (fntConfig.resizable)
@@ -452,19 +511,20 @@ export class GTextField extends GObject {
     }
 
     protected updateOverflow() {
+        const uiComp = this._node._uiProps.uiTransformComp;
         if (this._autoSize == AutoSizeType.Both)
             this._label.overflow = Label.Overflow.NONE;
         else if (this._autoSize == AutoSizeType.Height) {
             this._label.overflow = Label.Overflow.RESIZE_HEIGHT;
-            this._node._uiProps.uiTransformComp.width = this._width;
+            uiComp.width = this._width;
         }
         else if (this._autoSize == AutoSizeType.Shrink) {
             this._label.overflow = Label.Overflow.SHRINK;
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            uiComp.setContentSize(this._width, this._height);
         }
         else {
             this._label.overflow = Label.Overflow.CLAMP;
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            uiComp.setContentSize(this._width, this._height);
         }
     }
 
@@ -474,7 +534,7 @@ export class GTextField extends GObject {
 
         if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
             if (!this._sizeDirty) {
-                this._node.emit(FUIEvent.SIZE_DELAY_CHANGE);
+                this._node.emit(FGUIEvent.SIZE_DELAY_CHANGE);
                 this._sizeDirty = true;
             }
         }

@@ -277,9 +277,7 @@ export class GLoader3D extends GObject {
         this._content.dragonAtlasAsset = atlasAsset;
         this._content.color = this._color;
 
-        
         let armatureKey = asset.init(atlasAsset._factory, atlasAsset["_uuid"]);
-        // let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
         let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
         this._content.armatureName = dragonBonesData.armatureNames[0];
 
@@ -328,8 +326,7 @@ export class GLoader3D extends GObject {
             this._content.clearTrack(0);
 
         let skin = this._skinName || this._content.skeletonData.getRuntimeData().skins[0].name;
-        
-        if (this._content._skeleton.skin.name != skin)
+        if (this._content["_skeleton"].skin?.name != skin)
             this._content.setSkin(skin);
     }
 

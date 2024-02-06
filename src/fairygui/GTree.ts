@@ -1,6 +1,6 @@
 import { Node } from "cc";
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { GComponent } from "./GComponent";
 import { GList } from "./GList";
 import { GObject } from "./GObject";
@@ -132,7 +132,7 @@ export class GTree extends GList {
 
         cc = child.getController("expanded");
         if (cc) {
-            cc.on(FUIEvent.STATUS_CHANGED, this.__expandedStateChanged, this);
+            cc.on(FGUIEvent.STATUS_CHANGED, this.__expandedStateChanged, this);
             cc.selectedIndex = node.expanded ? 1 : 0;
         }
 
@@ -141,7 +141,7 @@ export class GTree extends GList {
             cc.selectedIndex = node.isFolder ? 0 : 1;
 
         if (node.isFolder)
-            node._cell.on(FUIEvent.TOUCH_BEGIN, this.__cellMouseDown, this);
+            node._cell.on(FGUIEvent.TOUCH_BEGIN, this.__cellMouseDown, this);
 
         if (this.treeNodeRender)
             this.treeNodeRender(node, child);
@@ -311,7 +311,7 @@ export class GTree extends GList {
         }
     }
 
-    private __cellMouseDown(evt: FUIEvent): void {
+    private __cellMouseDown(evt: FGUIEvent): void {
         var node: GTreeNode = GObject.cast(<Node>evt.currentTarget)._treeNode;
         this._expandedStatusInEvt = node.expanded;
     }
@@ -321,7 +321,7 @@ export class GTree extends GList {
         node.expanded = cc.selectedIndex == 1;
     }
 
-    protected dispatchItemEvent(item: GObject, evt: FUIEvent): void {
+    protected dispatchItemEvent(item: GObject, evt: FGUIEvent): void {
         if (this._clickToExpand != 0) {
             var node: GTreeNode = item._treeNode;
             if (node && this._expandedStatusInEvt == node.expanded) {

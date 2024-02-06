@@ -1,6 +1,6 @@
 import { Mask, Vec2, Size, Node, UITransform, Constructor } from "cc";
-import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { Controller, createAction } from "./Controller";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { IHitTest, PixelHitTest, ChildHitArea } from "./event/HitTest";
 import { ChildrenRenderOrder, OverflowType, ObjectType } from "./FieldTypes";
 import { GGraph } from "./GGraph";
@@ -16,6 +16,7 @@ import { UIConfig } from "./UIConfig";
 import { UIContentScaler } from "./UIContentScaler";
 import { Decls, IObjectFactoryType, UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
+import { PlayTransitionAction } from "./action/PlayTransitionAction";
 
 export class GComponent extends GObject {
     public hitArea?: IHitTest;
@@ -41,6 +42,9 @@ export class GComponent extends GObject {
     public _alignOffset: Vec2;
     public _customMask?: Mask
 
+    private _invertedMask: boolean = false;
+    private _excludeInvisibles: boolean = false;
+
     public constructor() {
         super();
 
@@ -55,6 +59,17 @@ export class GComponent extends GObject {
         this._container.layer = UIConfig.defaultUILayer;
         this._container.addComponent(UITransform).setAnchorPoint(0, 1);
         this._node.addChild(this._container);
+    }
+
+    public get excludeInvisibles(): boolean {
+        return this._excludeInvisibles;
+    }
+
+    public set excludeInvisibles(value: boolean) {
+        if (this._excludeInvisibles != value) {
+            this._excludeInvisibles = value;
+            this.setBoundsChangedFlag();
+        }
     }
 
     public dispose(): void {
@@ -408,6 +423,11 @@ export class GComponent extends GObject {
     }
 
     private onChildAdd(child: GObject, index: number): void {
+        if(!child.node) {
+            console.error("child.node is null");
+            return;
+        }
+        
         child.node.parent = this._container;
         child.node.active = child._finalVisible;
 
@@ -633,17 +653,13 @@ export class GComponent extends GObject {
             value.node.on(Node.EventType.SIZE_CHANGED, this.onMaskContentChanged, this);
             value.node.on(Node.EventType.ANCHOR_CHANGED, this.onMaskContentChanged, this);
 
-            this._customMask.inverted = inverted;
-            if (this._node.activeInHierarchy)
-                this.onMaskReady();
-            else
-                this.on(FUIEvent.DISPLAY, this.onMaskReady, this);
-
-            this.onMaskContentChanged();
-            if (this._scrollPane)
-                this._scrollPane.adjustMaskContainer();
-            else
-                this._container.setPosition(0, 0);
+            this._invertedMask = inverted;
+            
+            if(UIConfig.enableDelayLoad && this._maskContent instanceof GImage && !this._maskContent._content.spriteFrame) {
+                this._maskContent.onReady = this.onMaskContentReady.bind(this);
+            }else{
+                this.onMaskContentReady();
+            }
         }
         else if (this._customMask) {
             if (this._scrollPane)
@@ -660,8 +676,21 @@ export class GComponent extends GObject {
         }
     }
 
+    private onMaskContentReady() {
+        if (this._node.activeInHierarchy)
+            this.onMaskReady();
+        else
+            this.on(FGUIEvent.DISPLAY, this.onMaskReady, this);
+
+        this.onMaskContentChanged();
+        if (this._scrollPane)
+            this._scrollPane.adjustMaskContainer();
+        else
+            this._container.setPosition(0, 0);
+    }
+
     private onMaskReady() {
-        this.off(FUIEvent.DISPLAY, this.onMaskReady, this);
+        this.off(FGUIEvent.DISPLAY, this.onMaskReady, this);
 
         if (this._maskContent instanceof GImage) {
             this._customMask.type = Mask.Type.SPRITE_STENCIL;
@@ -674,6 +703,8 @@ export class GComponent extends GObject {
             else
                 this._customMask.type = Mask.Type.GRAPHICS_RECT;
         }
+
+        this._customMask.inverted = this._invertedMask;
     }
 
     private onMaskContentChanged() {
@@ -874,6 +905,9 @@ export class GComponent extends GObject {
 
             for (var i: number = 0; i < len; i++) {
                 var child: GObject = this._children[i];
+                if (this._excludeInvisibles && !child.internalVisible3)
+                    continue;
+
                 tmp = child.x;
                 if (tmp < ax)
                     ax = tmp;
@@ -1270,6 +1304,42 @@ export class GComponent extends GObject {
         let cnt: number = this._transitions.length;
         for (let i: number = 0; i < cnt; ++i)
             this._transitions[i].onDisable();
+    }
+
+    addTransition(transition: Transition, newName?: string, applyBaseValue = true): void {
+        let trans = new Transition(this);
+        trans.copyFrom(transition, applyBaseValue);
+        if(newName) {
+            trans.name = newName;
+        }
+        this._transitions.push(trans);
+    }
+
+    addControllerAction(controlName: string, transition: Transition, fromPages: string[], toPages: string[], applyBaseValue = true): void {
+        let ctrl = this.getController(controlName);
+        if (!ctrl)
+            return;
+
+        this.addTransition(transition, null, applyBaseValue);
+
+        var action = createAction(0) as PlayTransitionAction;
+        action.transitionName = transition.name;
+
+        if(fromPages) {
+            fromPages = fromPages.map((it) => {
+                return ctrl.getPageIdByName(it);
+            });
+        }
+        if(toPages) {
+            toPages = toPages.map((it) => {
+                return ctrl.getPageIdByName(it);
+            });
+        }
+
+        action.fromPage = fromPages;
+        action.toPage = toPages;
+
+        ctrl.addAction(action);
     }
 }
 

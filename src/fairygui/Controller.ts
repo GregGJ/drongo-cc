@@ -1,5 +1,5 @@
 import { ControllerAction } from "./action/ControllerAction";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
 
@@ -43,18 +43,18 @@ export class Controller extends EventTarget {
             this._selectedIndex = value;
             this.parent.applyController(this);
 
-            this.emit(FUIEvent.STATUS_CHANGED, this);
+            this.emit(FGUIEvent.STATUS_CHANGED, this);
 
             this.changing = false;
         }
     }
 
     public onChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void {
-        this.on(FUIEvent.STATUS_CHANGED, callback, thisArg);
+        this.on(FGUIEvent.STATUS_CHANGED, callback, thisArg);
     }
 
     public offChanged<TFunction extends (...any: any[]) => void>(callback: TFunction, thisArg?: any): void {
-        this.off(FUIEvent.STATUS_CHANGED, callback, thisArg);
+        this.off(FGUIEvent.STATUS_CHANGED, callback, thisArg);
     }
 
     //功能和设置selectedIndex一样，但不会触发事件
@@ -289,6 +289,13 @@ export class Controller extends EventTarget {
         else
             this._selectedIndex = -1;
     }
+
+    addAction(action: ControllerAction): void {
+        if (!this._actions)
+            this._actions = new Array<ControllerAction>();
+        
+        this._actions.push(action);
+    }
 }
 
 
@@ -297,7 +304,7 @@ import { ChangePageAction } from "./action/ChangePageAction"
 import { EventTarget } from "cc";
 import { GComponent } from "./GComponent";
 
-function createAction(type: number): ControllerAction {
+export function createAction(type: number): ControllerAction {
     switch (type) {
         case 0:
             return new PlayTransitionAction();

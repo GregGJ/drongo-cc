@@ -1,7 +1,6 @@
 import { Color, EventMouse } from "cc";
-import { ResURL } from "../drongo/res/core/ResURL";
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { PopupDirection, ObjectPropID, RelationType } from "./FieldTypes";
 import { GButton } from "./GButton";
 import { GComponent } from "./GComponent";
@@ -13,6 +12,7 @@ import { GTextInput } from "./GTextInput";
 import { UIConfig } from "./UIConfig";
 import { UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
+import { ResURL } from "../drongo-cc";
 
 export class GComboBox extends GComponent {
     public dropdown: GComponent;
@@ -292,7 +292,7 @@ export class GComboBox extends GComponent {
                 console.error(this.resourceURL + ": 下拉框的弹出元件里必须包含名为list的列表");
                 return;
             }
-            this._list.on(FUIEvent.CLICK_ITEM, this.onClickItem, this);
+            this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
 
             this._list.addRelation(this.dropdown, RelationType.Width);
             this._list.removeRelation(this.dropdown, RelationType.Height);
@@ -300,13 +300,13 @@ export class GComboBox extends GComponent {
             this.dropdown.addRelation(this._list, RelationType.Height);
             this.dropdown.removeRelation(this._list, RelationType.Width);
 
-            this.dropdown.on(FUIEvent.UNDISPLAY, this.onPopupClosed, this);
+            this.dropdown.on(FGUIEvent.UNDISPLAY, this.onPopupClosed, this);
         }
 
-        this._node.on(FUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this);
-        this._node.on(FUIEvent.TOUCH_END, this.onTouchEnd_1, this);
-        this._node.on(FUIEvent.ROLL_OVER, this.onRollOver_1, this);
-        this._node.on(FUIEvent.ROLL_OUT, this.onRollOut_1, this);
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this);
+        this._node.on(FGUIEvent.TOUCH_END, this.onTouchEnd_1, this);
+        this._node.on(FGUIEvent.ROLL_OVER, this.onRollOver_1, this);
+        this._node.on(FGUIEvent.ROLL_OUT, this.onRollOut_1, this);
     }
 
     public handleControllerChanged(c: Controller): void {
@@ -437,7 +437,7 @@ export class GComboBox extends GComponent {
 
         this._selectedIndex = -1;
         this.selectedIndex = index;
-        this._node.emit(FUIEvent.STATUS_CHANGED, this);
+        this._node.emit(FGUIEvent.STATUS_CHANGED, this);
     }
 
     private onRollOver_1(): void {
@@ -456,7 +456,7 @@ export class GComboBox extends GComponent {
         this.setState(GButton.UP);
     }
 
-    private onTouchBegin_1(evt: FUIEvent): void {
+    private onTouchBegin_1(evt: FGUIEvent): void {
         if (evt.button != EventMouse.BUTTON_LEFT)
             return;
 
@@ -470,7 +470,7 @@ export class GComboBox extends GComponent {
             this.showDropdown();
     }
 
-    private onTouchEnd_1(evt: FUIEvent): void {
+    private onTouchEnd_1(evt: FGUIEvent): void {
         if (evt.button != EventMouse.BUTTON_LEFT)
             return;
 

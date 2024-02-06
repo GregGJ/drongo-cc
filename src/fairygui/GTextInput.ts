@@ -1,5 +1,5 @@
-import { Color, EditBox, HorizontalTextAlignment, VerticalTextAlignment } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { Color, EditBox, HorizontalTextAlignment, Overflow, UITransform, VerticalTextAlignment } from "cc";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { AutoSizeType } from "./FieldTypes";
 import { GTextField } from "./GTextField";
 import { ByteBuffer } from "./utils/ByteBuffer";
@@ -23,7 +23,7 @@ export class GTextInput extends GTextField {
         this._editBox["_updateTextLabel"]();
 
         this._node.on('text-changed', this.onTextChanged, this);
-        this.on(FUIEvent.TOUCH_END, this.onTouchEnd1, this);
+        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd1, this);
 
         this.autoSize = AutoSizeType.None;
     }
@@ -165,7 +165,7 @@ export class GTextInput extends GTextField {
         this._text = this._editBox.string;
     }
 
-    private onTouchEnd1(evt: FUIEvent) {
+    private onTouchEnd1(evt: FGUIEvent) {
         (<MyEditBox>this._editBox).openKeyboard();
     }
 
@@ -208,6 +208,11 @@ export class GTextInput extends GTextField {
 class MyEditBox extends EditBox {
     _registerEvent() {
         //取消掉原来的事件处理
+
+        this.placeholderLabel.getComponent(UITransform).setAnchorPoint(0, 1);
+        this.textLabel.getComponent(UITransform).setAnchorPoint(0, 1);
+        this.placeholderLabel.overflow = Overflow.CLAMP;
+        this.textLabel.overflow = Overflow.CLAMP;
     }
 
     // _syncSize() {

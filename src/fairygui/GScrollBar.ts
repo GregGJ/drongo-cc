@@ -1,5 +1,5 @@
 import { Vec2 } from "cc";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
 import { ScrollPane } from "./ScrollPane";
@@ -86,19 +86,19 @@ export class GScrollBar extends GComponent {
         this._arrowButton1 = this.getChild("arrow1");
         this._arrowButton2 = this.getChild("arrow2");
 
-        this._grip.on(FUIEvent.TOUCH_BEGIN, this.onGripTouchDown, this);
-        this._grip.on(FUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
-        this._grip.on(FUIEvent.TOUCH_END, this.onGripTouchEnd, this);
+        this._grip.on(FGUIEvent.TOUCH_BEGIN, this.onGripTouchDown, this);
+        this._grip.on(FGUIEvent.TOUCH_MOVE, this.onGripTouchMove, this);
+        this._grip.on(FGUIEvent.TOUCH_END, this.onGripTouchEnd, this);
 
         if (this._arrowButton1)
-            this._arrowButton1.on(FUIEvent.TOUCH_BEGIN, this.onClickArrow1, this);
+            this._arrowButton1.on(FGUIEvent.TOUCH_BEGIN, this.onClickArrow1, this);
         if (this._arrowButton2)
-            this._arrowButton2.on(FUIEvent.TOUCH_BEGIN, this.onClickArrow2, this);
+            this._arrowButton2.on(FGUIEvent.TOUCH_BEGIN, this.onClickArrow2, this);
 
-        this.on(FUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
+        this.on(FGUIEvent.TOUCH_BEGIN, this.onBarTouchBegin, this);
     }
 
-    private onGripTouchDown(evt: FUIEvent): void {
+    private onGripTouchDown(evt: FGUIEvent): void {
         evt.propagationStopped = true;
         evt.captureTouch();
 
@@ -110,7 +110,7 @@ export class GScrollBar extends GComponent {
         this._dragOffset.y -= this._grip.y;
     }
 
-    private onGripTouchMove(evt: FUIEvent): void {
+    private onGripTouchMove(evt: FGUIEvent): void {
         if (!this.onStage)
             return;
 
@@ -125,7 +125,7 @@ export class GScrollBar extends GComponent {
         }
     }
 
-    private onGripTouchEnd(evt: FUIEvent): void {
+    private onGripTouchEnd(evt: FGUIEvent): void {
         if (!this.onStage)
             return;
 
@@ -133,7 +133,7 @@ export class GScrollBar extends GComponent {
         this._target.updateScrollBarVisible();
     }
 
-    private onClickArrow1(evt: FUIEvent): void {
+    private onClickArrow1(evt: FGUIEvent): void {
         evt.propagationStopped = true;
 
         if (this._vertical)
@@ -142,7 +142,7 @@ export class GScrollBar extends GComponent {
             this._target.scrollLeft();
     }
 
-    private onClickArrow2(evt: FUIEvent): void {
+    private onClickArrow2(evt: FGUIEvent): void {
         evt.propagationStopped = true;
 
         if (this._vertical)
@@ -151,7 +151,7 @@ export class GScrollBar extends GComponent {
             this._target.scrollRight();
     }
 
-    private onBarTouchBegin(evt: FUIEvent): void {
+    private onBarTouchBegin(evt: FGUIEvent): void {
         var pt: Vec2 = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
         if (this._vertical) {
             if (pt.y < 0)

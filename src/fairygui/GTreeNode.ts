@@ -1,4 +1,4 @@
-import { ResURL } from "../drongo/res/core/ResURL";
+import { ResURL } from "../drongo-cc";
 import { GComponent } from "./GComponent";
 import { GTree } from "./GTree";
 

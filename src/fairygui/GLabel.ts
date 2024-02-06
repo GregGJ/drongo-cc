@@ -8,8 +8,8 @@ import { GTextInput } from "./GTextInput";
 import { PackageItem } from "./PackageItem";
 import { UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
-import { ResURL } from "../drongo/res/core/ResURL";
+import { FGUIEvent } from "./event/FGUIEvent";
+import { ResURL } from "../drongo-cc";
 
 export class GLabel extends GComponent {
     protected _titleObject: GObject;
@@ -202,7 +202,7 @@ export class GLabel extends GComponent {
             if (buffer.readBool()){
                 this._soundVolumeScale = buffer.readFloat();
             }
-            this._node.on(FUIEvent.CLICK, this.onClick_1, this);
+            this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
         }
 
     }

@@ -1,6 +1,6 @@
-import { Component, director, game, isValid, Mask, math, Node, Rect, sys, UITransform, Vec2, View } from "cc"
+import { Component, director, game, isValid, Mask, math, Node, Rect, screen, sys, UITransform, Vec2, View } from "cc"
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { ScrollBarDisplayType, ScrollType } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GList } from "./GList";
@@ -118,10 +118,10 @@ export class ScrollPane extends Component {
         this._decelerationRate = UIConfig.defaultScrollDecelerationRate;
         this._snappingPolicy = 0;
 
-        o.on(FUIEvent.TOUCH_BEGIN, this.onTouchBegin, this);
-        o.on(FUIEvent.TOUCH_MOVE, this.onTouchMove, this);
-        o.on(FUIEvent.TOUCH_END, this.onTouchEnd, this);
-        o.on(FUIEvent.MOUSE_WHEEL, this.onMouseWheel, this);
+        o.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin, this);
+        o.on(FGUIEvent.TOUCH_MOVE, this.onTouchMove, this);
+        o.on(FGUIEvent.TOUCH_END, this.onTouchEnd, this);
+        o.on(FGUIEvent.MOUSE_WHEEL, this.onMouseWheel, this);
 
         this._scrollType = buffer.readByte();
         var scrollBarDisplay: ScrollBarDisplayType = buffer.readByte();
@@ -193,8 +193,8 @@ export class ScrollPane extends Component {
                 if (this._hzScrollBar)
                     this._hzScrollBar.node.active = false;
 
-                o.on(FUIEvent.ROLL_OVER, this.onRollOver, this);
-                o.on(FUIEvent.ROLL_OUT, this.onRollOut, this);
+                o.on(FGUIEvent.ROLL_OVER, this.onRollOver, this);
+                o.on(FGUIEvent.ROLL_OUT, this.onRollOut, this);
             }
         }
 
@@ -968,7 +968,7 @@ export class ScrollPane extends Component {
 
         this.refresh2();
 
-        this._owner.node.emit(FUIEvent.SCROLL, this._owner);
+        this._owner.node.emit(FGUIEvent.SCROLL, this._owner);
         if (this._needRefresh) //在onScroll事件里开发者可能修改位置，这里再刷新一次，避免闪烁
         {
             this._needRefresh = false;
@@ -1025,7 +1025,7 @@ export class ScrollPane extends Component {
             this.updatePageController();
     }
 
-    private onTouchBegin(evt: FUIEvent): void {
+    private onTouchBegin(evt: FGUIEvent): void {
         if (!this._touchEffect)
             return;
 
@@ -1052,7 +1052,7 @@ export class ScrollPane extends Component {
         this._lastMoveTime = game.totalTime / 1000;
     }
 
-    private onTouchMove(evt: FUIEvent): void {
+    private onTouchMove(evt: FGUIEvent): void {
         if (!isValid(this._owner.node))
             return;
 
@@ -1228,10 +1228,10 @@ export class ScrollPane extends Component {
         if (this._pageMode)
             this.updatePageController();
 
-        this._owner.node.emit(FUIEvent.SCROLL);
+        this._owner.node.emit(FGUIEvent.SCROLL);
     }
 
-    private onTouchEnd(evt: FUIEvent): void {
+    private onTouchEnd(evt: FGUIEvent): void {
         if (ScrollPane.draggingPane == this)
             ScrollPane.draggingPane = null;
 
@@ -1270,12 +1270,12 @@ export class ScrollPane extends Component {
             this._tweenChange.y = sEndPos.y - this._tweenStart.y;
             if (this._tweenChange.x < -UIConfig.touchDragSensitivity || this._tweenChange.y < -UIConfig.touchDragSensitivity) {
                 this._refreshEventDispatching = true;
-                this._owner.node.emit(FUIEvent.PULL_DOWN_RELEASE), this._owner;
+                this._owner.node.emit(FGUIEvent.PULL_DOWN_RELEASE), this._owner;
                 this._refreshEventDispatching = false;
             }
             else if (this._tweenChange.x > UIConfig.touchDragSensitivity || this._tweenChange.y > UIConfig.touchDragSensitivity) {
                 this._refreshEventDispatching = true;
-                this._owner.node.emit(FUIEvent.PULL_UP_RELEASE, this._owner);
+                this._owner.node.emit(FGUIEvent.PULL_UP_RELEASE, this._owner);
                 this._refreshEventDispatching = false;
             }
 
@@ -1347,7 +1347,7 @@ export class ScrollPane extends Component {
         this.updateScrollBarVisible();
     }
 
-    private onMouseWheel(evt: FUIEvent) {
+    private onMouseWheel(evt: FGUIEvent) {
         if (!this._mouseWheelEnabled)
             return;
 
@@ -1615,9 +1615,9 @@ export class ScrollPane extends Component {
             pos = -this._overlapSize[axis];
         else {
             //以屏幕像素为基准
-            var isMobile: boolean = sys.isMobile;
+            var isMobile: boolean = false;// sys.isMobile;
             var v2: number = Math.abs(v) * this._velocityScale;
-            const winSize = View.instance.getCanvasSize();
+            const winSize = screen.windowSize;
             //在移动设备上，需要对不同分辨率做一个适配，我们的速度判断以1136分辨率为基准
             if (isMobile)
                 v2 *= 1136 / Math.max(winSize.width, winSize.height);
@@ -1679,14 +1679,14 @@ export class ScrollPane extends Component {
         if (this._tweening == 1) //取消类型为1的tween需立刻设置到终点
         {
             this._container.setPosition(this._tweenStart.x + this._tweenChange.x, -(this._tweenStart.y + this._tweenChange.y));
-            this._owner.node.emit(FUIEvent.SCROLL, this._owner);
+            this._owner.node.emit(FGUIEvent.SCROLL, this._owner);
         }
 
         this._tweening = 0;
 
         this.updateScrollBarVisible();
 
-        this._owner.node.emit(FUIEvent.SCROLL_END, this._owner);
+        this._owner.node.emit(FGUIEvent.SCROLL_END, this._owner);
     }
 
     private checkRefreshBar(): void {
@@ -1764,12 +1764,12 @@ export class ScrollPane extends Component {
             this.updateScrollBarPos();
             this.updateScrollBarVisible();
 
-            this._owner.node.emit(FUIEvent.SCROLL, this._owner);
-            this._owner.node.emit(FUIEvent.SCROLL_END, this._owner);
+            this._owner.node.emit(FGUIEvent.SCROLL, this._owner);
+            this._owner.node.emit(FGUIEvent.SCROLL_END, this._owner);
         }
         else {
             this.updateScrollBarPos();
-            this._owner.node.emit(FUIEvent.SCROLL, this._owner);
+            this._owner.node.emit(FGUIEvent.SCROLL, this._owner);
         }
 
         return true;

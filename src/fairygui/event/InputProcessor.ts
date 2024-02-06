@@ -2,7 +2,7 @@ import { Component, Vec2, RichText, sys, Node, Touch, Event, EventMouse, EventTo
 import { GObject } from "../GObject";
 import { GRichTextField } from "../GRichTextField";
 import { UIContentScaler } from "../UIContentScaler";
-import { borrowEvent, FGUIEvent as FUIEvent, returnEvent } from "./FGUIEvent";
+import { borrowEvent, FGUIEvent, returnEvent } from "./FGUIEvent";
 
 export class InputProcessor extends Component {
     private _owner: GObject;
@@ -11,8 +11,12 @@ export class InputProcessor extends Component {
     private _touches: Array<TouchInfo>;
     private _rollOutChain: Array<GObject>;
     private _rollOverChain: Array<GObject>;
+    private _touching: boolean = false;
 
-    public _captureCallback: (evt: FUIEvent) => void;
+    public _captureCallback: (evt: FGUIEvent) => void;
+    public get touching(): boolean {
+        return this._touching;
+    }
 
     public constructor() {
         super();
@@ -117,9 +121,9 @@ export class InputProcessor extends Component {
     }
 
     public simulateClick(target: GObject) {
-        let evt: FUIEvent;
+        let evt: FGUIEvent;
 
-        evt = borrowEvent(FUIEvent.TOUCH_BEGIN, true);
+        evt = borrowEvent(FGUIEvent.TOUCH_BEGIN, true);
 
         evt.initiator = target;
         evt.pos.set(target.localToGlobal());
@@ -134,13 +138,13 @@ export class InputProcessor extends Component {
         target.node.dispatchEvent(evt);
 
         evt.unuse();
-        evt.type = FUIEvent.TOUCH_END;
+        evt.type = FGUIEvent.TOUCH_END;
         evt.bubbles = true;
 
         target.node.dispatchEvent(evt);
 
         evt.unuse();
-        evt.type = FUIEvent.CLICK;
+        evt.type = FGUIEvent.CLICK;
         evt.bubbles = true;
 
         target.node.dispatchEvent(evt);
@@ -149,6 +153,8 @@ export class InputProcessor extends Component {
     }
 
     private touchBeginHandler(evt: EventTouch): Boolean {
+        this._touching = true;
+
         let ti: TouchInfo = this.updateInfo(evt.getID(), evt.getLocation());
         this.setBegin(ti);
         if (this._touchListener) {
@@ -159,7 +165,7 @@ export class InputProcessor extends Component {
             e.preventSwallow = (ti.target == this._owner);
         }
 
-        let evt2 = this.getEvent(ti, ti.target, FUIEvent.TOUCH_BEGIN, true);
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_BEGIN, true);
 
         if (this._captureCallback)
             this._captureCallback.call(this._owner, evt2);
@@ -180,7 +186,7 @@ export class InputProcessor extends Component {
         this.handleRollOver(ti, ti.target);
 
         if (ti.began) {
-            let evt2 = this.getEvent(ti, ti.target, FUIEvent.TOUCH_MOVE, false);
+            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
 
             let done = false;
             let cnt = ti.touchMonitors.length;
@@ -190,7 +196,7 @@ export class InputProcessor extends Component {
                     continue;
 
                 evt2.unuse();
-                evt2.type = FUIEvent.TOUCH_MOVE;
+                evt2.type = FGUIEvent.TOUCH_MOVE;
                 mm.node.dispatchEvent(evt2);
                 if (mm == this._owner)
                     done = true;
@@ -198,7 +204,7 @@ export class InputProcessor extends Component {
 
             if (!done && this.node) {
                 evt2.unuse();
-                evt2.type = FUIEvent.TOUCH_MOVE;
+                evt2.type = FGUIEvent.TOUCH_MOVE;
                 this.node.dispatchEvent(evt2);
             }
 
@@ -207,6 +213,8 @@ export class InputProcessor extends Component {
     }
 
     private touchEndHandler(evt: EventTouch): void {
+        this._touching = false;
+
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt as any;
@@ -214,7 +222,7 @@ export class InputProcessor extends Component {
         }
         this.setEnd(ti);
 
-        let evt2 = this.getEvent(ti, ti.target, FUIEvent.TOUCH_END, false);
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
 
         let cnt = ti.touchMonitors.length;
         for (let i = 0; i < cnt; i++) {
@@ -224,7 +232,7 @@ export class InputProcessor extends Component {
                 continue;
 
             evt2.unuse();
-            evt2.type = FUIEvent.TOUCH_END;
+            evt2.type = FGUIEvent.TOUCH_END;
             mm.node.dispatchEvent(evt2);
         }
         ti.touchMonitors.length = 0;
@@ -234,7 +242,7 @@ export class InputProcessor extends Component {
                 ti.target.node.getComponent(RichText)["_onTouchEnded"](evt);
 
             evt2.unuse();
-            evt2.type = FUIEvent.TOUCH_END;
+            evt2.type = FGUIEvent.TOUCH_END;
             evt2.bubbles = true;
             ti.target.node.dispatchEvent(evt2);
         }
@@ -243,7 +251,7 @@ export class InputProcessor extends Component {
 
         ti.target = this.clickTest(ti);
         if (ti.target) {
-            evt2 = this.getEvent(ti, ti.target, FUIEvent.CLICK, true);
+            evt2 = this.getEvent(ti, ti.target, FGUIEvent.CLICK, true);
             ti.target.node.dispatchEvent(evt2);
             returnEvent(evt2);
         }
@@ -259,13 +267,15 @@ export class InputProcessor extends Component {
     }
 
     private touchCancelHandler(evt: EventTouch): void {
+        this._touching = false;
+
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt as any;
             e.preventSwallow = (ti.target == this._owner);
         }
 
-        let evt2 = this.getEvent(ti, ti.target, FUIEvent.TOUCH_END, false);
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_END, false);
 
         let cnt = ti.touchMonitors.length;
         for (let i = 0; i < cnt; i++) {
@@ -314,7 +324,7 @@ export class InputProcessor extends Component {
         this.handleRollOver(ti, ti.target);
 
         if (ti.began) {
-            let evt2 = this.getEvent(ti, ti.target, FUIEvent.TOUCH_MOVE, false);
+            let evt2 = this.getEvent(ti, ti.target, FGUIEvent.TOUCH_MOVE, false);
 
             let done = false;
             let cnt = ti.touchMonitors.length;
@@ -343,7 +353,7 @@ export class InputProcessor extends Component {
         let ti = this.updateInfo(0, evt.getLocation());
         ti.mouseWheelDelta = Math.max(evt.getScrollX(), evt.getScrollY());
 
-        let evt2 = this.getEvent(ti, ti.target, FUIEvent.MOUSE_WHEEL, true);
+        let evt2 = this.getEvent(ti, ti.target, FGUIEvent.MOUSE_WHEEL, true);
         ti.target.node.dispatchEvent(evt2);
         returnEvent(evt2);
     }
@@ -475,7 +485,7 @@ export class InputProcessor extends Component {
         for (let i = 0; i < cnt; i++) {
             element = this._rollOutChain[i];
             if (element.node && element.node.activeInHierarchy) {
-                let evt = this.getEvent(ti, element, FUIEvent.ROLL_OUT, false);
+                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OUT, false);
                 element.node.dispatchEvent(evt);
                 returnEvent(evt);
             }
@@ -485,7 +495,7 @@ export class InputProcessor extends Component {
         for (let i = 0; i < cnt; i++) {
             element = this._rollOverChain[i];
             if (element.node && element.node.activeInHierarchy) {
-                let evt = this.getEvent(ti, element, FUIEvent.ROLL_OVER, false);
+                let evt = this.getEvent(ti, element, FGUIEvent.ROLL_OVER, false);
                 element.node.dispatchEvent(evt);
                 returnEvent(evt);
             }
@@ -495,7 +505,7 @@ export class InputProcessor extends Component {
         this._rollOverChain.length = 0;
     }
 
-    private getEvent(ti: TouchInfo, target: GObject, type: string, bubbles: boolean): FUIEvent {
+    private getEvent(ti: TouchInfo, target: GObject, type: string, bubbles: boolean): FGUIEvent {
         let evt = borrowEvent(type, bubbles);
         evt.initiator = target;
         evt.pos.set(ti.pos);

@@ -1,8 +1,7 @@
-import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3} from "cc";
-import { ResURL } from "../drongo/res/core/ResURL";
+import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3, Constructor } from "cc";
 import { Controller } from "./Controller";
 import { BlendMode, BlendModeUtils } from "./display/BlendMode";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent } from "./event/FGUIEvent";
 import { RelationType, ObjectPropID } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GearAnimation } from "./gears/GearAnimation";
@@ -20,9 +19,10 @@ import { GGroup } from "./GGroup";
 import { GTreeNode } from "./GTreeNode";
 import { PackageItem } from "./PackageItem";
 import { Relations } from "./Relations";
-import { TooltipsData } from "./tooltips/TooltipsData";
 import { UIConfig } from "./UIConfig";
 import { ByteBuffer } from "./utils/ByteBuffer";
+import { ResURL } from "../drongo-cc";
+import { TooltipsData } from "./tooltips/TooltipsData";
 
 export class GObject {
     public data?: any;
@@ -111,6 +111,7 @@ export class GObject {
 
     public set name(value: string) {
         this._name = value;
+        this._node.name = value;
     }
 
     public get x(): number {
@@ -146,7 +147,7 @@ export class GObject {
                 this._parent.setBoundsChangedFlag();
                 if (this._group)
                     this._group.setBoundsChangedFlag(true);
-                this._node.emit(FUIEvent.XY_CHANGED, this);
+                this._node.emit(FGUIEvent.XY_CHANGED, this);
             }
 
             if (GObject.draggingObject == this && !s_dragging)
@@ -258,7 +259,7 @@ export class GObject {
                     this._group.setBoundsChangedFlag();
             }
 
-            this._node.emit(FUIEvent.SIZE_CHANGED, this);
+            this._node.emit(FGUIEvent.SIZE_CHANGED, this);
         }
     }
 
@@ -444,15 +445,15 @@ export class GObject {
 
     public set tooltips(value: TooltipsData | null) {
         if (this._tooltips) {
-            this._node.off(FUIEvent.ROLL_OVER, this.onRollOver, this);
-            this._node.off(FUIEvent.ROLL_OUT, this.onRollOut, this);
+            this._node.off(FGUIEvent.ROLL_OVER, this.onRollOver, this);
+            this._node.off(FGUIEvent.ROLL_OUT, this.onRollOut, this);
         }
 
         this._tooltips = value;
 
         if (this._tooltips) {
-            this._node.on(FUIEvent.ROLL_OVER, this.onRollOver, this);
-            this._node.on(FUIEvent.ROLL_OUT, this.onRollOut, this);
+            this._node.on(FGUIEvent.ROLL_OVER, this.onRollOver, this);
+            this._node.on(FGUIEvent.ROLL_OUT, this.onRollOut, this);
         }
     }
 
@@ -669,34 +670,34 @@ export class GObject {
     }
 
     public onClick(listener: Function, target?: any): void {
-        this._node.on(FUIEvent.CLICK, listener, target);
+        this._node.on(FGUIEvent.CLICK, listener, target);
     }
 
     public onceClick(listener: Function, target?: any): void {
-        this._node.once(FUIEvent.CLICK, listener, target);
+        this._node.once(FGUIEvent.CLICK, listener, target);
     }
 
     public offClick(listener: Function, target?: any): void {
-        this._node.off(FUIEvent.CLICK, listener, target);
+        this._node.off(FGUIEvent.CLICK, listener, target);
     }
 
     public clearClick(): void {
-        this._node.off(FUIEvent.CLICK);
+        this._node.off(FGUIEvent.CLICK);
     }
 
     public hasClickListener(): boolean {
-        return this._node.hasEventListener(FUIEvent.CLICK);
+        return this._node.hasEventListener(FGUIEvent.CLICK);
     }
 
     public on(type: string, listener: Function, target?: any): void {
-        if (type == FUIEvent.DISPLAY || type == FUIEvent.UNDISPLAY)
+        if (type == FGUIEvent.DISPLAY || type == FGUIEvent.UNDISPLAY)
             this._partner._emitDisplayEvents = true;
 
         this._node.on(type, listener, target);
     }
 
     public once(type: string, listener: Function, target?: any): void {
-        if (type == FUIEvent.DISPLAY || type == FUIEvent.UNDISPLAY)
+        if (type == FGUIEvent.DISPLAY || type == FGUIEvent.UNDISPLAY)
             this._partner._emitDisplayEvents = true;
 
         this._node.once(type, listener, target);
@@ -925,7 +926,7 @@ export class GObject {
         var f2: number;
 
         this._id = buffer.readS();
-        this._name = buffer.readS();
+        this.name = buffer.readS();
         f1 = buffer.readInt();
         f2 = buffer.readInt();
         this.setPosition(f1, f2);
@@ -1032,14 +1033,14 @@ export class GObject {
     //-------------------------------------------------------------------
     private initDrag(): void {
         if (this._draggable) {
-            this.on(FUIEvent.TOUCH_BEGIN, this.onTouchBegin_0, this);
-            this.on(FUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
-            this.on(FUIEvent.TOUCH_END, this.onTouchEnd_0, this);
+            this.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_0, this);
+            this.on(FGUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
+            this.on(FGUIEvent.TOUCH_END, this.onTouchEnd_0, this);
         }
         else {
-            this.off(FUIEvent.TOUCH_BEGIN, this.onTouchBegin_0, this);
-            this.off(FUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
-            this.off(FUIEvent.TOUCH_END, this.onTouchEnd_0, this);
+            this.off(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_0, this);
+            this.off(FGUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
+            this.off(FGUIEvent.TOUCH_END, this.onTouchEnd_0, this);
         }
     }
 
@@ -1049,7 +1050,7 @@ export class GObject {
             tmp.stopDrag();
             GObject.draggingObject = null;
 
-            tmp._node.emit(FUIEvent.DRAG_END);
+            tmp._node.emit(FGUIEvent.DRAG_END);
         }
 
         if (touchId == undefined)
@@ -1062,8 +1063,8 @@ export class GObject {
         this._dragTesting = false;
         Decls.GRoot.inst.inputProcessor.addTouchMonitor(touchId, this);
 
-        this.on(FUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
-        this.on(FUIEvent.TOUCH_END, this.onTouchEnd_0, this);
+        this.on(FGUIEvent.TOUCH_MOVE, this.onTouchMove_0, this);
+        this.on(FGUIEvent.TOUCH_END, this.onTouchEnd_0, this);
     }
 
     private dragEnd(): void {
@@ -1074,7 +1075,7 @@ export class GObject {
         s_dragQuery = false;
     }
 
-    private onTouchBegin_0(evt: FUIEvent): void {
+    private onTouchBegin_0(evt: FGUIEvent): void {
         if (this._dragStartPos == null)
             this._dragStartPos = new Vec2();
 
@@ -1083,7 +1084,7 @@ export class GObject {
         evt.captureTouch();
     }
 
-    private onTouchMove_0(evt: FUIEvent): void {
+    private onTouchMove_0(evt: FGUIEvent): void {
         if (GObject.draggingObject != this && this._draggable && this._dragTesting) {
             var sensitivity: number = UIConfig.touchDragSensitivity;
             if (this._dragStartPos
@@ -1094,7 +1095,7 @@ export class GObject {
             this._dragTesting = false;
 
             s_dragQuery = true;
-            this._node.emit(FUIEvent.DRAG_START, evt);
+            this._node.emit(FGUIEvent.DRAG_START, evt);
             if (s_dragQuery)
                 this.dragBegin(evt.touchId);
         }
@@ -1129,7 +1130,7 @@ export class GObject {
             this.setPosition(Math.round(pt.x), Math.round(pt.y));
             s_dragging = false;
 
-            this._node.emit(FUIEvent.DRAG_MOVE, evt);
+            this._node.emit(FGUIEvent.DRAG_MOVE, evt);
         }
     }
 
@@ -1137,7 +1138,7 @@ export class GObject {
         if (GObject.draggingObject == this) {
             GObject.draggingObject = null;
 
-            this._node.emit(FUIEvent.DRAG_END, evt);
+            this._node.emit(FGUIEvent.DRAG_END, evt);
         }
     }
 }
@@ -1153,21 +1154,21 @@ export class GObjectPartner extends Component {
     }
 
     public onClickLink(evt: Event, text: string) {
-        this.node.emit(FUIEvent.LINK, text, evt);
+        this.node.emit(FGUIEvent.LINK, text, evt);
     }
 
     protected onEnable() {
         (<any>this.node)["$gobj"].onEnable();
 
         if (this._emitDisplayEvents)
-            this.node.emit(FUIEvent.DISPLAY);
+            this.node.emit(FGUIEvent.DISPLAY);
     }
 
     protected onDisable() {
         (<any>this.node)["$gobj"].onDisable();
 
         if (this._emitDisplayEvents)
-            this.node.emit(FUIEvent.UNDISPLAY);
+            this.node.emit(FGUIEvent.UNDISPLAY);
     }
 
     protected update(dt: number) {

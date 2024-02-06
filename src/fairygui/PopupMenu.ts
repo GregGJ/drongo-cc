@@ -1,5 +1,5 @@
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { RelationType, PopupDirection } from "./FieldTypes";
 import { GButton } from "./GButton";
 import { GComponent } from "./GComponent";
@@ -21,13 +21,13 @@ export class PopupMenu {
                 throw "UIConfig.popupMenu not defined";
         }
         this._contentPane = <GComponent>UIPackage.createObjectFromURL(url);
-        this._contentPane.on(FUIEvent.DISPLAY, this.onDisplay, this);
+        this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
         this._list = <GList>(this._contentPane.getChild("list"));
         this._list.removeChildrenToPool();
         this._list.addRelation(this._contentPane, RelationType.Width);
         this._list.removeRelation(this._contentPane, RelationType.Height);
         this._contentPane.addRelation(this._list, RelationType.Height);
-        this._list.on(FUIEvent.CLICK_ITEM, this.onClickItem, this);
+        this._list.on(FGUIEvent.CLICK_ITEM, this.onClickItem, this);
     }
 
     public dispose(): void {
@@ -146,13 +146,13 @@ export class PopupMenu {
         GRoot.inst.showPopup(this.contentPane, (target instanceof GRoot) ? null : target, dir);
     }
 
-    private onClickItem(item: GObject, evt: FUIEvent): void {
+    private onClickItem(item: GObject, evt: FGUIEvent): void {
         this._list._partner.callLater((dt: number) => {
             this.onClickItem2(item, evt);
         }, 0.1);
     }
 
-    private onClickItem2(item: GObject, evt: FUIEvent): void {
+    private onClickItem2(item: GObject, evt: FGUIEvent): void {
         if (!(item instanceof GButton))
             return;
 

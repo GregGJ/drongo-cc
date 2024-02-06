@@ -1,6 +1,6 @@
 import { AssetManager, Color, Font, Layers, resources } from "cc";
 import { ScrollBarDisplayType } from "./FieldTypes";
-import { ITooltipsManager as ITooltipsManager } from "./tooltips/ITooltipManager";
+import { ITooltipsManager } from "./tooltips/ITooltipManager";
 
 export class UIConfig {
     public constructor() {
@@ -45,7 +45,7 @@ export class UIConfig {
     public static tooltipsWin: string;
     /**提示管理器 */
     public static tooltipsManager:ITooltipsManager
-    
+
     //Max items displayed in combobox without scrolling.
     public static defaultComboBoxVisibleItemCount: number = 10;
 
@@ -67,6 +67,10 @@ export class UIConfig {
 
     //Default group name of UI node.<br/>
     public static defaultUILayer: number = Layers.Enum.UI_2D;
+
+    public static enableDelayLoad: boolean = true;
+    // 
+    public static autoReleaseAssets: boolean = false;
 }
 
 let _fontRegistry: { [index: string]: Font } = {};
