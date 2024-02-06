@@ -240,42 +240,14 @@ const factors = [
 ];
 
 class FGUIEvent extends Event$1 {
-    static TOUCH_BEGIN = "fui_touch_begin";
-    static TOUCH_MOVE = "fui_touch_move";
-    static TOUCH_END = "fui_touch_end";
-    static CLICK = "fui_click";
-    static ROLL_OVER = "fui_roll_over";
-    static ROLL_OUT = "fui_roll_out";
-    static MOUSE_WHEEL = "fui_mouse_wheel";
-    static DISPLAY = "fui_display";
-    static UNDISPLAY = "fui_undisplay";
-    static GEAR_STOP = "fui_gear_stop";
-    static LINK = "fui_text_link";
-    static Submit = "editing-return";
-    static TEXT_CHANGE = "text-changed";
-    static STATUS_CHANGED = "fui_status_changed";
-    static XY_CHANGED = "fui_xy_changed";
-    static SIZE_CHANGED = "fui_size_changed";
-    static SIZE_DELAY_CHANGE = "fui_size_delay_change";
-    static DRAG_START = "fui_drag_start";
-    static DRAG_MOVE = "fui_drag_move";
-    static DRAG_END = "fui_drag_end";
-    static DROP = "fui_drop";
-    static SCROLL = "fui_scroll";
-    static SCROLL_END = "fui_scroll_end";
-    static PULL_DOWN_RELEASE = "fui_pull_down_release";
-    static PULL_UP_RELEASE = "fui_pull_up_release";
-    static CLICK_ITEM = "fui_click_item";
-    initiator;
-    pos = new Vec2();
-    touchId = 0;
-    clickCount = 0;
-    button = 0;
-    keyModifiers = 0;
-    mouseWheelDelta = 0;
-    _processor;
     constructor(type, bubbles) {
         super(type, bubbles);
+        this.pos = new Vec2();
+        this.touchId = 0;
+        this.clickCount = 0;
+        this.button = 0;
+        this.keyModifiers = 0;
+        this.mouseWheelDelta = 0;
     }
     get sender() {
         return GObject.cast(this.currentTarget);
@@ -292,6 +264,32 @@ class FGUIEvent extends Event$1 {
             this._processor.addTouchMonitor(this.touchId, obj);
     }
 }
+FGUIEvent.TOUCH_BEGIN = "fui_touch_begin";
+FGUIEvent.TOUCH_MOVE = "fui_touch_move";
+FGUIEvent.TOUCH_END = "fui_touch_end";
+FGUIEvent.CLICK = "fui_click";
+FGUIEvent.ROLL_OVER = "fui_roll_over";
+FGUIEvent.ROLL_OUT = "fui_roll_out";
+FGUIEvent.MOUSE_WHEEL = "fui_mouse_wheel";
+FGUIEvent.DISPLAY = "fui_display";
+FGUIEvent.UNDISPLAY = "fui_undisplay";
+FGUIEvent.GEAR_STOP = "fui_gear_stop";
+FGUIEvent.LINK = "fui_text_link";
+FGUIEvent.Submit = "editing-return";
+FGUIEvent.TEXT_CHANGE = "text-changed";
+FGUIEvent.STATUS_CHANGED = "fui_status_changed";
+FGUIEvent.XY_CHANGED = "fui_xy_changed";
+FGUIEvent.SIZE_CHANGED = "fui_size_changed";
+FGUIEvent.SIZE_DELAY_CHANGE = "fui_size_delay_change";
+FGUIEvent.DRAG_START = "fui_drag_start";
+FGUIEvent.DRAG_MOVE = "fui_drag_move";
+FGUIEvent.DRAG_END = "fui_drag_end";
+FGUIEvent.DROP = "fui_drop";
+FGUIEvent.SCROLL = "fui_scroll";
+FGUIEvent.SCROLL_END = "fui_scroll_end";
+FGUIEvent.PULL_DOWN_RELEASE = "fui_pull_down_release";
+FGUIEvent.PULL_UP_RELEASE = "fui_pull_up_release";
+FGUIEvent.CLICK_ITEM = "fui_click_item";
 var eventPool = new Array();
 function borrowEvent(type, bubbles) {
     let evt;
@@ -348,10 +346,6 @@ var EaseType;
 })(EaseType || (EaseType = {}));
 
 class GearBase {
-    static disableAllTweenEffect;
-    _owner;
-    _controller;
-    _tweenConfig;
     dispose() {
         if (this._tweenConfig && this._tweenConfig._tweener) {
             this._tweenConfig._tweener.kill();
@@ -431,12 +425,6 @@ class GearBase {
     }
 }
 class GearTweenConfig {
-    tween;
-    easeType;
-    duration;
-    delay;
-    _displayLockToken;
-    _tweener;
     constructor() {
         this.tween = true;
         this.easeType = EaseType.QuadOut;
@@ -446,8 +434,6 @@ class GearTweenConfig {
 }
 
 class GearAnimation extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = {
             playing: this._owner.getProp(ObjectPropID.Playing),
@@ -485,8 +471,6 @@ class GearAnimation extends GearBase {
 }
 
 class GearColor extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = {
             color: this._owner.getProp(ObjectPropID.Color),
@@ -524,9 +508,12 @@ class GearColor extends GearBase {
 }
 
 class GearDisplay extends GearBase {
-    pages = null;
-    _visible = 0;
-    _displayLockToken = 1;
+    constructor() {
+        super(...arguments);
+        this.pages = null;
+        this._visible = 0;
+        this._displayLockToken = 1;
+    }
     init() {
         this.pages = null;
     }
@@ -554,9 +541,12 @@ class GearDisplay extends GearBase {
 }
 
 class GearDisplay2 extends GearBase {
-    pages = null;
-    condition = 0;
-    _visible = 0;
+    constructor() {
+        super(...arguments);
+        this.pages = null;
+        this.condition = 0;
+        this._visible = 0;
+    }
     init() {
         this.pages = null;
     }
@@ -578,8 +568,10 @@ class GearDisplay2 extends GearBase {
 }
 
 class GearFontSize extends GearBase {
-    _storage;
-    _default = 0;
+    constructor() {
+        super(...arguments);
+        this._default = 0;
+    }
     init() {
         this._default = this._owner.getProp(ObjectPropID.FontSize);
         this._storage = {};
@@ -605,8 +597,6 @@ class GearFontSize extends GearBase {
 }
 
 class GearIcon extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = this._owner.icon;
         this._storage = {};
@@ -632,11 +622,8 @@ class GearIcon extends GearBase {
 }
 
 let Pool$1 = class Pool {
-    pool = [];
-    _init;
-    _reset;
-    _ct;
     constructor(type, init, reset) {
+        this.pool = [];
         this._init = init;
         this._reset = reset;
         this._ct = type;
@@ -861,10 +848,6 @@ function bounce_easeInOut(time, duration) {
 }
 
 class TweenValue {
-    x;
-    y;
-    z;
-    w;
     constructor() {
         this.x = this.y = this.z = this.w = 0;
     }
@@ -916,38 +899,17 @@ class TweenValue {
 
 var s_vec2$5 = new Vec2();
 class GTweener {
-    _target;
-    _propType;
-    _killed;
-    _paused;
-    _delay = 0;
-    _duration = 0;
-    _breakpoint = 0;
-    _easeType = 0;
-    _easeOvershootOrAmplitude = 0;
-    _easePeriod = 0;
-    _repeat = 0;
-    _yoyo = false;
-    _timeScale = 1;
-    _snapping = false;
-    _userData;
-    _path;
-    _onUpdate;
-    _onStart;
-    _onComplete;
-    _onUpdateCaller;
-    _onStartCaller;
-    _onCompleteCaller;
-    _startValue;
-    _endValue;
-    _value;
-    _deltaValue;
-    _valueSize;
-    _started;
-    _ended;
-    _elapsedTime;
-    _normalizedTime;
     constructor() {
+        this._delay = 0;
+        this._duration = 0;
+        this._breakpoint = 0;
+        this._easeType = 0;
+        this._easeOvershootOrAmplitude = 0;
+        this._easePeriod = 0;
+        this._repeat = 0;
+        this._yoyo = false;
+        this._timeScale = 1;
+        this._snapping = false;
         this._startValue = new TweenValue();
         this._endValue = new TweenValue();
         this._value = new TweenValue();
@@ -1448,7 +1410,6 @@ var _totalActiveTweens = 0;
 var _root;
 
 class GTween {
-    static catchCallbackExceptions = true;
     static to(start, end, duration) {
         return TweenManager.createTween()._to(start, end, duration);
     }
@@ -1480,10 +1441,9 @@ class GTween {
         return TweenManager.getTween(target, propType);
     }
 }
+GTween.catchCallbackExceptions = true;
 
 class GearLook extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = {
             alpha: this._owner.alpha,
@@ -1574,8 +1534,6 @@ class GearLook extends GearBase {
 }
 
 class GearSize extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = {
             width: this._owner.width,
@@ -1673,8 +1631,6 @@ class GearSize extends GearBase {
 }
 
 class GearText extends GearBase {
-    _storage;
-    _default;
     init() {
         this._default = this._owner.text;
         this._storage = {};
@@ -1700,9 +1656,6 @@ class GearText extends GearBase {
 }
 
 class GearXY extends GearBase {
-    positionsInPercent;
-    _storage;
-    _default;
     init() {
         this._default = {
             x: this._owner.x,
@@ -1810,13 +1763,6 @@ class GearXY extends GearBase {
 }
 
 class RelationItem {
-    _owner;
-    _target;
-    _defs;
-    _targetX;
-    _targetY;
-    _targetWidth;
-    _targetHeight;
     constructor(owner) {
         this._owner = owner;
         this._defs = new Array();
@@ -2359,10 +2305,10 @@ class RelationItem {
     }
 }
 class RelationDef {
-    percent = false;
-    type = 0;
-    axis = 0;
     constructor() {
+        this.percent = false;
+        this.type = 0;
+        this.axis = 0;
     }
     copyFrom(source) {
         this.percent = source.percent;
@@ -2372,11 +2318,8 @@ class RelationDef {
 }
 
 class Relations {
-    _owner;
-    _items;
-    handling;
-    sizeDirty = false;
     constructor(owner) {
+        this.sizeDirty = false;
         this._owner = owner;
         this._items = new Array();
     }
@@ -2508,54 +2451,36 @@ class Relations {
 class UIConfig {
     constructor() {
     }
-    //Default font name
-    static defaultFont = "Arial";
-    //Resource using in Window.ShowModalWait for locking the window.
-    static windowModalWaiting;
-    //Resource using in GRoot.ShowModalWait for locking the screen.
-    static globalModalWaiting;
-    //When a modal window is in front, the background becomes dark.
-    static modalLayerColor = new Color(0x33, 0x33, 0x33, 0x33);
-    //Default button click sound
-    static buttonSound;
-    static buttonSoundVolumeScale = 1;
-    static horizontalScrollBar;
-    static verticalScrollBar;
-    //Scrolling step in pixels
-    static defaultScrollStep = 25;
-    //Deceleration ratio of scrollpane when its in touch dragging.
-    static defaultScrollDecelerationRate = 0.967;
-    //Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
-    static defaultScrollBarDisplay = ScrollBarDisplayType.Visible;
-    //Allow dragging the content to scroll. Recommeded true for mobile.
-    static defaultScrollTouchEffect = true;
-    //The "rebound" effect in the scolling container. Recommeded true for mobile.
-    static defaultScrollBounceEffect = true;
-    //Resources for PopupMenu.
-    static popupMenu;
-    //Resources for seperator of PopupMenu.
-    static popupMenu_seperator;
-    //In case of failure of loading content for GLoader, use this sign to indicate an error.
-    static loaderErrorSign;
-    //Resources for tooltips.
-    static tooltipsWin;
-    /**提示管理器 */
-    static tooltipsManager;
-    //Max items displayed in combobox without scrolling.
-    static defaultComboBoxVisibleItemCount = 10;
-    // Pixel offsets of finger to trigger scrolling.
-    static touchScrollSensitivity = 20;
-    // Pixel offsets of finger to trigger dragging.
-    static touchDragSensitivity = 10;
-    // Pixel offsets of mouse pointer to trigger dragging.
-    static clickDragSensitivity = 2;
-    // When click the window, brings to front automatically.
-    static bringWindowToFrontOnClick = true;
-    static frameTimeForAsyncUIConstruction = 0.002;
-    static linkUnderline = true;
-    //Default group name of UI node.<br/>
-    static defaultUILayer = Layers.Enum.UI_2D;
 }
+//Default font name
+UIConfig.defaultFont = "Arial";
+//When a modal window is in front, the background becomes dark.
+UIConfig.modalLayerColor = new Color(0x33, 0x33, 0x33, 0x33);
+UIConfig.buttonSoundVolumeScale = 1;
+//Scrolling step in pixels
+UIConfig.defaultScrollStep = 25;
+//Deceleration ratio of scrollpane when its in touch dragging.
+UIConfig.defaultScrollDecelerationRate = 0.967;
+//Default scrollbar display mode. Recommened visible for Desktop and Auto for mobile.
+UIConfig.defaultScrollBarDisplay = ScrollBarDisplayType.Visible;
+//Allow dragging the content to scroll. Recommeded true for mobile.
+UIConfig.defaultScrollTouchEffect = true;
+//The "rebound" effect in the scolling container. Recommeded true for mobile.
+UIConfig.defaultScrollBounceEffect = true;
+//Max items displayed in combobox without scrolling.
+UIConfig.defaultComboBoxVisibleItemCount = 10;
+// Pixel offsets of finger to trigger scrolling.
+UIConfig.touchScrollSensitivity = 20;
+// Pixel offsets of finger to trigger dragging.
+UIConfig.touchDragSensitivity = 10;
+// Pixel offsets of mouse pointer to trigger dragging.
+UIConfig.clickDragSensitivity = 2;
+// When click the window, brings to front automatically.
+UIConfig.bringWindowToFrontOnClick = true;
+UIConfig.frameTimeForAsyncUIConstruction = 0.002;
+UIConfig.linkUnderline = true;
+//Default group name of UI node.<br/>
+UIConfig.defaultUILayer = Layers.Enum.UI_2D;
 let _fontRegistry = {};
 function registerFont(name, font, bundle) {
     if (font instanceof Font)
@@ -2571,57 +2496,30 @@ function getFontByName(name) {
 }
 
 class GObject {
-    data;
-    packageItem;
-    static draggingObject;
-    _x = 0;
-    _y = 0;
-    _alpha = 1;
-    _visible = true;
-    _touchable = true;
-    _grayed;
-    _draggable;
-    _skewX = 0;
-    _skewY = 0;
-    _pivotAsAnchor;
-    _sortingOrder = 0;
-    _internalVisible = true;
-    _handlingController;
-    _tooltips;
-    _blendMode;
-    _pixelSnapping;
-    _dragTesting;
-    _dragStartPos;
-    _relations;
-    _group;
-    _gears;
-    _node;
-    _dragBounds;
-    sourceWidth = 0;
-    sourceHeight = 0;
-    initWidth = 0;
-    initHeight = 0;
-    minWidth = 0;
-    minHeight = 0;
-    maxWidth = 0;
-    maxHeight = 0;
-    _parent;
-    _width = 0;
-    _height = 0;
-    _rawWidth = 0;
-    _rawHeight = 0;
-    _id;
-    _name;
-    _underConstruct = false;
-    _gearLocked;
-    _sizePercentInGroup = 0;
-    _touchDisabled;
-    _partner;
-    _treeNode;
-    _uiTrans;
-    _uiOpacity;
-    _hitTestPt;
     constructor() {
+        this._x = 0;
+        this._y = 0;
+        this._alpha = 1;
+        this._visible = true;
+        this._touchable = true;
+        this._skewX = 0;
+        this._skewY = 0;
+        this._sortingOrder = 0;
+        this._internalVisible = true;
+        this.sourceWidth = 0;
+        this.sourceHeight = 0;
+        this.initWidth = 0;
+        this.initHeight = 0;
+        this.minWidth = 0;
+        this.minHeight = 0;
+        this.maxWidth = 0;
+        this.maxHeight = 0;
+        this._width = 0;
+        this._height = 0;
+        this._rawWidth = 0;
+        this._rawHeight = 0;
+        this._underConstruct = false;
+        this._sizePercentInGroup = 0;
         this._node = new Node();
         this._uiTrans = this._node.addComponent(UITransform);
         this._uiOpacity = this.node.addComponent(UIOpacity);
@@ -3478,7 +3376,6 @@ class GObject {
 }
 //-------------------------------------------------------------------
 class GObjectPartner extends Component {
-    _emitDisplayEvents;
     callLater(callback, delay) {
         if (!director.getScheduler().isScheduled(callback, this))
             this.scheduleOnce(callback, delay);
@@ -3524,21 +3421,17 @@ var Decls$1 = {};
 var constructingDepth = { n: 0 };
 
 class GGroup extends GObject {
-    _layout = 0;
-    _lineGap = 0;
-    _columnGap = 0;
-    _excludeInvisibles;
-    _autoSizeDisabled;
-    _mainGridIndex = -1;
-    _mainGridMinSize = 50;
-    _boundsChanged;
-    _percentReady;
-    _mainChildIndex = -1;
-    _totalSize = 0;
-    _numChildren = 0;
-    _updating = 0;
     constructor() {
         super();
+        this._layout = 0;
+        this._lineGap = 0;
+        this._columnGap = 0;
+        this._mainGridIndex = -1;
+        this._mainGridMinSize = 50;
+        this._mainChildIndex = -1;
+        this._totalSize = 0;
+        this._numChildren = 0;
+        this._updating = 0;
         this._node.name = "GGroup";
         this._touchDisabled = true;
     }
@@ -3902,19 +3795,10 @@ class GGroup extends GObject {
 }
 
 class GGraph extends GObject {
-    _content;
-    _type = 0;
-    _lineSize = 0;
-    _lineColor;
-    _fillColor;
-    _cornerRadius;
-    _sides;
-    _startAngle;
-    _polygonPoints;
-    _distances;
-    _hasContent;
     constructor() {
         super();
+        this._type = 0;
+        this._lineSize = 0;
         this._node.name = "GGraph";
         this._lineSize = 1;
         this._lineColor = new Color();
@@ -4134,13 +4018,12 @@ class GGraph extends GObject {
 }
 
 class Image extends Sprite {
-    _flip = FlipType.None;
-    _fillMethod = FillMethod.None;
-    _fillOrigin = FillOrigin.Left;
-    _fillAmount = 0;
-    _fillClockwise;
     constructor() {
         super();
+        this._flip = FlipType.None;
+        this._fillMethod = FillMethod.None;
+        this._fillOrigin = FillOrigin.Left;
+        this._fillAmount = 0;
     }
     get flip() {
         return this._flip;
@@ -4243,7 +4126,6 @@ class Image extends Sprite {
 }
 
 class GImage extends GObject {
-    _content;
     constructor() {
         super();
         this._node.name = "GImage";
@@ -4335,26 +4217,24 @@ class GImage extends GObject {
 }
 
 class MovieClip extends Image {
-    interval = 0;
-    swing = false;
-    repeatDelay = 0;
-    timeScale = 1;
-    _playing = true;
-    _frameCount = 0;
-    _frames;
-    _frame = 0;
-    _start = 0;
-    _end = 0;
-    _times = 0;
-    _endAt = 0;
-    _status = 0; //0-none, 1-next loop, 2-ending, 3-ended
-    _callback;
-    _smoothing = true;
-    _frameElapsed = 0; //当前帧延迟
-    _reversed = false;
-    _repeatedCount = 0;
     constructor() {
         super();
+        this.interval = 0;
+        this.swing = false;
+        this.repeatDelay = 0;
+        this.timeScale = 1;
+        this._playing = true;
+        this._frameCount = 0;
+        this._frame = 0;
+        this._start = 0;
+        this._end = 0;
+        this._times = 0;
+        this._endAt = 0;
+        this._status = 0; //0-none, 1-next loop, 2-ending, 3-ended
+        this._smoothing = true;
+        this._frameElapsed = 0; //当前帧延迟
+        this._reversed = false;
+        this._repeatedCount = 0;
     }
     get frames() {
         return this._frames;
@@ -4571,7 +4451,6 @@ class MovieClip extends Image {
 }
 
 class GMovieClip extends GObject {
-    _content;
     constructor() {
         super();
         this._node.name = "GMovieClip";
@@ -4696,10 +4575,10 @@ class GMovieClip extends GObject {
 }
 
 class UIContentScaler {
-    static scaleFactor = 1;
-    static scaleLevel = 0;
-    static rootSize = new Size();
 }
+UIContentScaler.scaleFactor = 1;
+UIContentScaler.scaleLevel = 0;
+UIContentScaler.rootSize = new Size();
 function updateScaler() {
     let size = view.getCanvasSize();
     size.width /= view.getScaleX();
@@ -4718,37 +4597,9 @@ function updateScaler() {
 }
 
 class PackageItem {
-    owner;
-    type;
-    objectType;
-    id;
-    name;
-    width = 0;
-    height = 0;
-    file;
-    decoded;
-    loading;
-    rawData;
-    asset;
-    highResolution;
-    branches;
-    //image
-    scale9Grid;
-    scaleByTile;
-    tileGridIndice;
-    smoothing;
-    hitTestData;
-    //movieclip
-    interval;
-    repeatDelay;
-    swing;
-    frames;
-    //componenet
-    extensionType;
-    //skeleton
-    skeletonAnchor;
-    atlasAsset;
     constructor() {
+        this.width = 0;
+        this.height = 0;
     }
     load() {
         return this.owner.getItemAsset(this);
@@ -4775,7 +4626,6 @@ class PackageItem {
 }
 
 class TranslationHelper {
-    static strings;
     static loadFromXML(source) {
         TranslationHelper.strings = {};
         let strings = TranslationHelper.strings;
@@ -4975,14 +4825,8 @@ class TranslationHelper {
 }
 
 class ByteBuffer {
-    stringTable;
-    version = 0;
-    littleEndian;
-    _view;
-    _bytes;
-    _pos;
-    _length;
     constructor(buffer, offset, length) {
+        this.version = 0;
         offset = offset || 0;
         if (length == null || length == -1)
             length = buffer.byteLength - offset;
@@ -5148,11 +4992,6 @@ class ByteBuffer {
 }
 
 class PixelHitTest {
-    _data;
-    offsetX;
-    offsetY;
-    scaleX;
-    scaleY;
     constructor(data, offsetX, offsetY) {
         this._data = data;
         this.offsetX = offsetX == undefined ? 0 : offsetX;
@@ -5175,9 +5014,6 @@ class PixelHitTest {
     }
 }
 class PixelHitTestData {
-    pixelWidth;
-    scale;
-    pixels;
     constructor(ba) {
         ba.readInt();
         this.pixelWidth = ba.readInt();
@@ -5186,7 +5022,6 @@ class PixelHitTestData {
     }
 }
 class ChildHitArea {
-    _child;
     constructor(child) {
         this._child = child;
     }
@@ -5197,17 +5032,6 @@ class ChildHitArea {
 
 var PathUtils = path;
 class UIPackage {
-    _id;
-    _name;
-    _path;
-    _items;
-    _itemsById;
-    _itemsByName;
-    _sprites;
-    _dependencies;
-    _branches;
-    _branchIndex;
-    _bundle;
     constructor() {
         this._items = [];
         this._itemsById = {};
@@ -5902,14 +5726,8 @@ function toGrayedColor(c) {
 }
 
 class UBBParser {
-    _text;
-    _readPos = 0;
-    _handlers;
-    lastColor;
-    lastSize;
-    linkUnderline;
-    linkColor;
     constructor() {
+        this._readPos = 0;
         this._handlers = {};
         this._handlers["url"] = this.onTag_URL;
         this._handlers["img"] = this.onTag_IMG;
@@ -6057,25 +5875,10 @@ class UBBParser {
 var defaultParser = new UBBParser();
 
 class GTextField extends GObject {
-    _label;
-    _font;
-    _realFont;
-    _fontSize = 0;
-    _color;
-    _strokeColor;
-    _shadowOffset;
-    _shadowColor;
-    _leading = 0;
-    _text;
-    _ubbEnabled;
-    _templateVars;
-    _autoSize;
-    _updatingSize;
-    _sizeDirty;
-    _outline;
-    _shadow;
     constructor() {
         super();
+        this._fontSize = 0;
+        this._leading = 0;
         this._node.name = "GTextField";
         this._touchDisabled = true;
         this._text = "";
@@ -6552,12 +6355,6 @@ class RichTextImageAtlas extends SpriteAtlas {
 }
 const imageAtlas = new RichTextImageAtlas();
 class GRichTextField extends GTextField {
-    _richText;
-    _bold;
-    _italics;
-    _underline;
-    linkUnderline;
-    linkColor;
     constructor() {
         super();
         this._node.name = "GRichTextField";
@@ -6666,13 +6463,6 @@ class GRichTextField extends GTextField {
 }
 
 class InputProcessor extends Component {
-    _owner;
-    _touchListener;
-    _touchPos;
-    _touches;
-    _rollOutChain;
-    _rollOverChain;
-    _captureCallback;
     constructor() {
         super();
         this._touches = new Array();
@@ -7077,26 +6867,24 @@ class InputProcessor extends Component {
     }
 }
 class TouchInfo {
-    target;
-    pos = new Vec2();
-    touchId = 0;
-    clickCount = 0;
-    mouseWheelDelta = 0;
-    button = -1;
-    downPos = new Vec2();
-    began = false;
-    clickCancelled = false;
-    lastClickTime = 0;
-    lastRollOver;
-    downTargets = new Array();
-    touchMonitors = new Array();
+    constructor() {
+        this.pos = new Vec2();
+        this.touchId = 0;
+        this.clickCount = 0;
+        this.mouseWheelDelta = 0;
+        this.button = -1;
+        this.downPos = new Vec2();
+        this.began = false;
+        this.clickCancelled = false;
+        this.lastClickTime = 0;
+        this.downTargets = new Array();
+        this.touchMonitors = new Array();
+    }
 }
 var s_vec3 = new Vec3();
 var s_vec3_2 = new Vec3();
 
 class ControllerAction {
-    fromPage;
-    toPage;
     constructor() {
     }
     run(controller, prevPage, curPage) {
@@ -7125,13 +6913,10 @@ class ControllerAction {
 }
 
 class PlayTransitionAction extends ControllerAction {
-    transitionName;
-    playTimes = 1;
-    delay = 0;
-    stopOnExit;
-    _currentTransition;
     constructor() {
         super();
+        this.playTimes = 1;
+        this.delay = 0;
     }
     enter(controller) {
         var trans = controller.parent.getTransition(this.transitionName);
@@ -7159,9 +6944,6 @@ class PlayTransitionAction extends ControllerAction {
 }
 
 class ChangePageAction extends ControllerAction {
-    objectId;
-    controllerName;
-    targetPage;
     constructor() {
         super();
     }
@@ -7197,15 +6979,6 @@ class ChangePageAction extends ControllerAction {
 
 var _nextPageId = 0;
 class Controller extends EventTarget {
-    _selectedIndex;
-    _previousIndex;
-    _pageIds;
-    _pageNames;
-    _actions;
-    name;
-    parent;
-    autoRadioGroupDepth;
-    changing;
     constructor() {
         super();
         this._pageIds = [];
@@ -7443,11 +7216,11 @@ function createAction(type) {
 }
 
 class Margin {
-    left = 0;
-    right = 0;
-    top = 0;
-    bottom = 0;
     constructor() {
+        this.left = 0;
+        this.right = 0;
+        this.top = 0;
+        this.bottom = 0;
     }
     copy(source) {
         this.top = source.top;
@@ -7461,62 +7234,10 @@ class Margin {
 }
 
 class ScrollPane extends Component {
-    _owner;
-    _container;
-    _maskContainer;
-    _scrollType;
-    _scrollStep;
-    _mouseWheelStep;
-    _decelerationRate;
-    _scrollBarMargin;
-    _bouncebackEffect;
-    _touchEffect;
-    _scrollBarDisplayAuto;
-    _vScrollNone;
-    _hScrollNone;
-    _needRefresh;
-    _refreshBarAxis;
-    _displayOnLeft;
-    _snapToItem;
-    _snappingPolicy;
-    _displayInDemand;
-    _mouseWheelEnabled;
-    _pageMode;
-    _inertiaDisabled;
-    _floating;
-    _dontClipMargin;
-    _xPos;
-    _yPos;
-    _viewSize;
-    _contentSize;
-    _overlapSize;
-    _pageSize;
-    _containerPos;
-    _beginTouchPos;
-    _lastTouchPos;
-    _lastTouchGlobalPos;
-    _velocity;
-    _velocityScale;
-    _lastMoveTime;
-    _isHoldAreaDone;
-    _aniFlag = 0;
-    _loop;
-    _headerLockedSize;
-    _footerLockedSize;
-    _refreshEventDispatching;
-    _dragged;
-    _hover;
-    _tweening;
-    _tweenTime;
-    _tweenDuration;
-    _tweenStart;
-    _tweenChange;
-    _pageController;
-    _hzScrollBar;
-    _vtScrollBar;
-    _header;
-    _footer;
-    static draggingPane;
+    constructor() {
+        super(...arguments);
+        this._aniFlag = 0;
+    }
     setup(buffer) {
         const o = this._owner = GObject.cast(this.node);
         this._maskContainer = new Node("ScrollPane");
@@ -9036,13 +8757,6 @@ var CurveType;
     CurveType[CurveType["Straight"] = 3] = "Straight";
 })(CurveType || (CurveType = {}));
 class GPathPoint {
-    x;
-    y;
-    control1_x;
-    control1_y;
-    control2_x;
-    control2_y;
-    curveType;
     constructor() {
         this.x = 0;
         this.y = 0;
@@ -9099,9 +8813,6 @@ class GPathPoint {
 }
 
 class GPath {
-    _segments;
-    _points;
-    _fullLength;
     constructor() {
         this._segments = new Array();
         this._points = new Array();
@@ -9336,26 +9047,18 @@ function distance(x1, y1, x2, y2) {
 }
 
 class Transition {
-    name;
-    _owner;
-    _ownerBaseX = 0;
-    _ownerBaseY = 0;
-    _items;
-    _totalTimes = 0;
-    _totalTasks = 0;
-    _playing;
-    _paused;
-    _onComplete;
-    _options = 0;
-    _reversed;
-    _totalDuration = 0;
-    _autoPlay;
-    _autoPlayTimes = 1;
-    _autoPlayDelay = 0;
-    _timeScale = 1;
-    _startTime = 0;
-    _endTime = 0;
     constructor(owner) {
+        this._ownerBaseX = 0;
+        this._ownerBaseY = 0;
+        this._totalTimes = 0;
+        this._totalTasks = 0;
+        this._options = 0;
+        this._totalDuration = 0;
+        this._autoPlayTimes = 1;
+        this._autoPlayDelay = 0;
+        this._timeScale = 1;
+        this._startTime = 0;
+        this._endTime = 0;
         this._owner = owner;
         this._items = new Array();
     }
@@ -10345,16 +10048,6 @@ var ActionType;
     ActionType[ActionType["Unknown"] = 16] = "Unknown";
 })(ActionType || (ActionType = {}));
 class Item {
-    time;
-    targetId;
-    type;
-    tweenConfig;
-    label;
-    value;
-    hook;
-    tweener;
-    target;
-    displayLockToken;
     constructor(type) {
         this.type = type;
         this.value = {};
@@ -10362,15 +10055,6 @@ class Item {
     }
 }
 class TweenConfig {
-    duration;
-    easeType;
-    repeat;
-    yoyo;
-    startValue;
-    endValue;
-    endLabel;
-    endHook;
-    path;
     constructor() {
         this.easeType = EaseType.QuadOut;
         this.startValue = { b1: true, b2: true };
@@ -10379,27 +10063,11 @@ class TweenConfig {
 }
 
 class GComponent extends GObject {
-    hitArea;
-    _sortingChildCount = 0;
-    _opaque;
-    _applyingController;
-    _rectMask;
-    _maskContent;
-    _margin;
-    _trackBounds;
-    _boundsChanged;
-    _childrenRenderOrder = ChildrenRenderOrder.Ascent;
-    _apexIndex = 0;
-    _buildingDisplayList;
-    _children;
-    _controllers;
-    _transitions;
-    _container;
-    _scrollPane;
-    _alignOffset;
-    _customMask;
     constructor() {
         super();
+        this._sortingChildCount = 0;
+        this._childrenRenderOrder = ChildrenRenderOrder.Ascent;
+        this._apexIndex = 0;
         this._node.name = "GComponent";
         this._children = new Array();
         this._controllers = new Array();
@@ -11410,20 +11078,9 @@ class GComponent extends GObject {
 var s_vec2$2 = new Vec2();
 
 class Window extends GComponent {
-    _contentPane;
-    _modalWaitPane;
-    _closeButton;
-    _dragArea;
-    _contentArea;
-    _frame;
-    _modal;
-    _uiSources;
-    _inited;
-    _loading;
-    _requestingCmd = 0;
-    bringToFontOnClick;
     constructor() {
         super();
+        this._requestingCmd = 0;
         this._uiSources = new Array();
         this.bringToFontOnClick = UIConfig.bringWindowToFrontOnClick;
         this._node.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this, true);
@@ -11643,17 +11300,6 @@ class Window extends GComponent {
 }
 
 class GRoot extends GComponent {
-    _modalLayer;
-    _popupStack;
-    _justClosedPopups;
-    _modalWaitPane;
-    _tooltipWin;
-    _defaultTooltipWin;
-    _volumeScale;
-    _inputProcessor;
-    _thisOnResized;
-    audioEngine;
-    static _inst;
     static get inst() {
         if (!GRoot._inst)
             throw 'Call GRoot.create first!';
@@ -11995,8 +11641,6 @@ class GRoot extends GComponent {
 Decls$1.GRoot = GRoot;
 
 class GTextInput extends GTextField {
-    _editBox;
-    _promptText;
     constructor() {
         super();
         this._node.name = "GTextInput";
@@ -12169,9 +11813,8 @@ class MyEditBox extends EditBox {
 }
 
 class GObjectPool {
-    _pool;
-    _count = 0;
     constructor() {
+        this._count = 0;
         this._pool = {};
     }
     clear() {
@@ -12214,25 +11857,9 @@ class GObjectPool {
 }
 
 class GLoader extends GObject {
-    _content;
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _showErrorSign;
-    _playing;
-    _frame = 0;
-    _color;
-    _contentItem;
-    _container;
-    _errorSign;
-    _content2;
-    _updatingLayout;
-    static _errorSignPool = new GObjectPool();
     constructor() {
         super();
+        this._frame = 0;
         this._node.name = "GLoader";
         this._playing = true;
         this._url = "";
@@ -12713,26 +12340,12 @@ class GLoader extends GObject {
             this.loadContent();
     }
 }
+GLoader._errorSignPool = new GObjectPool();
 
 class GLoader3D extends GObject {
-    _url;
-    _align;
-    _verticalAlign;
-    _autoSize;
-    _fill;
-    _shrinkOnly;
-    _playing;
-    _frame = 0;
-    _loop;
-    _animationName;
-    _skinName;
-    _color;
-    _contentItem;
-    _container;
-    _content;
-    _updatingLayout;
     constructor() {
         super();
+        this._frame = 0;
         this._node.name = "GLoader3D";
         this._playing = true;
         this._url = "";
@@ -13144,10 +12757,6 @@ class GLoader3D extends GObject {
 }
 
 class GLabel extends GComponent {
-    _titleObject;
-    _iconObject;
-    _sound;
-    _soundVolumeScale;
     constructor() {
         super();
         this._node.name = "GLabel";
@@ -13322,33 +12931,6 @@ class GLabel extends GComponent {
 }
 
 class GButton extends GComponent {
-    _titleObject;
-    _iconObject;
-    _mode;
-    _selected;
-    _title;
-    _selectedTitle;
-    _icon;
-    _selectedIcon;
-    _sound;
-    _soundVolumeScale;
-    _buttonController;
-    _relatedController;
-    _relatedPageId;
-    _changeStateOnClick;
-    _linkedPopup;
-    _downEffect;
-    _downEffectValue;
-    _downColor;
-    _downScaled;
-    _down;
-    _over;
-    static UP = "up";
-    static DOWN = "down";
-    static OVER = "over";
-    static SELECTED_OVER = "selectedOver";
-    static DISABLED = "disabled";
-    static SELECTED_DISABLED = "selectedDisabled";
     constructor() {
         super();
         this._node.name = "GButton";
@@ -13782,40 +13364,30 @@ class GButton extends GComponent {
         }
     }
 }
+GButton.UP = "up";
+GButton.DOWN = "down";
+GButton.OVER = "over";
+GButton.SELECTED_OVER = "selectedOver";
+GButton.DISABLED = "disabled";
+GButton.SELECTED_DISABLED = "selectedDisabled";
 
 class GList extends GComponent {
-    itemRenderer;
-    itemProvider;
-    scrollItemToViewOnClick = true;
-    foldInvisibleItems = false;
-    _layout;
-    _lineCount = 0;
-    _columnCount = 0;
-    _lineGap = 0;
-    _columnGap = 0;
-    _defaultItem;
-    _autoResizeItem;
-    _selectionMode;
-    _align;
-    _verticalAlign;
-    _selectionController;
-    _lastSelectedIndex = 0;
-    _pool;
-    //Virtual List support
-    _virtual;
-    _loop;
-    _numItems = 0;
-    _realNumItems = 0;
-    _firstIndex = 0; //the top left index
-    _curLineItemCount = 0; //item count in one line
-    _curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
-    _itemSize;
-    _virtualListChanged = 0; //1-content changed, 2-size changed
-    _virtualItems;
-    _eventLocked;
-    itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
     constructor() {
         super();
+        this.scrollItemToViewOnClick = true;
+        this.foldInvisibleItems = false;
+        this._lineCount = 0;
+        this._columnCount = 0;
+        this._lineGap = 0;
+        this._columnGap = 0;
+        this._lastSelectedIndex = 0;
+        this._numItems = 0;
+        this._realNumItems = 0;
+        this._firstIndex = 0; //the top left index
+        this._curLineItemCount = 0; //item count in one line
+        this._curLineItemCount2 = 0; //只用在页面模式，表示垂直方向的项目数
+        this._virtualListChanged = 0; //1-content changed, 2-size changed
+        this.itemInfoVer = 0; //用来标志item是否在本次处理中已经被重用了
         this._node.name = "GList";
         this._trackBounds = true;
         this._pool = new GObjectPool();
@@ -14968,7 +14540,6 @@ class GList extends GComponent {
         }
         this._boundsChanged = false;
     }
-    static pos_param;
     handleScroll1(forceUpdate) {
         var pos = this._scrollPane.scrollingPosY;
         var max = pos + this._scrollPane.viewHeight;
@@ -15848,23 +15419,11 @@ class GList extends GComponent {
 var s_n = 0;
 
 class GComboBox extends GComponent {
-    dropdown;
-    _titleObject;
-    _iconObject;
-    _list;
-    _items;
-    _values;
-    _icons;
-    _visibleItemCount = 0;
-    _itemsUpdated;
-    _selectedIndex = 0;
-    _buttonController;
-    _popupDirection = PopupDirection.Auto;
-    _selectionController;
-    _over;
-    _down;
     constructor() {
         super();
+        this._visibleItemCount = 0;
+        this._selectedIndex = 0;
+        this._popupDirection = PopupDirection.Auto;
         this._node.name = "GComboBox";
         this._visibleItemCount = UIConfig.defaultComboBoxVisibleItemCount;
         this._itemsUpdated = true;
@@ -16244,28 +15803,20 @@ class GComboBox extends GComponent {
 }
 
 class GSlider extends GComponent {
-    _min = 0;
-    _max = 0;
-    _value = 0;
-    _titleType;
-    _reverse;
-    _wholeNumbers;
-    _titleObject;
-    _barObjectH;
-    _barObjectV;
-    _barMaxWidth = 0;
-    _barMaxHeight = 0;
-    _barMaxWidthDelta = 0;
-    _barMaxHeightDelta = 0;
-    _gripObject;
-    _clickPos;
-    _clickPercent = 0;
-    _barStartX = 0;
-    _barStartY = 0;
-    changeOnClick = true;
-    canDrag = true;
     constructor() {
         super();
+        this._min = 0;
+        this._max = 0;
+        this._value = 0;
+        this._barMaxWidth = 0;
+        this._barMaxHeight = 0;
+        this._barMaxWidthDelta = 0;
+        this._barMaxHeightDelta = 0;
+        this._clickPercent = 0;
+        this._barStartX = 0;
+        this._barStartY = 0;
+        this.changeOnClick = true;
+        this.canDrag = true;
         this._node.name = "GSlider";
         this._titleType = ProgressTitleType.Percent;
         this._value = 50;
@@ -16463,23 +16014,17 @@ class GSlider extends GComponent {
 var s_vec2$1 = new Vec2();
 
 class GProgressBar extends GComponent {
-    _min = 0;
-    _max = 0;
-    _value = 0;
-    _titleType;
-    _reverse;
-    _titleObject;
-    _aniObject;
-    _barObjectH;
-    _barObjectV;
-    _barMaxWidth = 0;
-    _barMaxHeight = 0;
-    _barMaxWidthDelta = 0;
-    _barMaxHeightDelta = 0;
-    _barStartX = 0;
-    _barStartY = 0;
     constructor() {
         super();
+        this._min = 0;
+        this._max = 0;
+        this._value = 0;
+        this._barMaxWidth = 0;
+        this._barMaxHeight = 0;
+        this._barMaxWidthDelta = 0;
+        this._barMaxHeightDelta = 0;
+        this._barStartX = 0;
+        this._barStartY = 0;
         this._node.name = "GProgressBar";
         this._titleType = ProgressTitleType.Percent;
         this._value = 50;
@@ -16636,16 +16181,6 @@ class GProgressBar extends GComponent {
 }
 
 class GScrollBar extends GComponent {
-    _grip;
-    _arrowButton1;
-    _arrowButton2;
-    _bar;
-    _target;
-    _vertical;
-    _scrollPerc;
-    _fixedGripSize;
-    _dragOffset;
-    _gripDragging;
     constructor() {
         super();
         this._node.name = "GScrollBar";
@@ -16770,15 +16305,8 @@ class GScrollBar extends GComponent {
 var s_vec2 = new Vec2();
 
 class GTreeNode {
-    data;
-    _parent;
-    _children;
-    _expanded;
-    _level = 0;
-    _tree;
-    _cell;
-    _resURL;
     constructor(hasChild, resURL) {
+        this._level = 0;
         this._resURL = resURL;
         if (hasChild)
             this._children = new Array();
@@ -16980,12 +16508,6 @@ class GTreeNode {
 }
 
 class GTree extends GList {
-    treeNodeRender;
-    treeNodeWillExpand;
-    _indent;
-    _clickToExpand;
-    _rootNode;
-    _expandedStatusInEvt;
     constructor() {
         super();
         this._indent = 15;
@@ -17296,8 +16818,6 @@ class GTree extends GList {
 var s_list = new Array();
 
 class PopupMenu {
-    _contentPane;
-    _list;
     constructor(url) {
         if (!url) {
             url = UIConfig.popupMenu;
@@ -17443,9 +16963,6 @@ class PopupMenu {
 }
 
 class UIObjectFactory {
-    static counter = 0;
-    static extensions = {};
-    static loaderType;
     constructor() {
     }
     static setExtension(url, type) {
@@ -17531,12 +17048,11 @@ class UIObjectFactory {
         return obj;
     }
 }
+UIObjectFactory.counter = 0;
+UIObjectFactory.extensions = {};
 Decls.UIObjectFactory = UIObjectFactory;
 
 class DragDropManager {
-    _agent;
-    _sourceData;
-    static _inst;
     static get inst() {
         if (!DragDropManager._inst)
             DragDropManager._inst = new DragDropManager();
@@ -17596,8 +17112,6 @@ class DragDropManager {
 }
 
 class AsyncOperation {
-    callback;
-    _node;
     createObject(pkgName, resName) {
         if (this._node)
             throw 'Already running';
@@ -17639,9 +17153,6 @@ class AsyncOperation {
     }
 }
 class AsyncOperationRunner extends Component {
-    _itemList;
-    _objectPool;
-    _index;
     constructor() {
         super();
         this._itemList = new Array();
@@ -17781,10 +17292,6 @@ class AsyncOperationRunner extends Component {
  * 注入器
  */
 class Injector {
-    /**类型字典*/
-    static __injectedMap = new Map();
-    /**实例字典*/
-    static __instanceMap = new Map();
     /**
      * 注入
      * @param key
@@ -17815,10 +17322,16 @@ class Injector {
         return instance;
     }
 }
+/**类型字典*/
+Injector.__injectedMap = new Map();
+/**实例字典*/
+Injector.__instanceMap = new Map();
 
 class TickerManagerImpl {
-    __tickerList = [];
-    __nextFrameCallBacks = [];
+    constructor() {
+        this.__tickerList = [];
+        this.__nextFrameCallBacks = [];
+    }
     Tick(dt) {
         let handler;
         while (this.__nextFrameCallBacks.length) {
@@ -17865,8 +17378,6 @@ class TickerManagerImpl {
     }
 }
 class NextFrameHandler {
-    callBack;
-    caller;
     constructor(callBack, caller) {
         this.callBack = callBack;
         this.caller = caller;
@@ -17886,7 +17397,6 @@ class NextFrameHandler {
  * 心跳管理器
  */
 class TickerManager {
-    static KEY = "drongo.TickerManager";
     /**
      * 心跳驱动接口
      * @param dt
@@ -17923,7 +17433,6 @@ class TickerManager {
     static ClearNextFrame(value, caller) {
         this.impl.ClearNextFrame(value, caller);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -17934,6 +17443,7 @@ class TickerManager {
         return this.__impl;
     }
 }
+TickerManager.KEY = "drongo.TickerManager";
 
 /**
  * 获取类名
@@ -17991,7 +17501,6 @@ function FullURL(url) {
     return url.url;
 }
 class ResURLUtils {
-    static __assetTypes = new Map();
     static getAssetType(key) {
         if (!this.__assetTypes.has(key)) {
             throw new Error("未找到对应资源类型：" + key);
@@ -18059,10 +17568,13 @@ class ResURLUtils {
         return className;
     }
 }
+ResURLUtils.__assetTypes = new Map();
 
 class DebugerImpl {
-    __logs = new Dictionary();
-    __debuger = new Map();
+    constructor() {
+        this.__logs = new Dictionary();
+        this.__debuger = new Map();
+    }
     /**
      * 设置过滤
      * @param key
@@ -18148,15 +17660,6 @@ class DebugerImpl {
 }
 
 class Debuger {
-    static KEY = "drongo.Debuger";
-    /**
-     * 引擎
-     */
-    static DRONGO = "drongo";
-    /**
-     * 最大保存条数
-     */
-    static MaxCount = 1000;
     /**
      * 设置过滤
      * @param key
@@ -18185,7 +17688,6 @@ class Debuger {
     static Info(type, msg) {
         this.impl.Info(type, msg);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -18196,24 +17698,33 @@ class Debuger {
         return this.__impl;
     }
 }
+Debuger.KEY = "drongo.Debuger";
+/**
+ * 引擎
+ */
+Debuger.DRONGO = "drongo";
+/**
+ * 最大保存条数
+ */
+Debuger.MaxCount = 1000;
 
 /**
  * 事件分发器(只有一对多的情况下去使用)
  */
 class EventDispatcher {
-    /**
-    * 对象已经注册的处理器
-    */
-    callerMap = new Map();
-    /**
-     * 事件派发器上所监听的处理器
-     */
-    keyMap = new Map();
-    /**
-     * 需要派发的事件
-     */
-    needEmit = [];
     constructor() {
+        /**
+        * 对象已经注册的处理器
+        */
+        this.callerMap = new Map();
+        /**
+         * 事件派发器上所监听的处理器
+         */
+        this.keyMap = new Map();
+        /**
+         * 需要派发的事件
+         */
+        this.needEmit = [];
     }
     /**
      * 添加事件
@@ -18389,11 +17900,9 @@ class EventDispatcher {
     }
 }
 class EventInfo {
-    key = "";
-    target;
-    handler;
-    priority = 255;
     constructor(key, target, handler) {
+        this.key = "";
+        this.priority = 255;
         this.key = key;
         this.target = target;
         this.handler = handler;
@@ -18407,19 +17916,6 @@ class EventInfo {
 }
 
 class Event {
-    static START = "start";
-    static PROGRESS = "progress";
-    static COMPLETE = "complete";
-    static ERROR = "error";
-    static SHOW = "show";
-    static HIDE = "hide";
-    static ADD = "add";
-    static REMOVE = "remove";
-    static UPDATE = "update";
-    static CLEAR = "clear";
-    static State_Changed = "stateChanged";
-    /**事件通道 */
-    static channels = new Map();
     /**
      * 获取事件通道
      * @param key
@@ -18510,15 +18006,28 @@ class Event {
         eventChannel.OffAllEvent();
     }
 }
+Event.START = "start";
+Event.PROGRESS = "progress";
+Event.COMPLETE = "complete";
+Event.ERROR = "error";
+Event.SHOW = "show";
+Event.HIDE = "hide";
+Event.ADD = "add";
+Event.REMOVE = "remove";
+Event.UPDATE = "update";
+Event.CLEAR = "clear";
+Event.State_Changed = "stateChanged";
+/**事件通道 */
+Event.channels = new Map();
 
 /**
  * 字典
  */
 class Dictionary extends EventDispatcher {
-    __map = new Map();
-    __list = [];
     constructor() {
         super();
+        this.__map = new Map();
+        this.__list = [];
     }
     /**
      * 设置
@@ -18616,8 +18125,8 @@ class Dictionary extends EventDispatcher {
 }
 
 class TimerImpl {
-    __lastTime = 0;
     constructor() {
+        this.__lastTime = 0;
         this.Reset();
         TickerManager.AddTicker(this);
     }
@@ -18641,7 +18150,6 @@ class TimerImpl {
  * 计时器工具类
  */
 class Timer {
-    static KEY = "Timer";
     /**
      * 当前时间(推荐使用)
      */
@@ -18661,7 +18169,6 @@ class Timer {
     static Reset(time) {
         this.impl.Reset(time);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -18672,21 +18179,22 @@ class Timer {
         return this.__impl;
     }
 }
+Timer.KEY = "Timer";
 
 /**
  * 默认资源管理器
  * @internal
  */
 class ResManagerImpl {
-    /**
-     * 资源
-     */
-    __resDic = new Dictionary();
-    /**
-     * 等待销毁的资源
-     */
-    _waitDestroy = [];
     constructor() {
+        /**
+         * 资源
+         */
+        this.__resDic = new Dictionary();
+        /**
+         * 等待销毁的资源
+         */
+        this._waitDestroy = [];
         TickerManager.AddTicker(this);
     }
     Tick(dt) {
@@ -18773,15 +18281,6 @@ class ResManagerImpl {
  * 资源管理器
  */
 class ResManager {
-    static KEY = "drongo.ResManager";
-    /**
-     * 资源保留长时间GC
-     */
-    static GC_TIME = 15;
-    /**
-     * 自动清理
-     */
-    static AUTO_GC = true;
     /**
      * 添加一个资源
      * @param value
@@ -18832,7 +18331,6 @@ class ResManager {
     static get resList() {
         return this.impl.resList;
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -18843,17 +18341,22 @@ class ResManager {
         return this.__impl;
     }
 }
+ResManager.KEY = "drongo.ResManager";
+/**
+ * 资源保留长时间GC
+ */
+ResManager.GC_TIME = 15;
+/**
+ * 自动清理
+ */
+ResManager.AUTO_GC = true;
 
 class ResRef {
-    /**唯一KEY */
-    key = "";
-    /**引用KEY */
-    refKey;
-    /**资源内容 */
-    content;
-    /**是否已释放 */
-    __isDispose = false;
     constructor() {
+        /**唯一KEY */
+        this.key = "";
+        /**是否已释放 */
+        this.__isDispose = false;
     }
     /**释放 */
     Dispose() {
@@ -18882,20 +18385,52 @@ class ResRef {
     }
 }
 
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
 class LoaderQueue {
-    /**
-     * 加载中
-     */
-    running = new Dictionary();
-    /**
-     * 等待加载
-     */
-    waiting = new Dictionary();
-    /**
-     * 对象池
-     */
-    pool = new Map();
     constructor() {
+        /**
+         * 加载中
+         */
+        this.running = new Dictionary();
+        /**
+         * 等待加载
+         */
+        this.waiting = new Dictionary();
+        /**
+         * 对象池
+         */
+        this.pool = new Map();
         TickerManager.AddTicker(this);
     }
     Tick(dt) {
@@ -18984,7 +18519,6 @@ class LoaderQueue {
         //加入等待列表
         this.waiting.Set(urlKey, url);
     }
-    static __instance;
     static get single() {
         if (this.__instance == null) {
             this.__instance = new LoaderQueue();
@@ -18994,20 +18528,8 @@ class LoaderQueue {
 }
 
 class ResRequest {
-    /**
-     * 资源地址
-     */
-    urls;
-    /**
-     * 完成回调
-     */
-    cb;
-    /**
-     * 进度处理器
-     */
-    progress;
-    __loadedMap = new Map();
     constructor(url, cb, progress) {
+        this.__loadedMap = new Map();
         if (Array.isArray(url)) {
             this.urls = url;
         }
@@ -19080,8 +18602,8 @@ class ResRequest {
 }
 
 class Loader {
-    requests = new Map();
     constructor() {
+        this.requests = new Map();
     }
     /**
      * 加载
@@ -19168,7 +18690,6 @@ class Loader {
             }
         }
     }
-    static __instance;
     static get single() {
         if (this.__instance == null) {
             this.__instance = new Loader();
@@ -19178,17 +18699,18 @@ class Loader {
 }
 
 class ResourceImpl {
-    /**
-     * 状态 0 正常 1待删除
-     */
-    state = 0;
-    key = "";
-    lastOpTime = 0;
-    /**
-     * @internal
-     */
-    __refs = [];
     constructor() {
+        /**
+         * 状态 0 正常 1待删除
+         */
+        this.state = 0;
+        this.key = "";
+        this.lastOpTime = 0;
+        /**
+         * @internal
+         */
+        this.__refs = [];
+        this.__content = null;
     }
     set content(value) {
         this.__content = value;
@@ -19197,7 +18719,6 @@ class ResourceImpl {
             this.__content.addRef();
         }
     }
-    __content = null;
     get content() {
         return this.__content;
     }
@@ -19286,7 +18807,6 @@ class ResourceImpl {
  * 加载器CC实现
  */
 class CCLoaderImpl extends EventDispatcher {
-    url;
     constructor() {
         super();
     }
@@ -19431,7 +18951,6 @@ class StringUtils {
 }
 
 class ResImpl {
-    loaderClass;
     constructor() {
         this.loaderClass = new Map();
     }
@@ -19468,49 +18987,48 @@ class ResImpl {
         });
         return promise;
     }
-    async GetResRefList(urls, refKey, progress) {
-        let tasks = [];
-        Loader.single.Load(urls, (err) => {
-            if (err) {
-                tasks.push(Promise.reject(err));
-            }
-            else {
-                for (let index = 0; index < urls.length; index++) {
-                    const url = urls[index];
-                    const urlKey = URL2Key(url);
-                    tasks.push(Promise.resolve(ResManager.AddResRef(urlKey, refKey)));
-                }
-            }
-        }, progress);
-        return await Promise.all(tasks);
-    }
-    async GetResRefMap(urls, refKey, result, progress) {
-        result = result || new Map();
-        let promise = new Promise((resolve, reject) => {
+    GetResRefList(urls, refKey, progress) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let tasks = [];
             Loader.single.Load(urls, (err) => {
                 if (err) {
-                    reject(err);
+                    tasks.push(Promise.reject(err));
                 }
                 else {
                     for (let index = 0; index < urls.length; index++) {
                         const url = urls[index];
                         const urlKey = URL2Key(url);
-                        result.set(urlKey, ResManager.AddResRef(urlKey, refKey));
+                        tasks.push(Promise.resolve(ResManager.AddResRef(urlKey, refKey)));
                     }
-                    resolve(result);
                 }
             }, progress);
+            return yield Promise.all(tasks);
         });
-        return promise;
+    }
+    GetResRefMap(urls, refKey, result, progress) {
+        return __awaiter(this, void 0, void 0, function* () {
+            result = result || new Map();
+            let promise = new Promise((resolve, reject) => {
+                Loader.single.Load(urls, (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        for (let index = 0; index < urls.length; index++) {
+                            const url = urls[index];
+                            const urlKey = URL2Key(url);
+                            result.set(urlKey, ResManager.AddResRef(urlKey, refKey));
+                        }
+                        resolve(result);
+                    }
+                }, progress);
+            });
+            return promise;
+        });
     }
 }
 
 class Res {
-    static KEY = "drongo.Res";
-    /**
-     * 最大加载线程
-     */
-    static MAX_LOADER_THREAD = 5;
     /**
      * 设置资源加载器
      * @param key
@@ -19558,7 +19076,6 @@ class Res {
     static GetResRefMap(url, refKey, result, progress) {
         return this.impl.GetResRefMap(url, refKey, result, progress);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -19569,24 +19086,13 @@ class Res {
         return this.__impl;
     }
 }
+Res.KEY = "drongo.Res";
+/**
+ * 最大加载线程
+ */
+Res.MAX_LOADER_THREAD = 5;
 
 class AudioChannelImpl {
-    __node;
-    __source;
-    __isPlaying;
-    __url;
-    __volume;
-    __speed;
-    __loop;
-    __startTime;
-    __time;
-    __fadeData;
-    __paused;
-    __pauseTime;
-    __playedComplete;
-    __ref;
-    __mute;
-    volume;
     constructor(node, source) {
         if (source == null) {
             source = node.addComponent(AudioSource);
@@ -19861,23 +19367,16 @@ class AudioChannelImpl {
     }
 }
 class FadeData {
-    time;
-    startTime;
-    startValue;
-    endValue;
-    complete;
-    completeStop;
 }
 
 /**
  * 音频播放管理器
  */
 class AudioManagerImpl {
-    __audioRoot;
-    __musicChannels;
-    __musicChannelIndex = 0;
-    __soundChannels;
     constructor() {
+        this.__musicChannelIndex = 0;
+        this.__volume = 1;
+        this.__musicVolume = 1;
         this.__musicChannels = [];
         this.__soundChannels = [];
         TickerManager.AddTicker(this);
@@ -19899,7 +19398,6 @@ class AudioManagerImpl {
     get volume() {
         return this.__volume;
     }
-    __volume = 1;
     set volume(value) {
         if (this.__volume == value) {
             return;
@@ -19939,7 +19437,6 @@ class AudioManagerImpl {
             current.Fade(100, channelVolume, current.curVolume);
         }
     }
-    __musicVolume = 1;
     get musicVolume() {
         return this.__musicVolume;
     }
@@ -19949,7 +19446,6 @@ class AudioManagerImpl {
     get soundVolume() {
         return this.__soundVolume;
     }
-    __soundVolume;
     set soundVolume(value) {
         if (this.__soundVolume == value) {
             return;
@@ -19971,14 +19467,12 @@ class AudioManagerImpl {
         this.__mute = value;
         this.__changedMutes();
     }
-    __mute;
     get mute() {
         return this.__mute;
     }
     get muteMusic() {
         return this.__muteMusic;
     }
-    __muteMusic;
     set muteMusic(value) {
         if (this.__muteMusic == value) {
             return;
@@ -19989,7 +19483,6 @@ class AudioManagerImpl {
     get muteSound() {
         return this.__muteSound;
     }
-    __muteSound;
     set muteSound(value) {
         if (this.__muteSound == value) {
             return;
@@ -20119,14 +19612,6 @@ class AudioManagerImpl {
  */
 class AudioManager {
     /**
-     * 全局唯一注入KEY
-     */
-    static KEY = "drongo.AudioManager";
-    /**
-     * 最大音频轨道数量
-     */
-    static MAX_SOUND_CHANNEL_COUNT = 30;
-    /**
      * 总音量
      */
     static get volume() {
@@ -20219,7 +19704,6 @@ class AudioManager {
     static GetPlaying(url) {
         return this.impl.GetPlaying(url);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -20230,23 +19714,19 @@ class AudioManager {
         return this.__impl;
     }
 }
+/**
+ * 全局唯一注入KEY
+ */
+AudioManager.KEY = "drongo.AudioManager";
+/**
+ * 最大音频轨道数量
+ */
+AudioManager.MAX_SOUND_CHANNEL_COUNT = 30;
 
 /**
  * 函数钩子信息
  */
 class FunctionHookInfo {
-    /**
-     * 方法名
-     */
-    functionName;
-    /**
-     * 前置处理器
-     */
-    preHandler;
-    /**
-     * 后置处理器
-     */
-    laterHandler;
     Equal(functionName, preHandler, laterHandler) {
         if (this.functionName != functionName) {
             return false;
@@ -20261,14 +19741,6 @@ class FunctionHookInfo {
     }
 }
 class FunctionHook {
-    data;
-    /**
-     * 已添加好钩子的方法
-     */
-    __functions;
-    __preHandlerMap;
-    __laterHandlerMap;
-    __groupMap;
     constructor(data) {
         this.data = data;
         this.__functions = [];
@@ -20433,18 +19905,6 @@ class FunctionHook {
  * 绑定信息
  */
 class BindInfo {
-    /**
-     * 属性KEY
-     */
-    property;
-    /**
-     * 目标或回调函数
-     */
-    targetOrCallBack;
-    /**
-     * 目标属性或目标this引用
-     */
-    tPropertyOrCaller;
     constructor(property, targetOrCallBack, tPropertyOrCaller) {
         this.property = property;
         this.targetOrCallBack = targetOrCallBack;
@@ -20468,17 +19928,6 @@ class BindInfo {
  * 属性绑定器
  */
 class PropertyBinder {
-    data;
-    /**
-     * 代理过的数据
-     */
-    __propertys;
-    /**
-     * 属性改变列表
-     */
-    __changedPropertys;
-    __bindedMap;
-    __bindedGroupMap;
     constructor(data) {
         this.data = data;
         this.__propertys = [];
@@ -20773,10 +20222,6 @@ class BinderUtils {
  * 绑定工具类
  */
 class BindingUtils {
-    /**属性绑定记录 */
-    __bindRecords;
-    /**方法绑定记录 */
-    __hookRecords;
     constructor() {
         this.__bindRecords = [];
         this.__hookRecords = [];
@@ -20972,8 +20417,8 @@ class BindingUtils {
  * 配置存取器基类
  */
 class BaseConfigAccessor {
-    __configs = [];
     constructor() {
+        this.__configs = [];
     }
     Save(value) {
         const index = this.__configs.indexOf(value);
@@ -20991,10 +20436,6 @@ class BaseConfigAccessor {
 }
 
 class ConfigManagerImpl {
-    /**
-     * 存取器
-     */
-    __accessors;
     constructor() {
         this.__accessors = new Map();
     }
@@ -21037,11 +20478,6 @@ class ConfigManagerImpl {
  * 配置表管理器
  */
 class ConfigManager {
-    static KEY = "drongo.ConfigManager";
-    /**配置表名转地址 */
-    static Sheet2URL;
-    /**地址转配置表名 */
-    static URL2Sheet;
     /**
      * 注册存取器
      * @param sheet
@@ -21065,7 +20501,6 @@ class ConfigManager {
     static GetAccessor(sheet) {
         return this.impl.GetAccessor(sheet);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -21076,22 +20511,22 @@ class ConfigManager {
         return this.__impl;
     }
 }
+ConfigManager.KEY = "drongo.ConfigManager";
 
 /**
  * 列表
  */
 class List extends EventDispatcher {
-    __element;
-    /**
-     * 是否保证元素的唯一性
-     */
-    __only = false;
-    /**
-     * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
-     */
-    count = 0;
     constructor(only = true) {
         super();
+        /**
+         * 是否保证元素的唯一性
+         */
+        this.__only = false;
+        /**
+         * 元素数量(内部再增删时会修改这个参数，外部只做计算和绑定使用，切记不可做赋值操作！)
+         */
+        this.count = 0;
         this.__only = only;
         this.__element = [];
     }
@@ -21252,13 +20687,6 @@ class List extends EventDispatcher {
  * 状态机
  */
 class FSM extends EventDispatcher {
-    /**所属*/
-    owner;
-    debug;
-    __current;
-    __state;
-    __states;
-    __name;
     constructor(owner, name) {
         super();
         this.owner = owner;
@@ -21351,8 +20779,6 @@ var GUIState;
 })(GUIState || (GUIState = {}));
 
 class Layer extends GComponent {
-    isFullScrene;
-    openRecord;
     constructor(name, isFullScrene = false) {
         super();
         this.node.name = name;
@@ -21384,8 +20810,8 @@ class Layer extends GComponent {
  * cocos fgui 层管理器
  */
 class LayerManagerImpl {
-    __layerMap = new Map();
     constructor() {
+        this.__layerMap = new Map();
     }
     /**
      * 添加层
@@ -21434,7 +20860,6 @@ class LayerManagerImpl {
  * 层管理器
  */
 class LayerManager {
-    static KEY = "drongo.LayerManager";
     /**
      * 添加一个层
      * @param key
@@ -21463,7 +20888,6 @@ class LayerManager {
     static GetAllLayer() {
         return this.impl.GetAllLayer();
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -21474,12 +20898,12 @@ class LayerManager {
         return this.__impl;
     }
 }
+LayerManager.KEY = "drongo.LayerManager";
 
 /**
  * 加载界面
  */
 class LoadingView {
-    static KEY = "drongo.LoadingView";
     static Show() {
         if (!this.impl) {
             return;
@@ -21498,7 +20922,6 @@ class LoadingView {
         }
         this.impl.ChangeData(data);
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -21509,13 +20932,12 @@ class LoadingView {
         return this.__impl;
     }
 }
+LoadingView.KEY = "drongo.LoadingView";
 
 /**
 * GUI 关联关系
 */
 class RelationManager {
-    static DEBUG = false;
-    static __map = new Map();
     constructor() {
     }
     /**
@@ -21582,6 +21004,8 @@ class RelationManager {
         return this.__map.get(key);
     }
 }
+RelationManager.DEBUG = false;
+RelationManager.__map = new Map();
 
 class FGUIResource extends ResourceImpl {
     constructor() {
@@ -21607,7 +21031,6 @@ class FGUIResource extends ResourceImpl {
 }
 
 class FGUILoader extends EventDispatcher {
-    url;
     constructor() {
         super();
     }
@@ -21816,37 +21239,37 @@ class ConfigUtils {
  * @language zh_CN
  */
 class Endian {
-    /**
-     * Indicates the least significant byte of the multibyte number appears first in the sequence of bytes.
-     * The hexadecimal number 0x12345678 has 4 bytes (2 hexadecimal digits per byte). The most significant byte is 0x12. The least significant byte is 0x78. (For the equivalent decimal number, 305419896, the most significant digit is 3, and the least significant digit is 6).
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @language en_US
-     */
-    /**
-     * 表示多字节数字的最低有效字节位于字节序列的最前面。
-     * 十六进制数字 0x12345678 包含 4 个字节（每个字节包含 2 个十六进制数字）。最高有效字节为 0x12。最低有效字节为 0x78。（对于等效的十进制数字 305419896，最高有效数字是 3，最低有效数字是 6）。
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @language zh_CN
-     */
-    static LITTLE_ENDIAN = "littleEndian";
-    /**
-     * Indicates the most significant byte of the multibyte number appears first in the sequence of bytes.
-     * The hexadecimal number 0x12345678 has 4 bytes (2 hexadecimal digits per byte).  The most significant byte is 0x12. The least significant byte is 0x78. (For the equivalent decimal number, 305419896, the most significant digit is 3, and the least significant digit is 6).
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @language en_US
-     */
-    /**
-     * 表示多字节数字的最高有效字节位于字节序列的最前面。
-     * 十六进制数字 0x12345678 包含 4 个字节（每个字节包含 2 个十六进制数字）。最高有效字节为 0x12。最低有效字节为 0x78。（对于等效的十进制数字 305419896，最高有效数字是 3，最低有效数字是 6）。
-     * @version Egret 2.4
-     * @platform Web,Native
-     * @language zh_CN
-     */
-    static BIG_ENDIAN = "bigEndian";
 }
+/**
+ * Indicates the least significant byte of the multibyte number appears first in the sequence of bytes.
+ * The hexadecimal number 0x12345678 has 4 bytes (2 hexadecimal digits per byte). The most significant byte is 0x12. The least significant byte is 0x78. (For the equivalent decimal number, 305419896, the most significant digit is 3, and the least significant digit is 6).
+ * @version Egret 2.4
+ * @platform Web,Native
+ * @language en_US
+ */
+/**
+ * 表示多字节数字的最低有效字节位于字节序列的最前面。
+ * 十六进制数字 0x12345678 包含 4 个字节（每个字节包含 2 个十六进制数字）。最高有效字节为 0x12。最低有效字节为 0x78。（对于等效的十进制数字 305419896，最高有效数字是 3，最低有效数字是 6）。
+ * @version Egret 2.4
+ * @platform Web,Native
+ * @language zh_CN
+ */
+Endian.LITTLE_ENDIAN = "littleEndian";
+/**
+ * Indicates the most significant byte of the multibyte number appears first in the sequence of bytes.
+ * The hexadecimal number 0x12345678 has 4 bytes (2 hexadecimal digits per byte).  The most significant byte is 0x12. The least significant byte is 0x78. (For the equivalent decimal number, 305419896, the most significant digit is 3, and the least significant digit is 6).
+ * @version Egret 2.4
+ * @platform Web,Native
+ * @language en_US
+ */
+/**
+ * 表示多字节数字的最高有效字节位于字节序列的最前面。
+ * 十六进制数字 0x12345678 包含 4 个字节（每个字节包含 2 个十六进制数字）。最高有效字节为 0x12。最低有效字节为 0x78。（对于等效的十进制数字 305419896，最高有效数字是 3，最低有效数字是 6）。
+ * @version Egret 2.4
+ * @platform Web,Native
+ * @language zh_CN
+ */
+Endian.BIG_ENDIAN = "bigEndian";
 /**
  * The ByteArray class provides methods and attributes for optimized reading and writing as well as dealing with binary data.
  * Note: The ByteArray class is applied to the advanced developers who need to access data at the byte layer.
@@ -21864,24 +21287,6 @@ class Endian {
  * @language zh_CN
  */
 class ByteArray {
-    /**
-     * @private
-     */
-    bufferExtSize = 0; //Buffer expansion size
-    data;
-    _bytes;
-    /**
-     * @private
-     */
-    _position;
-    /**
-     *
-     * 已经使用的字节偏移量
-     * @protected
-     * @type {number}
-     * @memberOf ByteArray
-     */
-    write_position;
     /**
      * Changes or reads the byte order; egret.EndianConst.BIG_ENDIAN or egret.EndianConst.LITTLE_EndianConst.
      * @default egret.EndianConst.BIG_ENDIAN
@@ -21902,12 +21307,23 @@ class ByteArray {
     set endian(value) {
         this.$endian = value == Endian.LITTLE_ENDIAN ? 0 /* EndianConst.LITTLE_ENDIAN */ : 1 /* EndianConst.BIG_ENDIAN */;
     }
-    $endian;
     /**
      * @version Egret 2.4
      * @platform Web,Native
      */
     constructor(buffer, bufferExtSize = 0) {
+        /**
+         * @private
+         */
+        this.bufferExtSize = 0; //Buffer expansion size
+        /**
+         * @private
+         */
+        this.EOF_byte = -1;
+        /**
+         * @private
+         */
+        this.EOF_code_point = -1;
         if (bufferExtSize < 0) {
             bufferExtSize = 0;
         }
@@ -22830,14 +22246,6 @@ class ByteArray {
     }
     /**
      * @private
-     */
-    EOF_byte = -1;
-    /**
-     * @private
-     */
-    EOF_code_point = -1;
-    /**
-     * @private
      *
      * @param a
      * @param min
@@ -22897,7 +22305,6 @@ class ByteArray {
 }
 
 class ConfigLoader extends EventDispatcher {
-    url;
     constructor() {
         super();
     }
@@ -22978,10 +22385,6 @@ class ConfigLoader extends EventDispatcher {
 }
 
 class Drongo {
-    /**UI资源AssetBundle */
-    static UIBundle = "UI";
-    /**UI遮罩颜色值 */
-    static MaskColor = new Color(0, 0, 0, 255 * 0.5);
     /**
      * 初始化
      * @param guiconfig     UI配置
@@ -23047,12 +22450,12 @@ class Drongo {
         TickerManager.Tick(dt);
     }
 }
+/**UI资源AssetBundle */
+Drongo.UIBundle = "UI";
+/**UI遮罩颜色值 */
+Drongo.MaskColor = new Color(0, 0, 0, 255 * 0.5);
 
 class ServiceStarter {
-    __name;
-    __serviceClass;
-    __result;
-    __service;
     constructor(name, serviceClass) {
         this.__name = name;
         this.__serviceClass = serviceClass;
@@ -23060,25 +22463,27 @@ class ServiceStarter {
     /**
      * 启动
      */
-    async Start() {
-        if (this.__result) {
-            return this.__result;
-        }
-        this.__result = new Promise((resolve, reject) => {
-            //创建服务
-            this.__service = new this.__serviceClass();
-            this.__service.name = this.__name;
-            //初始化服务
-            this.__service.Init((err, result) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(result);
-                }
+    Start() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.__result) {
+                return this.__result;
+            }
+            this.__result = new Promise((resolve, reject) => {
+                //创建服务
+                this.__service = new this.__serviceClass();
+                this.__service.name = this.__name;
+                //初始化服务
+                this.__service.Init((err, result) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(result);
+                    }
+                });
             });
+            return this.__result;
         });
-        return this.__result;
     }
     Destroy() {
         this.__name = undefined;
@@ -23090,8 +22495,6 @@ class ServiceStarter {
 }
 
 class ServiceManager {
-    /**启动器 */
-    static __starters = new Map();
     /**
      * 获取服务
      * @param key
@@ -23121,6 +22524,8 @@ class ServiceManager {
         this.__starters.delete(className);
     }
 }
+/**启动器 */
+ServiceManager.__starters = new Map();
 
 var LoadState;
 (function (LoadState) {
@@ -23132,26 +22537,17 @@ var LoadState;
  * GUI代理，将资源加载和Mediator逻辑隔离开
  */
 class GUIProxy {
-    /**用于Creator创建器的统一帮助节点 */
-    static createNode = new Node("createHelpNode");
-    info;
-    /**GUI中介*/
-    mediator;
-    /**关闭时间*/
-    closeTime = 0;
-    /**UI层次*/
-    zIndex = 0;
-    /**数据 */
-    data;
-    /**资源引用*/
-    __resRef = null;
-    /**是否在显示中*/
-    __showing = false;
-    /**加载状态 */
-    __loadState = LoadState.Null;
-    __uiURL;
-    __startTime;
     constructor(info) {
+        /**关闭时间*/
+        this.closeTime = 0;
+        /**UI层次*/
+        this.zIndex = 0;
+        /**资源引用*/
+        this.__resRef = null;
+        /**是否在显示中*/
+        this.__showing = false;
+        /**加载状态 */
+        this.__loadState = LoadState.Null;
         this.info = info;
         if (!this.info) {
             throw new Error("UI信息不能为空！");
@@ -23222,12 +22618,14 @@ class GUIProxy {
     /**
     * 初始化服务
     */
-    async __initServices() {
-        for (let index = 0; index < this.mediator.services.length; index++) {
-            const serviceClass = this.mediator.services[index];
-            await ServiceManager.GetService(serviceClass);
-        }
-        this.__createUI();
+    __initServices() {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let index = 0; index < this.mediator.services.length; index++) {
+                const serviceClass = this.mediator.services[index];
+                yield ServiceManager.GetService(serviceClass);
+            }
+            this.__createUI();
+        });
     }
     /**
      * 创建UI
@@ -23328,7 +22726,8 @@ class GUIProxy {
         Event.Emit(Event.HIDE, this.info.key);
     }
     Destroy() {
-        console.log("UI销毁=>" + this.info?.key);
+        var _a;
+        console.log("UI销毁=>" + ((_a = this.info) === null || _a === void 0 ? void 0 : _a.key));
         this.mediator.Destroy();
         this.mediator = undefined;
         this.info = undefined;
@@ -23359,20 +22758,22 @@ class GUIProxy {
         return this.mediator.GetUIComponent(path);
     }
 }
+/**用于Creator创建器的统一帮助节点 */
+GUIProxy.createNode = new Node("createHelpNode");
 
 /**
  * GUI管理器
  */
 class GUIManagerImpl {
-    /**已注册*/
-    __registered = new Map();
-    /**实例 */
-    __instances = new Map();
-    /**
-     * 删除列表
-     */
-    __destryList = [];
     constructor() {
+        /**已注册*/
+        this.__registered = new Map();
+        /**实例 */
+        this.__instances = new Map();
+        /**
+         * 删除列表
+         */
+        this.__destryList = [];
         TickerManager.AddTicker(this);
         //监听打开和关闭事件
         Event.On(Event.SHOW, this.__showedHandler, this);
@@ -23614,11 +23015,6 @@ class GUIManagerImpl {
      * GUI 管理器
      */
 class GUIManager {
-    static KEY = "drongo.GUIManager";
-    /**
-     * 在界面关闭后多长时间不使用则销毁(秒)
-     */
-    static GUI_GC_INTERVAL = 30;
     /**
      * 注册
      * @param info
@@ -23694,7 +23090,6 @@ class GUIManager {
     static GetPrevLayer() {
         return this.impl.GetPrevLayer();
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -23705,21 +23100,23 @@ class GUIManager {
         return this.__impl;
     }
 }
+GUIManager.KEY = "drongo.GUIManager";
+/**
+ * 在界面关闭后多长时间不使用则销毁(秒)
+ */
+GUIManager.GUI_GC_INTERVAL = 30;
 
 /**
  * 基础UIMediator类
  */
 class BaseMediator {
-    /**UI组件 */
-    ui = null;
-    /**初始化完毕*/
-    inited = false;
-    /**外部传参*/
-    data;
-    /**需要注册和删除的事件*/
-    __bindEvents = [];
-    __bindingUtils;
     constructor() {
+        /**UI组件 */
+        this.ui = null;
+        /**初始化完毕*/
+        this.inited = false;
+        /**需要注册和删除的事件*/
+        this.__bindEvents = [];
         this.__bindingUtils = new BindingUtils();
     }
     Init() {
@@ -23890,24 +23287,13 @@ class BaseMediator {
  * UI中介者
  */
 class GUIMediator extends BaseMediator {
-    info = null;
-    /**依赖的服务 */
-    services;
-    /**
-     * 依赖的配置表名称
-     */
-    $configs;
-    $configRefs;
-    /**根节点 */
-    viewComponent = null;
-    /**遮罩 */
-    __mask = null;
-    /**创建UI完成回调*/
-    __createdCallBack;
-    /**子Mediator(用于代码拆分)*/
-    $subMediators;
     constructor() {
         super();
+        this.info = null;
+        /**根节点 */
+        this.viewComponent = null;
+        /**遮罩 */
+        this.__mask = null;
     }
     /**
      * 创建UI
@@ -23941,7 +23327,6 @@ class GUIMediator extends BaseMediator {
             throw new Error("UI:" + this.info.comName + "依赖的配置加载出错:" + reason);
         });
     }
-    __asyncCreator;
     __createUI(async) {
         let packageName = this.info.packageName;
         if (async) {
@@ -24059,8 +23444,6 @@ class GUIMediator extends BaseMediator {
  * 子UI 逻辑划分
  */
 class SubGUIMediator extends BaseMediator {
-    /**所属GUI*/
-    owner;
     constructor(ui, owner) {
         super();
         this.ui = ui;
@@ -24085,30 +23468,28 @@ var FindPosition;
 })(FindPosition || (FindPosition = {}));
 
 class Rect {
-    /**
-     * 起点 x 坐标
-     */
-    x = 0;
-    /**
-     * 起点 y 坐标
-     */
-    y = 0;
-    /**
-     * 宽度
-     */
-    width = 0;
-    /**
-     * 高度
-     */
-    height = 0;
-    /**
-     * 当前是否被旋转了
-     */
-    isRotated = false;
-    /**
-     * 自定义信息
-     */
-    info;
+    constructor() {
+        /**
+         * 起点 x 坐标
+         */
+        this.x = 0;
+        /**
+         * 起点 y 坐标
+         */
+        this.y = 0;
+        /**
+         * 宽度
+         */
+        this.width = 0;
+        /**
+         * 高度
+         */
+        this.height = 0;
+        /**
+         * 当前是否被旋转了
+         */
+        this.isRotated = false;
+    }
     /**
      * 克隆
      */
@@ -24137,11 +23518,6 @@ class Rect {
 }
 
 class MaxRectBinPack {
-    containerHeight;
-    containerWidth;
-    allowRotate;
-    freeRects = [];
-    usedRects = [];
     /**
      * 构建方程
      * @param width {number} 画板宽度
@@ -24149,6 +23525,8 @@ class MaxRectBinPack {
      * @param allowRotate {boolean} 允许旋转
      */
     constructor(width, height, allowRotate) {
+        this.freeRects = [];
+        this.usedRects = [];
         this.containerHeight = height;
         this.containerWidth = width;
         this.allowRotate = allowRotate === true;
@@ -24641,7 +24019,6 @@ class MaxRectBinPack {
  * 对象池
  */
 class Pool {
-    static __pools = new Map();
     /**
      * 分配
      * @param clazz
@@ -24695,15 +24072,15 @@ class Pool {
         pool.recycleAll();
     }
 }
+Pool.__pools = new Map();
 class PoolImpl {
-    /**池中闲置对象 */
-    __cacheStack = new Array();
-    /**正在使用的对象 */
-    __usingArray = new Array();
-    /**池中对象最大数 */
-    __maxCount = 0;
-    __class;
     constructor(clazz, maxCount) {
+        /**池中闲置对象 */
+        this.__cacheStack = new Array();
+        /**正在使用的对象 */
+        this.__usingArray = new Array();
+        /**池中对象最大数 */
+        this.__maxCount = 0;
         this.__class = clazz;
         if (!this.__class) {
             throw new Error("构造函数不能为空！");
@@ -24790,19 +24167,6 @@ class PoolImpl {
  *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
  */
 class BaseService {
-    /**名称 */
-    name;
-    /**
-     * 依赖的配置表名称
-     */
-    $configs;
-    $configRefs;
-    /**
-     * 依赖的资源
-     */
-    $assets;
-    $assetRefs;
-    __initCallback;
     constructor() {
     }
     Init(callback) {
@@ -24883,7 +24247,6 @@ class BaseService {
  * 本地数据缓存
  */
 class LocalStorage {
-    static KEY = "drongo.LocalStorage";
     /**
      * 初始化
      * @param gameName
@@ -24920,7 +24283,6 @@ class LocalStorage {
     static ClearAll() {
         this.impl.ClearAll();
     }
-    static __impl;
     static get impl() {
         if (this.__impl == null) {
             this.__impl = Injector.GetInject(this.KEY);
@@ -24931,13 +24293,12 @@ class LocalStorage {
         return this.__impl;
     }
 }
+LocalStorage.KEY = "drongo.LocalStorage";
 
 /**
  * 本地数据缓存
  */
 class LocalStorageImpl {
-    __gameName;
-    data;
     /**
      * 初始化
      * @param gameName
@@ -24998,10 +24359,9 @@ class LocalStorageImpl {
  * 任务队列
  */
 class TaskQueue extends EventDispatcher {
-    __taskList;
-    __index = 0;
     constructor() {
         super();
+        this.__index = 0;
         this.__taskList = [];
     }
     AddTask(value) {
@@ -25061,10 +24421,10 @@ class TaskQueue extends EventDispatcher {
  * 任务序列（并行）
  */
 class TaskSequence extends EventDispatcher {
-    __taskList = new Array();
-    __index = 0;
     constructor() {
         super();
+        this.__taskList = new Array();
+        this.__index = 0;
     }
     AddTask(value) {
         if (this.__taskList.indexOf(value) >= 0) {
@@ -25117,9 +24477,8 @@ class TaskSequence extends EventDispatcher {
  * bit位操作
  */
 class BitFlag {
-    __flags = 0;
-    __elements;
     constructor() {
+        this.__flags = 0;
         this.__elements = [];
     }
     Add(flag) {
@@ -25163,10 +24522,10 @@ class BitFlag {
  * 处理器
  */
 class Handler {
-    method;
-    caller;
-    once = true;
-    isOver = false;
+    constructor() {
+        this.once = true;
+        this.isOver = false;
+    }
     /**
      * 运行
      * @param args
