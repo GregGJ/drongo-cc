@@ -20,6 +20,4 @@
 
 * 运行 npm install  安装依赖
 * 运行 npm run build 来编译
-  * 编译时报错RollupError: You must specify "output.file" or "output.dir" for the build
-  * 定位到rollup.js文件的normalizeOutputOptions方法中直接添加config=config.output即可。
 
