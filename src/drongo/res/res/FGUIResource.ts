@@ -21,7 +21,6 @@ export class FGUIResource extends ResourceImpl {
             let bundle = assetManager.getBundle(Drongo.UIBundle);
             let asset = bundle.get(url.url);
             assetManager.releaseAsset(asset);
-            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
         } else {
             throw new Error("未处理的Fguipackage销毁！");
         }

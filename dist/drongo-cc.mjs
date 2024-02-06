@@ -19074,6 +19074,7 @@ class ResManagerImpl {
     DestroyRes(value) {
         this.__resDic.Delete(value.key);
         value.Destroy();
+        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
     }
     get resList() {
         return this.__resDic.elements;
@@ -21792,7 +21793,6 @@ class FGUIResource extends ResourceImpl {
             let bundle = assetManager.getBundle(Drongo.UIBundle);
             let asset = bundle.get(url.url);
             assetManager.releaseAsset(asset);
-            console.log("销毁:FGUIPacage=>" + url.bundle + " " + url.url);
         }
         else {
             throw new Error("未处理的Fguipackage销毁！");

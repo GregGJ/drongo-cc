@@ -1,4 +1,6 @@
+import { Drongo } from "../../../drongo";
 import { Dictionary } from "../../containers/Dictionary";
+import { Debuger } from "../../debugers/Debuger";
 import { TickerManager } from "../../ticker/TickerManager";
 import { Timer } from "../../timer/Timer";
 import { IResManager } from "../core/IResManager";
@@ -106,8 +108,9 @@ export class ResManagerImpl implements IResManager {
     protected DestroyRes(value: IResource): void {
         this.__resDic.Delete(value.key);
         value.Destroy();
+        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
     }
-
+    
     get resList(): Array<IResource> {
         return this.__resDic.elements;
     }
