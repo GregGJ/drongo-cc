@@ -4,27 +4,30 @@
   "description": "cocos create +fgui game framework",
   "main": "dist/drongo-cc.mjs",
   "types": "dist/drongo-cc.d.ts",
-  "module": "dist/drongo-cc.mjs",
-  "type": "module",
   "files": [
     "dist/drongo-cc.mjs",
+    "dist/drongo-cc.min.mjs",
     "dist/drongo-cc.d.ts"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "gulp build"
   },
   "keywords": [
     "cocos create +fgui 游戏框架"
   ],
   "author": "guojie.greg",
   "license": "MIT",
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^24.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "rollup": "^3.20.2",
-    "rollup-plugin-dts": "^5.3.0",
-    "rollup-plugin-typescript2": "^0.34.1"
+  "dependencies":{
   },
-  "dependencies": {
+  "devDependencies": {
+    "lodash": "^4.17.15",
+    "rollup": "^4.9.6",
+    "@types/lodash": "^4.14.150",
+    "@types/node": "^14.0.1",
+    "dts-bundle": "^0.7.3",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulp-uglify-es": "^2.0.0"
   }
 }
