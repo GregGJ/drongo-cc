@@ -106,9 +106,9 @@ export class ResManagerImpl implements IResManager {
      * @param value 
      */
     protected DestroyRes(value: IResource): void {
+        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
         this.__resDic.Delete(value.key);
         value.Destroy();
-        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
     }
     
     get resList(): Array<IResource> {

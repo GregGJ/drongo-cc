@@ -19072,9 +19072,9 @@ class ResManagerImpl {
      * @param value
      */
     DestroyRes(value) {
+        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
         this.__resDic.Delete(value.key);
         value.Destroy();
-        Debuger.Log(Debuger.DRONGO, "资源销毁:" + value.key);
     }
     get resList() {
         return this.__resDic.elements;
