@@ -56,19 +56,24 @@ export class ResImpl implements IRes {
     }
 
     GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]> {
-        let tasks: Array<Promise<ResRef>> = [];
-        Loader.single.Load(urls, (err: Error) => {
-            if (err) {
-                tasks.push(Promise.reject(err));
-            } else {
-                for (let index = 0; index < urls.length; index++) {
-                    const url = urls[index];
-                    const urlKey = URL2Key(url);
-                    tasks.push(Promise.resolve(ResManager.AddResRef(urlKey, refKey)));
-                }
+        let result: Array<ResRef> = [];
+        let promise = new Promise<Array<ResRef>>(
+            (resolve, reject) => {
+                Loader.single.Load(urls, (err: Error) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        for (let index = 0; index < urls.length; index++) {
+                            const url = urls[index];
+                            const urlKey = URL2Key(url);
+                            result.push(ResManager.AddResRef(urlKey, refKey));
+                        }
+                        resolve(result);
+                    }
+                }, progress);
             }
-        }, progress);
-        return Promise.all(tasks);
+        );
+        return promise;
     }
 
     GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>> {
