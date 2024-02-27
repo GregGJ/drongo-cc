@@ -19542,7 +19542,7 @@ class ResourceImpl {
         if (this.__content instanceof Asset) {
             this.__content.decRef();
             if (this.__content.refCount <= 0) {
-                Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
+                // Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
                 assetManager.releaseAsset(this.__content);
             }
         }
@@ -23312,6 +23312,7 @@ class Drongo {
                 const element = list[index];
                 GUIManager.Register(element);
             }
+            result.Dispose();
             callback();
         }, (reason) => {
             throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));

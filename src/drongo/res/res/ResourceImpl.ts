@@ -82,7 +82,7 @@ export class ResourceImpl implements IResource {
         if (this.__content instanceof Asset) {
             this.__content.decRef();
             if (this.__content.refCount <= 0) {
-                Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
+                // Debuger.Log(Debuger.DRONGO, "Res:" + "资源销毁=>" + this.key);
                 assetManager.releaseAsset(this.__content);
             }
         } else {

@@ -90,6 +90,7 @@ export class Drongo {
                     const element = list[index];
                     GUIManager.Register(element);
                 }
+                result.Dispose();
                 callback();
             }, (reason) => {
                 throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
