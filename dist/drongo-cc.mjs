@@ -19780,43 +19780,39 @@ class ResImpl {
         return promise;
     }
     GetResRefList(urls, refKey, progress) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let tasks = [];
+        let tasks = [];
+        Loader.single.Load(urls, (err) => {
+            if (err) {
+                tasks.push(Promise.reject(err));
+            }
+            else {
+                for (let index = 0; index < urls.length; index++) {
+                    const url = urls[index];
+                    const urlKey = URL2Key(url);
+                    tasks.push(Promise.resolve(ResManager.AddResRef(urlKey, refKey)));
+                }
+            }
+        }, progress);
+        return Promise.all(tasks);
+    }
+    GetResRefMap(urls, refKey, result, progress) {
+        result = result || new Map();
+        let promise = new Promise((resolve, reject) => {
             Loader.single.Load(urls, (err) => {
                 if (err) {
-                    tasks.push(Promise.reject(err));
+                    reject(err);
                 }
                 else {
                     for (let index = 0; index < urls.length; index++) {
                         const url = urls[index];
                         const urlKey = URL2Key(url);
-                        tasks.push(Promise.resolve(ResManager.AddResRef(urlKey, refKey)));
+                        result.set(urlKey, ResManager.AddResRef(urlKey, refKey));
                     }
+                    resolve(result);
                 }
             }, progress);
-            return yield Promise.all(tasks);
         });
-    }
-    GetResRefMap(urls, refKey, result, progress) {
-        return __awaiter(this, void 0, void 0, function* () {
-            result = result || new Map();
-            let promise = new Promise((resolve, reject) => {
-                Loader.single.Load(urls, (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        for (let index = 0; index < urls.length; index++) {
-                            const url = urls[index];
-                            const urlKey = URL2Key(url);
-                            result.set(urlKey, ResManager.AddResRef(urlKey, refKey));
-                        }
-                        resolve(result);
-                    }
-                }, progress);
-            });
-            return promise;
-        });
+        return promise;
     }
 }
 

@@ -55,7 +55,7 @@ export class ResImpl implements IRes {
         return promise;
     }
 
-    async GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]> {
+    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]> {
         let tasks: Array<Promise<ResRef>> = [];
         Loader.single.Load(urls, (err: Error) => {
             if (err) {
@@ -68,10 +68,10 @@ export class ResImpl implements IRes {
                 }
             }
         }, progress);
-        return await Promise.all(tasks);
+        return Promise.all(tasks);
     }
 
-    async GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>> {
+    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>> {
         result = result || new Map<string, ResRef>();
         let promise = new Promise<Map<string, ResRef>>(
             (resolve, reject) => {
