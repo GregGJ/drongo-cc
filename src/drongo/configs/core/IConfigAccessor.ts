@@ -11,12 +11,10 @@ export interface IConfigAccessor {
      * @param value 
      */
     Save(value: any): boolean;
-
     /**
-     * 获取列表形式存储的配置内容
+     * 获取
      */
-    Get<T>(): Array<T>;
-    
+    Get<T>(...arg: any[]): T | Array<T>;
     /**
      * 清理
      */

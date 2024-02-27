@@ -3163,9 +3163,9 @@ interface IConfigAccessor {
      */
     Save(value: any): boolean;
     /**
-     * 获取列表形式存储的配置内容
+     * 获取
      */
-    Get<T>(): Array<T>;
+    Get<T>(...arg: any[]): T | Array<T>;
     /**
      * 清理
      */
@@ -3176,10 +3176,31 @@ interface IConfigAccessor {
  * 配置存取器基类
  */
 declare class BaseConfigAccessor implements IConfigAccessor {
-    private __configs;
+    protected $configs: Array<any>;
+    protected $storages: Map<string, ConfigStorage>;
     constructor();
+    /**
+     * 增加存储方式
+     * @param keys
+     */
+    protected AddStorage(keys: Array<string>): void;
     Save(value: any): boolean;
-    Get<T>(): Array<T>;
+    /**
+     * 获取
+     * @param keys
+     * @param values
+     * @returns
+     */
+    Get<T>(keys?: Array<string>, values?: Array<any>): T | Array<T>;
+    Destroy(): void;
+}
+declare class ConfigStorage {
+    key: string;
+    keys: Array<string>;
+    map: Map<string, any>;
+    constructor(keys: Array<string>);
+    Save(value: any): void;
+    Get<T>(key: string): T;
     Destroy(): void;
 }
 
@@ -6072,6 +6093,13 @@ declare class StringUtils {
      * @returns
      */
     static ReplaceSuffix(url: string, suff: string): string;
+    /**
+     * 拼装
+     * @param keys
+     * @param sp
+     * @returns
+     */
+    static PieceTogether(keys: Array<string>, sp?: string): string;
 }
 
 declare class Drongo {

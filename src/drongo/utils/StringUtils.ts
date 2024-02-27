@@ -103,4 +103,24 @@ export class StringUtils {
         let changeUrl: string = url.replace(suixx, suff);
         return changeUrl
     }
+
+    /**
+     * 拼装
+     * @param keys 
+     * @param sp 
+     * @returns 
+     */
+    static PieceTogether(keys: Array<string>, sp: string = "_"): string {
+        const end = keys.length - 1;
+        let result: string = "";
+        for (let index = 0; index < keys.length; index++) {
+            const key = keys[index];
+            if (index < end) {
+                result += key + sp;
+            } else {
+                result += key;
+            }
+        }
+        return result;
+    }
 }
