@@ -1,4 +1,4 @@
-import { gfx, UIRenderer, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, isValid, Size, screen, view, assetManager, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, InstanceMaterialType, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find } from 'cc';
+import { gfx, UIRenderer, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, isValid, Size, screen, view, assetManager, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, InstanceMaterialType, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset } from 'cc';
 import { EDITOR } from 'cc/env';
 
 var ButtonMode;
@@ -23245,50 +23245,65 @@ class ConfigLoader extends EventDispatcher {
 class Drongo {
     /**
      * 初始化
+     * @param root          fgui根节点
+     * @param callback      回调
      * @param guiconfig     UI配置
      * @param layer         层级配置
-     * @param sheetConfig   配置表配置
-     * @param callback      回调
+     * @param sheetBundle   配置表AssetBundle包
      */
-    static Init(root, guiconfig, layer, sheetConfig, callback) {
-        GRoot.create(root);
+    static Init(root, callback, guiconfig, layer, sheetBundle = "Configs") {
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
+        GRoot.create(root);
         //路径转换
-        if (sheetConfig) {
-            ConfigManager.Sheet2URL = (sheet) => {
-                return { url: sheetConfig.preURL + sheet, type: "config", bundle: sheetConfig.bundle };
-            };
-            ConfigManager.URL2Sheet = (url) => {
-                if (typeof url == "string") {
-                    return url;
-                }
-                let src;
-                if (url.url.indexOf(sheetConfig.preURL) >= 0) {
-                    src = url.url.replace(sheetConfig.preURL, "");
-                }
-                else {
-                    src = url.url;
-                }
-                return src;
-            };
+        if (sheetBundle) {
+            if (ConfigManager.Sheet2URL == null) {
+                ConfigManager.Sheet2URL = (sheet) => {
+                    return { url: sheet, type: "config", bundle: sheetBundle };
+                };
+            }
+            if (ConfigManager.URL2Sheet == null) {
+                ConfigManager.URL2Sheet = (url) => {
+                    if (typeof url == "string") {
+                        return url;
+                    }
+                    return url.url;
+                };
+            }
         }
         //创建层级
-        if (layer) {
-            if (layer.layers && layer.layers.length > 0) {
-                for (let index = 0; index < layer.layers.length; index++) {
-                    const layerKey = layer.layers[index];
-                    if (layer.fullScrene && layer.fullScrene.length > 0) {
-                        LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
-                    }
-                    else {
-                        LayerManager.AddLayer(layerKey, new Layer(layerKey));
-                    }
+        if (layer == null) {
+            let layers = [
+                "BattleDamage",
+                "FullScreen",
+                "Window",
+                "Pannel",
+                "Tooltip",
+                "Alert",
+                "Guide",
+                "LoadingView"
+            ];
+            let fullScrene = [
+                "FullScreen"
+            ];
+            layer = { layers, fullScrene };
+        }
+        if (layer.layers && layer.layers.length > 0) {
+            for (let index = 0; index < layer.layers.length; index++) {
+                const layerKey = layer.layers[index];
+                if (layer.fullScrene && layer.fullScrene.length > 0) {
+                    LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
+                }
+                else {
+                    LayerManager.AddLayer(layerKey, new Layer(layerKey));
                 }
             }
         }
         //加载guiconfig.json
+        if (guiconfig == null) {
+            guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" };
+        }
         Res.GetResRef(guiconfig, "Drongo").then((result) => {
             let list = result.content.json;
             for (let index = 0; index < list.length; index++) {

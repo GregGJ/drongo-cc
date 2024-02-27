@@ -6109,18 +6109,16 @@ declare class Drongo {
     static MaskColor: Color;
     /**
      * 初始化
+     * @param root          fgui根节点
+     * @param callback      回调
      * @param guiconfig     UI配置
      * @param layer         层级配置
-     * @param sheetConfig   配置表配置
-     * @param callback      回调
+     * @param sheetBundle   配置表AssetBundle包
      */
-    static Init(root: Node, guiconfig: ResURL, layer: {
+    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: {
         layers: Array<string>;
         fullScrene: Array<string>;
-    }, sheetConfig: {
-        preURL: string;
-        bundle: string;
-    }, callback: () => void): void;
+    }, sheetBundle?: string): void;
     /**
      * 总心跳驱动接口
      * @param dt

@@ -1,4 +1,4 @@
-import { BufferAsset, Color, Node } from "cc";
+import { BufferAsset, Color, JsonAsset, Node } from "cc";
 import { ConfigManager } from "./drongo/configs/ConfigManager";
 import { GUIManager } from "./drongo/gui/GUIManager";
 import { LayerManager } from "./drongo/gui/core/layer/LayerManager";
@@ -22,50 +22,67 @@ export class Drongo {
 
     /**
      * 初始化
+     * @param root          fgui根节点
+     * @param callback      回调
      * @param guiconfig     UI配置
      * @param layer         层级配置
-     * @param sheetConfig   配置表配置
-     * @param callback      回调
+     * @param sheetBundle   配置表AssetBundle包
      */
-    static Init(root: Node, guiconfig: ResURL, layer: { layers: Array<string>, fullScrene: Array<string> }, sheetConfig: { preURL: string, bundle: string }, callback: () => void): void {
-        GRoot.create(root);
-
+    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs"): void {
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
+
+        GRoot.create(root);
+
         //路径转换
-        if (sheetConfig) {
-            ConfigManager.Sheet2URL = (sheet: string) => {
-                return { url: sheetConfig.preURL + sheet, type: "config", bundle: sheetConfig.bundle };
+        if (sheetBundle) {
+            if (ConfigManager.Sheet2URL == null) {
+                ConfigManager.Sheet2URL = (sheet: string) => {
+                    return { url: sheet, type: "config", bundle: sheetBundle };
+                }
             }
-            ConfigManager.URL2Sheet = (url: ResURL) => {
-                if (typeof url == "string") {
-                    return url;
+            if (ConfigManager.URL2Sheet == null) {
+                ConfigManager.URL2Sheet = (url: ResURL) => {
+                    if (typeof url == "string") {
+                        return url;
+                    }
+                    return url.url;
                 }
-                let src: string;
-                if (url.url.indexOf(sheetConfig.preURL) >= 0) {
-                    src = url.url.replace(sheetConfig.preURL, "");
-                } else {
-                    src = url.url;
-                }
-                return src;
             }
         }
         //创建层级
-        if (layer) {
-            if (layer.layers && layer.layers.length > 0) {
-                for (let index = 0; index < layer.layers.length; index++) {
-                    const layerKey = layer.layers[index];
-                    if (layer.fullScrene && layer.fullScrene.length > 0) {
-                        LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
-                    } else {
-                        LayerManager.AddLayer(layerKey, new Layer(layerKey))
-                    }
+        if (layer == null) {
+            let layers = [
+                "BattleDamage",
+                "FullScreen",
+                "Window",
+                "Pannel",
+                "Tooltip",
+                "Alert",
+                "Guide",
+                "LoadingView"
+            ]
+            let fullScrene = [
+                "FullScreen"
+            ]
+            layer = { layers, fullScrene };
+        }
+        if (layer.layers && layer.layers.length > 0) {
+            for (let index = 0; index < layer.layers.length; index++) {
+                const layerKey = layer.layers[index];
+                if (layer.fullScrene && layer.fullScrene.length > 0) {
+                    LayerManager.AddLayer(layerKey, new Layer(layerKey, layer.fullScrene.indexOf(layerKey) >= 0));
+                } else {
+                    LayerManager.AddLayer(layerKey, new Layer(layerKey))
                 }
             }
         }
 
         //加载guiconfig.json
+        if (guiconfig == null) {
+            guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" }
+        }
         Res.GetResRef(guiconfig, "Drongo").then(
             (result: ResRef) => {
                 let list = result.content.json;
