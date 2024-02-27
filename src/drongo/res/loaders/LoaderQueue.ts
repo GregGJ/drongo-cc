@@ -80,7 +80,10 @@ export class LoaderQueue implements ITicker {
             Loader.single.ChildProgress(data.url, data.progress);
             return;
         }
+        //删除所有事件监听
         target.OffAllEvent();
+        //从运行列表中删除
+        this.running.Delete(URL2Key(data.url));
         if (type == Event.ERROR) {
             Loader.single.ChildError(data.url, data.err);
             return;
