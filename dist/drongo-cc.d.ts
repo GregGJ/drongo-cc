@@ -3165,7 +3165,7 @@ interface IConfigAccessor {
     /**
      * 获取
      */
-    Get<T>(...arg: any[]): T | Array<T>;
+    Get<T>(...arg: any[]): any;
     /**
      * 清理
      */
@@ -3177,30 +3177,15 @@ interface IConfigAccessor {
  */
 declare class BaseConfigAccessor implements IConfigAccessor {
     protected $configs: Array<any>;
-    protected $storages: Map<string, ConfigStorage>;
     constructor();
-    /**
-     * 增加存储方式
-     * @param keys
-     */
-    protected AddStorage(keys: Array<string>): void;
     Save(value: any): boolean;
     /**
      * 获取
-     * @param keys
-     * @param values
+     * @param key
+     * @param value
      * @returns
      */
-    Get<T>(keys?: Array<string>, values?: Array<any>): T | Array<T>;
-    Destroy(): void;
-}
-declare class ConfigStorage {
-    key: string;
-    keys: Array<string>;
-    map: Map<string, any>;
-    constructor(keys: Array<string>);
-    Save(value: any): void;
-    Get<T>(key: string): T;
+    Get<T>(): Array<T>;
     Destroy(): void;
 }
 

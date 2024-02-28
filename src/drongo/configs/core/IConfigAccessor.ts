@@ -14,7 +14,7 @@ export interface IConfigAccessor {
     /**
      * 获取
      */
-    Get<T>(...arg: any[]): T | Array<T>;
+    Get<T>(...arg: any[]):any;
     /**
      * 清理
      */

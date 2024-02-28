@@ -21213,18 +21213,6 @@ class BindingUtils {
 class BaseConfigAccessor {
     constructor() {
         this.$configs = [];
-        this.$storages = new Map();
-    }
-    /**
-     * 增加存储方式
-     * @param keys
-     */
-    AddStorage(keys) {
-        const key = StringUtils.PieceTogether(keys);
-        if (this.$storages.has(key)) {
-            throw new Error("重复添加配置表存储方式：" + key);
-        }
-        this.$storages.set(key, new ConfigStorage(keys));
     }
     Save(value) {
         const index = this.$configs.indexOf(value);
@@ -21232,67 +21220,19 @@ class BaseConfigAccessor {
             return false;
         }
         this.$configs.push(value);
-        for (let i of this.$storages.values()) {
-            i.Save(value);
-        }
         return true;
     }
     /**
      * 获取
-     * @param keys
-     * @param values
+     * @param key
+     * @param value
      * @returns
      */
-    Get(keys, values) {
-        if (keys == null && values == null || keys.length == 0 && values.length == 0) {
-            return this.$configs;
-        }
-        if (keys.length != values.length) {
-            throw new Error("参数长度不一致!");
-        }
-        let sKey = StringUtils.PieceTogether(keys);
-        if (this.$storages.has(sKey)) {
-            const s = this.$storages.get(sKey);
-            const vKey = StringUtils.PieceTogether(values);
-            return s.Get(vKey);
-        }
+    Get() {
+        return this.$configs;
     }
     Destroy() {
         this.$configs = null;
-        for (const iterator of this.$storages.values()) {
-            iterator.Destroy();
-        }
-        this.$storages = null;
-    }
-}
-class ConfigStorage {
-    constructor(keys) {
-        this.key = StringUtils.PieceTogether(keys);
-        this.keys = keys;
-    }
-    Save(value) {
-        let values = [];
-        for (let index = 0; index < this.keys.length; index++) {
-            const key = this.keys[index];
-            values.push(value[key]);
-        }
-        const saveKey = StringUtils.PieceTogether(values);
-        if (this.map.has(saveKey)) {
-            throw new Error("配置表唯一Key存在重复内容:" + saveKey);
-        }
-        this.map.set(saveKey, value);
-    }
-    Get(key) {
-        if (this.map.has(key)) {
-            return this.map.get(key);
-        }
-        return null;
-    }
-    Destroy() {
-        this.key = null;
-        this.keys = null;
-        this.map.clear();
-        this.map = null;
     }
 }
 
