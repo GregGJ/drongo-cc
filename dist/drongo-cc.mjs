@@ -23244,6 +23244,52 @@ class ConfigLoader extends EventDispatcher {
     }
 }
 
+class CCFLoader extends GLoader {
+    constructor() {
+        super();
+        this.refKey = "CCFLoader";
+    }
+    loadExternal() {
+        if (typeof this.url == "string") {
+            super.loadExternal();
+            return;
+        }
+        if (this.__resRef != null) {
+            this.__resRef.Dispose();
+            this.__resRef = null;
+        }
+        Res.GetResRef(this.url, this.refKey).then((value) => {
+            const old = URL2Key(this.url);
+            if (value.key != old) {
+                value.Dispose();
+                return;
+            }
+            this.__resRef = value;
+            if (this.__resRef.content instanceof Texture2D) {
+                let t = new SpriteFrame();
+                t.texture = this.__resRef.content;
+                this.onExternalLoadSuccess(t);
+            }
+            else {
+                this.onExternalLoadSuccess(this.__resRef.content);
+            }
+        }, (err) => {
+            Debuger.Err(Debuger.DRONGO, "图片加载出错：" + err);
+        });
+    }
+    freeExternal() {
+        super.freeExternal();
+        if (this.__resRef) {
+            //因为是自己new 的所以这样释放，内部纹理还是归资源系统管理
+            if (this.__resRef.content instanceof Texture2D) {
+                this.texture.destroy();
+            }
+            this.__resRef.Dispose();
+            this.__resRef = null;
+        }
+    }
+}
+
 class Drongo {
     /**
      * 初始化
@@ -23252,11 +23298,15 @@ class Drongo {
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
+     * @param uibasic       UI公共资源包
      */
-    static Init(root, callback, guiconfig, layer, sheetBundle = "Configs") {
+    static Init(root, callback, guiconfig, layer, sheetBundle = "Configs", uibasics) {
+        this.callback = callback;
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
+        //加载器扩展
+        UIObjectFactory.setLoaderExtension(CCFLoader);
         GRoot.create(root);
         //路径转换
         if (sheetBundle) {
@@ -23275,7 +23325,22 @@ class Drongo {
             }
         }
         //创建层级
-        if (layer == null) {
+        this.__InitLayer(layer);
+        this.__loadUIBasic(guiconfig, uibasics);
+    }
+    static __loadUIBasic(uiconfig, uibasic) {
+        if (uibasic == undefined) {
+            uibasic = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
+        }
+        Res.GetResRefList(uibasic, Debuger.DRONGO).then((value) => {
+            //公共资源包永不销毁
+            this.__initUI(uiconfig);
+        }, (err) => {
+            this.__initUI(uiconfig);
+        });
+    }
+    static __InitLayer(layer) {
+        if (layer == undefined) {
             let layers = [
                 "BattleDamage",
                 "FullScreen",
@@ -23302,8 +23367,10 @@ class Drongo {
                 }
             }
         }
+    }
+    static __initUI(guiconfig) {
         //加载guiconfig.json
-        if (guiconfig == null) {
+        if (guiconfig == undefined) {
             guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" };
         }
         Res.GetResRef(guiconfig, "Drongo").then((result) => {
@@ -23313,7 +23380,7 @@ class Drongo {
                 GUIManager.Register(element);
             }
             result.Dispose();
-            callback();
+            this.callback();
         }, (reason) => {
             throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
         });

@@ -6107,6 +6107,8 @@ declare class Drongo {
     static UIBundle: string;
     /**UI遮罩颜色值 */
     static MaskColor: Color;
+    /**初始化完成回调 */
+    private static callback;
     /**
      * 初始化
      * @param root          fgui根节点
@@ -6114,11 +6116,15 @@ declare class Drongo {
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
+     * @param uibasic       UI公共资源包
      */
     static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: {
         layers: Array<string>;
         fullScrene: Array<string>;
-    }, sheetBundle?: string): void;
+    }, sheetBundle?: string, uibasics?: Array<ResURL>): void;
+    private static __loadUIBasic;
+    private static __InitLayer;
+    private static __initUI;
     /**
      * 总心跳驱动接口
      * @param dt

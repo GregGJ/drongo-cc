@@ -10,6 +10,8 @@ import { TickerManager } from "./drongo/ticker/TickerManager";
 import { GRoot } from "./fairygui/GRoot";
 import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
 import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
+import { Debuger, UIConfig, UIObjectFactory } from "./drongo-cc";
+import { CCFLoader } from "./drongo/res/loaders/CCFLoader";
 
 
 export class Drongo {
@@ -20,6 +22,9 @@ export class Drongo {
     /**UI遮罩颜色值 */
     public static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
 
+    /**初始化完成回调 */
+    private static callback: () => void;
+
     /**
      * 初始化
      * @param root          fgui根节点
@@ -27,14 +32,19 @@ export class Drongo {
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
+     * @param uibasic       UI公共资源包
      */
-    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs"): void {
+    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs", uibasics?: Array<ResURL>): void {
+        this.callback = callback;
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
 
-        GRoot.create(root);
+        //加载器扩展
+        UIObjectFactory.setLoaderExtension(CCFLoader);
 
+        GRoot.create(root);
+        
         //路径转换
         if (sheetBundle) {
             if (ConfigManager.Sheet2URL == null) {
@@ -52,7 +62,25 @@ export class Drongo {
             }
         }
         //创建层级
-        if (layer == null) {
+        this.__InitLayer(layer);
+        this.__loadUIBasic(guiconfig, uibasics);
+    }
+
+    private static __loadUIBasic(uiconfig: ResURL, uibasic?: Array<ResURL>): void {
+        if (uibasic == undefined) {
+            uibasic = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
+        }
+        Res.GetResRefList(uibasic, Debuger.DRONGO).then(
+            (value) => {
+                //公共资源包永不销毁
+                this.__initUI(uiconfig);
+            }, (err) => {
+                this.__initUI(uiconfig);
+            });
+    }
+
+    private static __InitLayer(layer?: { layers: Array<string>, fullScrene: Array<string> }): void {
+        if (layer == undefined) {
             let layers = [
                 "BattleDamage",
                 "FullScreen",
@@ -78,9 +106,11 @@ export class Drongo {
                 }
             }
         }
+    }
 
+    private static __initUI(guiconfig: ResURL): void {
         //加载guiconfig.json
-        if (guiconfig == null) {
+        if (guiconfig == undefined) {
             guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" }
         }
         Res.GetResRef(guiconfig, "Drongo").then(
@@ -91,7 +121,7 @@ export class Drongo {
                     GUIManager.Register(element);
                 }
                 result.Dispose();
-                callback();
+                this.callback();
             }, (reason) => {
                 throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
             }
