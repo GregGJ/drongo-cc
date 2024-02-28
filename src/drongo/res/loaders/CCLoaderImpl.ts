@@ -31,25 +31,25 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
                     this.Emit(Event.ERROR, { url, err });
                     return;
                 }
-                this.__load(url,bundle);
+                this.__load(url, bundle);
             });
         } else {
-            this.__load(url,bundle);
+            this.__load(url, bundle);
         }
     }
 
     private __load(url: ResURL, bundle: AssetManager.Bundle): void {
-        if(typeof url=="string"){
+        if (typeof url == "string") {
             throw new Error("未实现！");
         }
-        let __this=this;
+        let __this = this;
         bundle.load(FullURL(url), url.type,
             (finished: number, total: number) => {
                 const progress = finished / total;
                 __this.Emit(Event.PROGRESS, { url, progress });
             }, (err: Error, asset: Asset) => {
                 if (err) {
-                    __this.Emit(Event.ERROR, err);
+                    __this.Emit(Event.ERROR, { url, err });
                     return;
                 }
                 const urlKey = URL2Key(url);

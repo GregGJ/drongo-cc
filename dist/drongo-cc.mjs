@@ -19614,7 +19614,7 @@ class CCLoaderImpl extends EventDispatcher {
             __this.Emit(Event.PROGRESS, { url, progress });
         }, (err, asset) => {
             if (err) {
-                __this.Emit(Event.ERROR, err);
+                __this.Emit(Event.ERROR, { url, err });
                 return;
             }
             const urlKey = URL2Key(url);
@@ -23336,6 +23336,7 @@ class Drongo {
             //公共资源包永不销毁
             this.__initUI(uiconfig);
         }, (err) => {
+            Debuger.Err(Debuger.DRONGO, err);
             this.__initUI(uiconfig);
         });
     }

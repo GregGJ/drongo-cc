@@ -1,4 +1,5 @@
-import { BufferAsset, Color, JsonAsset, Node } from "cc";
+import { Color, JsonAsset, Node } from "cc";
+import { Debuger, UIObjectFactory } from "./drongo-cc";
 import { ConfigManager } from "./drongo/configs/ConfigManager";
 import { GUIManager } from "./drongo/gui/GUIManager";
 import { LayerManager } from "./drongo/gui/core/layer/LayerManager";
@@ -6,12 +7,11 @@ import { Layer } from "./drongo/gui/layer/Layer";
 import { Res } from "./drongo/res/Res";
 import { ResRef } from "./drongo/res/core/ResRef";
 import { ResURL, URL2Key } from "./drongo/res/core/ResURL";
+import { CCFLoader } from "./drongo/res/loaders/CCFLoader";
+import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
+import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
 import { TickerManager } from "./drongo/ticker/TickerManager";
 import { GRoot } from "./fairygui/GRoot";
-import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
-import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
-import { Debuger, UIConfig, UIObjectFactory } from "./drongo-cc";
-import { CCFLoader } from "./drongo/res/loaders/CCFLoader";
 
 
 export class Drongo {
@@ -44,7 +44,7 @@ export class Drongo {
         UIObjectFactory.setLoaderExtension(CCFLoader);
 
         GRoot.create(root);
-        
+
         //路径转换
         if (sheetBundle) {
             if (ConfigManager.Sheet2URL == null) {
@@ -75,6 +75,7 @@ export class Drongo {
                 //公共资源包永不销毁
                 this.__initUI(uiconfig);
             }, (err) => {
+                Debuger.Err(Debuger.DRONGO, err);
                 this.__initUI(uiconfig);
             });
     }
