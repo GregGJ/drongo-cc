@@ -21868,77 +21868,49 @@ class RelationManager {
 RelationManager.DEBUG = false;
 RelationManager.__map = new Map();
 
-class FGUIResource extends ResourceImpl {
+class CCFLoader extends GLoader {
     constructor() {
         super();
+        this.refKey = "CCFLoader";
     }
-    /**
-     * 销毁
-     */
-    Destroy() {
-        let url = Key2URL(this.key);
-        if (typeof url != "string") {
-            UIPackage.removePackage(url.url);
-            let bundle = assetManager.getBundle(Drongo.UIBundle);
-            let asset = bundle.get(url.url);
-            assetManager.releaseAsset(asset);
+    loadExternal() {
+        if (typeof this.url == "string") {
+            super.loadExternal();
+            return;
         }
-        else {
-            throw new Error("未处理的Fguipackage销毁！");
+        if (this.__resRef != null) {
+            this.__resRef.Dispose();
+            this.__resRef = null;
         }
-        super.Destroy();
-    }
-}
-
-class FGUILoader extends EventDispatcher {
-    constructor() {
-        super();
-    }
-    Load(url) {
-        this.url = url;
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        else {
-            let bundle = assetManager.getBundle(url.bundle);
-            let __this = this;
-            if (!bundle) {
-                assetManager.loadBundle(url.bundle, (err, bundle) => {
-                    if (err) {
-                        __this.Emit(Event.ERROR, { url, err });
-                        return;
-                    }
-                    __this.loadUIPackge(url, bundle);
-                });
-            }
-            else {
-                __this.loadUIPackge(url, bundle);
-            }
-        }
-    }
-    loadUIPackge(url, bundle) {
-        if (typeof url == "string") {
-            throw new Error("未实现：" + url);
-        }
-        let __this = this;
-        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
-            const progress = finish / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
-        }, (err, pkg) => {
-            if (err) {
-                __this.Emit(Event.ERROR, { url, err });
+        Res.GetResRef(this.url, this.refKey).then((value) => {
+            const old = URL2Key(this.url);
+            if (value.key != old) {
+                value.Dispose();
                 return;
             }
-            const urlKey = URL2Key(url);
-            let res = new FGUIResource();
-            res.key = urlKey;
-            res.content = pkg;
-            ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
+            this.__resRef = value;
+            if (this.__resRef.content instanceof Texture2D) {
+                let t = new SpriteFrame();
+                t.texture = this.__resRef.content;
+                this.onExternalLoadSuccess(t);
+            }
+            else {
+                this.onExternalLoadSuccess(this.__resRef.content);
+            }
+        }, (err) => {
+            Debuger.Err(Debuger.DRONGO, "图片加载出错：" + err);
         });
     }
-    Reset() {
-        this.url = null;
+    freeExternal() {
+        super.freeExternal();
+        if (this.__resRef) {
+            //因为是自己new 的所以这样释放，内部纹理还是归资源系统管理
+            if (this.__resRef.content instanceof Texture2D) {
+                this.texture.destroy();
+            }
+            this.__resRef.Dispose();
+            this.__resRef = null;
+        }
     }
 }
 
@@ -23244,49 +23216,77 @@ class ConfigLoader extends EventDispatcher {
     }
 }
 
-class CCFLoader extends GLoader {
+class FGUIResource extends ResourceImpl {
     constructor() {
         super();
-        this.refKey = "CCFLoader";
     }
-    loadExternal() {
-        if (typeof this.url == "string") {
-            super.loadExternal();
-            return;
+    /**
+     * 销毁
+     */
+    Destroy() {
+        let url = Key2URL(this.key);
+        if (typeof url != "string") {
+            UIPackage.removePackage(url.url);
+            let bundle = assetManager.getBundle(Drongo.UIBundle);
+            let asset = bundle.get(url.url);
+            assetManager.releaseAsset(asset);
         }
-        if (this.__resRef != null) {
-            this.__resRef.Dispose();
-            this.__resRef = null;
+        else {
+            throw new Error("未处理的Fguipackage销毁！");
         }
-        Res.GetResRef(this.url, this.refKey).then((value) => {
-            const old = URL2Key(this.url);
-            if (value.key != old) {
-                value.Dispose();
-                return;
-            }
-            this.__resRef = value;
-            if (this.__resRef.content instanceof Texture2D) {
-                let t = new SpriteFrame();
-                t.texture = this.__resRef.content;
-                this.onExternalLoadSuccess(t);
+        super.Destroy();
+    }
+}
+
+class FGUILoader extends EventDispatcher {
+    constructor() {
+        super();
+    }
+    Load(url) {
+        this.url = url;
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        else {
+            let bundle = assetManager.getBundle(url.bundle);
+            let __this = this;
+            if (!bundle) {
+                assetManager.loadBundle(url.bundle, (err, bundle) => {
+                    if (err) {
+                        __this.Emit(Event.ERROR, { url, err });
+                        return;
+                    }
+                    __this.loadUIPackge(url, bundle);
+                });
             }
             else {
-                this.onExternalLoadSuccess(this.__resRef.content);
+                __this.loadUIPackge(url, bundle);
             }
-        }, (err) => {
-            Debuger.Err(Debuger.DRONGO, "图片加载出错：" + err);
+        }
+    }
+    loadUIPackge(url, bundle) {
+        if (typeof url == "string") {
+            throw new Error("未实现：" + url);
+        }
+        let __this = this;
+        UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
+            const progress = finish / total;
+            __this.Emit(Event.PROGRESS, { url, progress });
+        }, (err, pkg) => {
+            if (err) {
+                __this.Emit(Event.ERROR, { url, err });
+                return;
+            }
+            const urlKey = URL2Key(url);
+            let res = new FGUIResource();
+            res.key = urlKey;
+            res.content = pkg;
+            ResManager.AddRes(res);
+            __this.Emit(Event.COMPLETE, { url });
         });
     }
-    freeExternal() {
-        super.freeExternal();
-        if (this.__resRef) {
-            //因为是自己new 的所以这样释放，内部纹理还是归资源系统管理
-            if (this.__resRef.content instanceof Texture2D) {
-                this.texture.destroy();
-            }
-            this.__resRef.Dispose();
-            this.__resRef = null;
-        }
+    Reset() {
+        this.url = null;
     }
 }
 
