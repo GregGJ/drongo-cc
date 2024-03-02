@@ -63,8 +63,8 @@ export class LoaderQueue implements ITicker {
             }
             if (loader != null) {
                 this.running.Set(urlKey, loader);
-                loader.Load(url);
                 this.__addEvent(loader);
+                loader.Load(url);
             }
         }
     }

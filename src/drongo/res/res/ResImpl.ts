@@ -2,7 +2,6 @@ import { Loader } from "../loaders/Loader";
 import { CCLoaderImpl } from "../loaders/CCLoaderImpl";
 import { IRes } from "../core/IRes";
 import { ILoader } from "../core/ILoader";
-import { GetClassName } from "../../exports/GetClassName";
 import { ResURL, URL2Key } from "../core/ResURL";
 import { ResRef } from "../core/ResRef";
 import { StringUtils } from "../../utils/StringUtils";
@@ -19,12 +18,12 @@ export class ResImpl implements IRes {
     }
 
     SetResLoader(key: any, loader: new () => ILoader): void {
-        let className = GetClassName(key);
+        let className = StringUtils.GetClassName(key);
         this.loaderClass.set(className, loader);
     }
 
     GetResLoader(key: any): new () => ILoader {
-        let className = GetClassName(key);
+        let className = StringUtils.GetClassName(key);
         if (!this.loaderClass.has(className)) {
             return CCLoaderImpl;
         }

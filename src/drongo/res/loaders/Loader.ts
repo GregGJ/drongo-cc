@@ -52,6 +52,7 @@ export class Loader {
             //销毁
             request.Destroy();
         }
+        this.requests.delete(urlKey);
     }
 
     ChildProgress(url: ResURL, progress: number): void {

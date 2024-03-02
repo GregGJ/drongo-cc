@@ -1,3 +1,4 @@
+import { ResURL } from "../../drongo-cc";
 
 
 /**
@@ -10,22 +11,19 @@ export interface IService {
      */
     name: string;
     /**
-     * 初始化
-     * @param callback 
+     * 依赖的配置资源
      */
-    Init(callback: (err: Error) => void): void;
-
+    configs: Array<string>;
+    /**
+     * 依赖的资源
+     */
+    assets: Array<ResURL>;
+    /**
+     * 初始化
+     */
+    Init(): void;
     /**
      * 销毁(内部接口，请在不需要该服务时调用ServiceManager.Dispose()接口)
      */
     Destroy(): void;
-
-    AddRef(): void;
-
-    RemoveRef(): void;
-
-    /**
-     * 引用计数器
-     */
-    readonly refCount: number;
 }

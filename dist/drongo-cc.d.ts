@@ -3632,13 +3632,6 @@ declare class Event$1 {
 }
 
 /**
- * 获取类名
- * @param clazz
- * @returns
- */
-declare function GetClassName(clazz: any): string;
-
-/**
  * 状态接口
  */
 interface IState {
@@ -3718,20 +3711,21 @@ interface IService {
      */
     name: string;
     /**
-     * 初始化
-     * @param callback
+     * 依赖的配置资源
      */
-    Init(callback: (err: Error) => void): void;
+    configs: Array<string>;
+    /**
+     * 依赖的资源
+     */
+    assets: Array<ResURL>;
+    /**
+     * 初始化
+     */
+    Init(): void;
     /**
      * 销毁(内部接口，请在不需要该服务时调用ServiceManager.Dispose()接口)
      */
     Destroy(): void;
-    AddRef(): void;
-    RemoveRef(): void;
-    /**
-     * 引用计数器
-     */
-    readonly refCount: number;
 }
 
 interface IViewComponent {
@@ -3744,11 +3738,19 @@ interface IViewComponent {
 interface IGUIMediator {
     info: any;
     /**
+     * 依赖的配置
+     */
+    configs: Array<string>;
+    /**
      * 依赖的服务
      */
     services: Array<{
         new (): IService;
     }>;
+    /**
+     * 是否显示进度条
+     */
+    showLoadingView: boolean;
     /**初始化完毕 */
     inited: boolean;
     /**
@@ -4295,26 +4297,6 @@ declare class GUIManagerImpl implements IGUIManager {
     IsOpen(key: string): boolean;
 }
 
-declare class ResRef {
-    /**唯一KEY */
-    key: string;
-    /**引用KEY */
-    refKey: string | undefined;
-    /**资源内容 */
-    content: any;
-    /**是否已释放 */
-    private __isDispose;
-    constructor();
-    /**释放 */
-    Dispose(): void;
-    get isDispose(): boolean;
-    Reset(): void;
-    /**
-     * 彻底销毁(注意内部接口，请勿调用)
-     */
-    Destroy(): void;
-}
-
 /**
  * 子UI 逻辑划分
  */
@@ -4334,11 +4316,10 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     services: Array<{
         new (): IService;
     }>;
-    /**
-     * 依赖的配置表名称
-     */
-    protected $configs: Array<string>;
-    protected $configRefs: Array<ResRef>;
+    /**依赖的配置表 */
+    configs: Array<string>;
+    /**是否显示进度界面 */
+    showLoadingView: boolean;
     /**根节点 */
     viewComponent: GComponent | null;
     /**遮罩 */
@@ -4354,7 +4335,6 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
      * @param created
      */
     CreateUI(info: any, created: Function): void;
-    private __loadConfigs;
     private __asyncCreator;
     private __createUI;
     private __uiCreated;
@@ -4380,6 +4360,26 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     Destroy(): void;
 }
 
+declare class ResRef {
+    /**唯一KEY */
+    key: string;
+    /**引用KEY */
+    refKey: string | undefined;
+    /**资源内容 */
+    content: any;
+    /**是否已释放 */
+    private __isDispose;
+    constructor();
+    /**释放 */
+    Dispose(): void;
+    get isDispose(): boolean;
+    Reset(): void;
+    /**
+     * 彻底销毁(注意内部接口，请勿调用)
+     */
+    Destroy(): void;
+}
+
 /**
  * GUI代理，将资源加载和Mediator逻辑隔离开
  */
@@ -4395,14 +4395,13 @@ declare class GUIProxy {
     zIndex: number;
     /**数据 */
     data: any;
-    /**资源引用*/
-    private __resRef;
+    /**引用的资源 */
+    urls: Array<ResURL>;
+    assets: Array<ResRef>;
     /**是否在显示中*/
     private __showing;
     /**加载状态 */
     private __loadState;
-    private __uiURL;
-    private __startTime;
     constructor(info: IGUIInfo);
     /**
      * 加载代码包
@@ -4413,11 +4412,6 @@ declare class GUIProxy {
      */
     private __codeBundleLoaded;
     private __loadAssets;
-    private __loadAssetProgress;
-    private __loadAssetError;
-    private __loadAssetComplete;
-    /**创建Mediator */
-    private __createUIMediator;
     /**
     * 初始化服务
     */
@@ -5040,8 +5034,6 @@ declare class ResManagerImpl implements IResManager {
 
 /**
  *  服务基类
- *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
- *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
  */
 declare class BaseService implements IService {
     /**名称 */
@@ -5049,50 +5041,56 @@ declare class BaseService implements IService {
     /**
      * 依赖的配置表名称
      */
-    protected $configs: Array<string>;
-    protected $configRefs: Array<ResRef>;
+    configs: Array<string>;
     /**
      * 依赖的资源
      */
-    protected $assets: Array<ResURL>;
-    protected $assetRefs: Array<ResRef>;
+    assets: Array<ResURL>;
+    constructor();
+    Init(): void;
+    Destroy(): void;
+}
+
+declare class ServiceProxy {
+    service: IService;
+    refs: Array<ResRef>;
     /**
-     * 引用计数
+     * 引用计数器
      */
     refCount: number;
-    protected __initCallback: (err: Error) => void;
-    constructor();
-    Init(callback: (err: Error) => void): void;
-    private __loadConfigs;
-    private __configLoaded;
-    private __loadAssets;
-    /**
-     * 依赖的配置与资源准备完毕
-     */
-    protected $configAndAssetReady(): void;
-    /**
-     * 初始化完成时调用
-     */
-    protected $initComplete(): void;
-    Destroy(): void;
+    constructor(service: IService, refs: Array<ResRef>);
     AddRef(): void;
     RemoveRef(): void;
+    Destroy(): void;
 }
 
 declare class ServiceManager {
-    /**启动器 */
+    /**
+     * 最大启动线程
+     */
+    static MAX_LOADER_THREAD: number;
+    private static __requests;
+    /**
+     * 加载
+     * @param services
+     * @param progress
+     * @param callback
+     */
+    static Load(services: Array<{
+        new (): IService;
+    }>, progress: (progress: number) => void, callback: (err: Error) => void): void;
+    static ChildComplete(service: new () => IService, proxy: ServiceProxy): void;
+    static ChildError(service: new () => IService, err: Error): void;
+    static ChildProgress(service: new () => IService, progress: number): void;
+    private static __addRequest;
+    private static __removeRequest;
     private static __services;
     /**
-     * 初始化服务
-     * @param key
+     * 获取代理
+     * @param clazz
      * @returns
      */
-    static InitService(services: {
-        new (): IService;
-    } | Array<{
-        new (): IService;
-    }>, callback: (err: Error, services?: Array<IService>) => void): void;
-    private static __InitService;
+    static GetServiceProxy(clazz: new () => IService): ServiceProxy;
     /**
      * 获取服务
      * @param clazz
@@ -6085,6 +6083,16 @@ declare class StringUtils {
      * @returns
      */
     static PieceTogether(keys: Array<string>, sp?: string): string;
+    /**
+     * 获取单词指定位置单词
+     * @param str
+     * @param n
+     * @returns
+     */
+    static GetWord(str: string, n: number | Array<number>): string | Array<string>;
+    static GetContractName(code: string): string;
+    static GetFunctionName(code: string): string;
+    static GetClassName(value: any): string;
 }
 
 declare class Drongo {
@@ -6117,4 +6125,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILayerManager, ILoader, ILoadingView, ILocalStorage, IRecyclable, IRelationInfo, IRelationList, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, ListItemRenderer, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILayerManager, ILoader, ILoadingView, ILocalStorage, IRecyclable, IRelationInfo, IRelationList, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, ListItemRenderer, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

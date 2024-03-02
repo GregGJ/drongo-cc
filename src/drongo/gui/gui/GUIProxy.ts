@@ -14,6 +14,7 @@ import { Event } from "../../events/Event";
 import { LayerManager } from "../core/layer/LayerManager";
 import { ILayer } from "../core/layer/ILayer";
 import { IService } from "../../services/IService";
+import { ConfigManager } from "../../configs/ConfigManager";
 
 
 
@@ -45,8 +46,9 @@ export class GUIProxy {
     /**数据 */
     data: any;
 
-    /**资源引用*/
-    private __resRef: ResRef | null = null;
+    /**引用的资源 */
+    urls: Array<ResURL>;
+    assets: Array<ResRef>;
 
     /**是否在显示中*/
     private __showing: boolean = false;
@@ -54,22 +56,18 @@ export class GUIProxy {
     /**加载状态 */
     private __loadState: LoadState = LoadState.Null;
 
-    private __uiURL: ResURL;
-
-    private __startTime: number;
-
     constructor(info: IGUIInfo) {
         this.info = info;
         if (!this.info) {
             throw new Error("UI信息不能为空！");
         }
+        this.urls = [];
     }
 
     /**
      * 加载代码包
      */
     private __loadCodeBundle(): void {
-        this.__startTime = Timer.currentTime;
         this.__loadState = LoadState.Loading;
         if (!assetManager.getBundle(this.info.bundleName)) {
             assetManager.loadBundle(this.info.bundleName, this.__codeBundleLoaded.bind(this));
@@ -82,73 +80,64 @@ export class GUIProxy {
      * 代码包加载完成
      */
     private __codeBundleLoaded(): void {
-        this.__uiURL = { url: this.info.packageName, type: "fgui", bundle: Drongo.UIBundle };
-        this.__loadAssets();
-    }
-
-    //加载UI资源
-    private __loadAssets(): void {
-        Res.GetResRef(this.__uiURL, this.info.key, this.__loadAssetProgress.bind(this)).then(
-            this.__loadAssetComplete.bind(this),
-            this.__loadAssetError.bind(this)
-        );
-    }
-
-    private __loadAssetProgress(progress: number): void {
-        LoadingView.ChangeData({ label: this.info.key + " asset loading...", progress: progress })
-    }
-
-    private __loadAssetError(err: any): void {
-        if (err) {
-            LoadingView.ChangeData({ label: err });
-        }
-    }
-
-    private __loadAssetComplete(result: ResRef): void {
-        let resKey: string = URL2Key(this.__uiURL);
-        if (resKey != result.key) {
-            result.Dispose();
-            return;
-        }
-        //资源是否存在
-        this.__resRef = result;
-        if (!this.__resRef) {
-            throw new Error("加载UI资源失败:" + this.info.packageName + " ");
-        }
-        this.__createUIMediator();
-    }
-
-
-
-    /**创建Mediator */
-    private __createUIMediator(): void {
+        this.urls.push({ url: this.info.packageName, type: "fgui", bundle: Drongo.UIBundle });
+        //创建Mediator
         let viewCreatorCom: Component = GUIProxy.createNode.addComponent(this.info.key + "ViewCreator");
         let viewCreator: IViewCreator = <unknown>viewCreatorCom as IViewCreator;
         if (!viewCreator) {
             throw new Error(this.info.key + "ViewCreator类不存在或未实现IViewCreator!");
         }
         this.mediator = viewCreator.createMediator();
+        //进度界面
+        if (this.mediator.showLoadingView) {
+            LoadingView.Show();
+        }
         //销毁组件
         viewCreatorCom.destroy();
-        if (this.mediator.services) {
-            this.__initServices();
-        } else {
-            this.__createUI();
+        //配置表
+        if (this.mediator.configs != null && this.mediator.configs.length > 0) {
+            for (let index = 0; index < this.mediator.configs.length; index++) {
+                const sheet = this.mediator.configs[index];
+                const url = ConfigManager.Sheet2URL(sheet);
+                this.urls.push(url);
+            }
         }
+        this.__loadAssets();
+    }
+
+    //加载UI资源
+    private __loadAssets(): void {
+        Res.GetResRefList(this.urls, this.info.key,
+            (progress: number) => {
+                LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress * 0.5 })
+            }).then(
+                (result: Array<ResRef>) => {
+                    this.assets = result;
+                    this.__initServices();
+                }, (err) => {
+                    LoadingView.ChangeData({ label: this.info.key + " Res Load Err:" + err });
+                });
     }
 
     /**
     * 初始化服务
     */
     private __initServices(): void {
-        ServiceManager.InitService(this.mediator.services,
-            (err: Error, services?: Array<IService>) => {
+        if (this.mediator.services == null) {
+            this.__createUI();
+            return;
+        }
+        ServiceManager.Load(this.mediator.services,
+            (progress: number) => {
+                LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 0.5 + progress * 0.4 });
+            }, (err: Error) => {
                 if (err) {
                     throw err;
                 }
-                for (let index = 0; index < services.length; index++) {
-                    const service = services[index];
-                    service.AddRef();
+                for (let index = 0; index < this.mediator.services.length; index++) {
+                    const service = this.mediator.services[index];
+                    const proxy = ServiceManager.GetServiceProxy(service);
+                    proxy.AddRef();
                 }
                 this.__createUI();
             });
@@ -165,6 +154,7 @@ export class GUIProxy {
      * UI创建完成回调
      */
     private __createUICallBack(): void {
+        LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 1 });
         this.__loadState = LoadState.Loaded;
         this.mediator!.Init();
         this.mediator.inited = true;
@@ -179,13 +169,6 @@ export class GUIProxy {
     }
 
     Tick(dt: number): void {
-        if (this.__loadState == LoadState.Loading) {
-            let currentTime = Timer.currentTime;
-            if (currentTime - this.__startTime > 1) {
-                LoadingView.Show();
-            }
-            return;
-        }
         if (this.__loadState == LoadState.Loaded) {
             if (this.mediator) {
                 this.mediator.Tick(dt);
@@ -213,7 +196,10 @@ export class GUIProxy {
             //加载中啥也不干
         } else {
             this.__addToLayer();
-            LoadingView.Hide();
+            //进度界面
+            if (this.mediator!.showLoadingView) {
+                LoadingView.Hide();
+            }
             this.mediator!.Show(this.data);
             this.data = null;
             //如果界面已经被关闭(这是有可能的！);
@@ -262,14 +248,16 @@ export class GUIProxy {
 
     Destroy(): void {
         console.log("UI销毁=>" + this.info?.key);
+        for (let index = 0; index < this.assets.length; index++) {
+            const ref = this.assets[index];
+            ref.Dispose();
+        }
+        this.assets.length = 0;
+        this.assets = null;
         this.mediator!.Destroy();
         this.mediator = undefined;
         this.info = undefined;
         this.data = null;
-        if (this.__resRef) {
-            this.__resRef.Dispose();
-            this.__resRef = null;
-        }
     }
 
     private getLayerChildCount(): number {

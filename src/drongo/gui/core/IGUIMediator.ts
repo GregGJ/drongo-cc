@@ -6,12 +6,20 @@ import { IViewComponent } from "./IViewComponent";
 export interface IGUIMediator {
 
     info: any;
-
+    /**
+     * 依赖的配置
+     */
+    configs: Array<string>;
     /**
      * 依赖的服务
      */
-    services: Array<{new():IService}>;
+    services: Array<{ new(): IService }>;
 
+    /**
+     * 是否显示进度条
+     */
+    showLoadingView: boolean;
+    
     /**初始化完毕 */
     inited: boolean;
 

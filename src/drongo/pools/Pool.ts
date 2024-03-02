@@ -1,4 +1,4 @@
-import { GetClassName } from "../exports/GetClassName";
+import { StringUtils } from "../utils/StringUtils";
 import { IRecyclable } from "./IRecyclable";
 
 
@@ -16,7 +16,7 @@ export class Pool {
      * @returns 
      */
     static allocate<T extends IRecyclable>(clazz: { new(): T }, maxCount?: number): T {
-        let className = GetClassName(clazz);
+        let className = StringUtils.GetClassName(clazz);
         let pool: PoolImpl<IRecyclable>;
         if (this.__pools.has(className)) {
             pool = this.__pools.get(className);
@@ -32,7 +32,7 @@ export class Pool {
      * @param value 
      */
     static recycle(value: IRecyclable): void {
-        let className = GetClassName(value);
+        let className = StringUtils.GetClassName(value);
         if (!this.__pools.has(className)) {
             throw new Error("对象池不存在:" + className);
         }
@@ -56,7 +56,7 @@ export class Pool {
      * @param clazz 
      */
     static recycleAll<T extends IRecyclable>(clazz: { new(): T }): void {
-        let className = GetClassName(clazz);
+        let className = StringUtils.GetClassName(clazz);
         if (!this.__pools.has(className)) {
             throw new Error("对象池不存在:" + className);
         }

@@ -90,9 +90,6 @@ export { Event } from "./drongo/events/Event"
 export { EventDispatcher } from "./drongo/events/EventDispatcher"
 export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 
-//exports
-export { GetClassName } from "./drongo/exports/GetClassName"
-
 //fsm
 export { FSM } from "./drongo/fsm/FSM"
 export { IState } from "./drongo/fsm/IState"

@@ -1,5 +1,5 @@
 import { Asset, SpriteFrame, Texture2D } from "cc";
-import { GetClassName } from "../../exports/GetClassName";
+import { StringUtils } from "../../utils/StringUtils";
 
 
 /**
@@ -112,7 +112,7 @@ class ResURLUtils {
     }
 
     private static getAndSaveClassName(clazz: any): string {
-        let className: string = GetClassName(clazz);
+        let className: string = StringUtils.GetClassName(clazz);
         if (!this.__assetTypes.has(className)) {
             this.__assetTypes.set(className, clazz);
         }

@@ -5,10 +5,6 @@ import { GComponent } from "../../../fairygui/GComponent";
 import { GGraph } from "../../../fairygui/GGraph";
 import { GObject } from "../../../fairygui/GObject";
 import { UIPackage } from "../../../fairygui/UIPackage";
-import { ConfigManager } from "../../configs/ConfigManager";
-import { Res } from "../../res/Res";
-import { ResRef } from "../../res/core/ResRef";
-import { ResURL } from "../../res/core/ResURL";
 import { IService } from "../../services/IService";
 import { ServiceManager } from "../../services/ServiceManager";
 import { GUIManager } from "../GUIManager";
@@ -27,12 +23,10 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
 
     /**依赖的服务 */
     services: Array<{ new(): IService }>;
-
-    /**
-     * 依赖的配置表名称
-     */
-    protected $configs: Array<string>;
-    protected $configRefs: Array<ResRef>;
+    /**依赖的配置表 */
+    configs: Array<string>;
+    /**是否显示进度界面 */
+    showLoadingView: boolean = false;
 
     /**根节点 */
     viewComponent: GComponent | null = null;
@@ -61,28 +55,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
             throw new Error("GUI 信息不能为空");
         }
         this.__createdCallBack = created;
-        if (this.$configs != null && this.$configs.length != 0) {
-            this.__loadConfigs();
-        } else {
-            this.__createUI(true);
-        }
-    }
-
-    private __loadConfigs(): void {
-        let urls: Array<ResURL> = [];
-        for (let index = 0; index < this.$configs.length; index++) {
-            const sheet = this.$configs[index];
-            const url = ConfigManager.Sheet2URL(sheet);
-            urls.push(url);
-        }
-        Res.GetResRefList(urls, this.info.comName).then(
-            (value) => {
-                this.$configRefs = value;
-                this.__createUI(true);
-            }, (reason) => {
-                throw new Error("UI:" + this.info.comName + "依赖的配置加载出错:" + reason);
-            }
-        )
+        this.__createUI(true);
     }
 
     private __asyncCreator: AsyncOperation
@@ -212,14 +185,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
             }
         }
         //依赖的配置
-        if (this.$configRefs) {
-            for (let index = 0; index < this.$configRefs.length; index++) {
-                const element = this.$configRefs[index];
-                element.Dispose();
-            }
-            this.$configRefs = null;
-        }
-        this.$configs = null;
+        this.configs = null;
         if (this.services) {
             for (let index = 0; index < this.services.length; index++) {
                 const element = this.services[index];

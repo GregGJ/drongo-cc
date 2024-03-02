@@ -7,6 +7,7 @@ export class CCFLoader extends GLoader {
 
     refKey: string = "CCFLoader";
 
+    private __spriteFrame: SpriteFrame;
     private __resRef: ResRef;
 
     constructor() {
@@ -17,6 +18,10 @@ export class CCFLoader extends GLoader {
         if (typeof this.url == "string") {
             super.loadExternal();
             return;
+        }
+        if (this.__spriteFrame) {
+            this.__spriteFrame.destroy();
+            this.__spriteFrame = null;
         }
         if (this.__resRef != null) {
             this.__resRef.Dispose();
@@ -30,9 +35,9 @@ export class CCFLoader extends GLoader {
             }
             this.__resRef = value;
             if (this.__resRef.content instanceof Texture2D) {
-                let t: SpriteFrame = new SpriteFrame();
-                t.texture = this.__resRef.content;
-                this.onExternalLoadSuccess(t);
+                this.__spriteFrame = new SpriteFrame();
+                this.__spriteFrame.texture = this.__resRef.content;
+                this.onExternalLoadSuccess(this.__spriteFrame);
             } else {
                 this.onExternalLoadSuccess(this.__resRef.content);
             }
@@ -44,11 +49,11 @@ export class CCFLoader extends GLoader {
 
     protected freeExternal(): void {
         super.freeExternal();
+        if (this.__spriteFrame) {
+            this.__spriteFrame.destroy();
+            this.__spriteFrame = null;
+        }
         if (this.__resRef) {
-            //因为是自己new 的所以这样释放，内部纹理还是归资源系统管理
-            if (this.__resRef.content instanceof Texture2D) {
-                this.texture.destroy();
-            }
             this.__resRef.Dispose();
             this.__resRef = null;
         }

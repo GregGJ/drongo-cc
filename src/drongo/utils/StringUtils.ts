@@ -123,4 +123,57 @@ export class StringUtils {
         }
         return result;
     }
+
+    /**
+     * 获取单词指定位置单词
+     * @param str 
+     * @param n 
+     * @returns 
+     */
+    static GetWord(str: string, n: number | Array<number>): string | Array<string> {
+        if (Array.isArray(n) && n.length > 0) {
+            let arr = [];
+            for (let i of n) {
+                arr.push(this.GetWord(str, i).toString());
+            }
+            return arr;
+        } else {
+            const m = str.match(new RegExp('^(?:\\w+\\W+){' + n + '}(\\w+)'));
+            if (m) {
+                return m[1];
+            }
+            return "";
+        }
+    }
+
+    static GetContractName(code: string): string {
+        const words = this.GetWord(code, [0, 1, 2])
+        if (words[0] === 'abstract') {
+            return words[2]
+        }
+        return words[1];
+    }
+
+    static GetFunctionName(code: string): string {
+        const words = this.GetWord(code, [0, 1])
+        if (words[0] === 'constructor') {
+            return words[0];
+        }
+        return words[1];
+    }
+
+    static GetClassName(value:any):string{
+        let className: string;
+        if (typeof value != "string") {
+            className = value.toString();
+            if (className.startsWith("function")) {
+                return this.GetFunctionName(className);
+            } else {
+                return this.GetContractName(className);
+            }
+        } else {
+            className = value;
+        }
+        return className;
+    }
 }

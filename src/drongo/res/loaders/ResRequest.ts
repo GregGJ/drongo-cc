@@ -1,6 +1,7 @@
 
 import { ResURL, URL2Key } from "../core/ResURL";
 import { ResManager } from "../res/ResManager";
+import { Loader } from "./Loader";
 import { LoaderQueue } from "./LoaderQueue";
 
 
@@ -41,7 +42,7 @@ export class ResRequest {
             const urlKey = URL2Key(url);
             //如果已经加载完成
             if (ResManager.HasRes(urlKey)) {
-                this.__loadedMap.set(urlKey, 1);
+                Loader.single.ChildComplete(url);
             } else {
                 LoaderQueue.single.Load(url);
             }

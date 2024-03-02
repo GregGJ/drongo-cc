@@ -18248,26 +18248,171 @@ class TickerManager {
 }
 TickerManager.KEY = "drongo.TickerManager";
 
-/**
- * 获取类名
- * @param clazz
- * @returns
- */
-function GetClassName(clazz) {
-    let className;
-    if (typeof clazz != "string") {
-        className = clazz.toString();
-        className = className.replace("function ", "");
-        let index = className.indexOf("()");
-        if (index < 0) {
-            throw new Error("获取类型名称错误：" + className);
+class StringUtils {
+    /**
+     * 是否为空
+     * @param str
+     */
+    static IsEmpty(str) {
+        if (str == null || str == undefined || str.length == 0) {
+            return true;
         }
-        className = className.substring(0, index);
+        return false;
     }
-    else {
-        className = clazz;
+    /**
+     * 参数替换
+     *  @param  str
+     *  @param  rest
+     *
+     *  @example
+     *
+     *  var str:string = "here is some info '{0}' and {1}";
+     *  trace(StringUtil.substitute(str, 15.4, true));
+     *
+     *  // this will output the following string:
+     *  // "here is some info '15.4' and true"
+     */
+    static Substitute(str, ...rest) {
+        if (str == null)
+            return '';
+        // Replace all of the parameters in the msg string.
+        var len = rest.length;
+        var args;
+        if (len == 1 && rest[0] instanceof Array) {
+            args = rest[0];
+            len = args.length;
+        }
+        else {
+            args = rest;
+        }
+        for (var i = 0; i < len; i++) {
+            str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
+        }
+        return str;
     }
-    return className;
+    /**
+    * 替换全部字符串
+    * @param string src 源串
+    * @param string from_ch 被替换的字符
+    * @param string to_ch 替换的字符
+    *
+    * @return string 结果字符串
+    */
+    static ReplaceAll(src, from_ch, to_ch) {
+        return src.split(from_ch).join(to_ch);
+    }
+    /**
+     * 拆分字符串
+     * @param str
+     */
+    static SplitString(str, split0, split1) {
+        let args = new Array();
+        let tmp = str.split(split0);
+        tmp.forEach((val, key) => {
+            let s = val.split(split1);
+            args.push(s);
+        });
+        return args;
+    }
+    /**
+     * 获取文件后缀名
+     * @param url
+     */
+    static GetFileSuffix(url) {
+        let index = url.lastIndexOf(".");
+        if (index < 0) {
+            return "";
+        }
+        let suixx = url.substring(index + 1);
+        return suixx;
+    }
+    /**
+     * 替换后缀
+     * @param url
+     * @param suff      后缀
+     * @returns
+     */
+    static ReplaceSuffix(url, suff) {
+        let index = url.lastIndexOf(".");
+        if (index < 0) {
+            throw new Error(url + "没有后缀！！！");
+        }
+        let suixx = url.substring(index + 1);
+        let changeUrl = url.replace(suixx, suff);
+        return changeUrl;
+    }
+    /**
+     * 拼装
+     * @param keys
+     * @param sp
+     * @returns
+     */
+    static PieceTogether(keys, sp = "_") {
+        const end = keys.length - 1;
+        let result = "";
+        for (let index = 0; index < keys.length; index++) {
+            const key = keys[index];
+            if (index < end) {
+                result += key + sp;
+            }
+            else {
+                result += key;
+            }
+        }
+        return result;
+    }
+    /**
+     * 获取单词指定位置单词
+     * @param str
+     * @param n
+     * @returns
+     */
+    static GetWord(str, n) {
+        if (Array.isArray(n) && n.length > 0) {
+            let arr = [];
+            for (let i of n) {
+                arr.push(this.GetWord(str, i).toString());
+            }
+            return arr;
+        }
+        else {
+            const m = str.match(new RegExp('^(?:\\w+\\W+){' + n + '}(\\w+)'));
+            if (m) {
+                return m[1];
+            }
+            return "";
+        }
+    }
+    static GetContractName(code) {
+        const words = this.GetWord(code, [0, 1, 2]);
+        if (words[0] === 'abstract') {
+            return words[2];
+        }
+        return words[1];
+    }
+    static GetFunctionName(code) {
+        const words = this.GetWord(code, [0, 1]);
+        if (words[0] === 'constructor') {
+            return words[0];
+        }
+        return words[1];
+    }
+    static GetClassName(value) {
+        let className;
+        if (typeof value != "string") {
+            className = value.toString();
+            if (className.startsWith("function")) {
+                return this.GetFunctionName(className);
+            }
+            else {
+                return this.GetContractName(className);
+            }
+        }
+        else {
+            className = value;
+        }
+        return className;
+    }
 }
 
 /**
@@ -18364,7 +18509,7 @@ class ResURLUtils {
         return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
     }
     static getAndSaveClassName(clazz) {
-        let className = GetClassName(clazz);
+        let className = StringUtils.GetClassName(clazz);
         if (!this.__assetTypes.has(className)) {
             this.__assetTypes.set(className, clazz);
         }
@@ -19239,8 +19384,8 @@ class LoaderQueue {
             }
             if (loader != null) {
                 this.running.Set(urlKey, loader);
-                loader.Load(url);
                 this.__addEvent(loader);
+                loader.Load(url);
             }
         }
     }
@@ -19321,7 +19466,7 @@ class ResRequest {
             const urlKey = URL2Key(url);
             //如果已经加载完成
             if (ResManager.HasRes(urlKey)) {
-                this.__loadedMap.set(urlKey, 1);
+                Loader.single.ChildComplete(url);
             }
             else {
                 LoaderQueue.single.Load(url);
@@ -19418,6 +19563,7 @@ class Loader {
             //销毁
             request.Destroy();
         }
+        this.requests.delete(urlKey);
     }
     ChildProgress(url, progress) {
         const urlKey = URL2Key(url);
@@ -19630,131 +19776,16 @@ class CCLoaderImpl extends EventDispatcher {
     }
 }
 
-class StringUtils {
-    /**
-     * 是否为空
-     * @param str
-     */
-    static IsEmpty(str) {
-        if (str == null || str == undefined || str.length == 0) {
-            return true;
-        }
-        return false;
-    }
-    /**
-     * 参数替换
-     *  @param  str
-     *  @param  rest
-     *
-     *  @example
-     *
-     *  var str:string = "here is some info '{0}' and {1}";
-     *  trace(StringUtil.substitute(str, 15.4, true));
-     *
-     *  // this will output the following string:
-     *  // "here is some info '15.4' and true"
-     */
-    static Substitute(str, ...rest) {
-        if (str == null)
-            return '';
-        // Replace all of the parameters in the msg string.
-        var len = rest.length;
-        var args;
-        if (len == 1 && rest[0] instanceof Array) {
-            args = rest[0];
-            len = args.length;
-        }
-        else {
-            args = rest;
-        }
-        for (var i = 0; i < len; i++) {
-            str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
-        }
-        return str;
-    }
-    /**
-    * 替换全部字符串
-    * @param string src 源串
-    * @param string from_ch 被替换的字符
-    * @param string to_ch 替换的字符
-    *
-    * @return string 结果字符串
-    */
-    static ReplaceAll(src, from_ch, to_ch) {
-        return src.split(from_ch).join(to_ch);
-    }
-    /**
-     * 拆分字符串
-     * @param str
-     */
-    static SplitString(str, split0, split1) {
-        let args = new Array();
-        let tmp = str.split(split0);
-        tmp.forEach((val, key) => {
-            let s = val.split(split1);
-            args.push(s);
-        });
-        return args;
-    }
-    /**
-     * 获取文件后缀名
-     * @param url
-     */
-    static GetFileSuffix(url) {
-        let index = url.lastIndexOf(".");
-        if (index < 0) {
-            return "";
-        }
-        let suixx = url.substring(index + 1);
-        return suixx;
-    }
-    /**
-     * 替换后缀
-     * @param url
-     * @param suff      后缀
-     * @returns
-     */
-    static ReplaceSuffix(url, suff) {
-        let index = url.lastIndexOf(".");
-        if (index < 0) {
-            throw new Error(url + "没有后缀！！！");
-        }
-        let suixx = url.substring(index + 1);
-        let changeUrl = url.replace(suixx, suff);
-        return changeUrl;
-    }
-    /**
-     * 拼装
-     * @param keys
-     * @param sp
-     * @returns
-     */
-    static PieceTogether(keys, sp = "_") {
-        const end = keys.length - 1;
-        let result = "";
-        for (let index = 0; index < keys.length; index++) {
-            const key = keys[index];
-            if (index < end) {
-                result += key + sp;
-            }
-            else {
-                result += key;
-            }
-        }
-        return result;
-    }
-}
-
 class ResImpl {
     constructor() {
         this.loaderClass = new Map();
     }
     SetResLoader(key, loader) {
-        let className = GetClassName(key);
+        let className = StringUtils.GetClassName(key);
         this.loaderClass.set(className, loader);
     }
     GetResLoader(key) {
-        let className = GetClassName(key);
+        let className = StringUtils.GetClassName(key);
         if (!this.loaderClass.has(className)) {
             return CCLoaderImpl;
         }
@@ -21818,6 +21849,10 @@ class CCFLoader extends GLoader {
             super.loadExternal();
             return;
         }
+        if (this.__spriteFrame) {
+            this.__spriteFrame.destroy();
+            this.__spriteFrame = null;
+        }
         if (this.__resRef != null) {
             this.__resRef.Dispose();
             this.__resRef = null;
@@ -21830,9 +21865,9 @@ class CCFLoader extends GLoader {
             }
             this.__resRef = value;
             if (this.__resRef.content instanceof Texture2D) {
-                let t = new SpriteFrame();
-                t.texture = this.__resRef.content;
-                this.onExternalLoadSuccess(t);
+                this.__spriteFrame = new SpriteFrame();
+                this.__spriteFrame.texture = this.__resRef.content;
+                this.onExternalLoadSuccess(this.__spriteFrame);
             }
             else {
                 this.onExternalLoadSuccess(this.__resRef.content);
@@ -21843,11 +21878,11 @@ class CCFLoader extends GLoader {
     }
     freeExternal() {
         super.freeExternal();
+        if (this.__spriteFrame) {
+            this.__spriteFrame.destroy();
+            this.__spriteFrame = null;
+        }
         if (this.__resRef) {
-            //因为是自己new 的所以这样释放，内部纹理还是归资源系统管理
-            if (this.__resRef.content instanceof Texture2D) {
-                this.texture.destroy();
-            }
             this.__resRef.Dispose();
             this.__resRef = null;
         }
@@ -23339,77 +23374,323 @@ Drongo.UIBundle = "UI";
 /**UI遮罩颜色值 */
 Drongo.MaskColor = new Color(0, 0, 0, 255 * 0.5);
 
-class ServiceManager {
-    /**
-     * 初始化服务
-     * @param key
-     * @returns
-     */
-    static InitService(services, callback) {
-        let result = [];
-        if (Array.isArray(services)) {
-            let inited = 0;
-            for (let index = 0; index < services.length; index++) {
-                const serviceClass = services[index];
-                this.__InitService(serviceClass, (err, service) => {
-                    result.push(service);
-                    inited++;
-                    if (inited >= services.length) {
-                        callback(err, result);
-                    }
-                });
+class ServiceProxy {
+    constructor(service, refs) {
+        /**
+         * 引用计数器
+         */
+        this.refCount = 0;
+        this.service = service;
+        this.refs = refs;
+        this.refCount = 0;
+    }
+    AddRef() {
+        this.refCount++;
+    }
+    RemoveRef() {
+        this.refCount--;
+    }
+    Destroy() {
+        this.service.Destroy();
+        this.service = null;
+        for (let index = 0; index < this.refs.length; index++) {
+            const ref = this.refs[index];
+            ref.Dispose();
+        }
+        this.refs.length = 0;
+        this.refs = null;
+    }
+}
+
+class ServiceLoader extends EventDispatcher {
+    Load(serviceClass) {
+        this.serviceClass = serviceClass;
+        this.service = new this.serviceClass();
+        this.service.name = StringUtils.GetClassName(this.serviceClass);
+        //配置表
+        let urls = [];
+        if (this.service.configs != undefined && this.service.configs.length > 0) {
+            for (let index = 0; index < this.service.configs.length; index++) {
+                const sheet = this.service.configs[index];
+                const url = ConfigManager.Sheet2URL(sheet);
+                urls.push(url);
             }
         }
-        else {
-            this.__InitService(services, (err, service) => {
-                result.push(service);
-                callback(err, result);
-            });
+        //其他资源
+        if (this.service.assets != undefined && this.service.assets.length > 0) {
+            for (let index = 0; index < this.service.assets.length; index++) {
+                const url = this.service.assets[index];
+                urls.push(url);
+            }
+        }
+        if (urls.length == 0) {
+            this.__assetReady();
+            return;
+        }
+        //加载
+        Res.GetResRefList(urls, this.service.name, (progress) => {
+            this.Emit(Event.PROGRESS, { service: this.serviceClass, progress });
+        }).then((value) => {
+            this.refs = value;
+            this.__assetReady();
+        }, (reason) => {
+            this.Emit(Event.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) });
+        });
+    }
+    /**
+     * 依赖的配置与资源准备完毕
+     */
+    __assetReady() {
+        this.service.Init();
+        let proxy = new ServiceProxy(this.service, this.refs);
+        this.Emit(Event.COMPLETE, { service: this.serviceClass, proxy });
+    }
+    Reset() {
+        this.serviceClass = null;
+        this.service = null;
+        this.refs = null;
+    }
+}
+
+class ServiceQueue {
+    constructor() {
+        this.running = new Dictionary();
+        this.waiting = [];
+        this.pool = [];
+        TickerManager.AddTicker(this);
+    }
+    Load(service) {
+        //已经在等待列表中
+        if (this.waiting.indexOf(service) >= 0) {
+            return;
+        }
+        if (this.running.Has(service)) {
+            return;
+        }
+        this.waiting.push(service);
+    }
+    Tick(dt) {
+        while (this.running.size < ServiceManager.MAX_LOADER_THREAD && this.waiting.length > 0) {
+            const service = this.waiting.shift();
+            let loader;
+            if (this.pool.length > 0) {
+                loader = this.pool.shift();
+            }
+            else {
+                loader = new ServiceLoader();
+            }
+            this.running.Set(service, loader);
+            this.__addEvent(loader);
+            loader.Load(service);
         }
     }
-    static __InitService(serviceClass, callback) {
-        const className = GetClassName(serviceClass);
-        let service;
-        if (this.__services.has(className)) {
-            service = this.__services.get(className);
-            callback(null, service);
+    __addEvent(target) {
+        target.On(Event.COMPLETE, this.__eventHandler, this);
+        target.On(Event.ERROR, this.__eventHandler, this);
+        target.On(Event.PROGRESS, this.__eventHandler, this);
+    }
+    __eventHandler(type, target, data) {
+        if (type == Event.PROGRESS) {
+            ServiceManager.ChildProgress(data.service, data.progress);
+            return;
         }
-        else {
-            service = new serviceClass();
-            service.name = className;
-            this.__services.set(className, service);
-            service.Init((err) => {
-                callback(err, service);
-            });
+        target.OffAllEvent();
+        this.running.Delete(data.service);
+        if (type == Event.ERROR) {
+            ServiceManager.ChildError(data.service, data.err);
+            return;
         }
+        if (type == Event.COMPLETE) {
+            ServiceManager.ChildComplete(data.service, data.proxy);
+            target.Reset();
+            this.pool.push(target);
+        }
+    }
+    static get single() {
+        if (this.instance == null) {
+            this.instance = new ServiceQueue();
+        }
+        return this.instance;
+    }
+}
+
+class ServiceRequest {
+    constructor(services, progress, callback) {
+        this.__loadedMap = new Map();
+        this.services = services;
+        this.__progress = progress;
+        this.__callback = callback;
+    }
+    Load() {
+        this.__loadedMap.clear();
+        for (let index = 0; index < this.services.length; index++) {
+            const serviceClass = this.services[index];
+            const service = ServiceManager.GetService(serviceClass);
+            if (service) {
+                this.__loadedMap.set(serviceClass, 1);
+            }
+            else {
+                ServiceQueue.single.Load(serviceClass);
+            }
+        }
+    }
+    ChildComplete(service) {
+        this.__loadedMap.set(service, 1);
+        this.__checkComplete();
+    }
+    ChildError(service, err) {
+        if (this.__callback) {
+            this.__callback(err);
+        }
+    }
+    ChildProgress(service, progress) {
+        this.__loadedMap.set(service, progress);
+        let totalProgress = this.loaded / this.services.length;
+        if (this.__progress) {
+            this.__progress(totalProgress);
+        }
+    }
+    __checkComplete() {
+        let progress = this.loaded / this.services.length;
+        if (this.__progress) {
+            this.__progress(progress);
+        }
+        //完成
+        if (progress == 1 && this.__callback != null) {
+            this.__callback(null);
+            this.Destroy();
+        }
+    }
+    get loaded() {
+        let loaded = 0;
+        for (let value of this.__loadedMap.values()) {
+            loaded += value;
+        }
+        return loaded;
+    }
+    Destroy() {
+        this.services = null;
+        this.__progress = null;
+        this.__callback = null;
+    }
+}
+
+class ServiceManager {
+    /**
+     * 加载
+     * @param services
+     * @param progress
+     * @param callback
+     */
+    static Load(services, progress, callback) {
+        let request = new ServiceRequest(services, progress, callback);
+        this.__addRequest(request);
+        request.Load();
+    }
+    static ChildComplete(service, proxy) {
+        //保存
+        this.__services.set(service, proxy);
+        //通知
+        let list = this.__requests.get(service);
+        for (let index = 0; index < list.length; index++) {
+            const request = list[index];
+            request.ChildComplete(service);
+        }
+        list.length = 0;
+        this.__requests.delete(service);
+    }
+    static ChildError(service, err) {
+        let list = this.__requests.get(service);
+        for (let index = 0; index < list.length; index++) {
+            const request = list[index];
+            request.ChildError(service, err);
+        }
+        //复制
+        let clist = list.concat();
+        //清除掉关联的所有资源请求
+        for (let index = 0; index < clist.length; index++) {
+            const request = clist[index];
+            this.__removeRequest(request);
+            //销毁
+            request.Destroy();
+        }
+    }
+    static ChildProgress(service, progress) {
+        let list = this.__requests.get(service);
+        for (let index = 0; index < list.length; index++) {
+            const request = list[index];
+            request.ChildProgress(service, progress);
+        }
+    }
+    static __addRequest(request) {
+        let list;
+        for (let index = 0; index < request.services.length; index++) {
+            const service = request.services[index];
+            if (!this.__requests.has(service)) {
+                list = [];
+                this.__requests.set(service, list);
+            }
+            else {
+                list = this.__requests.get(service);
+            }
+            list.push(request);
+        }
+    }
+    static __removeRequest(request) {
+        let list;
+        let findex = 0;
+        //遍历当前请求的所有服务
+        for (let index = 0; index < request.services.length; index++) {
+            const service = request.services[index];
+            //从列表中找出并删除
+            list = this.__requests.get(service);
+            findex = list.indexOf(request);
+            if (findex >= 0) {
+                list.splice(findex, 1);
+            }
+        }
+    }
+    /**
+     * 获取代理
+     * @param clazz
+     * @returns
+     */
+    static GetServiceProxy(clazz) {
+        if (!this.__services.has(clazz)) {
+            return null;
+        }
+        return this.__services.get(clazz);
     }
     /**
      * 获取服务
      * @param clazz
      */
     static GetService(clazz) {
-        const className = GetClassName(clazz);
-        if (!this.__services.has(className)) {
-            throw new Error(className + "未初始化!");
+        let proxy = this.GetServiceProxy(clazz);
+        if (proxy == null) {
+            return null;
         }
-        let service = this.__services.get(className);
-        return service;
+        return proxy.service;
     }
     /**
      * 尝试销毁服务
      * @param clazz
      */
     static Dispose(clazz) {
-        let service = this.GetService(clazz);
-        service.RemoveRef();
-        if (service.refCount <= 0) {
-            const serviceName = GetClassName(clazz);
-            this.__services.delete(serviceName);
-            service.Destroy();
+        let proxy = this.__services.get(clazz);
+        proxy.RemoveRef();
+        if (proxy.refCount <= 0) {
+            Debuger.Log(Debuger.DRONGO, "Service销毁:" + proxy.service.name);
+            this.__services.delete(clazz);
+            proxy.Destroy();
         }
     }
 }
-/**启动器 */
+/**
+ * 最大启动线程
+ */
+ServiceManager.MAX_LOADER_THREAD = 5;
+ServiceManager.__requests = new Map();
 ServiceManager.__services = new Map();
 
 var LoadState;
@@ -23427,8 +23708,6 @@ class GUIProxy {
         this.closeTime = 0;
         /**UI层次*/
         this.zIndex = 0;
-        /**资源引用*/
-        this.__resRef = null;
         /**是否在显示中*/
         this.__showing = false;
         /**加载状态 */
@@ -23437,12 +23716,12 @@ class GUIProxy {
         if (!this.info) {
             throw new Error("UI信息不能为空！");
         }
+        this.urls = [];
     }
     /**
      * 加载代码包
      */
     __loadCodeBundle() {
-        this.__startTime = Timer.currentTime;
         this.__loadState = LoadState.Loading;
         if (!assetManager.getBundle(this.info.bundleName)) {
             assetManager.loadBundle(this.info.bundleName, this.__codeBundleLoaded.bind(this));
@@ -23455,62 +23734,59 @@ class GUIProxy {
      * 代码包加载完成
      */
     __codeBundleLoaded() {
-        this.__uiURL = { url: this.info.packageName, type: "fgui", bundle: Drongo.UIBundle };
-        this.__loadAssets();
-    }
-    //加载UI资源
-    __loadAssets() {
-        Res.GetResRef(this.__uiURL, this.info.key, this.__loadAssetProgress.bind(this)).then(this.__loadAssetComplete.bind(this), this.__loadAssetError.bind(this));
-    }
-    __loadAssetProgress(progress) {
-        LoadingView.ChangeData({ label: this.info.key + " asset loading...", progress: progress });
-    }
-    __loadAssetError(err) {
-        if (err) {
-            LoadingView.ChangeData({ label: err });
-        }
-    }
-    __loadAssetComplete(result) {
-        let resKey = URL2Key(this.__uiURL);
-        if (resKey != result.key) {
-            result.Dispose();
-            return;
-        }
-        //资源是否存在
-        this.__resRef = result;
-        if (!this.__resRef) {
-            throw new Error("加载UI资源失败:" + this.info.packageName + " ");
-        }
-        this.__createUIMediator();
-    }
-    /**创建Mediator */
-    __createUIMediator() {
+        this.urls.push({ url: this.info.packageName, type: "fgui", bundle: Drongo.UIBundle });
+        //创建Mediator
         let viewCreatorCom = GUIProxy.createNode.addComponent(this.info.key + "ViewCreator");
         let viewCreator = viewCreatorCom;
         if (!viewCreator) {
             throw new Error(this.info.key + "ViewCreator类不存在或未实现IViewCreator!");
         }
         this.mediator = viewCreator.createMediator();
+        //进度界面
+        if (this.mediator.showLoadingView) {
+            LoadingView.Show();
+        }
         //销毁组件
         viewCreatorCom.destroy();
-        if (this.mediator.services) {
+        //配置表
+        if (this.mediator.configs != null && this.mediator.configs.length > 0) {
+            for (let index = 0; index < this.mediator.configs.length; index++) {
+                const sheet = this.mediator.configs[index];
+                const url = ConfigManager.Sheet2URL(sheet);
+                this.urls.push(url);
+            }
+        }
+        this.__loadAssets();
+    }
+    //加载UI资源
+    __loadAssets() {
+        Res.GetResRefList(this.urls, this.info.key, (progress) => {
+            LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress * 0.5 });
+        }).then((result) => {
+            this.assets = result;
             this.__initServices();
-        }
-        else {
-            this.__createUI();
-        }
+        }, (err) => {
+            LoadingView.ChangeData({ label: this.info.key + " Res Load Err:" + err });
+        });
     }
     /**
     * 初始化服务
     */
     __initServices() {
-        ServiceManager.InitService(this.mediator.services, (err, services) => {
+        if (this.mediator.services == null) {
+            this.__createUI();
+            return;
+        }
+        ServiceManager.Load(this.mediator.services, (progress) => {
+            LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 0.5 + progress * 0.4 });
+        }, (err) => {
             if (err) {
                 throw err;
             }
-            for (let index = 0; index < services.length; index++) {
-                const service = services[index];
-                service.AddRef();
+            for (let index = 0; index < this.mediator.services.length; index++) {
+                const service = this.mediator.services[index];
+                const proxy = ServiceManager.GetServiceProxy(service);
+                proxy.AddRef();
             }
             this.__createUI();
         });
@@ -23525,6 +23801,7 @@ class GUIProxy {
      * UI创建完成回调
      */
     __createUICallBack() {
+        LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 1 });
         this.__loadState = LoadState.Loaded;
         this.mediator.Init();
         this.mediator.inited = true;
@@ -23537,13 +23814,6 @@ class GUIProxy {
         this.mediator.viewComponent.visible = true;
     }
     Tick(dt) {
-        if (this.__loadState == LoadState.Loading) {
-            let currentTime = Timer.currentTime;
-            if (currentTime - this.__startTime > 1) {
-                LoadingView.Show();
-            }
-            return;
-        }
         if (this.__loadState == LoadState.Loaded) {
             if (this.mediator) {
                 this.mediator.Tick(dt);
@@ -23568,7 +23838,10 @@ class GUIProxy {
         else if (this.__loadState == LoadState.Loading) ;
         else {
             this.__addToLayer();
-            LoadingView.Hide();
+            //进度界面
+            if (this.mediator.showLoadingView) {
+                LoadingView.Hide();
+            }
             this.mediator.Show(this.data);
             this.data = null;
             //如果界面已经被关闭(这是有可能的！);
@@ -23616,14 +23889,16 @@ class GUIProxy {
     Destroy() {
         var _a;
         console.log("UI销毁=>" + ((_a = this.info) === null || _a === void 0 ? void 0 : _a.key));
+        for (let index = 0; index < this.assets.length; index++) {
+            const ref = this.assets[index];
+            ref.Dispose();
+        }
+        this.assets.length = 0;
+        this.assets = null;
         this.mediator.Destroy();
         this.mediator = undefined;
         this.info = undefined;
         this.data = null;
-        if (this.__resRef) {
-            this.__resRef.Dispose();
-            this.__resRef = null;
-        }
     }
     getLayerChildCount() {
         return this.layer.GetCount();
@@ -24178,6 +24453,8 @@ class GUIMediator extends BaseMediator {
     constructor() {
         super();
         this.info = null;
+        /**是否显示进度界面 */
+        this.showLoadingView = false;
         /**根节点 */
         this.viewComponent = null;
         /**遮罩 */
@@ -24194,26 +24471,7 @@ class GUIMediator extends BaseMediator {
             throw new Error("GUI 信息不能为空");
         }
         this.__createdCallBack = created;
-        if (this.$configs != null && this.$configs.length != 0) {
-            this.__loadConfigs();
-        }
-        else {
-            this.__createUI(true);
-        }
-    }
-    __loadConfigs() {
-        let urls = [];
-        for (let index = 0; index < this.$configs.length; index++) {
-            const sheet = this.$configs[index];
-            const url = ConfigManager.Sheet2URL(sheet);
-            urls.push(url);
-        }
-        Res.GetResRefList(urls, this.info.comName).then((value) => {
-            this.$configRefs = value;
-            this.__createUI(true);
-        }, (reason) => {
-            throw new Error("UI:" + this.info.comName + "依赖的配置加载出错:" + reason);
-        });
+        this.__createUI(true);
     }
     __createUI(async) {
         let packageName = this.info.packageName;
@@ -24330,14 +24588,7 @@ class GUIMediator extends BaseMediator {
             }
         }
         //依赖的配置
-        if (this.$configRefs) {
-            for (let index = 0; index < this.$configRefs.length; index++) {
-                const element = this.$configRefs[index];
-                element.Dispose();
-            }
-            this.$configRefs = null;
-        }
-        this.$configs = null;
+        this.configs = null;
         if (this.services) {
             for (let index = 0; index < this.services.length; index++) {
                 const element = this.services[index];
@@ -24934,7 +25185,7 @@ class Pool {
      * @returns
      */
     static allocate(clazz, maxCount) {
-        let className = GetClassName(clazz);
+        let className = StringUtils.GetClassName(clazz);
         let pool;
         if (this.__pools.has(className)) {
             pool = this.__pools.get(className);
@@ -24950,7 +25201,7 @@ class Pool {
      * @param value
      */
     static recycle(value) {
-        let className = GetClassName(value);
+        let className = StringUtils.GetClassName(value);
         if (!this.__pools.has(className)) {
             throw new Error("对象池不存在:" + className);
         }
@@ -24972,7 +25223,7 @@ class Pool {
      * @param clazz
      */
     static recycleAll(clazz) {
-        let className = GetClassName(clazz);
+        let className = StringUtils.GetClassName(clazz);
         if (!this.__pools.has(className)) {
             throw new Error("对象池不存在:" + className);
         }
@@ -25071,93 +25322,16 @@ class PoolImpl {
 
 /**
  *  服务基类
- *  1.  如果有依赖的资源请在子类构造函数中给this.$configs和this.$assets进行赋值
- *  2.  重写$configAndAssetReady函数，并在完成初始化后调用this.initComplete()
  */
 class BaseService {
     constructor() {
-        /**
-         * 引用计数
-         */
-        this.refCount = 0;
     }
-    Init(callback) {
-        this.__initCallback = callback;
-        if (this.$configs == null || this.$configs.length <= 0) {
-            this.__configLoaded();
-        }
-        else {
-            this.__loadConfigs();
-        }
-    }
-    __loadConfigs() {
-        let urls = [];
-        for (let index = 0; index < this.$configs.length; index++) {
-            const sheet = this.$configs[index];
-            const url = ConfigManager.Sheet2URL(sheet);
-            urls.push(url);
-        }
-        Res.GetResRefList(urls, this.name).then((value) => {
-            this.$configRefs = value;
-            this.__configLoaded();
-        }, (reason) => {
-            throw new Error(this.name + "依赖的配置加载出错:" + reason);
-        });
-    }
-    __configLoaded() {
-        if (this.$assets == null || this.$assets.length <= 0) {
-            this.$configAndAssetReady();
-        }
-        else {
-            this.__loadAssets();
-        }
-    }
-    __loadAssets() {
-        Res.GetResRefList(this.$assets, this.name).then((value) => {
-            this.$assetRefs = value;
-            this.$configAndAssetReady();
-        }, (reason) => {
-            throw new Error(this.name + "依赖资源加载出错:" + reason);
-        });
-    }
-    /**
-     * 依赖的配置与资源准备完毕
-     */
-    $configAndAssetReady() {
-    }
-    /**
-     * 初始化完成时调用
-     */
-    $initComplete() {
-        if (this.__initCallback) {
-            this.__initCallback(null);
-            this.__initCallback = null;
-        }
+    Init() {
     }
     Destroy() {
         this.name = undefined;
-        this.__initCallback = null;
-        this.$configs = null;
-        this.$assets.length = 0;
-        this.$assets = null;
-        //配置资源引用
-        for (let index = 0; index < this.$configRefs.length; index++) {
-            const element = this.$configRefs[index];
-            element.Dispose();
-        }
-        this.$configRefs = null;
-        //将引用的资源释放
-        for (let index = 0; index < this.$assetRefs.length; index++) {
-            const element = this.$assetRefs[index];
-            element.Dispose();
-        }
-        this.$assetRefs = null;
-    }
-    AddRef() {
-        this.refCount++;
-    }
-    RemoveRef() {
-        this.refCount--;
+        this.configs = null;
+        this.assets = null;
     }
 }
 
@@ -25484,4 +25658,4 @@ class Handler {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, GetClassName, Handler, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
