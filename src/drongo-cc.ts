@@ -1,4 +1,6 @@
 //fgui
+import {CCFLoader} from "./drongo/res/loaders/CCFLoader";
+
 export { GGroup } from "./fairygui/GGroup";
 export { GObject } from "./fairygui/GObject";
 export { GGraph } from "./fairygui/GGraph";
@@ -190,6 +192,9 @@ export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
 export { StringUtils } from "./drongo/utils/StringUtils"
+
+// external custom fgui components
+export { CCFLoader } from "./drongo/res/loaders/CCFLoader"
 
 //框架对外接口
 export { Drongo } from "./drongo"
