@@ -40,6 +40,18 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     /**子Mediator(用于代码拆分)*/
     protected $subMediators: Array<SubGUIMediator>;
 
+    /**
+     * 播放显示动画
+     * @param complete 
+     */
+    PlayShowAnimation?: (complete: Function) => void;
+
+    /**
+     * 界面关闭时播放的动画
+     * @param complete 
+     */
+    PlayHideAnimation?: (complete: Function) => void;
+    
     constructor() {
         super();
     }

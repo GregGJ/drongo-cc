@@ -25336,118 +25336,6 @@ class BaseService {
 }
 
 /**
- * 本地数据缓存
- */
-class LocalStorage {
-    /**
-     * 初始化
-     * @param gameName
-     */
-    static Init(gameName) {
-        this.impl.Init(gameName);
-    }
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    static GetItem(key) {
-        this.impl.GetItem(key);
-    }
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    static SetItem(key, value) {
-        this.impl.SetItem(key, value);
-    }
-    /**
-     * 清理
-     * @param key
-     */
-    static ClearItem(key) {
-        this.impl.ClearItem(key);
-    }
-    /**
-     * 清理所有
-     */
-    static ClearAll() {
-        this.impl.ClearAll();
-    }
-    static get impl() {
-        if (this.__impl == null) {
-            this.__impl = Injector.GetInject(this.KEY);
-        }
-        if (this.__impl == null) {
-            throw new Error(this.KEY + "未注入!");
-        }
-        return this.__impl;
-    }
-}
-LocalStorage.KEY = "drongo.LocalStorage";
-
-/**
- * 本地数据缓存
- */
-class LocalStorageImpl {
-    /**
-     * 初始化
-     * @param gameName
-     */
-    Init(gameName) {
-        this.__gameName = gameName;
-        let localDataStr = sys.localStorage.getItem(this.__gameName);
-        if (!localDataStr) {
-            this.data = {};
-        }
-        else {
-            this.data = JSON.parse(localDataStr);
-        }
-    }
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    GetItem(key) {
-        return this.data[key];
-    }
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    SetItem(key, value) {
-        this.data[key] = value;
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 清理
-     * @param key
-     */
-    ClearItem(key) {
-        delete this.data[key];
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 清理所有
-     */
-    ClearAll() {
-        this.data = {};
-        TickerManager.CallNextFrame(this.__save, this);
-    }
-    /**
-     * 保存
-     */
-    __save() {
-        //保存到本地
-        let localDataStr = JSON.stringify(this.data);
-        sys.localStorage.setItem(this.__gameName, localDataStr);
-    }
-}
-
-/**
  * 任务队列
  */
 class TaskQueue extends EventDispatcher {
@@ -25658,4 +25546,712 @@ class Handler {
     }
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+var SerializationMode;
+(function (SerializationMode) {
+    SerializationMode[SerializationMode["JSON"] = 0] = "JSON";
+})(SerializationMode || (SerializationMode = {}));
+
+class ModelEvent {
+    constructor() {
+    }
+    static Create(newValue, oldValue, key) {
+        let result = new ModelEvent();
+        result.oldValue = oldValue;
+        result.newValue = newValue;
+        result.key = key;
+        return result;
+    }
+}
+ModelEvent.VALUE_CHANGED = "ModelEvent.VALUE_CHANGED";
+ModelEvent.ADD_CHILD = "ModelEvent.ADD_CHILD";
+ModelEvent.REMOVE_CHILD = "ModelEvent.REMOVE_CHILD";
+ModelEvent.CHILD_VALUE_CHANGED = "ModelEvent.CHILD_VALUE_CHANGED";
+
+/**
+ * 值抽象类
+ */
+class BaseValue extends EventDispatcher {
+    constructor() {
+        super();
+    }
+    GetValue() {
+        return this.data;
+    }
+    SetValue(value) {
+        if (this.CheckValue(value)) {
+            var oldValue = this.data;
+            this.data = value;
+            this.SendEvent(this.data, oldValue);
+        }
+    }
+    SendEvent(newValue, oldValue) {
+        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
+            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue));
+        }
+    }
+    /**
+     * 检测值是否合法
+     * @param value
+     */
+    CheckValue(value) {
+        return false;
+    }
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type, data) {
+        switch (type) {
+            case SerializationMode.JSON:
+                this.SetValue(data);
+                break;
+            default:
+                throw new Error("未知序列化类型:" + type);
+        }
+    }
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     * @returns
+     */
+    Encode(type, data) {
+        switch (type) {
+            case SerializationMode.JSON:
+                return this.data;
+            default:
+                throw new Error("未知序列化类型:" + type);
+        }
+    }
+    Equality(value) {
+        if (this.data == value.GetValue()) {
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
+ * 数组型数值
+ */
+class ArrayValue extends BaseValue {
+    constructor() {
+        super();
+        this.data = [];
+    }
+    CheckValue(value) {
+        if (value != null && Array.isArray(value)) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 添加到指定位置
+     * @param index
+     * @param value
+     */
+    AddAt(index, value) {
+        if (index < this.elements.length - 1) {
+            this.elements.splice(index, 0, value);
+            if (this.HasEvent(ModelEvent.ADD_CHILD)) {
+                this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+            }
+            value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+            value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        }
+        else {
+            throw new Error("索引" + index + " 超出可添加范围:" + (this.elements.length - 1));
+        }
+    }
+    /**
+     * 删除
+     * @param value
+     */
+    Remove(value) {
+        let index = this.elements.indexOf(value);
+        this.RemoveAt(index);
+    }
+    /**
+     * 通过索引删除并返回元素
+     * @param index
+     */
+    RemoveAt(index) {
+        if (index < 0 || index > this.elements.length - 1) {
+            throw new Error("要删除的索引超出数组边界！");
+        }
+        let result = this.elements[index];
+        this.elements.splice(index, 1);
+        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
+            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        }
+        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return result;
+    }
+    /**
+     * 添加到末尾
+     * @param value
+     */
+    Push(value) {
+        let index = this.elements.indexOf(value);
+        if (index >= 0) {
+            throw new Error("重复添加！");
+        }
+        index = this.elements.length;
+        this.elements.push(value);
+        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
+            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+        }
+        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+    }
+    /**
+     * 添加到头部
+     * @param value
+     */
+    Unshift(value) {
+        let index = this.elements.indexOf(value);
+        if (index >= 0) {
+            throw new Error("重复添加！");
+        }
+        this.elements.unshift(value);
+        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
+            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(0));
+        }
+        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+    }
+    /**
+     * 删除并返回第一个元素
+     */
+    Shift() {
+        if (this.elements.length == 0) {
+            throw new Error("数组为空！");
+        }
+        let result = this.elements.shift();
+        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
+            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(0));
+        }
+        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return result;
+    }
+    /**
+    * 删除并返回最后一个元素
+    */
+    Pop() {
+        if (this.elements.length == 0) {
+            throw new Error("数组为空！");
+        }
+        let index = this.elements.length - 1;
+        let result = this.elements.pop();
+        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
+            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        }
+        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return result;
+    }
+    /**
+     * 通过索引获取元素
+     * @param index
+     */
+    GetAt(index) {
+        return this.elements[index];
+    }
+    /**
+     * 获取索引值
+     * @param value
+     */
+    GetChildIndex(value) {
+        return this.elements.indexOf(value);
+    }
+    /**
+     * 检测时候包含该内容
+     * @param value
+     */
+    Contain(value) {
+        for (let index = 0; index < this.elements.length; index++) {
+            const element = this.elements[index];
+            if (element.Equality(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * 对比
+     * @param value
+     */
+    Equality(value) {
+        if (value instanceof ArrayValue) {
+            if (this.elements == value.elements) {
+                return true;
+            }
+            if (this.elements.length != value.elements.length) {
+                return false;
+            }
+            let a, b;
+            for (let index = 0; index < this.length; index++) {
+                a = this.elements[index];
+                b = value.elements[index];
+                if (a.Equality(b) == false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    ChildValueChanged(data) {
+        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+        }
+    }
+    /**
+     * 清除
+     */
+    Clear() {
+        this.elements.length = 0;
+    }
+    /**
+     * 列表长度
+     */
+    get length() {
+        return this.elements.length;
+    }
+    /**
+     * 内容
+     */
+    get elements() {
+        return this.data;
+    }
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type, data) {
+        switch (type) {
+            case SerializationMode.JSON:
+                let item;
+                let value;
+                for (let i = 0; i < data.length; i++) {
+                    item = data[i];
+                    value = ModelFactory.CreateValue(item);
+                    value.Decode(type, item);
+                    this.Push(value);
+                }
+                break;
+        }
+    }
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     */
+    Encode(type, data) {
+        switch (type) {
+            case SerializationMode.JSON:
+                let result = [];
+                let item;
+                for (var i = 0; i < this.elements.length; i++) {
+                    item = this.elements[i];
+                    result.push(item.Encode(type, data));
+                }
+                return result;
+            default:
+                return null;
+        }
+    }
+}
+
+/**
+ * 对象类型数据
+ */
+class DictionaryValue extends BaseValue {
+    constructor() {
+        super();
+        this.data = new Dictionary();
+    }
+    /**
+     * 添加属性
+     * @param value
+     */
+    Add(value) {
+        if (this.map.Has(value.key)) {
+            throw new Error("重复添加相同KEY的属性！");
+        }
+        this.map.Set(value.key, value);
+        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
+            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(value, null, value.key));
+        }
+        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+    }
+    /**
+     * 删除属性
+     * @param value
+     */
+    Remove(value) {
+        this.RemoveByKey(value.key);
+    }
+    /**
+     * 通过属性key删除并返回
+     * @param key
+     */
+    RemoveByKey(key) {
+        if (!this.map.Has(key)) {
+            throw new Error("要删除的属性不在集合内!");
+        }
+        let result = this.map.Get(key);
+        this.map.Delete(key);
+        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
+            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(null, result, key));
+        }
+        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return result;
+    }
+    /**
+     * 更新属性
+     * @param key
+     * @param data
+     */
+    Update(key, data) {
+        if (this.map.Has(key) == false) {
+            throw new Error("要更新的属性不存在！" + key);
+        }
+        let value = this.map.Get(key);
+        value.SetValue(data);
+    }
+    /**
+     * 更新多项属性
+     * @param keys
+     * @param values
+     */
+    MultUpdate(keys, values) {
+        if (keys == null || values == null) {
+            throw new Error("Keys和values不能为空！");
+        }
+        if (keys.length != values.length) {
+            throw new Error("keys.length!=values.length");
+        }
+        var key;
+        var value;
+        for (var i = 0; i < keys.length; i++) {
+            key = keys[i];
+            value = values[i];
+            this.Update(key, value);
+        }
+    }
+    /**
+     * 获取属性
+     * @param key
+     */
+    Get(key) {
+        return this.map.Get(key);
+    }
+    /**
+     * 对比
+     * @param value
+     */
+    Equality(value) {
+        if (value instanceof DictionaryValue) {
+            if (this.elements.length != value.elements.length) {
+                return false;
+            }
+            var a;
+            var b;
+            for (var i = 0; i < this.elements.length; i++) {
+                a = this.elements[i];
+                b = value.elements[i];
+                if (a.Equality(b) != false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 清除
+     */
+    Clear() {
+        this.map.Clear();
+    }
+    ChildValueChanged(data) {
+        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+        }
+    }
+    get elements() {
+        return this.map.elements;
+    }
+    get map() {
+        return this.data;
+    }
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type, data) {
+        switch (type) {
+            case SerializationMode.JSON:
+                let item;
+                let property;
+                for (const key in data) {
+                    if (Object.prototype.hasOwnProperty.call(data, key)) {
+                        item = data[key];
+                        property = ModelFactory.CreateProperty(item);
+                        property.key = key;
+                        property.Decode(type, item);
+                        this.Add(property);
+                    }
+                }
+                break;
+        }
+    }
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     * @returns
+     */
+    Encode(type, data = null) {
+        switch (type) {
+            case SerializationMode.JSON:
+                let result = {};
+                let item;
+                for (let index = 0; index < this.elements.length; index++) {
+                    item = this.elements[index];
+                    result[item.key] = item.Encode(type, data);
+                }
+                return result;
+            default:
+                return null;
+        }
+    }
+}
+
+class ArrayProperty extends ArrayValue {
+    constructor() {
+        super();
+    }
+    SendEvent(newValue, oldValue) {
+        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
+            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        }
+    }
+    /**
+     * 判断某个子内容的某个属性相同则返回true
+     */
+    ContainProperty(value) {
+        let item;
+        let findValue;
+        for (let j = 0; j < this.length; j++) {
+            item = this.elements[j];
+            if (item instanceof DictionaryValue) {
+                findValue = item.Get(value.key);
+                if (findValue.Equality(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+class DictionaryProperty extends DictionaryValue {
+    constructor() {
+        super();
+    }
+    SendEvent(newValue, oldValue) {
+        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
+            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        }
+    }
+}
+
+/**
+ * 数值类型值
+ */
+class NumberValue extends BaseValue {
+    constructor() {
+        super();
+    }
+    CheckValue(value) {
+        if (isNaN(value)) {
+            Debuger.Err(Debuger.DRONGO, "设置非数字类型:" + value);
+            return false;
+        }
+        if (value < Number.MIN_SAFE_INTEGER || value > Number.MAX_SAFE_INTEGER) {
+            Debuger.Err(Debuger.DRONGO, "数值:" + value + " 超出number可允许范围!");
+            return false;
+        }
+        return true;
+    }
+}
+
+class NumberProperty extends NumberValue {
+    constructor() {
+        super();
+    }
+    SendEvent(newValue, oldValue) {
+        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
+            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        }
+    }
+}
+
+/**
+ * 字符串类型值
+ */
+class StringValue extends BaseValue {
+    constructor() {
+        super();
+    }
+    CheckValue(value) {
+        if (value == undefined || value == null) {
+            return false;
+        }
+        return true;
+    }
+}
+
+class StringProperty extends StringValue {
+    constructor() {
+        super();
+    }
+    SendEvent(newValue, oldValue) {
+        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
+            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        }
+    }
+}
+
+class ModelFactory {
+    /**
+     * 根据数据创建值对象
+     * @param data
+     */
+    static CreateValue(data) {
+        if (data instanceof Array) {
+            return new ArrayValue();
+        }
+        else {
+            //字符串
+            if (data instanceof String) {
+                return new StringValue();
+            }
+            else {
+                //非数字
+                if (isNaN(data)) {
+                    return new DictionaryValue();
+                }
+                else {
+                    return new NumberValue();
+                }
+            }
+        }
+    }
+    /**
+     * 根据数据创建
+     * @param type
+     * @param key
+     */
+    static CreateProperty(data) {
+        let result;
+        if (data instanceof Array) {
+            result = new ArrayProperty();
+        }
+        else {
+            //字符串
+            if (typeof data === 'string') {
+                result = new StringProperty();
+            }
+            else {
+                let numValue = Number(data);
+                //非数字
+                if (isNaN(numValue)) {
+                    result = new DictionaryProperty();
+                }
+                else {
+                    result = new NumberProperty();
+                }
+            }
+        }
+        return result;
+    }
+}
+
+class BaseModel {
+    constructor(gameName, userID) {
+        this.gameName = gameName;
+        this.userID = userID;
+        this.__playerPrefs = new DictionaryValue();
+    }
+    /**
+     * 游戏存档
+     */
+    get playerPrefs() {
+        return this.__playerPrefs;
+    }
+    /**
+     * 清空游戏存档
+     */
+    ClearPlayerPrefs() {
+        localStorage.setItem(this.uuid, "");
+        if (this.__playerPrefs) {
+            this.__playerPrefs.Clear();
+        }
+    }
+    /**
+     * 保存游戏存档
+     */
+    SavePlayerPrefs() {
+        let data = this.__playerPrefs.Encode(SerializationMode.JSON);
+        localStorage.setItem(this.uuid, JSON.stringify(data));
+    }
+    /**
+     * 从本地读取存档
+     */
+    ReadByLoacl() {
+        this.__playerPrefs.Clear();
+        let jsonStr = localStorage.getItem(this.uuid);
+        if (StringUtils.IsEmpty(jsonStr)) {
+            this.isNewPlayer = true;
+        }
+        else {
+            try {
+                let jsonData = JSON.parse(jsonStr);
+                this.__playerPrefs.Decode(SerializationMode.JSON, jsonData);
+                this.isNewPlayer = false;
+            }
+            catch (error) {
+                this.isNewPlayer = true;
+            }
+        }
+        if (this.isNewPlayer) {
+            this.SetDefaultPropertys();
+        }
+        this.OnReadComplete();
+    }
+    /**
+     * 数据读取完成
+     */
+    OnReadComplete() {
+    }
+    /**
+     * 默认数据填充
+     */
+    SetDefaultPropertys() {
+    }
+    get uuid() {
+        return this.gameName + "_" + this.userID;
+    }
+}
+
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };

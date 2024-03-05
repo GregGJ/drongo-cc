@@ -61,8 +61,8 @@ export { AudioManager } from "./drongo/audios/AudioManager"
 export { IAudioChannel } from "./drongo/audios/IAudioChannel"
 export { IAudioGroup } from "./drongo/audios/IAudioGroup"
 export { IAudioManager } from "./drongo/audios/IAudioManager"
-export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
-export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
+// export { AudioChannelImpl } from "./drongo/audios/AudioChannelImpl"
+// export { AudioManagerImpl } from "./drongo/audios/AudioManagerImpl"
 
 //bindings
 export { BinderUtils } from "./drongo/bindings/BinderUtils"
@@ -82,8 +82,8 @@ export { List } from "./drongo/containers/List"
 
 //debugers
 export { Debuger } from "./drongo/debugers/Debuger"
-export { DebugerImpl } from "./drongo/debugers/DebugerImpl"
-export { IDebuger } from "./drongo/debugers/IDebuger"
+// export { DebugerImpl } from "./drongo/debugers/DebugerImpl"
+// export { IDebuger } from "./drongo/debugers/IDebuger"
 
 //events
 export { Event } from "./drongo/events/Event"
@@ -98,7 +98,7 @@ export { IState } from "./drongo/fsm/IState"
 export { GUIManager } from "./drongo/gui/GUIManager"
 //layer
 export { ILayer } from "./drongo/gui/core/layer/ILayer"
-export { ILayerManager } from "./drongo/gui/core/layer/ILayerManager"
+// export { ILayerManager } from "./drongo/gui/core/layer/ILayerManager"
 export { LayerManager } from "./drongo/gui/core/layer/LayerManager"
 //loadingView
 export { ILoadingView } from "./drongo/gui/core/loadingView/ILoadingView"
@@ -116,7 +116,7 @@ export { IViewCreator } from "./drongo/gui/core/IViewCreator"
 
 //gui
 export { BaseMediator } from "./drongo/gui/gui/BaseMediator"
-export { GUIManagerImpl } from "./drongo/gui/gui/GUIManagerImpl"
+// export { GUIManagerImpl } from "./drongo/gui/gui/GUIManagerImpl"
 export { GUIMediator } from "./drongo/gui/gui/GUIMediator"
 export { GUIProxy } from "./drongo/gui/gui/GUIProxy"
 export { IGUIInfo } from "./drongo/gui/gui/IGUIInfo"
@@ -124,7 +124,7 @@ export { SubGUIMediator } from "./drongo/gui/gui/SubGUIMediator"
 
 //layer
 export { Layer } from "./drongo/gui//layer/Layer"
-export { LayerManagerImpl } from "./drongo/gui//layer/LayerManagerImpl"
+// export { LayerManagerImpl } from "./drongo/gui//layer/LayerManagerImpl"
 
 //maxRects
 export { FindPosition } from "./drongo/maxRects/FindPosition"
@@ -138,35 +138,30 @@ export { Pool } from "./drongo/pools/Pool"
 //res
 export { Res } from "./drongo/res/Res"
 //res/core
-export { ILoader } from "./drongo/res/core/ILoader"
-export { IRes } from "./drongo/res/core/IRes"
-export { IResManager } from "./drongo/res/core/IResManager"
+// export { ILoader } from "./drongo/res/core/ILoader"
+// export { IRes } from "./drongo/res/core/IRes"
+// export { IResManager } from "./drongo/res/core/IResManager"
 export { IResource } from "./drongo/res/core/IResource"
 export { ResRef } from "./drongo/res/core/ResRef"
 export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/core/ResURL"
 //res/loader
-export { CCLoaderImpl } from "./drongo/res/loaders/CCLoaderImpl"
-export { FGUILoader } from "./drongo/res/loaders/FGUILoader"
-export { Loader } from "./drongo/res/loaders/Loader"
-export { LoaderQueue } from "./drongo/res/loaders/LoaderQueue"
-export { ResRequest } from "./drongo/res/loaders/ResRequest"
+// export { CCLoaderImpl } from "./drongo/res/loaders/CCLoaderImpl"
+// export { FGUILoader } from "./drongo/res/loaders/FGUILoader"
+// export { Loader } from "./drongo/res/loaders/Loader"
+// export { LoaderQueue } from "./drongo/res/loaders/LoaderQueue"
+// export { ResRequest } from "./drongo/res/loaders/ResRequest"
 //res/res
-export { FGUIResource } from "./drongo/res/res/FGUIResource"
-export { ResImpl } from "./drongo/res/res/ResImpl"
+// export { FGUIResource } from "./drongo/res/res/FGUIResource"
+// export { ResImpl } from "./drongo/res/res/ResImpl"
 export { ResManager } from "./drongo/res//res/ResManager"
-export { ResManagerImpl } from "./drongo/res//res/ResManagerImpl"
-export { ResourceImpl } from "./drongo/res/res/ResourceImpl"
+// export { ResManagerImpl } from "./drongo/res//res/ResManagerImpl"
+// export { ResourceImpl } from "./drongo/res/res/ResourceImpl"
 
 
 //services
 export { BaseService } from "./drongo/services/BaseService"
 export { IService } from "./drongo/services/IService"
 export { ServiceManager } from "./drongo/services/ServiceManager"
-
-//storages
-export { ILocalStorage } from "./drongo/storages/ILocalStorage"
-export { LocalStorage } from "./drongo/storages/LocalStorage"
-export { LocalStorageImpl } from "./drongo/storages/LocalStorageImpl"
 
 //tasks
 export { ITask } from "./drongo/tasks/ITask"
@@ -175,14 +170,14 @@ export { TaskSequence } from "./drongo/tasks/TaskSequence"
 
 //ticker
 export { ITicker } from "./drongo/ticker/ITicker"
-export { ITickerManager } from "./drongo/ticker/ITickerManager"
+// export { ITickerManager } from "./drongo/ticker/ITickerManager"
 export { TickerManager } from "./drongo/ticker/TickerManager"
-export { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl"
+// export { TickerManagerImpl } from "./drongo/ticker/TickerManagerImpl"
 
 //timer
-export { ITimer } from "./drongo/timer/ITimer"
+// export { ITimer } from "./drongo/timer/ITimer"
 export { Timer } from "./drongo/timer/Timer"
-export { TimerImpl } from "./drongo/timer/TimerImpl"
+// export { TimerImpl } from "./drongo/timer/TimerImpl"
 
 //utils
 export { BitFlag } from "./drongo/utils/BitFlag"
@@ -190,6 +185,29 @@ export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
 export { StringUtils } from "./drongo/utils/StringUtils"
+
+
+//model
+export { SerializationMode } from "./drongo/models/SerializationMode"
+export { ModelEvent } from "./drongo/models/ModelEvent"
+export { ModelFactory } from "./drongo/models/ModelFactory"
+
+export { ISerialization } from "./drongo/models/core/ISerialization"
+export { IValue } from "./drongo/models/core/IValue"
+export { IProperty } from "./drongo/models/core/IProperty"
+
+export { BaseValue } from "./drongo/models/values/BaseValue"
+export { StringValue } from "./drongo/models/values/StringValue"
+export { NumberValue } from "./drongo/models/values/NumberValue"
+export { ArrayValue } from "./drongo/models/values/ArrayValue"
+export { DictionaryValue } from "./drongo/models/values/DictionaryValue"
+
+export { StringProperty } from "./drongo/models/propertys/StringProperty"
+export { NumberProperty } from "./drongo/models/propertys/NumberProperty"
+export { DictionaryProperty } from "./drongo/models/propertys/DictionaryProperty"
+export { ArrayProperty } from "./drongo/models/propertys/ArrayProperty"
+
+export { BaseModel } from "./drongo/models/BaseModel"
 
 //框架对外接口
 export { Drongo } from "./drongo"

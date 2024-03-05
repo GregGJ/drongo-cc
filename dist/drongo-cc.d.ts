@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, AudioSource } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
 
 declare class ByteBuffer {
     stringTable: Array<string>;
@@ -2808,101 +2808,6 @@ interface IAudioManager {
     GetPlaying(url: ResURL): IAudioChannel;
 }
 
-declare class AudioChannelImpl implements IAudioChannel {
-    private __node;
-    private __source;
-    private __isPlaying;
-    private __url;
-    private __volume;
-    private __speed;
-    private __loop;
-    private __startTime;
-    private __time;
-    private __fadeData;
-    private __paused;
-    private __pauseTime;
-    private __playedComplete;
-    private __ref;
-    private __mute;
-    volume: number;
-    constructor(node: Node, source?: AudioSource);
-    get url(): ResURL;
-    get mute(): boolean;
-    set mute(value: boolean);
-    Play(url: ResURL, playedComplete: Function, volume: number, fade?: {
-        time: number;
-        startVolume?: number;
-        complete?: Function;
-        completeStop?: boolean;
-    }, loop?: boolean, speed?: number): void;
-    Stop(): void;
-    get isPlaying(): boolean;
-    /**
-     *
-     * @param time
-     * @param endVolume
-     * @param startVolume
-     * @param complete
-     * @param completeStop
-     * @returns
-     */
-    Fade(time: number, endVolume: number, startVolume?: number, complete?: Function, completeStop?: boolean): void;
-    private __reset;
-    private __clipLoaded;
-    private __play;
-    Tick(dt: number): void;
-    Resume(): void;
-    Pause(): void;
-    get curVolume(): number;
-}
-
-/**
- * 音频播放管理器
- */
-declare class AudioManagerImpl implements IAudioManager {
-    private __audioRoot;
-    private __musicChannels;
-    private __musicChannelIndex;
-    private __soundChannels;
-    constructor();
-    /**
-     * 总音量
-     */
-    get volume(): number;
-    private __volume;
-    set volume(value: number);
-    /**
-     * 音乐总音量控制
-     */
-    set musicVolume(value: number);
-    private __musicVolume;
-    get musicVolume(): number;
-    /**
-     * 声音总音量
-     */
-    get soundVolume(): number;
-    private __soundVolume;
-    set soundVolume(value: number);
-    set mute(value: boolean);
-    private __mute;
-    get mute(): boolean;
-    get muteMusic(): boolean;
-    private __muteMusic;
-    set muteMusic(value: boolean);
-    get muteSound(): boolean;
-    private __muteSound;
-    set muteSound(value: boolean);
-    private __changedMutes;
-    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
-    StopMusic(): void;
-    PauseMusic(): void;
-    ResumeMusic(): void;
-    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
-    GetPlaying(url: ResURL): IAudioChannel;
-    private GetIdleChannel;
-    Tick(dt: number): void;
-}
-
 /**
  * 处理器
  */
@@ -3510,67 +3415,6 @@ declare class Debuger {
     private static get impl();
 }
 
-interface IDebuger {
-    /**
-     * 设置过滤
-     * @param key
-     * @param isOpen
-     */
-    Debug(key: string, isOpen: boolean): void;
-    /**
-     * 获取已保存的日志
-     * @param type
-     * @returns
-     */
-    GetLogs(type?: string): Array<string>;
-    /**
-     * 日志
-     * @param type
-     * @param msg
-     */
-    Log(type: string, msg: any): void;
-    /**
-     * 错误
-     * @param type
-     * @param msg
-     */
-    Err(type: string, msg: any): void;
-    /**
-     * 警告
-     * @param type
-     * @param msg
-     */
-    Warn(type: string, msg: any): void;
-    /**
-     * 信息
-     * @param type
-     * @param msg
-     */
-    Info(type: string, msg: any): void;
-}
-
-declare class DebugerImpl implements IDebuger {
-    private __logs;
-    private __debuger;
-    /**
-     * 设置过滤
-     * @param key
-     * @param isOpen
-     */
-    Debug(key: string, isOpen: boolean): void;
-    /**
-     * 获取已保存的日志
-     * @param type
-     * @returns
-     */
-    GetLogs(type?: string): Array<string>;
-    private __save;
-    Log(type: string, msg: any): void;
-    Err(type: string, msg: any): void;
-    Warn(type: string, msg: any): void;
-    Info(type: string, msg: any): void;
-}
-
 declare class Event$1 {
     static readonly START: string;
     static readonly PROGRESS: string;
@@ -3892,29 +3736,6 @@ interface ILayer {
      * 当前层拥有的子对象数量
      */
     GetCount(): number;
-}
-
-interface ILayerManager {
-    /**
-     * 添加层
-     * @param key
-     * @param layer
-     */
-    AddLayer(key: string, layer: ILayer): void;
-    /**
-     * 删除层
-     * @param key
-     */
-    RemoveLayer(key: string): void;
-    /**
-     * 获取层对象
-     * @param key
-     */
-    GetLayer(key: string): ILayer | undefined;
-    /**
-     * 获得所有层
-     */
-    GetAllLayer(): ILayer[];
 }
 
 /**
@@ -4244,60 +4065,6 @@ interface IGUIInfo {
 }
 
 /**
- * GUI管理器
- */
-declare class GUIManagerImpl implements IGUIManager {
-    /**已注册*/
-    private __registered;
-    /**实例 */
-    private __instances;
-    /**
-     * 删除列表
-     */
-    private __destryList;
-    constructor();
-    /**获取某个组件 */
-    GetUIComponent(key: string, path: string): any;
-    /**
-     * 获取界面的mediator
-     * @param key
-     */
-    GetMediatorByKey(key: string): IGUIMediator;
-    private __showedHandler;
-    private __closedHandler;
-    Register(info: IGUIInfo): void;
-    Unregister(key: string): void;
-    Tick(dt: number): void;
-    Open(key: string, data?: any): void;
-    private __open;
-    private CheckFullLayer;
-    Close(key: string, checkLayer?: boolean): void;
-    CloseAll(): void;
-    private __close;
-    /**
-     * 检测UI关联关系
-     * @param key
-     */
-    private __checkRelation;
-    /**
-     * 获得前一个打开的全屏界面
-     */
-    GetPrevLayer(): string;
-    /**
-     * 获取界面状态
-     * @param key
-     */
-    GetGUIState(key: string): GUIState;
-    SetGUIState(key: string, state: GUIState): void;
-    /**
-     * 是否已打开或打开中
-     * @param key
-     * @returns
-     */
-    IsOpen(key: string): boolean;
-}
-
-/**
  * 子UI 逻辑划分
  */
 declare class SubGUIMediator extends BaseMediator {
@@ -4328,6 +4095,16 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     private __createdCallBack;
     /**子Mediator(用于代码拆分)*/
     protected $subMediators: Array<SubGUIMediator>;
+    /**
+     * 播放显示动画
+     * @param complete
+     */
+    PlayShowAnimation?: (complete: Function) => void;
+    /**
+     * 界面关闭时播放的动画
+     * @param complete
+     */
+    PlayHideAnimation?: (complete: Function) => void;
     constructor();
     /**
      * 创建UI
@@ -4453,30 +4230,6 @@ declare class Layer extends GComponent implements ILayer {
     RemoveChildAt(index: number): void;
     GetChildAt(index: number): GObject;
     GetCount(): number;
-}
-
-/**
- * cocos fgui 层管理器
- */
-declare class LayerManagerImpl implements ILayerManager {
-    private __layerMap;
-    constructor();
-    /**
-     * 添加层
-     * @param key
-     * @param layer
-     */
-    AddLayer(key: string, layer: ILayer): void;
-    /**
-     * 删除层
-     * @param key
-     */
-    RemoveLayer(key: string): void;
-    GetLayer(layerKey: string): ILayer | undefined;
-    /**
-     * 获得所有层
-     */
-    GetAllLayer(): ILayer[];
 }
 
 declare enum FindPosition {
@@ -4677,53 +4430,6 @@ declare class Res {
     private static get impl();
 }
 
-interface IRes {
-    /**
-     * 设置加载器
-     * @param key
-     * @param loader
-     */
-    SetResLoader(key: any, loader: new () => ILoader): void;
-    /**
-     * 获取加载器
-     * @param key
-     */
-    GetResLoader(key: any): new () => ILoader;
-    /**
-    * 获取资源
-    * @param url
-    * @param refKey
-    * @param progress
-    */
-    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
-    /**
-     * 获取资源列表
-     * @param urls
-     * @param refKey
-     * @param progress
-     */
-    GetResRefList(urls: Array<ResURL>, refKey: string, progress?: (progress: number) => void): Promise<Array<ResRef>>;
-    /**
-     * 获取资源列表按照URL存放到字典中
-     * @param urls
-     * @param refKey
-     * @param result
-     * @param progress
-     */
-    GetResRefMap(urls: Array<ResURL>, refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
-}
-
-/**
- * 心跳接口
- */
-interface ITicker {
-    /**
-     * 心跳
-     * @param dt    间隔时间(秒)
-     */
-    Tick(dt: number): void;
-}
-
 /**
  * 资源接口
  */
@@ -4764,190 +4470,6 @@ interface IResource {
      * 资源的引用列表
      */
     readonly refList: Array<ResRef>;
-}
-
-/**
- * 资源管理器接口
- */
-interface IResManager extends ITicker {
-    /**
-     * 添加一个资源
-     * @param value
-     */
-    AddRes(value: IResource): void;
-    /**
-     * 获取资源(内部接口)
-     * @param key
-     */
-    _getRes(key: string): IResource;
-    /**
-     * 是否包含该资源
-     * @param key
-     */
-    HasRes(key: string): boolean;
-    /**
-     * 添加并返回一个资源引用
-     * @param key
-     * @param refKey
-     */
-    AddResRef(key: string, refKey?: string): ResRef;
-    /**
-     * 删除一个资源引用
-     * @param value
-     */
-    RemoveResRef(value: ResRef): void;
-    /**
-     * 资源清理
-     */
-    GC(ignoreTime?: boolean): void;
-    /**
-     * 资源列表
-     */
-    readonly resList: Array<IResource>;
-}
-
-/**
- * 加载器CC实现
- */
-declare class CCLoaderImpl extends EventDispatcher implements ILoader {
-    url: ResURL;
-    constructor();
-    Load(url: ResURL): void;
-    private __load;
-    Reset(): void;
-}
-
-declare class FGUILoader extends EventDispatcher implements ILoader {
-    url: ResURL;
-    constructor();
-    Load(url: ResURL): void;
-    private loadUIPackge;
-    Reset(): void;
-}
-
-declare class Loader {
-    private requests;
-    constructor();
-    /**
-     * 加载
-     * @param url
-     * @param resKey
-     * @param cb
-     * @param progress
-     */
-    Load(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void): void;
-    ChildComplete(url: ResURL): void;
-    ChildError(url: ResURL, err: Error): void;
-    ChildProgress(url: ResURL, progress: number): void;
-    /**
-     * 添加
-     * @param request
-     */
-    private __addReqeuset;
-    /**
-     * 删除
-     * @param request
-     */
-    private __deleteReqeuset;
-    private static __instance;
-    static get single(): Loader;
-}
-
-declare class LoaderQueue implements ITicker {
-    /**
-     * 加载中
-     */
-    private running;
-    /**
-     * 等待加载
-     */
-    private waiting;
-    /**
-     * 对象池
-     */
-    private pool;
-    constructor();
-    Tick(dt: number): void;
-    private __addEvent;
-    private __eventHandler;
-    Load(url: ResURL): void;
-    private static __instance;
-    static get single(): LoaderQueue;
-}
-
-declare class ResRequest {
-    /**
-     * 资源地址
-     */
-    urls: Array<ResURL>;
-    /**
-     * 完成回调
-     */
-    cb?: (err: Error) => void;
-    /**
-     * 进度处理器
-     */
-    progress?: (progress: number) => void;
-    private __loadedMap;
-    constructor(url: ResURL | Array<ResURL>, cb?: (err: Error) => void, progress?: (progress: number) => void);
-    Load(): void;
-    ChildComplete(resURL: ResURL): void;
-    ChildProgress(resURL: ResURL, progress: number): void;
-    ChildError(err: Error): void;
-    UpdateProgress(): void;
-    private checkComplete;
-    private getLoaded;
-    Destroy(): void;
-}
-
-declare class ResourceImpl implements IResource {
-    /**
-     * 状态 0 正常 1待删除
-     */
-    state: number;
-    key: string;
-    lastOpTime: number;
-    /**
-     * @internal
-     */
-    private __refs;
-    constructor();
-    set content(value: any);
-    private __content;
-    get content(): any;
-    AddRef(refKey?: string): ResRef;
-    RemoveRef(value: ResRef): void;
-    Destroy(): void;
-    /**
-     * 引用数量
-     */
-    get refCount(): number;
-    /**
-     * 引用列表长度
-     */
-    get refLength(): number;
-    /**
-     * 引用列表
-     */
-    get refList(): Array<ResRef>;
-}
-
-declare class FGUIResource extends ResourceImpl {
-    constructor();
-    /**
-     * 销毁
-     */
-    Destroy(): void;
-}
-
-declare class ResImpl implements IRes {
-    private loaderClass;
-    constructor();
-    SetResLoader(key: any, loader: new () => ILoader): void;
-    GetResLoader(key: any): new () => ILoader;
-    GetResRef(url: ResURL, refKey: string, progress?: (progress: number) => void): Promise<ResRef>;
-    GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]>;
-    GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>>;
 }
 
 /**
@@ -5001,35 +4523,6 @@ declare class ResManager {
     static get resList(): Array<IResource>;
     private static __impl;
     private static get impl();
-}
-
-/**
- * 默认资源管理器
- * @internal
- */
-declare class ResManagerImpl implements IResManager {
-    /**
-     * 资源
-     */
-    protected __resDic: Dictionary<string, IResource>;
-    /**
-     * 等待销毁的资源
-     */
-    protected _waitDestroy: Array<IResource>;
-    constructor();
-    Tick(dt: number): void;
-    AddRes(value: IResource): void;
-    HasRes(key: string): boolean;
-    _getRes(key: string): IResource;
-    AddResRef(key: string, refKey?: string): ResRef;
-    RemoveResRef(value: ResRef): void;
-    GC(ignoreTime?: boolean): void;
-    /**
-     * 销毁
-     * @param value
-     */
-    protected DestroyRes(value: IResource): void;
-    get resList(): Array<IResource>;
 }
 
 /**
@@ -5107,108 +4600,6 @@ declare class ServiceManager {
     }): void;
 }
 
-interface ILocalStorage {
-    /**
-     * 初始化
-     * @param gameName
-     */
-    Init(gameName: string): void;
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    GetItem(key: string): any;
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    SetItem(key: string, value: any): void;
-    /**
-     * 清理
-     * @param key
-     */
-    ClearItem(key: string): void;
-    /**
-     * 清理所有
-     */
-    ClearAll(): void;
-}
-
-/**
- * 本地数据缓存
- */
-declare class LocalStorage {
-    static KEY: string;
-    /**
-     * 初始化
-     * @param gameName
-     */
-    static Init(gameName: string): void;
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    static GetItem(key: string): any;
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    static SetItem(key: string, value: any): void;
-    /**
-     * 清理
-     * @param key
-     */
-    static ClearItem(key: string): void;
-    /**
-     * 清理所有
-     */
-    static ClearAll(): void;
-    private static __impl;
-    private static get impl();
-}
-
-/**
- * 本地数据缓存
- */
-declare class LocalStorageImpl implements ILocalStorage {
-    private __gameName;
-    private data;
-    /**
-     * 初始化
-     * @param gameName
-     */
-    Init(gameName: string): void;
-    /**
-     * 获取指定数据
-     * @param key
-     * @returns
-     */
-    GetItem(key: string): any;
-    /**
-     * 设置指定数据
-     * @param key
-     * @param value
-     */
-    SetItem(key: string, value: any): void;
-    /**
-     * 清理
-     * @param key
-     */
-    ClearItem(key: string): void;
-    /**
-     * 清理所有
-     */
-    ClearAll(): void;
-    /**
-     * 保存
-     */
-    private __save;
-}
-
 /**
  * 任务接口
  */
@@ -5251,6 +4642,17 @@ declare class TaskSequence extends EventDispatcher implements ITask {
     Start(data?: any): void;
     private __subTaskEventHandler;
     Destroy(): void;
+}
+
+/**
+ * 心跳接口
+ */
+interface ITicker {
+    /**
+     * 心跳
+     * @param dt    间隔时间(秒)
+     */
+    Tick(dt: number): void;
 }
 
 /**
@@ -5321,34 +4723,6 @@ declare class TickerManager {
     static get impl(): ITickerManager;
 }
 
-declare class TickerManagerImpl implements ITickerManager {
-    private __tickerList;
-    private __nextFrameCallBacks;
-    Tick(dt: number): void;
-    AddTicker(value: ITicker): void;
-    RemoveTicker(value: ITicker): void;
-    CallNextFrame(value: Function, caller: any): void;
-    ClearNextFrame(value: Function, caller: any): void;
-}
-
-/**
- * 计时器接口
- */
-interface ITimer {
-    /**
-     * 当前时间(推荐使用)
-     */
-    readonly currentTime: number;
-    /**
-     * 绝对时间(注意效率较差，不推荐使用！)
-     */
-    readonly absTime: number;
-    /**
-     * 重新校准
-     */
-    Reset(time?: number): void;
-}
-
 /**
  * 计时器工具类
  */
@@ -5369,15 +4743,6 @@ declare class Timer {
     static Reset(time?: number): void;
     private static __impl;
     private static get impl();
-}
-
-declare class TimerImpl implements ITimer, ITicker {
-    private __lastTime;
-    constructor();
-    Reset(): void;
-    Tick(dt: number): void;
-    get currentTime(): number;
-    get absTime(): number;
 }
 
 /**
@@ -6095,6 +5460,345 @@ declare class StringUtils {
     static GetClassName(value: any): string;
 }
 
+declare enum SerializationMode {
+    JSON = 0
+}
+
+declare class ModelEvent {
+    static VALUE_CHANGED: string;
+    static ADD_CHILD: string;
+    static REMOVE_CHILD: string;
+    static CHILD_VALUE_CHANGED: string;
+    key: string;
+    newValue: any;
+    oldValue: any;
+    constructor();
+    static Create(newValue?: any, oldValue?: any, key?: string): ModelEvent;
+}
+
+/**
+ * 序列化接口
+ */
+interface ISerialization {
+    /**
+     * 编码
+     * @param type
+     * @param data
+     */
+    Encode(type: Number, data?: any): any;
+    /**
+     * 解码
+     * @param type
+     * @param data
+     */
+    Decode(type: Number, data: any): void;
+}
+
+/**
+ * 值接口
+ */
+interface IValue extends IEventDispatcher, ISerialization {
+    /**
+     * 获取值
+     */
+    GetValue(): any;
+    /**
+     * 设置值
+     * @param value
+     */
+    SetValue(value: any): void;
+    /**
+     * 对比函数
+     * @param value
+     */
+    Equality(value: IValue): boolean;
+}
+
+/**
+ * 属性接口
+ */
+interface IProperty extends IValue {
+    key: string;
+}
+
+declare class ModelFactory {
+    /**
+     * 根据数据创建值对象
+     * @param data
+     */
+    static CreateValue(data: any): IValue;
+    /**
+     * 根据数据创建
+     * @param type
+     * @param key
+     */
+    static CreateProperty(data: any): IProperty;
+}
+
+/**
+ * 值抽象类
+ */
+declare class BaseValue extends EventDispatcher implements IValue {
+    protected data: any;
+    constructor();
+    GetValue(): any;
+    SetValue(value: any): void;
+    protected SendEvent(newValue: any, oldValue: any): void;
+    /**
+     * 检测值是否合法
+     * @param value
+     */
+    protected CheckValue(value: any): boolean;
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type: Number, data: any): void;
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     * @returns
+     */
+    Encode(type: Number, data?: any): any;
+    Equality(value: IValue): boolean;
+}
+
+/**
+ * 字符串类型值
+ */
+declare class StringValue extends BaseValue {
+    constructor();
+    protected CheckValue(value: any): boolean;
+}
+
+/**
+ * 数值类型值
+ */
+declare class NumberValue extends BaseValue {
+    constructor();
+    protected CheckValue(value: any): boolean;
+}
+
+/**
+ * 数组型数值
+ */
+declare class ArrayValue extends BaseValue {
+    constructor();
+    protected CheckValue(value: any): boolean;
+    /**
+     * 添加到指定位置
+     * @param index
+     * @param value
+     */
+    AddAt(index: number, value: IValue): void;
+    /**
+     * 删除
+     * @param value
+     */
+    Remove(value: IValue): void;
+    /**
+     * 通过索引删除并返回元素
+     * @param index
+     */
+    RemoveAt(index: number): IValue;
+    /**
+     * 添加到末尾
+     * @param value
+     */
+    Push(value: IValue): void;
+    /**
+     * 添加到头部
+     * @param value
+     */
+    Unshift(value: IValue): void;
+    /**
+     * 删除并返回第一个元素
+     */
+    Shift(): IValue;
+    /**
+    * 删除并返回最后一个元素
+    */
+    Pop(): IValue;
+    /**
+     * 通过索引获取元素
+     * @param index
+     */
+    GetAt(index: number): IValue;
+    /**
+     * 获取索引值
+     * @param value
+     */
+    GetChildIndex(value: IValue): number;
+    /**
+     * 检测时候包含该内容
+     * @param value
+     */
+    Contain(value: IValue): boolean;
+    /**
+     * 对比
+     * @param value
+     */
+    Equality(value: IValue): boolean;
+    private ChildValueChanged;
+    /**
+     * 清除
+     */
+    Clear(): void;
+    /**
+     * 列表长度
+     */
+    get length(): number;
+    /**
+     * 内容
+     */
+    get elements(): Array<IValue>;
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type: Number, data: any): void;
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     */
+    Encode(type: number, data?: any): any;
+}
+
+/**
+ * 对象类型数据
+ */
+declare class DictionaryValue extends BaseValue {
+    constructor();
+    /**
+     * 添加属性
+     * @param value
+     */
+    Add(value: IProperty): void;
+    /**
+     * 删除属性
+     * @param value
+     */
+    Remove(value: IProperty): void;
+    /**
+     * 通过属性key删除并返回
+     * @param key
+     */
+    RemoveByKey(key: string): IValue;
+    /**
+     * 更新属性
+     * @param key
+     * @param data
+     */
+    Update(key: string, data: any): void;
+    /**
+     * 更新多项属性
+     * @param keys
+     * @param values
+     */
+    MultUpdate(keys: Array<string>, values: Array<any>): void;
+    /**
+     * 获取属性
+     * @param key
+     */
+    Get(key: string): IValue;
+    /**
+     * 对比
+     * @param value
+     */
+    Equality(value: IValue): boolean;
+    /**
+     * 清除
+     */
+    Clear(): void;
+    private ChildValueChanged;
+    get elements(): Array<IValue>;
+    private get map();
+    /**
+     * 反序列化
+     * @param type
+     * @param data
+     */
+    Decode(type: Number, data: any): void;
+    /**
+     * 序列化
+     * @param type
+     * @param data
+     * @returns
+     */
+    Encode(type: number, data?: any): any;
+}
+
+declare class StringProperty extends StringValue implements IProperty {
+    key: string;
+    constructor();
+    protected SendEvent(newValue: any, oldValue: any): void;
+}
+
+declare class NumberProperty extends NumberValue implements IProperty {
+    key: string;
+    constructor();
+    protected SendEvent(newValue: any, oldValue: any): void;
+}
+
+declare class DictionaryProperty extends DictionaryValue implements IProperty {
+    key: string;
+    constructor();
+    protected SendEvent(newValue: any, oldValue: any): void;
+}
+
+declare class ArrayProperty extends ArrayValue implements IProperty {
+    key: string;
+    constructor();
+    protected SendEvent(newValue: any, oldValue: any): void;
+    /**
+     * 判断某个子内容的某个属性相同则返回true
+     */
+    ContainProperty(value: IProperty): Boolean;
+}
+
+declare class BaseModel {
+    /**
+     * 是否是新玩家
+     */
+    isNewPlayer: boolean;
+    gameName: string;
+    userID: string;
+    /**
+     * 游戏存档
+     */
+    private __playerPrefs;
+    constructor(gameName: string, userID: string);
+    /**
+     * 游戏存档
+     */
+    get playerPrefs(): DictionaryValue;
+    /**
+     * 清空游戏存档
+     */
+    ClearPlayerPrefs(): void;
+    /**
+     * 保存游戏存档
+     */
+    SavePlayerPrefs(): void;
+    /**
+     * 从本地读取存档
+     */
+    ReadByLoacl(): void;
+    /**
+     * 数据读取完成
+     */
+    protected OnReadComplete(): void;
+    /**
+     * 默认数据填充
+     */
+    protected SetDefaultPropertys(): void;
+    get uuid(): string;
+}
+
 declare class Drongo {
     /**UI资源AssetBundle */
     static UIBundle: string;
@@ -6125,4 +5829,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { AsyncOperation, AudioChannelImpl, AudioManager, AudioManagerImpl, BaseConfigAccessor, BaseMediator, BaseService, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CCLoaderImpl, ConfigManager, Controller, Debuger, DebugerImpl, Dictionary, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FGUILoader, FGUIResource, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIManagerImpl, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IDebuger, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILayerManager, ILoader, ILoadingView, ILocalStorage, IRecyclable, IRelationInfo, IRelationList, IRes, IResManager, IResource, IService, IState, ITask, ITicker, ITickerManager, ITimer, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, LayerManagerImpl, List, ListItemRenderer, Loader, LoaderQueue, LoadingView, LocalStorage, LocalStorageImpl, MaxRectBinPack, MovieClip, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResImpl, ResManager, ResManagerImpl, ResRef, ResRequest, ResURL, ResourceImpl, ScrollPane, ServiceManager, StringUtils, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, TickerManagerImpl, Timer, TimerImpl, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
