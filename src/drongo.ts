@@ -1,12 +1,12 @@
-import { Color, JsonAsset, Node } from "cc";
-import { Debuger, UIObjectFactory } from "./drongo-cc";
+import { Color, Font, JsonAsset, Node, assetManager } from "cc";
+import { Debuger, StringUtils, UIConfig, UIObjectFactory, registerFont } from "./drongo-cc";
 import { ConfigManager } from "./drongo/configs/ConfigManager";
 import { GUIManager } from "./drongo/gui/GUIManager";
 import { LayerManager } from "./drongo/gui/core/layer/LayerManager";
 import { Layer } from "./drongo/gui/layer/Layer";
 import { Res } from "./drongo/res/Res";
 import { ResRef } from "./drongo/res/core/ResRef";
-import { ResURL, URL2Key } from "./drongo/res/core/ResURL";
+import { Key2URL, ResURL, URL2Key } from "./drongo/res/core/ResURL";
 import { CCFLoader } from "./drongo/res/loaders/CCFLoader";
 import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
 import { FGUILoader } from "./drongo/res/loaders/FGUILoader";
@@ -23,19 +23,21 @@ export class Drongo {
     public static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
 
     /**初始化完成回调 */
-    private static callback: () => void;
-
+    private static __callback: () => void;
+    private static __progress: (progress: number) => void;
     /**
      * 初始化
      * @param root          fgui根节点
      * @param callback      回调
+     * @param progress      进度汇报
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
-     * @param uibasic       UI公共资源包
+     * @param assets        公共资源
      */
-    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs", uibasics?: Array<ResURL>): void {
-        this.callback = callback;
+    static Init(root: Node, callback: () => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs", assets?: Array<ResURL>): void {
+        this.__callback = callback;
+        this.__progress = progress;
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
@@ -63,21 +65,35 @@ export class Drongo {
         }
         //创建层级
         this.__InitLayer(layer);
-        this.__loadUIBasic(guiconfig, uibasics);
+        this.__loadCommonAssets(guiconfig, assets);
     }
 
-    private static __loadUIBasic(uiconfig: ResURL, uibasic?: Array<ResURL>): void {
-        if (uibasic == undefined) {
-            uibasic = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
+    private static __loadCommonAssets(uiconfig: ResURL, assets?: Array<ResURL>): void {
+        if (assets == undefined) {
+            assets = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
         }
-        Res.GetResRefList(uibasic, Debuger.DRONGO).then(
-            (value) => {
-                //公共资源包永不销毁
-                this.__initUI(uiconfig);
-            }, (err) => {
-                Debuger.Err(Debuger.DRONGO, err);
-                this.__initUI(uiconfig);
-            });
+        Res.GetResRefList(assets, Debuger.DRONGO,
+            (progress: number) => {
+                //进度
+                if (this.__progress) this.__progress(progress * 0.7);
+            }).then(
+                (refs) => {
+                    for (let index = 0; index < refs.length; index++) {
+                        const ref = refs[index];
+                        const url: ResURL = Key2URL(ref.key);
+                        if (typeof url != "string") {
+                            //字体
+                            if (url.type == StringUtils.GetClassName(Font) && url.data != undefined) {
+                                registerFont(url.data, ref.content);
+                            }
+                        }
+                    }
+                    //公共资源包永不销毁
+                    this.__initUI(uiconfig);
+                }, (err) => {
+                    Debuger.Err(Debuger.DRONGO, err);
+                    this.__initUI(uiconfig);
+                });
     }
 
     private static __InitLayer(layer?: { layers: Array<string>, fullScrene: Array<string> }): void {
@@ -114,19 +130,22 @@ export class Drongo {
         if (guiconfig == undefined) {
             guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" }
         }
-        Res.GetResRef(guiconfig, "Drongo").then(
-            (result: ResRef) => {
-                let list = result.content.json;
-                for (let index = 0; index < list.length; index++) {
-                    const element = list[index];
-                    GUIManager.Register(element);
+        Res.GetResRef(guiconfig, "Drongo",
+            (progress: number) => {
+                if (this.__progress) this.__progress(0.7 + progress * 0.3);
+            }).then(
+                (result: ResRef) => {
+                    let list = result.content.json;
+                    for (let index = 0; index < list.length; index++) {
+                        const element = list[index];
+                        GUIManager.Register(element);
+                    }
+                    result.Dispose();
+                    this.__callback();
+                }, (reason) => {
+                    throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
                 }
-                result.Dispose();
-                this.callback();
-            }, (reason) => {
-                throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
-            }
-        )
+            )
     }
 
     /**

@@ -2100,6 +2100,7 @@ type ResURL = string | {
     url: string;
     bundle: string;
     type: string | any;
+    data?: string;
 };
 /**
  * 资源地址转唯一KEY
@@ -2107,6 +2108,12 @@ type ResURL = string | {
  * @returns
  */
 declare function URL2Key(url: ResURL): string;
+/**
+ * 是否相等
+ * @param a
+ * @param b
+ */
+declare function URLEqual(a: ResURL, b: ResURL): boolean;
 /**
  * 唯一key转URL
  * @param key
@@ -5805,21 +5812,23 @@ declare class Drongo {
     /**UI遮罩颜色值 */
     static MaskColor: Color;
     /**初始化完成回调 */
-    private static callback;
+    private static __callback;
+    private static __progress;
     /**
      * 初始化
      * @param root          fgui根节点
      * @param callback      回调
+     * @param progress      进度汇报
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
-     * @param uibasic       UI公共资源包
+     * @param assets        公共资源
      */
-    static Init(root: Node, callback: () => void, guiconfig?: ResURL, layer?: {
+    static Init(root: Node, callback: () => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: {
         layers: Array<string>;
         fullScrene: Array<string>;
-    }, sheetBundle?: string, uibasics?: Array<ResURL>): void;
-    private static __loadUIBasic;
+    }, sheetBundle?: string, assets?: Array<ResURL>): void;
+    private static __loadCommonAssets;
     private static __InitLayer;
     private static __initUI;
     /**
@@ -5829,4 +5838,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

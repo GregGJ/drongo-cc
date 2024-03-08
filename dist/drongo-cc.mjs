@@ -18424,6 +18424,23 @@ function URL2Key(url) {
     return ResURLUtils.URL2Key(url);
 }
 /**
+ * 是否相等
+ * @param a
+ * @param b
+ */
+function URLEqual(a, b) {
+    if (typeof a == "string" && typeof b == "string") {
+        return a == b;
+    }
+    if (typeof a == "string" || typeof b == "string") {
+        return false;
+    }
+    if (a.url == b.url && a.type == b.type && a.bundle == b.bundle) {
+        return true;
+    }
+    return false;
+}
+/**
  * 唯一key转URL
  * @param key
  * @returns
@@ -18484,7 +18501,7 @@ class ResURLUtils {
     static Key2URL(key) {
         if (key.indexOf("|")) {
             let arr = key.split("|");
-            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
+            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]), data: arr.length > 2 ? arr[3] : undefined };
         }
         return key;
     }
@@ -18501,12 +18518,12 @@ class ResURLUtils {
             return url;
         }
         if (url.type == SpriteFrame) {
-            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
         }
         if (url.type == Texture2D) {
-            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
         }
-        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
     }
     static getAndSaveClassName(clazz) {
         let className = StringUtils.GetClassName(clazz);
@@ -23270,13 +23287,15 @@ class Drongo {
      * 初始化
      * @param root          fgui根节点
      * @param callback      回调
+     * @param progress      进度汇报
      * @param guiconfig     UI配置
      * @param layer         层级配置
      * @param sheetBundle   配置表AssetBundle包
-     * @param uibasic       UI公共资源包
+     * @param assets        公共资源
      */
-    static Init(root, callback, guiconfig, layer, sheetBundle = "Configs", uibasics) {
-        this.callback = callback;
+    static Init(root, callback, progress, guiconfig, layer, sheetBundle = "Configs", assets) {
+        this.__callback = callback;
+        this.__progress = progress;
         //注册fgui加载器
         Res.SetResLoader("fgui", FGUILoader);
         Res.SetResLoader("config", ConfigLoader);
@@ -23301,13 +23320,27 @@ class Drongo {
         }
         //创建层级
         this.__InitLayer(layer);
-        this.__loadUIBasic(guiconfig, uibasics);
+        this.__loadCommonAssets(guiconfig, assets);
     }
-    static __loadUIBasic(uiconfig, uibasic) {
-        if (uibasic == undefined) {
-            uibasic = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
+    static __loadCommonAssets(uiconfig, assets) {
+        if (assets == undefined) {
+            assets = [{ url: "Basic", type: "fgui", bundle: this.UIBundle }];
         }
-        Res.GetResRefList(uibasic, Debuger.DRONGO).then((value) => {
+        Res.GetResRefList(assets, Debuger.DRONGO, (progress) => {
+            //进度
+            if (this.__progress)
+                this.__progress(progress * 0.7);
+        }).then((refs) => {
+            for (let index = 0; index < refs.length; index++) {
+                const ref = refs[index];
+                const url = Key2URL(ref.key);
+                if (typeof url != "string") {
+                    //字体
+                    if (url.type == StringUtils.GetClassName(Font) && url.data != undefined) {
+                        registerFont(url.data, ref.content);
+                    }
+                }
+            }
             //公共资源包永不销毁
             this.__initUI(uiconfig);
         }, (err) => {
@@ -23349,14 +23382,17 @@ class Drongo {
         if (guiconfig == undefined) {
             guiconfig = { url: "guiconfig", type: JsonAsset, bundle: "Configs" };
         }
-        Res.GetResRef(guiconfig, "Drongo").then((result) => {
+        Res.GetResRef(guiconfig, "Drongo", (progress) => {
+            if (this.__progress)
+                this.__progress(0.7 + progress * 0.3);
+        }).then((result) => {
             let list = result.content.json;
             for (let index = 0; index < list.length; index++) {
                 const element = list[index];
                 GUIManager.Register(element);
             }
             result.Dispose();
-            this.callback();
+            this.__callback();
         }, (reason) => {
             throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
         });
@@ -26254,4 +26290,4 @@ class BaseModel {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

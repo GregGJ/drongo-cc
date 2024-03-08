@@ -143,7 +143,7 @@ export { Res } from "./drongo/res/Res"
 // export { IResManager } from "./drongo/res/core/IResManager"
 export { IResource } from "./drongo/res/core/IResource"
 export { ResRef } from "./drongo/res/core/ResRef"
-export { FullURL, Key2URL, ResURL, URL2Key } from "./drongo/res/core/ResURL"
+export { FullURL, Key2URL,URLEqual, ResURL, URL2Key } from "./drongo/res/core/ResURL"
 //res/loader
 // export { CCLoaderImpl } from "./drongo/res/loaders/CCLoaderImpl"
 // export { FGUILoader } from "./drongo/res/loaders/FGUILoader"

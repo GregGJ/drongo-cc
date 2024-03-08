@@ -5,7 +5,7 @@ import { StringUtils } from "../../utils/StringUtils";
 /**
  * 资源地址
  */
-export type ResURL = string | { url: string, bundle: string, type: string | any };
+export type ResURL = string | { url: string, bundle: string, type: string | any, data?: string };
 
 /**
  * 资源地址转唯一KEY
@@ -14,6 +14,24 @@ export type ResURL = string | { url: string, bundle: string, type: string | any 
  */
 export function URL2Key(url: ResURL): string {
     return ResURLUtils.URL2Key(url);
+}
+
+/**
+ * 是否相等
+ * @param a 
+ * @param b 
+ */
+export function URLEqual(a: ResURL, b: ResURL): boolean {
+    if (typeof a == "string" && typeof b == "string") {
+        return a == b;
+    }
+    if (typeof a == "string" || typeof b == "string") {
+        return false;
+    }
+    if (a.url == b.url && a.type == b.type && a.bundle == b.bundle) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -85,7 +103,7 @@ class ResURLUtils {
     static Key2URL(key: string): ResURL {
         if (key.indexOf("|")) {
             let arr: Array<string> = key.split("|");
-            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
+            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]), data: arr.length > 2 ? arr[3] : undefined };
         }
         return key;
     }
@@ -103,12 +121,12 @@ class ResURLUtils {
             return url;
         }
         if (url.type == SpriteFrame) {
-            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
         }
         if (url.type == Texture2D) {
-            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
         }
-        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
+        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
     }
 
     private static getAndSaveClassName(clazz: any): string {
