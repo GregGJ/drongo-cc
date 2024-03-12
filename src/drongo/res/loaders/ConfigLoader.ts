@@ -9,7 +9,7 @@ import { ByteArray } from "../../utils/ByteArray";
 import { ILoader } from "../core/ILoader";
 import { FullURL, ResURL, URL2Key } from "../core/ResURL";
 import { ResManager } from "../res/ResManager";
-import { ResourceImpl } from "../res/ResourceImpl";
+import { Resource } from "../res/Resource";
 
 
 
@@ -57,7 +57,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
                 const urlKey = URL2Key(url);
                 let buffer = asset['_buffer'];
                 let accessor = this.__parseConfig(url.url, buffer);
-                let res: ResourceImpl = new ResourceImpl();
+                let res: Resource = new Resource();
                 res.key = urlKey;
                 res.content = accessor;
                 ResManager.AddRes(res);

@@ -10,21 +10,21 @@ import { IValue } from "../core/IValue";
  */
 export class BaseValue extends EventDispatcher implements IValue {
 
-    protected data: any;
+    value: any;
 
     constructor() {
         super();
     }
 
     GetValue(): any {
-        return this.data;
+        return this.value;
     }
     
     SetValue(value: any): void {
         if (this.CheckValue(value)) {
-            var oldValue: any = this.data;
-            this.data = value;
-            this.SendEvent(this.data, oldValue);
+            var oldValue: any = this.value;
+            this.value = value;
+            this.SendEvent(this.value, oldValue);
         }
     }
 
@@ -67,7 +67,7 @@ export class BaseValue extends EventDispatcher implements IValue {
     Encode(type: Number, data?: any): any {
         switch (type) {
             case SerializationMode.JSON:
-                return this.data;
+                return this.value;
 
             default:
                 throw new Error("未知序列化类型:" + type);
@@ -75,7 +75,7 @@ export class BaseValue extends EventDispatcher implements IValue {
     }
 
     Equality(value: IValue): boolean {
-        if (this.data == value.GetValue()) {
+        if (this.value == value.GetValue()) {
             return true;
         }
         return false;

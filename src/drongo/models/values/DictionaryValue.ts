@@ -14,14 +14,14 @@ export class DictionaryValue extends BaseValue {
 
     constructor() {
         super();
-        this.data = new Dictionary<string, IProperty>();
+        this.value = new Dictionary<string, IProperty>();
     }
 
     /**
      * 添加属性
      * @param value 
      */
-    Add(value: IProperty): void {
+    Add(value: IProperty): IValue {
         if (this.map.Has(value.key)) {
             throw new Error("重复添加相同KEY的属性！");
         }
@@ -31,6 +31,7 @@ export class DictionaryValue extends BaseValue {
         }
         value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
         value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return value;
     }
 
     /**
@@ -142,7 +143,7 @@ export class DictionaryValue extends BaseValue {
     }
 
     private get map(): Dictionary<string, IValue> {
-        return this.data;
+        return this.value;
     }
 
     /**
@@ -158,7 +159,7 @@ export class DictionaryValue extends BaseValue {
                 for (const key in data) {
                     if (Object.prototype.hasOwnProperty.call(data, key)) {
                         item = data[key];
-                        property = ModelFactory.CreateProperty(item);
+                        property = ModelFactory.CreateProperty(key, item);
                         property.key = key;
                         property.Decode(type, item);
                         this.Add(property);

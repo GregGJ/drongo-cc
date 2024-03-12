@@ -55,14 +55,14 @@ export class AudioManagerImpl implements IAudioManager {
             channel = this.__musicChannels[index];
             if (channel.isPlaying) {
                 channelVolume = channel.volume * this.__musicVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
         for (let index = 0; index < this.__soundChannels.length; index++) {
             channel = this.__soundChannels[index];
             if (channel.isPlaying) {
                 channelVolume = channel.volume * this.__soundVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
     }
@@ -81,7 +81,7 @@ export class AudioManagerImpl implements IAudioManager {
         let current: IAudioChannel = this.__musicChannels[this.__musicChannelIndex];
         if (current && current.isPlaying) {
             let channelVolume: number = current.volume * this.__musicVolume * this.__volume;
-            current.Fade(100, channelVolume, current.curVolume);
+            current.Fade(0.1, channelVolume, current.curVolume);
         }
     }
 
@@ -107,7 +107,7 @@ export class AudioManagerImpl implements IAudioManager {
             channel = this.__soundChannels[index];
             if (channel.isPlaying) {
                 let channelVolume: number = channel.volume * this.__soundVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
     }
@@ -161,7 +161,7 @@ export class AudioManagerImpl implements IAudioManager {
         }
     }
 
-    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void {
+    PlayMusic(url: ResURL, volume: number, speed: number): void {
         let playVolume: number;
         if (this.muteMusic || this.mute) {
             playVolume = 0;
@@ -188,10 +188,10 @@ export class AudioManagerImpl implements IAudioManager {
             last = this.__musicChannels[0];
         }
         if (last.isPlaying) {
-            last.Fade(500, 0, undefined, null, true);
+            last.Fade(0.5, 0, undefined, null, true);
         }
         current.volume = volume;
-        current.Play(url, null, playVolume, { time: 500, startVolume: 0 }, true, speed);
+        current.Play(url, null, playVolume, { time: 0.5, startVolume: 0 }, true, speed);
     }
 
     StopMusic(): void {

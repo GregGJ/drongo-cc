@@ -1,11 +1,11 @@
 import { assetManager } from "cc";
-import { ResourceImpl } from "./ResourceImpl";
+import { Resource } from "./Resource";
 import { Key2URL } from "../core/ResURL";
 import { UIPackage } from "../../../fairygui/UIPackage";
 import { Drongo } from "../../../drongo";
 
 
-export class FGUIResource extends ResourceImpl {
+export class FGUIResource extends Resource {
 
     constructor() {
         super();

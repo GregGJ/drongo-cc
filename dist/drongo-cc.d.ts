@@ -2656,8 +2656,8 @@ interface IAudioChannel {
      */
     Stop(): void;
     /**
-     *
-     * @param time
+     * 淡入
+     * @param time          过度时间(秒为单位)
      * @param startVolume
      * @param endVolume
      * @param complete
@@ -2725,7 +2725,7 @@ declare class AudioManager {
      * 播放音乐
      * @param value
      */
-    static PlayMusic(url: ResURL, volume?: number, speed?: number, loop?: boolean): void;
+    static PlayMusic(url: ResURL, volume?: number, speed?: number): void;
     /**
      * 停止音乐
      */
@@ -2790,7 +2790,7 @@ interface IAudioManager {
      * 播放音乐
      * @param value
      */
-    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
+    PlayMusic(url: ResURL, volume: number, speed: number): void;
     /**
      * 停止音乐
      */
@@ -4532,6 +4532,38 @@ declare class ResManager {
     private static get impl();
 }
 
+declare class Resource implements IResource {
+    /**
+     * 状态 0 正常 1待删除
+     */
+    state: number;
+    key: string;
+    lastOpTime: number;
+    /**
+     * @internal
+     */
+    private __refs;
+    constructor();
+    set content(value: any);
+    private __content;
+    get content(): any;
+    AddRef(refKey?: string): ResRef;
+    RemoveRef(value: ResRef): void;
+    Destroy(): void;
+    /**
+     * 引用数量
+     */
+    get refCount(): number;
+    /**
+     * 引用列表长度
+     */
+    get refLength(): number;
+    /**
+     * 引用列表
+     */
+    get refList(): Array<ResRef>;
+}
+
 /**
  *  服务基类
  */
@@ -5442,6 +5474,13 @@ declare class StringUtils {
      */
     static GetFileSuffix(url: string): string;
     /**
+     * 获取父文件夹路径
+     * @param url
+     * @param separator
+     * @returns
+     */
+    static GetDir(url: string, separator?: string): string;
+    /**
      * 替换后缀
      * @param url
      * @param suff      后缀
@@ -5506,6 +5545,10 @@ interface ISerialization {
  */
 interface IValue extends IEventDispatcher, ISerialization {
     /**
+     * 值对象（用于绑定）
+     */
+    value: any;
+    /**
      * 获取值
      */
     GetValue(): any;
@@ -5539,14 +5582,14 @@ declare class ModelFactory {
      * @param type
      * @param key
      */
-    static CreateProperty(data: any): IProperty;
+    static CreateProperty(key: string, data: any): IProperty;
 }
 
 /**
  * 值抽象类
  */
 declare class BaseValue extends EventDispatcher implements IValue {
-    protected data: any;
+    value: any;
     constructor();
     GetValue(): any;
     SetValue(value: any): void;
@@ -5684,7 +5727,7 @@ declare class DictionaryValue extends BaseValue {
      * 添加属性
      * @param value
      */
-    Add(value: IProperty): void;
+    Add(value: IProperty): IValue;
     /**
      * 删除属性
      * @param value
@@ -5741,25 +5784,25 @@ declare class DictionaryValue extends BaseValue {
 
 declare class StringProperty extends StringValue implements IProperty {
     key: string;
-    constructor();
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class NumberProperty extends NumberValue implements IProperty {
     key: string;
-    constructor();
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class DictionaryProperty extends DictionaryValue implements IProperty {
     key: string;
-    constructor();
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class ArrayProperty extends ArrayValue implements IProperty {
     key: string;
-    constructor();
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
     /**
      * 判断某个子内容的某个属性相同则返回true
@@ -5790,7 +5833,8 @@ declare class BaseModel {
     /**
      * 保存游戏存档
      */
-    SavePlayerPrefs(): void;
+    SavePlayerPrefs(now?: boolean): void;
+    private __save;
     /**
      * 从本地读取存档
      */
@@ -5838,4 +5882,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

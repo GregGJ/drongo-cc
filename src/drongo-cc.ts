@@ -138,7 +138,7 @@ export { Pool } from "./drongo/pools/Pool"
 //res
 export { Res } from "./drongo/res/Res"
 //res/core
-// export { ILoader } from "./drongo/res/core/ILoader"
+export { ILoader } from "./drongo/res/core/ILoader"
 // export { IRes } from "./drongo/res/core/IRes"
 // export { IResManager } from "./drongo/res/core/IResManager"
 export { IResource } from "./drongo/res/core/IResource"
@@ -155,7 +155,7 @@ export { FullURL, Key2URL,URLEqual, ResURL, URL2Key } from "./drongo/res/core/Re
 // export { ResImpl } from "./drongo/res/res/ResImpl"
 export { ResManager } from "./drongo/res//res/ResManager"
 // export { ResManagerImpl } from "./drongo/res//res/ResManagerImpl"
-// export { ResourceImpl } from "./drongo/res/res/ResourceImpl"
+export { Resource} from "./drongo/res/res/Resource"
 
 
 //services

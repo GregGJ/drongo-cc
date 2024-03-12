@@ -6,6 +6,12 @@ import { ISerialization } from "./ISerialization";
  * 值接口
  */
 export interface IValue extends IEventDispatcher, ISerialization {
+
+    /**
+     * 值对象（用于绑定）
+     */
+    value:any;
+
     /**
      * 获取值
      */

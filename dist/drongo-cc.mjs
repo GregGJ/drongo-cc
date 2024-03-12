@@ -18327,6 +18327,20 @@ class StringUtils {
         return suixx;
     }
     /**
+     * 获取父文件夹路径
+     * @param url
+     * @param separator
+     * @returns
+     */
+    static GetDir(url, separator = "/") {
+        let arr = url.split(separator);
+        if (arr.length > 1) {
+            arr.pop();
+            return arr.join(separator);
+        }
+        return "";
+    }
+    /**
      * 替换后缀
      * @param url
      * @param suff      后缀
@@ -19636,7 +19650,7 @@ class Loader {
     }
 }
 
-class ResourceImpl {
+class Resource {
     constructor() {
         /**
          * 状态 0 正常 1待删除
@@ -19781,7 +19795,7 @@ class CCLoaderImpl extends EventDispatcher {
                 return;
             }
             const urlKey = URL2Key(url);
-            let res = new ResourceImpl();
+            let res = new Resource();
             res.key = urlKey;
             res.content = asset;
             ResManager.AddRes(res);
@@ -20251,14 +20265,14 @@ class AudioManagerImpl {
             channel = this.__musicChannels[index];
             if (channel.isPlaying) {
                 channelVolume = channel.volume * this.__musicVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
         for (let index = 0; index < this.__soundChannels.length; index++) {
             channel = this.__soundChannels[index];
             if (channel.isPlaying) {
                 channelVolume = channel.volume * this.__soundVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
     }
@@ -20276,7 +20290,7 @@ class AudioManagerImpl {
         let current = this.__musicChannels[this.__musicChannelIndex];
         if (current && current.isPlaying) {
             let channelVolume = current.volume * this.__musicVolume * this.__volume;
-            current.Fade(100, channelVolume, current.curVolume);
+            current.Fade(0.1, channelVolume, current.curVolume);
         }
     }
     get musicVolume() {
@@ -20298,7 +20312,7 @@ class AudioManagerImpl {
             channel = this.__soundChannels[index];
             if (channel.isPlaying) {
                 let channelVolume = channel.volume * this.__soundVolume * this.__volume;
-                channel.Fade(100, channelVolume, channel.curVolume);
+                channel.Fade(0.1, channelVolume, channel.curVolume);
             }
         }
     }
@@ -20342,7 +20356,7 @@ class AudioManagerImpl {
             element.mute = this.muteSound || this.mute;
         }
     }
-    PlayMusic(url, volume, speed, loop) {
+    PlayMusic(url, volume, speed) {
         let playVolume;
         if (this.muteMusic || this.mute) {
             playVolume = 0;
@@ -20371,10 +20385,10 @@ class AudioManagerImpl {
             last = this.__musicChannels[0];
         }
         if (last.isPlaying) {
-            last.Fade(500, 0, undefined, null, true);
+            last.Fade(0.5, 0, undefined, null, true);
         }
         current.volume = volume;
-        current.Play(url, null, playVolume, { time: 500, startVolume: 0 }, true, speed);
+        current.Play(url, null, playVolume, { time: 0.5, startVolume: 0 }, true, speed);
     }
     StopMusic() {
         let current = this.__musicChannels[this.__musicChannelIndex];
@@ -20511,8 +20525,8 @@ class AudioManager {
      * 播放音乐
      * @param value
      */
-    static PlayMusic(url, volume = 1, speed = 1, loop = false) {
-        this.impl.PlayMusic(url, volume, speed, loop);
+    static PlayMusic(url, volume = 1, speed = 1) {
+        this.impl.PlayMusic(url, volume, speed);
     }
     /**
      * 停止音乐
@@ -23167,7 +23181,7 @@ class ConfigLoader extends EventDispatcher {
             const urlKey = URL2Key(url);
             let buffer = asset['_buffer'];
             let accessor = this.__parseConfig(url.url, buffer);
-            let res = new ResourceImpl();
+            let res = new Resource();
             res.key = urlKey;
             res.content = accessor;
             ResManager.AddRes(res);
@@ -23208,7 +23222,7 @@ class ConfigLoader extends EventDispatcher {
     }
 }
 
-class FGUIResource extends ResourceImpl {
+class FGUIResource extends Resource {
     constructor() {
         super();
     }
@@ -24535,6 +24549,7 @@ class GUIMediator extends BaseMediator {
             this.viewComponent = new GComponent();
             this.viewComponent.makeFullScreen();
             this.__mask = new GGraph();
+            this.__mask.touchable = true;
             this.__mask.makeFullScreen();
             this.__mask.drawRect(0, Color.BLACK, Drongo.MaskColor);
             this.viewComponent.addChild(this.__mask);
@@ -25611,13 +25626,13 @@ class BaseValue extends EventDispatcher {
         super();
     }
     GetValue() {
-        return this.data;
+        return this.value;
     }
     SetValue(value) {
         if (this.CheckValue(value)) {
-            var oldValue = this.data;
-            this.data = value;
-            this.SendEvent(this.data, oldValue);
+            var oldValue = this.value;
+            this.value = value;
+            this.SendEvent(this.value, oldValue);
         }
     }
     SendEvent(newValue, oldValue) {
@@ -25655,13 +25670,13 @@ class BaseValue extends EventDispatcher {
     Encode(type, data) {
         switch (type) {
             case SerializationMode.JSON:
-                return this.data;
+                return this.value;
             default:
                 throw new Error("未知序列化类型:" + type);
         }
     }
     Equality(value) {
-        if (this.data == value.GetValue()) {
+        if (this.value == value.GetValue()) {
             return true;
         }
         return false;
@@ -25674,7 +25689,7 @@ class BaseValue extends EventDispatcher {
 class ArrayValue extends BaseValue {
     constructor() {
         super();
-        this.data = [];
+        this.value = [];
     }
     CheckValue(value) {
         if (value != null && Array.isArray(value)) {
@@ -25861,7 +25876,7 @@ class ArrayValue extends BaseValue {
      * 内容
      */
     get elements() {
-        return this.data;
+        return this.value;
     }
     /**
      * 反序列化
@@ -25909,7 +25924,7 @@ class ArrayValue extends BaseValue {
 class DictionaryValue extends BaseValue {
     constructor() {
         super();
-        this.data = new Dictionary();
+        this.value = new Dictionary();
     }
     /**
      * 添加属性
@@ -25925,6 +25940,7 @@ class DictionaryValue extends BaseValue {
         }
         value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
         value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        return value;
     }
     /**
      * 删除属性
@@ -26026,7 +26042,7 @@ class DictionaryValue extends BaseValue {
         return this.map.elements;
     }
     get map() {
-        return this.data;
+        return this.value;
     }
     /**
      * 反序列化
@@ -26041,7 +26057,7 @@ class DictionaryValue extends BaseValue {
                 for (const key in data) {
                     if (Object.prototype.hasOwnProperty.call(data, key)) {
                         item = data[key];
-                        property = ModelFactory.CreateProperty(item);
+                        property = ModelFactory.CreateProperty(key, item);
                         property.key = key;
                         property.Decode(type, item);
                         this.Add(property);
@@ -26073,8 +26089,12 @@ class DictionaryValue extends BaseValue {
 }
 
 class ArrayProperty extends ArrayValue {
-    constructor() {
+    constructor(key, value) {
         super();
+        this.key = key;
+        if (value != null && value != undefined) {
+            this.SetValue(value);
+        }
     }
     SendEvent(newValue, oldValue) {
         if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
@@ -26101,8 +26121,12 @@ class ArrayProperty extends ArrayValue {
 }
 
 class DictionaryProperty extends DictionaryValue {
-    constructor() {
+    constructor(key, value) {
         super();
+        this.key = key;
+        if (value != null && value != undefined) {
+            this.SetValue(value);
+        }
     }
     SendEvent(newValue, oldValue) {
         if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
@@ -26132,8 +26156,12 @@ class NumberValue extends BaseValue {
 }
 
 class NumberProperty extends NumberValue {
-    constructor() {
+    constructor(key, value) {
         super();
+        this.key = key;
+        if (value != null && value != undefined) {
+            this.SetValue(value);
+        }
     }
     SendEvent(newValue, oldValue) {
         if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
@@ -26158,8 +26186,12 @@ class StringValue extends BaseValue {
 }
 
 class StringProperty extends StringValue {
-    constructor() {
+    constructor(key, value) {
         super();
+        this.key = key;
+        if (value != null && value != undefined) {
+            this.SetValue(value);
+        }
     }
     SendEvent(newValue, oldValue) {
         if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
@@ -26198,24 +26230,24 @@ class ModelFactory {
      * @param type
      * @param key
      */
-    static CreateProperty(data) {
+    static CreateProperty(key, data) {
         let result;
         if (data instanceof Array) {
-            result = new ArrayProperty();
+            result = new ArrayProperty(key);
         }
         else {
             //字符串
             if (typeof data === 'string') {
-                result = new StringProperty();
+                result = new StringProperty(key);
             }
             else {
                 let numValue = Number(data);
                 //非数字
                 if (isNaN(numValue)) {
-                    result = new DictionaryProperty();
+                    result = new DictionaryProperty(key);
                 }
                 else {
-                    result = new NumberProperty();
+                    result = new NumberProperty(key);
                 }
             }
         }
@@ -26247,7 +26279,15 @@ class BaseModel {
     /**
      * 保存游戏存档
      */
-    SavePlayerPrefs() {
+    SavePlayerPrefs(now = false) {
+        if (now) {
+            this.__save();
+        }
+        else {
+            TickerManager.CallNextFrame(this.__save, this);
+        }
+    }
+    __save() {
         let data = this.__playerPrefs.Encode(SerializationMode.JSON);
         localStorage.setItem(this.uuid, JSON.stringify(data));
     }
@@ -26290,4 +26330,4 @@ class BaseModel {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

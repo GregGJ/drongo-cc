@@ -40,21 +40,21 @@ export class ModelFactory {
      * @param type 
      * @param key 
      */
-    static CreateProperty(data: any): IProperty {
+    static CreateProperty(key:string,data: any): IProperty {
         let result: IProperty;
         if (data instanceof Array) {
-            result = new ArrayProperty();
+            result = new ArrayProperty(key);
         } else {
             //字符串
             if (typeof data === 'string') {
-                result = new StringProperty();
+                result = new StringProperty(key);
             } else {
                 let numValue: number = Number(data);
                 //非数字
                 if (isNaN(numValue)) {
-                    result = new DictionaryProperty();
+                    result = new DictionaryProperty(key);
                 } else {
-                    result = new NumberProperty();
+                    result = new NumberProperty(key);
                 }
             }
         }

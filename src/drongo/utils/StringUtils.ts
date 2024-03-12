@@ -89,6 +89,21 @@ export class StringUtils {
     }
 
     /**
+     * 获取父文件夹路径
+     * @param url 
+     * @param separator 
+     * @returns 
+     */
+    static GetDir(url: string, separator: string = "/"): string {
+        let arr = url.split(separator);
+        if (arr.length > 1) {
+            arr.pop();
+            return arr.join(separator);
+        }
+        return "";
+    }
+
+    /**
      * 替换后缀
      * @param url       
      * @param suff      后缀
@@ -162,7 +177,7 @@ export class StringUtils {
         return words[1];
     }
 
-    static GetClassName(value:any):string{
+    static GetClassName(value: any): string {
         let className: string;
         if (typeof value != "string") {
             className = value.toString();

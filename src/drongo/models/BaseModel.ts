@@ -1,3 +1,4 @@
+import { TickerManager } from "../ticker/TickerManager";
 import { StringUtils } from "../utils/StringUtils";
 import { SerializationMode } from "./SerializationMode";
 import { DictionaryValue } from "./values/DictionaryValue";
@@ -44,7 +45,15 @@ export class BaseModel {
     /**
      * 保存游戏存档
      */
-    SavePlayerPrefs(): void {
+    SavePlayerPrefs(now: boolean = false): void {
+        if (now) {
+            this.__save();
+        } else {
+            TickerManager.CallNextFrame(this.__save, this);
+        }
+    }
+
+    private __save(): void {
         let data: any = this.__playerPrefs.Encode(SerializationMode.JSON);
         localStorage.setItem(this.uuid, JSON.stringify(data));
     }
@@ -83,7 +92,7 @@ export class BaseModel {
      * 默认数据填充
      */
     protected SetDefaultPropertys(): void {
-        
+
     }
 
     get uuid(): string {

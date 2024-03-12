@@ -8,8 +8,12 @@ export class NumberProperty extends NumberValue implements IProperty
 {
     key: string;
     
-    constructor(){
+    constructor(key?: string, value?: any) {
         super();
+        this.key = key;
+        if (value != null && value != undefined) {
+            this.SetValue(value);
+        }
     }
 
     protected SendEvent(newValue: any, oldValue: any): void {

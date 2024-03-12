@@ -35,8 +35,8 @@ export interface IAudioChannel {
     Stop(): void;
 
     /**
-     * 
-     * @param time 
+     * 淡入
+     * @param time          过度时间(秒为单位)
      * @param startVolume 
      * @param endVolume 
      * @param complete

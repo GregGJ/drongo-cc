@@ -3,7 +3,7 @@ import { EventDispatcher } from "../../events/EventDispatcher";
 import { ILoader } from "../core/ILoader";
 import { FullURL, ResURL, URL2Key } from "../core/ResURL";
 import { Event } from "../../events/Event";
-import { ResourceImpl } from "../res/ResourceImpl";
+import { Resource } from "../res/Resource";
 import { ResManager } from "../res/ResManager";
 
 
@@ -53,7 +53,7 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
                     return;
                 }
                 const urlKey = URL2Key(url);
-                let res: ResourceImpl = new ResourceImpl();
+                let res: Resource = new Resource();
                 res.key = urlKey;
                 res.content = asset;
                 ResManager.AddRes(res);

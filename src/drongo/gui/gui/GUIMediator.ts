@@ -97,6 +97,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
             this.viewComponent.makeFullScreen();
 
             this.__mask = new GGraph();
+            this.__mask.touchable=true;
             this.__mask.makeFullScreen();
 
             this.__mask.drawRect(0, Color.BLACK, Drongo.MaskColor);

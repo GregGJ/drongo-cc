@@ -13,7 +13,7 @@ export class ArrayValue extends BaseValue {
 
     constructor() {
         super();
-        this.data = [];
+        this.value = [];
     }
 
     protected CheckValue(value: any): boolean {
@@ -217,7 +217,7 @@ export class ArrayValue extends BaseValue {
      * 内容
      */
     get elements(): Array<IValue> {
-        return this.data;
+        return this.value;
     }
 
     /**

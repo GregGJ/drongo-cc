@@ -91,8 +91,8 @@ export class AudioManager {
      * 播放音乐
      * @param value
      */
-    static PlayMusic(url: ResURL, volume: number = 1, speed: number = 1, loop: boolean = false): void {
-        this.impl.PlayMusic(url, volume, speed, loop);
+    static PlayMusic(url: ResURL, volume: number = 1, speed: number = 1): void {
+        this.impl.PlayMusic(url, volume, speed);
     }
 
     /**

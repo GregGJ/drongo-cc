@@ -1,10 +1,9 @@
 import { Asset, Node, Prefab, assetManager, instantiate, isValid } from "cc";
 import { IResource } from "../core/IResource";
 import { ResRef } from "../core/ResRef";
-import { Debuger } from "../../debugers/Debuger";
 
 
-export class ResourceImpl implements IResource {
+export class Resource implements IResource {
 
     /**
      * 状态 0 正常 1待删除

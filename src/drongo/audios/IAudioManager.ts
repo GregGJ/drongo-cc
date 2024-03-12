@@ -31,7 +31,7 @@ export interface IAudioManager {
      * 播放音乐
      * @param value 
      */
-    PlayMusic(url: ResURL, volume: number, speed: number, loop: boolean): void;
+    PlayMusic(url: ResURL, volume: number, speed: number): void;
 
     /**
      * 停止音乐
