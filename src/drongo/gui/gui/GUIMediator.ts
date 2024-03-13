@@ -44,13 +44,13 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
      * 播放显示动画
      * @param complete 
      */
-    PlayShowAnimation?: (complete: Function) => void;
+    PlayShowAnimation?: (complete:()=>void) => void;
 
     /**
      * 界面关闭时播放的动画
      * @param complete 
      */
-    PlayHideAnimation?: (complete: Function) => void;
+    PlayHideAnimation?: (complete:()=>void) => void;
     
     constructor() {
         super();

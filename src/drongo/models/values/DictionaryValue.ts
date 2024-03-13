@@ -101,7 +101,7 @@ export class DictionaryValue extends BaseValue {
     Get(key: string): IValue {
         return this.map.Get(key);
     }
-
+    
     /**
      * 对比
      * @param value 
