@@ -21343,14 +21343,9 @@ class ConfigManagerImpl {
     Register(sheet, accessor) {
         this.__accessors.set(sheet, accessor);
     }
-    /**
-     * 获取存取器类
-     * @param sheet
-     * @returns
-     */
-    GetAccessorClass(sheet) {
+    _GetAccessor(sheet) {
         if (!this.__accessors.has(sheet)) {
-            return BaseConfigAccessor;
+            return new BaseConfigAccessor();
         }
         return this.__accessors.get(sheet);
     }
@@ -21383,12 +21378,12 @@ class ConfigManager {
         this.impl.Register(sheet, accessors);
     }
     /**
-     * 获取存取器类
+     * 获取已注册的存取器
      * @param sheet
      * @returns
      */
-    static GetAccessorClass(sheet) {
-        return this.impl.GetAccessorClass(sheet);
+    static _GetAccessor(sheet) {
+        return this.impl._GetAccessor(sheet);
     }
     /**
      * 获取配置存取器
@@ -21408,6 +21403,100 @@ class ConfigManager {
     }
 }
 ConfigManager.KEY = "drongo.ConfigManager";
+
+class ConfigStorage {
+    constructor(keys) {
+        this.key = StringUtils.PieceTogether(keys);
+        this.keys = keys;
+    }
+    Save(value) {
+        let values = [];
+        for (let index = 0; index < this.keys.length; index++) {
+            const key = this.keys[index];
+            values.push(value[key]);
+        }
+        const saveKey = StringUtils.PieceTogether(values);
+        if (this.map.has(saveKey)) {
+            throw new Error("配置表唯一Key存在重复内容:" + saveKey);
+        }
+        this.map.set(saveKey, value);
+    }
+    Get(key) {
+        if (this.map.has(key)) {
+            return this.map.get(key);
+        }
+        return null;
+    }
+    Destroy() {
+        this.key = null;
+        this.keys = null;
+        this.map.clear();
+        this.map = null;
+    }
+}
+
+class MapConfigAccessor extends BaseConfigAccessor {
+    constructor(keys) {
+        super();
+        this.$storages = new Map();
+        this.AddStorage(keys);
+    }
+    /**
+     * 增加存储方式
+     * @param keys
+     */
+    AddStorage(keys) {
+        const key = StringUtils.PieceTogether(keys);
+        if (this.$storages.has(key)) {
+            throw new Error("重复添加配置表存储方式：" + key);
+        }
+        this.$storages.set(key, new ConfigStorage(keys));
+    }
+    Save(value) {
+        if (super.Save(value)) {
+            for (let i of this.$storages.values()) {
+                i.Save(value);
+            }
+            return true;
+        }
+        return false;
+    }
+    /**
+      * 获取
+      * @param keys
+      * @param values
+      * @returns
+      */
+    Get(keys, values) {
+        if (keys == null && values == null || keys.length == 0 && values.length == 0) {
+            return null;
+        }
+        if (keys.length != values.length) {
+            throw new Error("参数长度不一致!");
+        }
+        let sKey = StringUtils.PieceTogether(keys);
+        if (this.$storages.has(sKey)) {
+            const s = this.$storages.get(sKey);
+            const vKey = StringUtils.PieceTogether(values);
+            return s.Get(vKey);
+        }
+    }
+    /**
+     * 获取存储器
+     * @param keys
+     * @returns
+     */
+    GetStorage(keys) {
+        return this.$storages.get(StringUtils.PieceTogether(keys));
+    }
+    Destroy() {
+        for (let i of this.$storages.values()) {
+            i.Destroy();
+        }
+        this.$storages.clear();
+        this.$storages = null;
+    }
+}
 
 /**
  * 列表
@@ -23241,11 +23330,7 @@ class ConfigLoader extends EventDispatcher {
         len = byte.ReadUnsignedInt();
         let data;
         //存取器
-        let accessorClass = ConfigManager.GetAccessorClass(sheet);
-        if (accessorClass == null) {
-            Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
-        }
-        let accessor = new accessorClass();
+        let accessor = ConfigManager._GetAccessor(sheet);
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
             data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             accessor.Save(data);
@@ -23394,7 +23479,8 @@ class Drongo {
             this.__initUI(uiconfig);
         }, (err) => {
             Debuger.Err(Debuger.DRONGO, err);
-            this.__initUI(uiconfig);
+            if (this.__callback)
+                this.__callback(err);
         });
     }
     static __InitLayer(layer) {
@@ -23443,7 +23529,8 @@ class Drongo {
             result.Dispose();
             this.__callback();
         }, (reason) => {
-            throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
+            if (this.__callback)
+                this.__callback(reason);
         });
     }
     /**
@@ -26365,4 +26452,4 @@ class BaseModel {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

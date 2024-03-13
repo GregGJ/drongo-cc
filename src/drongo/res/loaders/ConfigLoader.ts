@@ -3,7 +3,7 @@ import { ConfigManager } from "../../configs/ConfigManager";
 import { ConfigUtils } from "../../configs/ConfigUtils";
 import { IConfigAccessor } from "../../configs/core/IConfigAccessor";
 import { Debuger } from "../../debugers/Debuger";
-import { Event } from "../../events/Event";
+import { DEvent } from "../../events/DEvent";
 import { EventDispatcher } from "../../events/EventDispatcher";
 import { ByteArray } from "../../utils/ByteArray";
 import { ILoader } from "../core/ILoader";
@@ -30,7 +30,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 this.__load(url, bundle);
@@ -48,10 +48,10 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
         bundle.load(FullURL(url), BufferAsset,
             (finished: number, total: number) => {
                 const progress = finished / total;
-                __this.Emit(Event.PROGRESS, { url, progress });
+                __this.Emit(DEvent.PROGRESS, { url, progress });
             }, (err: Error, asset: any) => {
                 if (err) {
-                    __this.Emit(Event.ERROR, { url, err });
+                    __this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 const urlKey = URL2Key(url);
@@ -61,7 +61,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
                 res.key = urlKey;
                 res.content = accessor;
                 ResManager.AddRes(res);
-                __this.Emit(Event.COMPLETE, { url });
+                __this.Emit(DEvent.COMPLETE, { url });
             });
     }
 
@@ -83,11 +83,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
         len = byte.ReadUnsignedInt();
         let data: any;
         //存取器
-        let accessorClass: new () => IConfigAccessor = ConfigManager.GetAccessorClass(sheet);
-        if (accessorClass == null) {
-            Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
-        }
-        let accessor: IConfigAccessor = new accessorClass();
+        let accessor: IConfigAccessor = ConfigManager._GetAccessor(sheet);
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
             data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             accessor.Save(data);

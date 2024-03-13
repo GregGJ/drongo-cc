@@ -2,7 +2,7 @@ import { Asset, AssetManager, assetManager } from "cc";
 import { EventDispatcher } from "../../events/EventDispatcher";
 import { ILoader } from "../core/ILoader";
 import { FullURL, ResURL, URL2Key } from "../core/ResURL";
-import { Event } from "../../events/Event";
+import { DEvent } from "../../events/DEvent";
 import { Resource } from "../res/Resource";
 import { ResManager } from "../res/ResManager";
 
@@ -28,7 +28,7 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 this.__load(url, bundle);
@@ -46,10 +46,10 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
         bundle.load(FullURL(url), url.type,
             (finished: number, total: number) => {
                 const progress = finished / total;
-                __this.Emit(Event.PROGRESS, { url, progress });
+                __this.Emit(DEvent.PROGRESS, { url, progress });
             }, (err: Error, asset: Asset) => {
                 if (err) {
-                    __this.Emit(Event.ERROR, { url, err });
+                    __this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 const urlKey = URL2Key(url);
@@ -57,7 +57,7 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
                 res.key = urlKey;
                 res.content = asset;
                 ResManager.AddRes(res);
-                __this.Emit(Event.COMPLETE, { url });
+                __this.Emit(DEvent.COMPLETE, { url });
             });
     }
 

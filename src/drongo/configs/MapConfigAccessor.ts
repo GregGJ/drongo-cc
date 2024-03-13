@@ -1,5 +1,6 @@
 import { StringUtils } from "../utils/StringUtils";
 import { BaseConfigAccessor } from "./BaseConfigAccessor";
+import { ConfigStorage } from "./ConfigStorage";
 import { IConfigAccessor } from "./core/IConfigAccessor";
 
 
@@ -7,16 +8,17 @@ export class MapConfigAccessor extends BaseConfigAccessor implements IConfigAcce
 
     protected $storages: Map<string, ConfigStorage>;
 
-    constructor() {
+    constructor(keys: Array<string>) {
         super();
         this.$storages = new Map<string, ConfigStorage>();
+        this.AddStorage(keys);
     }
 
     /**
      * 增加存储方式
      * @param keys 
      */
-    protected AddStorage(keys: Array<string>): void {
+    AddStorage(keys: Array<string>): void {
         const key = StringUtils.PieceTogether(keys);
         if (this.$storages.has(key)) {
             throw new Error("重复添加配置表存储方式：" + key);
@@ -55,50 +57,20 @@ export class MapConfigAccessor extends BaseConfigAccessor implements IConfigAcce
         }
     }
     
+    /**
+     * 获取存储器
+     * @param keys 
+     * @returns 
+     */
+    GetStorage(keys: Array<string>): ConfigStorage {
+        return this.$storages.get(StringUtils.PieceTogether(keys));
+    }
+
     Destroy(): void {
         for (let i of this.$storages.values()) {
             i.Destroy();
         }
         this.$storages.clear();
         this.$storages = null;
-    }
-}
-
-class ConfigStorage {
-
-    key: string;
-    keys: Array<string>;
-    map: Map<string, any>;
-
-    constructor(keys: Array<string>) {
-        this.key = StringUtils.PieceTogether(keys);;
-        this.keys = keys;
-    }
-
-    Save(value: any): void {
-        let values: Array<any> = [];
-        for (let index = 0; index < this.keys.length; index++) {
-            const key = this.keys[index];
-            values.push(value[key]);
-        }
-        const saveKey = StringUtils.PieceTogether(values);
-        if (this.map.has(saveKey)) {
-            throw new Error("配置表唯一Key存在重复内容:" + saveKey);
-        }
-        this.map.set(saveKey, value);
-    }
-
-    Get<T>(key: string): T {
-        if (this.map.has(key)) {
-            return this.map.get(key);
-        }
-        return null;
-    }
-
-    Destroy(): void {
-        this.key = null;
-        this.keys = null;
-        this.map.clear();
-        this.map = null;
     }
 }

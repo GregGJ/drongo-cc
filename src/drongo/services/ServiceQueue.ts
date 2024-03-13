@@ -1,5 +1,5 @@
 import { Dictionary } from "../containers/Dictionary";
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { ITicker } from "../ticker/ITicker";
 import { TickerManager } from "../ticker/TickerManager";
 import { IService } from "./IService";
@@ -48,23 +48,23 @@ export class ServiceQueue implements ITicker {
     }
 
     private __addEvent(target: ServiceLoader): void {
-        target.On(Event.COMPLETE, this.__eventHandler, this);
-        target.On(Event.ERROR, this.__eventHandler, this);
-        target.On(Event.PROGRESS, this.__eventHandler, this);
+        target.On(DEvent.COMPLETE, this.__eventHandler, this);
+        target.On(DEvent.ERROR, this.__eventHandler, this);
+        target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
 
     private __eventHandler(type: string, target: ServiceLoader, data: any): void {
-        if (type == Event.PROGRESS) {
+        if (type == DEvent.PROGRESS) {
             ServiceManager.ChildProgress(data.service, data.progress);
             return;
         }
         target.OffAllEvent();
         this.running.Delete(data.service);
-        if (type == Event.ERROR) {
+        if (type == DEvent.ERROR) {
             ServiceManager.ChildError(data.service, data.err);
             return;
         }
-        if (type == Event.COMPLETE) {
+        if (type == DEvent.COMPLETE) {
             ServiceManager.ChildComplete(data.service, data.proxy);
             target.Reset();
             this.pool.push(target);

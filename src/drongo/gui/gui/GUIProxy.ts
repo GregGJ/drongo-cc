@@ -10,7 +10,7 @@ import { LoadingView } from "../core/loadingView/LoadingView";
 import { IViewCreator } from "../core/IViewCreator";
 import { ServiceManager } from "../../services/ServiceManager";
 import { GUIManager } from "../GUIManager";
-import { Event } from "../../events/Event";
+import { DEvent } from "../../events/DEvent";
 import { LayerManager } from "../core/layer/LayerManager";
 import { ILayer } from "../core/layer/ILayer";
 import { IService } from "../../services/IService";
@@ -209,13 +209,13 @@ export class GUIProxy {
             if (this.mediator.PlayShowAnimation) {
                 this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
             } else {
-                Event.Emit(Event.SHOW, this.info!.key);
+                DEvent.Emit(DEvent.SHOW, this.info!.key);
             }
         }
     }
 
     private __showAnimationPlayed(): void {
-        Event.Emit(Event.SHOW, this.info!.key);
+        DEvent.Emit(DEvent.SHOW, this.info!.key);
     }
 
     Hide(): void {
@@ -243,7 +243,7 @@ export class GUIProxy {
         this.mediator!.viewComponent!.visible = false;
         this.mediator!.Hide();
         this.__showing = false;
-        Event.Emit(Event.HIDE, this.info!.key);
+        DEvent.Emit(DEvent.HIDE, this.info!.key);
     }
 
     Destroy(): void {

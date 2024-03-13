@@ -1,6 +1,6 @@
 
 import { Dictionary } from "../../containers/Dictionary";
-import { Event } from "../../events/Event";
+import { DEvent } from "../../events/DEvent";
 import { ITicker } from "../../ticker/ITicker";
 import { TickerManager } from "../../ticker/TickerManager";
 import { Res } from "../Res";
@@ -70,13 +70,13 @@ export class LoaderQueue implements ITicker {
     }
 
     private __addEvent(target: ILoader): void {
-        target.On(Event.COMPLETE, this.__eventHandler, this);
-        target.On(Event.ERROR, this.__eventHandler, this);
-        target.On(Event.PROGRESS, this.__eventHandler, this);
+        target.On(DEvent.COMPLETE, this.__eventHandler, this);
+        target.On(DEvent.ERROR, this.__eventHandler, this);
+        target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
 
     private __eventHandler(type: string, target: ILoader, data: any): void {
-        if (type == Event.PROGRESS) {
+        if (type == DEvent.PROGRESS) {
             Loader.single.ChildProgress(data.url, data.progress);
             return;
         }
@@ -84,11 +84,11 @@ export class LoaderQueue implements ITicker {
         target.OffAllEvent();
         //从运行列表中删除
         this.running.Delete(URL2Key(data.url));
-        if (type == Event.ERROR) {
+        if (type == DEvent.ERROR) {
             Loader.single.ChildError(data.url, data.err);
             return;
         }
-        if (type == Event.COMPLETE) {
+        if (type == DEvent.COMPLETE) {
             Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();

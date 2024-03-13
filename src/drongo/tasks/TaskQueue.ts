@@ -1,4 +1,4 @@
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { ITask } from "./ITask";
 
@@ -39,26 +39,26 @@ export class TaskQueue extends EventDispatcher implements ITask {
     private __tryNext(): void {
         if (this.__index < this.__taskList.length) {
             let task: ITask = this.__taskList[this.__index];
-            task.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            task.On(Event.PROGRESS, this.__subTaskEventHandler, this);
-            task.On(Event.ERROR, this.__subTaskEventHandler, this);
+            task.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
+            task.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
+            task.On(DEvent.ERROR, this.__subTaskEventHandler, this);
             task.Start();
         } else {
             //结束
-            this.Emit(Event.COMPLETE);
+            this.Emit(DEvent.COMPLETE);
         }
     }
 
     private __subTaskEventHandler(key: string, target: ITask, data?: any): void {
-        if (key == Event.PROGRESS) {
+        if (key == DEvent.PROGRESS) {
             let dataValue: number = Number(data) == undefined ? 0 : Number(data);
             let progress: number = (this.__index + dataValue) / this.__taskList.length;
-            this.Emit(Event.PROGRESS, progress);
+            this.Emit(DEvent.PROGRESS, progress);
             return;
         }
         target.OffAllEvent();
-        if (key == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
+        if (key == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, data);
             return;
         }
         target.Destroy();

@@ -74,7 +74,8 @@ export { PropertyBinder } from "./drongo/bindings/PropertyBinder"
 export { BaseConfigAccessor } from "./drongo/configs/BaseConfigAccessor"
 export { ConfigManager } from "./drongo/configs/ConfigManager"
 export { IConfigAccessor } from "./drongo/configs/core/IConfigAccessor"
-export { IConfigManager } from "./drongo/configs/core/IConfigManager"
+export { MapConfigAccessor } from "./drongo/configs/MapConfigAccessor"
+// export { IConfigManager } from "./drongo/configs/core/IConfigManager"
 
 //containers
 export { Dictionary } from "./drongo/containers/Dictionary"
@@ -86,7 +87,7 @@ export { Debuger } from "./drongo/debugers/Debuger"
 // export { IDebuger } from "./drongo/debugers/IDebuger"
 
 //events
-export { Event } from "./drongo/events/Event"
+export { DEvent as Event } from "./drongo/events/DEvent"
 export { EventDispatcher } from "./drongo/events/EventDispatcher"
 export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 

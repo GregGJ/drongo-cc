@@ -6,7 +6,7 @@ import { IEventDispatcher } from "../events/IEventDispatcher";
 export interface ITask extends IEventDispatcher {
 
     /**
-     * 开始
+     * 开始(请在完成后派发Event.COMPLETE事件),例外可以派发PROGRESS和ERROR
      * @param data 
      */
     Start(data?: any): void;

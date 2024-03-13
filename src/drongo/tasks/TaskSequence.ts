@@ -1,4 +1,4 @@
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { ITask } from "./ITask";
 
@@ -34,21 +34,21 @@ export class TaskSequence extends EventDispatcher implements ITask {
     Start(data?: any): void {
         for (let index = 0; index < this.__taskList.length; index++) {
             const element = this.__taskList[index];
-            element.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            element.On(Event.ERROR, this.__subTaskEventHandler, this);
-            element.On(Event.PROGRESS, this.__subTaskEventHandler, this);
+            element.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
+            element.On(DEvent.ERROR, this.__subTaskEventHandler, this);
+            element.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
             element.Start();
         }
     }
 
     private __subTaskEventHandler(type: string, target: ITask, data?: any): void {
-        if (type == Event.PROGRESS) {
-            this.Emit(Event.PROGRESS, this.__index / this.__taskList.length);
+        if (type == DEvent.PROGRESS) {
+            this.Emit(DEvent.PROGRESS, this.__index / this.__taskList.length);
             return;
         }
         target.OffAllEvent();
-        if (type == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
+        if (type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, data);
             return;
         }
         this.__index++;
@@ -57,7 +57,7 @@ export class TaskSequence extends EventDispatcher implements ITask {
         }
         target.Destroy();
         //完成
-        this.Emit(Event.COMPLETE);
+        this.Emit(DEvent.COMPLETE);
     }
 
     Destroy(): void {

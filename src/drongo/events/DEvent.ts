@@ -2,9 +2,10 @@
 
 
 import { EventDispatcher } from "./EventDispatcher";
+import { IEventDispatcher } from "./IEventDispatcher";
 
 
-export class Event {
+export class DEvent {
 
     static readonly START: string = "start";
     static readonly PROGRESS: string = "progress";
@@ -116,5 +117,36 @@ export class Event {
             eventChannel = this.channels.get(channel);
         }
         eventChannel.OffAllEvent();
+    }
+    //===========================
+    // 实例
+    //===========================
+    /**
+     * 事件类型
+     */
+    type: string;
+    /**
+     * 事件派发者
+     */
+    target: IEventDispatcher;
+    /**
+     * 停止派发
+     */
+    propagationStopped:boolean=false;
+    /**
+     * 错误对象
+     */
+    error:Error;
+    /**
+     * 进度
+     */
+    progress:number;
+    /**
+     * 事件数据
+     */
+    data: any;
+
+    constructor(type:string,target:IEventDispatcher){
+
     }
 }

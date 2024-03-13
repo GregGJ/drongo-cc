@@ -1,4 +1,4 @@
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { EventDispatcher } from "../events/EventDispatcher";
 
 
@@ -36,8 +36,8 @@ export class List<T> extends EventDispatcher {
         }
         this.__element.push(value);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
+        if (this.HasEvent(DEvent.ADD)) {
+            this.Emit(DEvent.ADD, value);
         }
         return true;
     }
@@ -56,8 +56,8 @@ export class List<T> extends EventDispatcher {
         }
         this.__element.unshift(value);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
+        if (this.HasEvent(DEvent.ADD)) {
+            this.Emit(DEvent.ADD, value);
         }
         return true;
     }
@@ -70,8 +70,8 @@ export class List<T> extends EventDispatcher {
         if (this.__element.length > 0) {
             const result = this.__element.pop();
             this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+            if (this.HasEvent(DEvent.REMOVE)) {
+                this.Emit(DEvent.REMOVE, result);
             }
             return result;
         }
@@ -86,8 +86,8 @@ export class List<T> extends EventDispatcher {
         if (this.__element.length > 0) {
             const result = this.__element.shift();
             this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+            if (this.HasEvent(DEvent.REMOVE)) {
+                this.Emit(DEvent.REMOVE, result);
             }
             return result;
         }
@@ -105,8 +105,8 @@ export class List<T> extends EventDispatcher {
         const result = this.__element[index];
         this.__element.splice(index, 1);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
         return result;
     }
@@ -123,8 +123,8 @@ export class List<T> extends EventDispatcher {
         const result = this.__element[index];
         this.__element.splice(index, 1);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
     }
 
@@ -134,8 +134,8 @@ export class List<T> extends EventDispatcher {
     Clear(): void {
         this.count = 0;
         this.__element.length = 0;
-        if (this.HasEvent(Event.CLEAR)) {
-            this.Emit(Event.CLEAR);
+        if (this.HasEvent(DEvent.CLEAR)) {
+            this.Emit(DEvent.CLEAR);
         }
     }
 

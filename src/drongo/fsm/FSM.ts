@@ -1,5 +1,5 @@
 import { Debuger } from "../debugers/Debuger";
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { IState } from "./IState";
 
@@ -69,7 +69,7 @@ export class FSM extends EventDispatcher {
             Debuger.Log("FSM",this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
         }
         this.__current.Enter(data);
-        this.Emit(Event.State_Changed, oldKey);
+        this.Emit(DEvent.State_Changed, oldKey);
     }
 
     get state(): number {

@@ -1,5 +1,5 @@
 
-import { Event } from "../../events/Event";
+import { DEvent } from "../../events/DEvent";
 import { IEventDispatcher } from "../../events/IEventDispatcher";
 import { TickerManager } from "../../ticker/TickerManager";
 import { Timer } from "../../timer/Timer";
@@ -39,8 +39,8 @@ export class GUIManagerImpl implements IGUIManager {
         TickerManager.AddTicker(this);
 
         //监听打开和关闭事件
-        Event.On(Event.SHOW, this.__showedHandler, this);
-        Event.On(Event.HIDE, this.__closedHandler, this);
+        DEvent.On(DEvent.SHOW, this.__showedHandler, this);
+        DEvent.On(DEvent.HIDE, this.__closedHandler, this);
     }
 
     /**获取某个组件 */

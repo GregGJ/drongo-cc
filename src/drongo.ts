@@ -23,7 +23,7 @@ export class Drongo {
     public static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
 
     /**初始化完成回调 */
-    private static __callback: () => void;
+    private static __callback: (err?: Error) => void;
     private static __progress: (progress: number) => void;
     /**
      * 初始化
@@ -35,7 +35,7 @@ export class Drongo {
      * @param sheetBundle   配置表AssetBundle包
      * @param assets        公共资源
      */
-    static Init(root: Node, callback: () => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs", assets?: Array<ResURL>): void {
+    static Init(root: Node, callback: (err?: Error) => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: { layers: Array<string>, fullScrene: Array<string> }, sheetBundle: string = "Configs", assets?: Array<ResURL>): void {
         this.__callback = callback;
         this.__progress = progress;
         //注册fgui加载器
@@ -92,7 +92,7 @@ export class Drongo {
                     this.__initUI(uiconfig);
                 }, (err) => {
                     Debuger.Err(Debuger.DRONGO, err);
-                    this.__initUI(uiconfig);
+                    if (this.__callback) this.__callback(err);
                 });
     }
 
@@ -143,7 +143,7 @@ export class Drongo {
                     result.Dispose();
                     this.__callback();
                 }, (reason) => {
-                    throw new Error("初始化引擎出错,gui配置加载错误:" + URL2Key(guiconfig));
+                    if (this.__callback) this.__callback(reason);
                 }
             )
     }

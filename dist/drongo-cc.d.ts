@@ -3115,13 +3115,13 @@ declare class ConfigManager {
      * @param sheet
      * @param accessors
      */
-    static Register(sheet: string, accessors: new () => IConfigAccessor): void;
+    static Register(sheet: string, accessors: IConfigAccessor): void;
     /**
-     * 获取存取器类
+     * 获取已注册的存取器
      * @param sheet
      * @returns
      */
-    static GetAccessorClass(sheet: string): new () => IConfigAccessor;
+    static _GetAccessor(sheet: string): IConfigAccessor;
     /**
      * 获取配置存取器
      * @param sheet
@@ -3131,26 +3131,39 @@ declare class ConfigManager {
     private static get impl();
 }
 
-/**
- * 配置管理器接口
- */
-interface IConfigManager {
+declare class ConfigStorage {
+    key: string;
+    keys: Array<string>;
+    map: Map<string, any>;
+    constructor(keys: Array<string>);
+    Save(value: any): void;
+    Get<T>(key: string): T;
+    Destroy(): void;
+}
+
+declare class MapConfigAccessor extends BaseConfigAccessor implements IConfigAccessor {
+    protected $storages: Map<string, ConfigStorage>;
+    constructor(keys: Array<string>);
     /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
+     * 增加存储方式
+     * @param keys
      */
-    Register(sheet: string, accessors: new () => IConfigAccessor): void;
+    AddStorage(keys: Array<string>): void;
+    Save(value: any): boolean;
     /**
-     * 获取存取器类
-     * @param sheet
-     */
-    GetAccessorClass(sheet: string): new () => IConfigAccessor;
+      * 获取
+      * @param keys
+      * @param values
+      * @returns
+      */
+    Get<T>(keys?: Array<string>, values?: Array<any>): T;
     /**
-     * 获取配置存取器
-     * @param sheet
+     * 获取存储器
+     * @param keys
+     * @returns
      */
-    GetAccessor(sheet: string): IConfigAccessor;
+    GetStorage(keys: Array<string>): ConfigStorage;
+    Destroy(): void;
 }
 
 /**
@@ -4644,7 +4657,7 @@ declare class ServiceManager {
  */
 interface ITask extends IEventDispatcher {
     /**
-     * 开始
+     * 开始(请在完成后派发Event.COMPLETE事件),例外可以派发PROGRESS和ERROR
      * @param data
      */
     Start(data?: any): void;
@@ -5868,7 +5881,7 @@ declare class Drongo {
      * @param sheetBundle   配置表AssetBundle包
      * @param assets        公共资源
      */
-    static Init(root: Node, callback: () => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: {
+    static Init(root: Node, callback: (err?: Error) => void, progress?: (progress: number) => void, guiconfig?: ResURL, layer?: {
         layers: Array<string>;
         fullScrene: Array<string>;
     }, sheetBundle?: string, assets?: Array<ResURL>): void;
@@ -5882,4 +5895,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IConfigManager, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

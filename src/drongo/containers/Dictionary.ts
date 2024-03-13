@@ -1,4 +1,4 @@
-import { Event } from "../events/Event";
+import { DEvent } from "../events/DEvent";
 import { EventDispatcher } from "../events/EventDispatcher";
 
 
@@ -29,11 +29,11 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
             }
             this.__map.delete(key);
             this.__list.splice(index,1);
-            this.Emit(Event.REMOVE,old);
+            this.Emit(DEvent.REMOVE,old);
         }
         this.__map.set(key,value);
         this.__list.push(value);
-        this.Emit(Event.ADD,value);
+        this.Emit(DEvent.ADD,value);
     }
 
     /**
@@ -83,8 +83,8 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
         this.__list.splice(index, 1);
         this.__map.delete(key);
         //派发删除事件
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
         return result;
     }
