@@ -21323,7 +21323,7 @@ class BaseConfigAccessor {
      * @param value
      * @returns
      */
-    Get() {
+    GetElements() {
         return this.$configs;
     }
     Destroy() {
@@ -21969,6 +21969,8 @@ class ConfigUtils {
             title = titleList[index];
             type = typeList[index];
             switch (type) {
+                case -1: //nuil
+                    continue;
                 case 0: //byte
                 case 1: //ubyte
                 case 2: //short

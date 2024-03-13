@@ -1,18 +1,21 @@
 import { StringUtils } from "../utils/StringUtils";
+import { BaseConfigAccessor } from "./BaseConfigAccessor";
 import { IConfigAccessor } from "./core/IConfigAccessor";
 
 
-export class MapConfigAccessor implements IConfigAccessor {
+export class MapConfigAccessor extends BaseConfigAccessor implements IConfigAccessor {
 
     protected $storages: Map<string, ConfigStorage>;
 
     constructor() {
+        super();
         this.$storages = new Map<string, ConfigStorage>();
     }
+
     /**
-   * 增加存储方式
-   * @param keys 
-   */
+     * 增加存储方式
+     * @param keys 
+     */
     protected AddStorage(keys: Array<string>): void {
         const key = StringUtils.PieceTogether(keys);
         if (this.$storages.has(key)) {
@@ -20,11 +23,15 @@ export class MapConfigAccessor implements IConfigAccessor {
         }
         this.$storages.set(key, new ConfigStorage(keys));
     }
+
     Save(value: any): boolean {
-        for (let i of this.$storages.values()) {
-            i.Save(value);
+        if (super.Save(value)) {
+            for (let i of this.$storages.values()) {
+                i.Save(value);
+            }
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**
@@ -47,9 +54,13 @@ export class MapConfigAccessor implements IConfigAccessor {
             return s.Get<T>(vKey);
         }
     }
-
+    
     Destroy(): void {
-        throw new Error("Method not implemented.");
+        for (let i of this.$storages.values()) {
+            i.Destroy();
+        }
+        this.$storages.clear();
+        this.$storages = null;
     }
 }
 

@@ -12,9 +12,9 @@ export interface IConfigAccessor {
      */
     Save(value: any): boolean;
     /**
-     * 获取
+     * 获取所有元素
      */
-    Get<T>(...arg: any[]):any;
+    GetElements<T>():Array<T>;
     /**
      * 清理
      */

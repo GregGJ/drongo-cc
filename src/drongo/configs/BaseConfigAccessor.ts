@@ -28,7 +28,7 @@ export class BaseConfigAccessor implements IConfigAccessor {
      * @param value
      * @returns 
      */
-    Get<T>(): Array<T> {
+    GetElements<T>(): Array<T> {
         return this.$configs;
     }
 
