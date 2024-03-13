@@ -19,7 +19,7 @@ export interface IGUIMediator {
      * 是否显示进度条
      */
     showLoadingView: boolean;
-    
+
     /**初始化完毕 */
     inited: boolean;
 
@@ -32,13 +32,13 @@ export interface IGUIMediator {
      * 播放显示动画
      * @param complete 
      */
-    PlayShowAnimation?: (complete: Function) => void;
+    PlayShowAnimation?: (complete: () => void) => void;
 
     /**
      * 界面关闭时播放的动画
      * @param complete 
      */
-    PlayHideAnimation?: (complete: Function) => void;
+    PlayHideAnimation?: (complete: () => void) => void;
 
     /**
      * 创建UI

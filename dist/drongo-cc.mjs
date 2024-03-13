@@ -19479,8 +19479,17 @@ class LoaderQueue {
 }
 
 class ResRequest {
-    constructor(url, cb, progress) {
-        this.__loadedMap = new Map();
+    constructor() {
+        this.__loaded = new Map();
+        this.__loadProgress = new Map();
+    }
+    /**
+     * 初始化
+     * @param url
+     * @param cb
+     * @param progress
+     */
+    Init(url, cb, progress) {
         if (Array.isArray(url)) {
             this.urls = url;
         }
@@ -19491,27 +19500,33 @@ class ResRequest {
         this.progress = progress;
     }
     Load() {
-        this.__loadedMap.clear();
+        let loading = false;
         for (let index = 0; index < this.urls.length; index++) {
             const url = this.urls[index];
             const urlKey = URL2Key(url);
             //如果已经加载完成
             if (ResManager.HasRes(urlKey)) {
-                Loader.single.ChildComplete(url);
+                //标记已加载
+                this.__loadProgress.set(urlKey, 1);
             }
             else {
+                loading = true;
                 LoaderQueue.single.Load(url);
             }
         }
+        if (!loading) {
+            this.checkComplete();
+        }
+        return loading;
     }
     ChildComplete(resURL) {
         const urlKey = URL2Key(resURL);
-        this.__loadedMap.set(urlKey, 1);
+        this.__loaded.set(urlKey, true);
         this.checkComplete();
     }
     ChildProgress(resURL, progress) {
         const urlKey = URL2Key(resURL);
-        this.__loadedMap.set(urlKey, progress);
+        this.__loadProgress.set(urlKey, progress);
         this.UpdateProgress();
     }
     ChildError(err) {
@@ -19527,25 +19542,24 @@ class ResRequest {
         }
     }
     checkComplete() {
-        let loaded = this.getLoaded();
+        let loaded = this.__loaded.size;
         let progress = loaded / this.urls.length;
-        if (this.progress) {
-            this.progress(progress);
-        }
         //完成
-        if (progress == 1 && this.cb != null) {
+        if (progress >= 1 && this.cb != null) {
             this.cb(null);
-            this.Destroy();
+            Loader.single.BackToPool(this);
         }
     }
     getLoaded() {
         let loaded = 0;
-        for (let value of this.__loadedMap.values()) {
+        for (let value of this.__loadProgress.values()) {
             loaded += value;
         }
         return loaded;
     }
-    Destroy() {
+    Reset() {
+        this.__loaded.clear();
+        this.__loadProgress.clear();
         this.urls = null;
         this.cb = null;
         this.progress = null;
@@ -19554,7 +19568,9 @@ class ResRequest {
 
 class Loader {
     constructor() {
-        this.requests = new Map();
+        this.__requests = new Map();
+        //对象池
+        this.__pools = [];
     }
     /**
      * 加载
@@ -19564,23 +19580,31 @@ class Loader {
      * @param progress
      */
     Load(url, cb, progress) {
-        let request = new ResRequest(url, cb, progress);
-        this.__addReqeuset(request);
-        request.Load();
+        let request;
+        if (this.__pools.length > 0) {
+            request = this.__pools.shift();
+        }
+        else {
+            request = new ResRequest();
+        }
+        request.Init(url, cb, progress);
+        if (request.Load()) {
+            this.__addReqeuset(request);
+        }
     }
     ChildComplete(url) {
         const urlKey = URL2Key(url);
-        let list = this.requests.get(urlKey);
+        let list = this.__requests.get(urlKey);
         for (let index = 0; index < list.length; index++) {
             const request = list[index];
             request.ChildComplete(url);
         }
         list.length = 0;
-        this.requests.delete(urlKey);
+        this.__requests.delete(urlKey);
     }
     ChildError(url, err) {
         const urlKey = URL2Key(url);
-        let rlist = this.requests.get(urlKey);
+        let rlist = this.__requests.get(urlKey);
         for (let index = 0; index < rlist.length; index++) {
             const request = rlist[index];
             request.ChildError(err);
@@ -19592,17 +19616,25 @@ class Loader {
             const request = list[index];
             this.__deleteReqeuset(request);
             //销毁
-            request.Destroy();
+            this.BackToPool(request);
         }
-        this.requests.delete(urlKey);
+        this.__requests.delete(urlKey);
     }
     ChildProgress(url, progress) {
         const urlKey = URL2Key(url);
-        let list = this.requests.get(urlKey);
+        let list = this.__requests.get(urlKey);
         for (let index = 0; index < list.length; index++) {
             const request = list[index];
             request.ChildProgress(url, progress);
         }
+    }
+    /**
+     * 回收到池中
+     * @param value
+     */
+    BackToPool(value) {
+        value.Reset();
+        this.__pools.push(value);
     }
     /**
      * 添加
@@ -19613,12 +19645,12 @@ class Loader {
         for (let index = 0; index < request.urls.length; index++) {
             const url = request.urls[index];
             const urlKey = URL2Key(url);
-            if (this.requests.has(urlKey)) {
-                list = this.requests.get(urlKey);
+            if (this.__requests.has(urlKey)) {
+                list = this.__requests.get(urlKey);
             }
             else {
                 list = [];
-                this.requests.set(urlKey, list);
+                this.__requests.set(urlKey, list);
             }
             list.push(request);
         }
@@ -19635,7 +19667,7 @@ class Loader {
             const url = request.urls[i];
             const urlKey = URL2Key(url);
             //从列表中找出并删除
-            list = this.requests.get(urlKey);
+            list = this.__requests.get(urlKey);
             findex = list.indexOf(request);
             if (findex >= 0) {
                 list.splice(findex, 1);
