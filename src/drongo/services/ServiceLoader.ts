@@ -41,13 +41,13 @@ export class ServiceLoader extends EventDispatcher {
         //加载
         Res.GetResRefList(urls, this.service.name,
             (progress: number) => {
-                this.Emit(DEvent.PROGRESS, { service: this.serviceClass, progress });
+                this.Emit(DEvent.PROGRESS, this.serviceClass, undefined, progress);
             }).then(
                 (value) => {
                     this.refs = value;
                     this.__assetReady();
                 }, (reason) => {
-                    this.Emit(DEvent.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) })
+                    this.Emit(DEvent.ERROR, this.serviceClass, reason)
                 }
             );
     }

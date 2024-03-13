@@ -3177,14 +3177,14 @@ interface IEventDispatcher {
      * @param handler
      * @param priority 优先级 数字越小优先级越高
      */
-    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority?: number): void;
+    On(key: string, handler: (e: DEvent) => void, caller: any, priority?: number): void;
     /**
      * 删除事件监听
      * @param key
      * @param caller
      * @param handler
      */
-    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void;
+    Off(key: string, handler: (e: DEvent) => void, caller: any): void;
     /**
      * 删除指定对象所有的事件处理
      * @param caller
@@ -3211,13 +3211,89 @@ interface IEventDispatcher {
      * @param caller
      * @param handler
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean;
+    HasEventHandler(key: string, handler: (e: DEvent) => void, caller: any): boolean;
+    /**
+     * 销毁
+     */
+    Destroy(): void;
+}
+
+declare class DEvent {
+    static readonly START: string;
+    static readonly PROGRESS: string;
+    static readonly COMPLETE: string;
+    static readonly ERROR: string;
+    static readonly SHOW: string;
+    static readonly HIDE: string;
+    static readonly ADD: string;
+    static readonly REMOVE: string;
+    static readonly UPDATE: string;
+    static readonly CLEAR: string;
+    static readonly STATE_CHANGED: string;
+    static readonly VALUE_CHANGED: string;
+    static readonly ADD_CHILD: string;
+    static readonly REMOVE_CHILD: string;
+    static readonly CHILD_VALUE_CHANGED: string;
+    /**
+     * 事件类型
+     */
+    type: string;
+    /**
+     * 事件派发者
+     */
+    target: IEventDispatcher;
+    /**
+     * 停止派发
+     */
+    propagationStopped: boolean;
+    /**
+     * 错误对象
+     */
+    error: Error;
+    /**
+     * 进度
+     */
+    progress: number;
+    /**
+     * 事件数据
+     */
+    data: any;
+    constructor(type: string, target: IEventDispatcher, data?: any, err?: Error, progress?: number);
+    /**
+     * 初始化
+     * @param type
+     * @param target
+     * @param data
+     * @param err
+     * @param progress
+     */
+    Init(type: string, target: IEventDispatcher, data?: any, err?: Error, progress?: number): void;
+    Reset(): void;
+    private static __pool;
+    /**
+     * 创建事件对象,优先从池中获取
+     * @param type
+     * @param target
+     * @param data
+     * @param err
+     * @param progress
+     */
+    static Create(type: string, target: IEventDispatcher, data?: any, err?: Error, progress?: number): DEvent;
+    /**
+     * 退还
+     * @param value
+     */
+    static BackToPool(value: DEvent): void;
 }
 
 /**
  * 事件分发器(只有一对多的情况下去使用)
  */
 declare class EventDispatcher implements IEventDispatcher {
+    /**
+     * 全局事件通道
+     */
+    static Global: EventDispatcher;
     /**
     * 对象已经注册的处理器
     */
@@ -3238,14 +3314,14 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param func
      * @param priority 优先级（数字越小优先级越高）
      */
-    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority?: number): void;
+    On(key: string, handler: (e: DEvent) => void, caller: any, priority?: number): void;
     /**
      * 删除事件监听
      * @param key
      * @param caller
      * @param handler
      */
-    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void;
+    Off(key: string, handler: (e: DEvent) => void, caller: any): void;
     /**
      * 删除指定对象所有的事件处理
      * @param caller
@@ -3260,7 +3336,7 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param type
      * @param data
      */
-    Emit(type: string, data?: any): void;
+    Emit(type: string, data?: any, err?: Error, progress?: number): void;
     private __emit;
     /**
      * 是否有事件监听
@@ -3273,7 +3349,7 @@ declare class EventDispatcher implements IEventDispatcher {
      * @param caller
      * @param func
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean;
+    HasEventHandler(key: string, handler: (e: DEvent) => void, caller: any): boolean;
     Destroy(): void;
 }
 
@@ -3433,91 +3509,6 @@ declare class Debuger {
     static Info(type: string, msg: any): void;
     private static __impl;
     private static get impl();
-}
-
-declare class DEvent {
-    static readonly START: string;
-    static readonly PROGRESS: string;
-    static readonly COMPLETE: string;
-    static readonly ERROR: string;
-    static readonly SHOW: string;
-    static readonly HIDE: string;
-    static readonly ADD: string;
-    static readonly REMOVE: string;
-    static readonly UPDATE: string;
-    static readonly CLEAR: string;
-    static readonly State_Changed: string;
-    /**事件通道 */
-    private static channels;
-    /**
-     * 获取事件通道
-     * @param key
-     * @returns
-     */
-    static GetChannel(key?: string): EventDispatcher;
-    /**
-     * 派发事件
-     * @param eventType
-     * @param data
-     * @param channel   通道
-     */
-    static Emit(eventType: string, data?: any, channel?: string): void;
-    /**
-     * 添加事件监听
-     * @param type
-     * @param handler
-     * @param caller
-     * @param priority  优先级
-     * @param channel   事件通道
-     */
-    static On(type: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any, priority?: number, channel?: string): void;
-    /**
-     * 删除事件监听
-     * @param type
-     * @param handler
-     * @param caller
-     * @param channel
-     * @returns
-     */
-    static Off(type: string, handler: (type: string, target?: any, ...arg: any[]) => void, caller: any, channel?: string): void;
-    /**
-     * 删除指定对象上的所有事件监听
-     * @param caller
-     * @param channel
-     * @returns
-     */
-    static OffByCaller(caller: any, channel?: string): void;
-    /**
-     * 删除指定通道上的所有事件监听
-     * @param channel
-     * @returns
-     */
-    static OffAll(channel?: string): void;
-    /**
-     * 事件类型
-     */
-    type: string;
-    /**
-     * 事件派发者
-     */
-    target: IEventDispatcher;
-    /**
-     * 停止派发
-     */
-    propagationStopped: boolean;
-    /**
-     * 错误对象
-     */
-    error: Error;
-    /**
-     * 进度
-     */
-    progress: number;
-    /**
-     * 事件数据
-     */
-    data: any;
-    constructor(type: string, target: IEventDispatcher);
 }
 
 /**
@@ -5550,16 +5541,12 @@ declare enum SerializationMode {
     JSON = 0
 }
 
-declare class ModelEvent {
-    static VALUE_CHANGED: string;
-    static ADD_CHILD: string;
-    static REMOVE_CHILD: string;
-    static CHILD_VALUE_CHANGED: string;
+declare class ChangedData {
     key: string;
     newValue: any;
     oldValue: any;
     constructor();
-    static Create(newValue?: any, oldValue?: any, key?: string): ModelEvent;
+    static Create(newValue?: any, oldValue?: any, key?: string): ChangedData;
 }
 
 /**
@@ -5922,4 +5909,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

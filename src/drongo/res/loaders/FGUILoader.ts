@@ -26,7 +26,7 @@ export class FGUILoader extends EventDispatcher implements ILoader {
             if (!bundle) {
                 assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                     if (err) {
-                        __this.Emit(DEvent.ERROR, { url, err });
+                        __this.Emit(DEvent.ERROR, url, err);
                         return;
                     }
                     __this.loadUIPackge(url, bundle);
@@ -45,11 +45,11 @@ export class FGUILoader extends EventDispatcher implements ILoader {
         UIPackage.loadPackage(bundle, url.url,
             (finish: number, total: number, item: AssetManager.RequestItem) => {
                 const progress: number = finish / total;
-                __this.Emit(DEvent.PROGRESS, { url, progress });
+                __this.Emit(DEvent.PROGRESS, url, undefined, progress);
             },
             (err: Error, pkg: UIPackage) => {
                 if (err) {
-                    __this.Emit(DEvent.ERROR, { url, err });
+                    __this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 const urlKey = URL2Key(url);
@@ -57,7 +57,7 @@ export class FGUILoader extends EventDispatcher implements ILoader {
                 res.key = urlKey;
                 res.content = pkg;
                 ResManager.AddRes(res);
-                __this.Emit(DEvent.COMPLETE, { url });
+                __this.Emit(DEvent.COMPLETE, url);
             });
     }
 

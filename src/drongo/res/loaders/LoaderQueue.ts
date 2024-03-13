@@ -75,28 +75,29 @@ export class LoaderQueue implements ITicker {
         target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
 
-    private __eventHandler(type: string, target: ILoader, data: any): void {
-        if (type == DEvent.PROGRESS) {
-            Loader.single.ChildProgress(data.url, data.progress);
+    private __eventHandler(evt: DEvent): void {
+        let target: ILoader = evt.target as ILoader;
+        if (evt.type == DEvent.PROGRESS) {
+            Loader.single.ChildProgress(evt.data, evt.progress);
             return;
         }
         //删除所有事件监听
         target.OffAllEvent();
         //从运行列表中删除
-        this.running.Delete(URL2Key(data.url));
-        if (type == DEvent.ERROR) {
-            Loader.single.ChildError(data.url, data.err);
+        this.running.Delete(URL2Key(evt.data));
+        if (evt.type == DEvent.ERROR) {
+            Loader.single.ChildError(evt.data, evt.error);
             return;
         }
-        if (type == DEvent.COMPLETE) {
-            Loader.single.ChildComplete(data.url);
+        if (evt.type == DEvent.COMPLETE) {
+            Loader.single.ChildComplete(evt.data);
             //重置并回收
             target.Reset();
             let type: any;
-            if (typeof data.url == "string") {
+            if (typeof evt.data == "string") {
                 type = "string";
             } else {
-                type = data.url.type;
+                type = evt.data.type;
             }
             let list = this.pool.get(type);
             if (list == null) {

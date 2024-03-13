@@ -1,5 +1,6 @@
 import { Dictionary } from "../../containers/Dictionary";
-import { ModelEvent } from "../ModelEvent";
+import { DEvent } from "../../events/DEvent";
+import { ChangedData } from "../ChangedData";
 import { ModelFactory } from "../ModelFactory";
 import { SerializationMode } from "../SerializationMode";
 import { IProperty } from "../core/IProperty";
@@ -26,11 +27,11 @@ export class DictionaryValue extends BaseValue {
             throw new Error("重复添加相同KEY的属性！");
         }
         this.map.Set(value.key, value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(value, null, value.key));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(value, null, value.key));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return value;
     }
 
@@ -52,11 +53,11 @@ export class DictionaryValue extends BaseValue {
         }
         let result: IValue = this.map.Get(key);
         this.map.Delete(key);
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(null, result, key));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(null, result, key));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
 
@@ -101,7 +102,7 @@ export class DictionaryValue extends BaseValue {
     Get(key: string): IValue {
         return this.map.Get(key);
     }
-    
+
     /**
      * 对比
      * @param value 
@@ -132,9 +133,9 @@ export class DictionaryValue extends BaseValue {
         this.map.Clear();
     }
 
-    private ChildValueChanged(data: any): void {
-        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
-            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+    private ChildValueChanged(e: DEvent): void {
+        if (this.HasEvent(DEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(DEvent.CHILD_VALUE_CHANGED, e.data);
         }
     }
 

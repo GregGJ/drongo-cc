@@ -1,20 +1,19 @@
 import { assetManager, Component, Node } from "cc";
-import { IGUIInfo } from "./IGUIInfo";
-import { IGUIMediator } from "../core/IGUIMediator";
-import { ResRef } from "../../res/core/ResRef";
-import { ResURL, URL2Key } from "../../res/core/ResURL";
-import { Timer } from "../../timer/Timer";
 import { Drongo } from "../../../drongo";
-import { Res } from "../../res/Res";
-import { LoadingView } from "../core/loadingView/LoadingView";
-import { IViewCreator } from "../core/IViewCreator";
-import { ServiceManager } from "../../services/ServiceManager";
-import { GUIManager } from "../GUIManager";
-import { DEvent } from "../../events/DEvent";
-import { LayerManager } from "../core/layer/LayerManager";
-import { ILayer } from "../core/layer/ILayer";
-import { IService } from "../../services/IService";
 import { ConfigManager } from "../../configs/ConfigManager";
+import { DEvent } from "../../events/DEvent";
+import { ResRef } from "../../res/core/ResRef";
+import { ResURL } from "../../res/core/ResURL";
+import { Res } from "../../res/Res";
+import { ServiceManager } from "../../services/ServiceManager";
+import { IGUIMediator } from "../core/IGUIMediator";
+import { IViewCreator } from "../core/IViewCreator";
+import { ILayer } from "../core/layer/ILayer";
+import { LayerManager } from "../core/layer/LayerManager";
+import { LoadingView } from "../core/loadingView/LoadingView";
+import { GUIManager } from "../GUIManager";
+import { IGUIInfo } from "./IGUIInfo";
+import { EventDispatcher } from "../../events/EventDispatcher";
 
 
 
@@ -209,13 +208,13 @@ export class GUIProxy {
             if (this.mediator.PlayShowAnimation) {
                 this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
             } else {
-                DEvent.Emit(DEvent.SHOW, this.info!.key);
+                EventDispatcher.Global.Emit(DEvent.SHOW, this.info!.key);
             }
         }
     }
 
     private __showAnimationPlayed(): void {
-        DEvent.Emit(DEvent.SHOW, this.info!.key);
+        EventDispatcher.Global.Emit(DEvent.SHOW, this.info!.key);
     }
 
     Hide(): void {
@@ -243,9 +242,9 @@ export class GUIProxy {
         this.mediator!.viewComponent!.visible = false;
         this.mediator!.Hide();
         this.__showing = false;
-        DEvent.Emit(DEvent.HIDE, this.info!.key);
+        EventDispatcher.Global.Emit(DEvent.HIDE, this.info!.key);
     }
-
+    
     Destroy(): void {
         console.log("UI销毁=>" + this.info?.key);
         for (let index = 0; index < this.assets.length; index++) {

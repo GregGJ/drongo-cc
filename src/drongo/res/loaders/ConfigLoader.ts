@@ -29,7 +29,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                 if (err) {
-                    this.Emit(DEvent.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 this.__load(url, bundle);
@@ -47,10 +47,10 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
         bundle.load(FullURL(url), BufferAsset,
             (finished: number, total: number) => {
                 const progress = finished / total;
-                __this.Emit(DEvent.PROGRESS, { url, progress });
+                __this.Emit(DEvent.PROGRESS, url, undefined, progress);
             }, (err: Error, asset: any) => {
                 if (err) {
-                    __this.Emit(DEvent.ERROR, { url, err });
+                    __this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 const urlKey = URL2Key(url);
@@ -60,7 +60,7 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
                 res.key = urlKey;
                 res.content = accessor;
                 ResManager.AddRes(res);
-                __this.Emit(DEvent.COMPLETE, { url });
+                __this.Emit(DEvent.COMPLETE, url);
             });
     }
 

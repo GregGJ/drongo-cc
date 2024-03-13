@@ -50,16 +50,17 @@ export class TaskQueue extends EventDispatcher implements ITask {
         }
     }
 
-    private __subTaskEventHandler(key: string, target: ITask, data?: any): void {
-        if (key == DEvent.PROGRESS) {
-            let dataValue: number = Number(data) == undefined ? 0 : Number(data);
+    private __subTaskEventHandler(evt: DEvent): void {
+        let target = evt.target as ITask;
+        if (evt.type == DEvent.PROGRESS) {
+            let dataValue: number = Number(evt.progress) == undefined ? 0 : Number(evt.progress);
             let progress: number = (this.__index + dataValue) / this.__taskList.length;
             this.Emit(DEvent.PROGRESS, progress);
             return;
         }
         target.OffAllEvent();
-        if (key == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, data);
+        if (evt.type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, evt.error);
             return;
         }
         target.Destroy();

@@ -69,7 +69,7 @@ export class FSM extends EventDispatcher {
             Debuger.Log("FSM",this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
         }
         this.__current.Enter(data);
-        this.Emit(DEvent.State_Changed, oldKey);
+        this.Emit(DEvent.STATE_CHANGED, oldKey);
     }
 
     get state(): number {

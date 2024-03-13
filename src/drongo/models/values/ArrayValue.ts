@@ -1,4 +1,5 @@
-import { ModelEvent } from "../ModelEvent";
+import { DEvent } from "../../events/DEvent";
+import { ChangedData } from "../ChangedData";
 import { ModelFactory } from "../ModelFactory";
 import { SerializationMode } from "../SerializationMode";
 import { IValue } from "../core/IValue";
@@ -31,11 +32,11 @@ export class ArrayValue extends BaseValue {
     AddAt(index: number, value: IValue): void {
         if (index < this.elements.length - 1) {
             this.elements.splice(index, 0, value);
-            if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-                this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+            if (this.HasEvent(DEvent.ADD_CHILD)) {
+                this.Emit(DEvent.ADD_CHILD, ChangedData.Create(index));
             }
-            value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-            value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+            value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+            value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         } else {
             throw new Error("索引" + index + " 超出可添加范围:" + (this.elements.length - 1));
         }
@@ -60,11 +61,11 @@ export class ArrayValue extends BaseValue {
         }
         let result: IValue = this.elements[index];
         this.elements.splice(index, 1);
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(index));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
 
@@ -80,11 +81,11 @@ export class ArrayValue extends BaseValue {
         }
         index = this.elements.length;
         this.elements.push(value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(index));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
     }
 
     /**
@@ -97,11 +98,11 @@ export class ArrayValue extends BaseValue {
             throw new Error("重复添加！");
         }
         this.elements.unshift(value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(0));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(0));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
     }
 
     /**
@@ -112,11 +113,11 @@ export class ArrayValue extends BaseValue {
             throw new Error("数组为空！");
         }
         let result: IValue = this.elements.shift();
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(0));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(0));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
 
@@ -129,11 +130,11 @@ export class ArrayValue extends BaseValue {
         }
         let index: number = this.elements.length - 1;
         let result: IValue = this.elements.pop();
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(index));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
 
@@ -193,9 +194,9 @@ export class ArrayValue extends BaseValue {
     }
 
 
-    private ChildValueChanged(data: any): void {
-        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
-            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+    private ChildValueChanged(e: DEvent): void {
+        if (this.HasEvent(DEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(DEvent.CHILD_VALUE_CHANGED, e.data);
         }
     }
 
@@ -203,7 +204,7 @@ export class ArrayValue extends BaseValue {
      * 清除
      */
     Clear(): void {
-        this.elements.length=0;
+        this.elements.length = 0;
     }
 
     /**

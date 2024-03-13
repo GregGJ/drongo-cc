@@ -20,7 +20,7 @@ export class ServiceQueue implements ITicker {
         TickerManager.AddTicker(this);
     }
 
-    
+
     Load(service: new () => IService): void {
         //已经在等待列表中
         if (this.waiting.indexOf(service) >= 0) {
@@ -53,19 +53,21 @@ export class ServiceQueue implements ITicker {
         target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
 
-    private __eventHandler(type: string, target: ServiceLoader, data: any): void {
-        if (type == DEvent.PROGRESS) {
-            ServiceManager.ChildProgress(data.service, data.progress);
+    private __eventHandler(evt: DEvent): void {
+        let target: ServiceLoader = evt.target as ServiceLoader;
+        if (evt.type == DEvent.PROGRESS) {
+            ServiceManager.ChildProgress(evt.data.service, evt.progress);
             return;
         }
         target.OffAllEvent();
-        this.running.Delete(data.service);
-        if (type == DEvent.ERROR) {
-            ServiceManager.ChildError(data.service, data.err);
+        if (evt.type == DEvent.ERROR) {
+            this.running.Delete(evt.data);
+            ServiceManager.ChildError(evt.data.service, evt.error);
             return;
         }
-        if (type == DEvent.COMPLETE) {
-            ServiceManager.ChildComplete(data.service, data.proxy);
+        if (evt.type == DEvent.COMPLETE) {
+            this.running.Delete(evt.data.service);
+            ServiceManager.ChildComplete(evt.data.service, evt.data.proxy);
             target.Reset();
             this.pool.push(target);
         }

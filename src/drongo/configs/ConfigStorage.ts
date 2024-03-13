@@ -10,6 +10,7 @@ export class ConfigStorage {
     constructor(keys: Array<string>) {
         this.key = StringUtils.PieceTogether(keys);;
         this.keys = keys;
+        this.map = new Map<string, any>();
     }
 
     Save(value: any): void {

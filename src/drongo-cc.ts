@@ -190,7 +190,7 @@ export { StringUtils } from "./drongo/utils/StringUtils"
 
 //model
 export { SerializationMode } from "./drongo/models/SerializationMode"
-export { ModelEvent } from "./drongo/models/ModelEvent"
+export { ChangedData as ModelEvent } from "./drongo/models/ChangedData"
 export { ModelFactory } from "./drongo/models/ModelFactory"
 
 export { ISerialization } from "./drongo/models/core/ISerialization"

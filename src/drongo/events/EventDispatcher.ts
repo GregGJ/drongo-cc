@@ -3,6 +3,7 @@
 
 import { Debuger } from "../debugers/Debuger";
 import { TickerManager } from "../ticker/TickerManager";
+import { DEvent } from "./DEvent";
 import { IEventDispatcher } from "./IEventDispatcher";
 
 
@@ -13,19 +14,24 @@ import { IEventDispatcher } from "./IEventDispatcher";
 export class EventDispatcher implements IEventDispatcher {
 
     /**
+     * 全局事件通道
+     */
+    static Global: EventDispatcher = new EventDispatcher();
+
+    /**
     * 对象已经注册的处理器
     */
-    private callerMap: Map<any, EventInfo[]> = new Map<any, EventInfo[]>();
+    private callerMap: Map<any, Listener[]> = new Map<any, Listener[]>();
 
     /**
      * 事件派发器上所监听的处理器
      */
-    private keyMap: Map<string, EventInfo[]> = new Map<string, EventInfo[]>();
+    private keyMap: Map<string, Listener[]> = new Map<string, Listener[]>();
 
     /**
      * 需要派发的事件
      */
-    private needEmit: Array<{ type: string, data: any }> = [];
+    private needEmit: Array<DEvent> = [];
 
     constructor() {
 
@@ -38,14 +44,14 @@ export class EventDispatcher implements IEventDispatcher {
      * @param func 
      * @param priority 优先级（数字越小优先级越高）
      */
-    On(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any, priority: number = 0): void {
-        let infoList: EventInfo[];
-        let info: EventInfo;
+    On(key: string, handler: (e: DEvent) => void, caller: any, priority: number = 0): void {
+        let infoList: Listener[];
+        let info: Listener;
         if (this.keyMap.has(key)) {
             infoList = this.keyMap.get(key)!;
             for (const iterator of infoList) {
                 if (iterator.target == caller && iterator.handler == handler) {
-                    Debuger.Err(Debuger.DRONGO,"重复添加同一个事件监听：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO, "重复添加同一个事件监听：" + key + " " + caller + " " + handler);
                     return;
                 }
             }
@@ -53,7 +59,7 @@ export class EventDispatcher implements IEventDispatcher {
             infoList = [];
             this.keyMap.set(key, infoList);
         }
-        info = new EventInfo(key, caller, handler);
+        info = new Listener(key, caller, handler);
         infoList.push(info);
         //按照优先级排序
         infoList.sort((a, b) => a.priority - priority);
@@ -63,7 +69,7 @@ export class EventDispatcher implements IEventDispatcher {
             infoList = this.callerMap.get(caller)!;
             for (const iterator of infoList) {
                 if (iterator.key == key && iterator.handler == handler) {
-                    Debuger.Err(Debuger.DRONGO,"事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
+                    Debuger.Err(Debuger.DRONGO, "事件系统 处理器关联错误：" + key + " " + caller + " " + handler);
                 }
             }
         } else {
@@ -79,13 +85,13 @@ export class EventDispatcher implements IEventDispatcher {
      * @param caller 
      * @param handler 
      */
-    Off(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): void {
+    Off(key: string, handler: (e: DEvent) => void, caller: any): void {
         if (this.keyMap.has(key) == false) {
             return;
         }
-        let infoList: EventInfo[] = this.keyMap.get(key)!;
-        let info: EventInfo;
-        let deleteInfo: EventInfo | null = null;
+        let infoList: Listener[] = this.keyMap.get(key)!;
+        let info: Listener;
+        let deleteInfo: Listener | null = null;
         //删除
         for (let index = 0; index < infoList.length; index++) {
             info = infoList[index];
@@ -120,11 +126,11 @@ export class EventDispatcher implements IEventDispatcher {
      * @param caller 
      */
     OffByCaller(caller: any): void {
-        let infoList: EventInfo[] | undefined = this.callerMap.get(caller);
+        let infoList: Listener[] | undefined = this.callerMap.get(caller);
         if (infoList === undefined || infoList.length == 0) {
             return;
         }
-        let info: EventInfo;
+        let info: Listener;
         //逐个删除
         while (infoList.length) {
             info = infoList[0];
@@ -152,29 +158,34 @@ export class EventDispatcher implements IEventDispatcher {
      * @param type 
      * @param data 
      */
-    Emit(type: string, data?: any): void {
-        for (let index = 0; index < this.needEmit.length; index++) {
-            const element = this.needEmit[index];
-            if (element.type == type && element.data === data) {
-                return;
-            }
+    Emit(type: string, data?: any, err?: Error, progress?: number): void {
+        if (!this.HasEvent(type)) {
+            //没人关心这个事件
+            return;
         }
-        this.needEmit.push({ type, data });
+        let evt = DEvent.Create(type, this, data, err, progress);
+        this.needEmit.push(evt);
         TickerManager.CallNextFrame(this.__emit, this);
     }
 
     private __emit(): void {
         for (let index = 0; index < this.needEmit.length; index++) {
             const event = this.needEmit[index];
-            if (this.keyMap.has(event.type) == false) {
-                continue;
+            //有人关心且事件没有被停止
+            if (this.HasEvent(event.type)&&event.propagationStopped==false) {
+                let list: Listener[] = this.keyMap.get(event.type)!;
+                let listener: Listener;
+                for (let index = 0; index < list.length; index++) {
+                    listener = list[index];
+                    //事件是否被停止
+                    if (event.propagationStopped) {
+                        break;
+                    }
+                    listener.handler.apply(listener.target, [event]);
+                }
             }
-            let infoList: EventInfo[] = this.keyMap.get(event.type)!;
-            let info: EventInfo;
-            for (let index = 0; index < infoList.length; index++) {
-                info = infoList[index];
-                info.handler.apply(info.target, [event.type, this, event.data]);
-            }
+            //事件退还
+            DEvent.BackToPool(event);
         }
         this.needEmit.length = 0;
     }
@@ -193,12 +204,12 @@ export class EventDispatcher implements IEventDispatcher {
      * @param caller 
      * @param func 
      */
-    HasEventHandler(key: string, handler: (type: string, target?: any, data?: any) => void, caller: any): boolean {
+    HasEventHandler(key: string, handler: (e: DEvent) => void, caller: any): boolean {
         if (this.keyMap.has(key) == false) {
             return false;
         }
-        let infoList: EventInfo[] = this.keyMap.get(key)!;
-        let info: EventInfo;
+        let infoList: Listener[] = this.keyMap.get(key)!;
+        let info: Listener;
         for (let index = 0; index < infoList.length; index++) {
             info = infoList[index];
             if (info.target == caller && info.handler == handler) {
@@ -214,14 +225,16 @@ export class EventDispatcher implements IEventDispatcher {
     }
 }
 
-
-class EventInfo {
+/**
+ * 监听者
+ */
+class Listener {
     key: string = "";
     target: any | null;
-    handler: (type: string, target?: any, data?: any) => void;
+    handler: (e: DEvent) => void;
     priority: number = 255;
 
-    constructor(key: string, target: any, handler: (type: string, target?: any, data?: any) => void) {
+    constructor(key: string, target: any, handler: (e: DEvent) => void) {
         this.key = key;
         this.target = target;
         this.handler = handler;

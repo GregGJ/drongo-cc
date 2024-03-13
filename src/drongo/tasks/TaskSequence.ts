@@ -42,21 +42,21 @@ export class TaskSequence extends EventDispatcher implements ITask {
         }
     }
 
-    private __subTaskEventHandler(type: string, target: ITask, data?: any): void {
-        if (type == DEvent.PROGRESS) {
+    private __subTaskEventHandler(evt:DEvent): void {
+        if (evt.type == DEvent.PROGRESS) {
             this.Emit(DEvent.PROGRESS, this.__index / this.__taskList.length);
             return;
         }
-        target.OffAllEvent();
-        if (type == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, data);
+        evt.target.OffAllEvent();
+        if (evt.type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, evt.error);
             return;
         }
         this.__index++;
         if (this.__index < this.__taskList.length) {
             return;
         }
-        target.Destroy();
+        evt.target.Destroy();
         //完成
         this.Emit(DEvent.COMPLETE);
     }

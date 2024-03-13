@@ -1,5 +1,6 @@
+import { DEvent } from "../../events/DEvent";
 import { EventDispatcher } from "../../events/EventDispatcher";
-import { ModelEvent } from "../ModelEvent";
+import { ChangedData } from "../ChangedData";
 import { SerializationMode } from "../SerializationMode";
 import { IValue } from "../core/IValue";
 
@@ -29,8 +30,8 @@ export class BaseValue extends EventDispatcher implements IValue {
     }
 
     protected SendEvent(newValue: any, oldValue: any): void {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue));
         }
     }
 

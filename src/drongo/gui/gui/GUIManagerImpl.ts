@@ -1,6 +1,6 @@
 
 import { DEvent } from "../../events/DEvent";
-import { IEventDispatcher } from "../../events/IEventDispatcher";
+import { EventDispatcher } from "../../events/EventDispatcher";
 import { TickerManager } from "../../ticker/TickerManager";
 import { Timer } from "../../timer/Timer";
 import { GUIManager } from "../GUIManager";
@@ -39,14 +39,14 @@ export class GUIManagerImpl implements IGUIManager {
         TickerManager.AddTicker(this);
 
         //监听打开和关闭事件
-        DEvent.On(DEvent.SHOW, this.__showedHandler, this);
-        DEvent.On(DEvent.HIDE, this.__closedHandler, this);
+        EventDispatcher.Global.On(DEvent.SHOW, this.__showedHandler, this);
+        EventDispatcher.Global.On(DEvent.HIDE, this.__closedHandler, this);
     }
 
     /**获取某个组件 */
     GetUIComponent(key: string, path: string) {
         if (!this.__instances.has(key)) {
-            throw new Error("GUI：" + key + "实例，不存在！");
+            throw new Error("GUI:" + key + "实例，不存在！");
         }
         let guiProxy: GUIProxy = this.__instances.get(key);
         return guiProxy.getComponent(path);
@@ -55,20 +55,20 @@ export class GUIManagerImpl implements IGUIManager {
      * 获取界面的mediator
      * @param key 
      */
-    GetMediatorByKey(key: string): IGUIMediator{
+    GetMediatorByKey(key: string): IGUIMediator {
         if (!this.__instances.has(key)) {
             return null;
         }
         return this.__instances.get(key).mediator;
     }
 
-    private __showedHandler(type: string, target: IEventDispatcher, data: any): void {
-        let guiKey: string = data;
+    private __showedHandler(e: DEvent): void {
+        let guiKey: string = e.data;
         this.SetGUIState(guiKey, GUIState.Showed);
     }
 
-    private __closedHandler(type: string, target: IEventDispatcher, data: any): void {
-        let guiKey: string = data;
+    private __closedHandler(e: DEvent): void {
+        let guiKey: string = e.data;
         this.SetGUIState(guiKey, GUIState.Closed);
     }
 

@@ -18549,6 +18549,88 @@ class ResURLUtils {
 }
 ResURLUtils.__assetTypes = new Map();
 
+class DEvent {
+    constructor(type, target, data, err, progress) {
+        /**
+         * 停止派发
+         */
+        this.propagationStopped = false;
+        this.Init(type, target, data, err, progress);
+    }
+    /**
+     * 初始化
+     * @param type
+     * @param target
+     * @param data
+     * @param err
+     * @param progress
+     */
+    Init(type, target, data, err, progress) {
+        this.type = type;
+        this.target = target;
+        this.data = data;
+        this.error = err;
+        this.progress = progress;
+    }
+    Reset() {
+        this.propagationStopped = false;
+        this.type = undefined;
+        this.target = null;
+        this.error = null;
+        this.progress = 0;
+        this.data = null;
+    }
+    /**
+     * 创建事件对象,优先从池中获取
+     * @param type
+     * @param target
+     * @param data
+     * @param err
+     * @param progress
+     */
+    static Create(type, target, data, err, progress) {
+        let result;
+        if (this.__pool.length > 0) {
+            result = this.__pool.shift();
+            result.Init(type, target, data, err, progress);
+        }
+        else {
+            result = new DEvent(type, target, data, err, progress);
+        }
+        return result;
+    }
+    /**
+     * 退还
+     * @param value
+     */
+    static BackToPool(value) {
+        value.Reset();
+        if (this.__pool.indexOf(value) >= 0) {
+            throw new Error("重复回收:" + value);
+        }
+        this.__pool.push(value);
+    }
+}
+DEvent.START = "START";
+DEvent.PROGRESS = "PROGRESS";
+DEvent.COMPLETE = "COMPLETE";
+DEvent.ERROR = "ERROR";
+DEvent.SHOW = "SHOW";
+DEvent.HIDE = "HIDE";
+DEvent.ADD = "ADD";
+DEvent.REMOVE = "REMOVE";
+DEvent.UPDATE = "UPDATE";
+DEvent.CLEAR = "CLEAR";
+DEvent.STATE_CHANGED = "STATE_CHANGED";
+DEvent.VALUE_CHANGED = "VALUE_CHANGED";
+DEvent.ADD_CHILD = "ADD_CHILD";
+DEvent.REMOVE_CHILD = "REMOVE_CHILD";
+DEvent.CHILD_VALUE_CHANGED = "CHILD_VALUE_CHANGED";
+//============
+//全局对象池
+//============
+DEvent.__pool = [];
+
 class DebugerImpl {
     constructor() {
         this.__logs = new Dictionary();
@@ -18728,7 +18810,7 @@ class EventDispatcher {
             infoList = [];
             this.keyMap.set(key, infoList);
         }
-        info = new EventInfo(key, caller, handler);
+        info = new Listener(key, caller, handler);
         infoList.push(info);
         //按照优先级排序
         infoList.sort((a, b) => a.priority - priority);
@@ -18821,28 +18903,33 @@ class EventDispatcher {
      * @param type
      * @param data
      */
-    Emit(type, data) {
-        for (let index = 0; index < this.needEmit.length; index++) {
-            const element = this.needEmit[index];
-            if (element.type == type && element.data === data) {
-                return;
-            }
+    Emit(type, data, err, progress) {
+        if (!this.HasEvent(type)) {
+            //没人关心这个事件
+            return;
         }
-        this.needEmit.push({ type, data });
+        let evt = DEvent.Create(type, this, data, err, progress);
+        this.needEmit.push(evt);
         TickerManager.CallNextFrame(this.__emit, this);
     }
     __emit() {
         for (let index = 0; index < this.needEmit.length; index++) {
             const event = this.needEmit[index];
-            if (this.keyMap.has(event.type) == false) {
-                continue;
+            //有人关心且事件没有被停止
+            if (this.HasEvent(event.type) && event.propagationStopped == false) {
+                let list = this.keyMap.get(event.type);
+                let listener;
+                for (let index = 0; index < list.length; index++) {
+                    listener = list[index];
+                    //事件是否被停止
+                    if (event.propagationStopped) {
+                        break;
+                    }
+                    listener.handler.apply(listener.target, [event]);
+                }
             }
-            let infoList = this.keyMap.get(event.type);
-            let info;
-            for (let index = 0; index < infoList.length; index++) {
-                info = infoList[index];
-                info.handler.apply(info.target, [event.type, this, event.data]);
-            }
+            //事件退还
+            DEvent.BackToPool(event);
         }
         this.needEmit.length = 0;
     }
@@ -18878,7 +18965,14 @@ class EventDispatcher {
         this.keyMap.clear();
     }
 }
-class EventInfo {
+/**
+ * 全局事件通道
+ */
+EventDispatcher.Global = new EventDispatcher();
+/**
+ * 监听者
+ */
+class Listener {
     constructor(key, target, handler) {
         this.key = "";
         this.priority = 255;
@@ -18893,117 +18987,6 @@ class EventInfo {
         this.priority = 0;
     }
 }
-
-class DEvent {
-    /**
-     * 获取事件通道
-     * @param key
-     * @returns
-     */
-    static GetChannel(key = "main") {
-        return this.channels.get(key);
-    }
-    /**
-     * 派发事件
-     * @param eventType
-     * @param data
-     * @param channel   通道
-     */
-    static Emit(eventType, data, channel = "main") {
-        if (!this.channels.has(channel)) {
-            return;
-        }
-        let eventChannel = this.channels.get(channel);
-        eventChannel.Emit(eventType, data);
-    }
-    /**
-     * 添加事件监听
-     * @param type
-     * @param handler
-     * @param caller
-     * @param priority  优先级
-     * @param channel   事件通道
-     */
-    static On(type, handler, caller, priority = 0, channel = "main") {
-        let eventChannel;
-        if (!this.channels.has(channel)) {
-            eventChannel = new EventDispatcher();
-            this.channels.set(channel, eventChannel);
-        }
-        else {
-            eventChannel = this.channels.get(channel);
-        }
-        eventChannel.On(type, handler, caller, priority);
-    }
-    /**
-     * 删除事件监听
-     * @param type
-     * @param handler
-     * @param caller
-     * @param channel
-     * @returns
-     */
-    static Off(type, handler, caller, channel = "main") {
-        let eventChannel;
-        if (!this.channels.has(channel)) {
-            return;
-        }
-        else {
-            eventChannel = this.channels.get(channel);
-        }
-        eventChannel.Off(type, handler, caller);
-    }
-    /**
-     * 删除指定对象上的所有事件监听
-     * @param caller
-     * @param channel
-     * @returns
-     */
-    static OffByCaller(caller, channel = "main") {
-        let eventChannel;
-        if (!this.channels.has(channel)) {
-            return;
-        }
-        else {
-            eventChannel = this.channels.get(channel);
-        }
-        eventChannel.OffByCaller(caller);
-    }
-    /**
-     * 删除指定通道上的所有事件监听
-     * @param channel
-     * @returns
-     */
-    static OffAll(channel = "main") {
-        let eventChannel;
-        if (!this.channels.has(channel)) {
-            return;
-        }
-        else {
-            eventChannel = this.channels.get(channel);
-        }
-        eventChannel.OffAllEvent();
-    }
-    constructor(type, target) {
-        /**
-         * 停止派发
-         */
-        this.propagationStopped = false;
-    }
-}
-DEvent.START = "start";
-DEvent.PROGRESS = "progress";
-DEvent.COMPLETE = "complete";
-DEvent.ERROR = "error";
-DEvent.SHOW = "show";
-DEvent.HIDE = "hide";
-DEvent.ADD = "add";
-DEvent.REMOVE = "remove";
-DEvent.UPDATE = "update";
-DEvent.CLEAR = "clear";
-DEvent.State_Changed = "stateChanged";
-/**事件通道 */
-DEvent.channels = new Map();
 
 /**
  * 字典
@@ -19431,29 +19414,30 @@ class LoaderQueue {
         target.On(DEvent.ERROR, this.__eventHandler, this);
         target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
-    __eventHandler(type, target, data) {
-        if (type == DEvent.PROGRESS) {
-            Loader.single.ChildProgress(data.url, data.progress);
+    __eventHandler(evt) {
+        let target = evt.target;
+        if (evt.type == DEvent.PROGRESS) {
+            Loader.single.ChildProgress(evt.data, evt.progress);
             return;
         }
         //删除所有事件监听
         target.OffAllEvent();
         //从运行列表中删除
-        this.running.Delete(URL2Key(data.url));
-        if (type == DEvent.ERROR) {
-            Loader.single.ChildError(data.url, data.err);
+        this.running.Delete(URL2Key(evt.data));
+        if (evt.type == DEvent.ERROR) {
+            Loader.single.ChildError(evt.data, evt.error);
             return;
         }
-        if (type == DEvent.COMPLETE) {
-            Loader.single.ChildComplete(data.url);
+        if (evt.type == DEvent.COMPLETE) {
+            Loader.single.ChildComplete(evt.data);
             //重置并回收
             target.Reset();
             let type;
-            if (typeof data.url == "string") {
+            if (typeof evt.data == "string") {
                 type = "string";
             }
             else {
-                type = data.url.type;
+                type = evt.data.type;
             }
             let list = this.pool.get(type);
             if (list == null) {
@@ -19810,7 +19794,7 @@ class CCLoaderImpl extends EventDispatcher {
         if (!bundle) {
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(DEvent.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, { url }, err);
                     return;
                 }
                 this.__load(url, bundle);
@@ -19827,10 +19811,10 @@ class CCLoaderImpl extends EventDispatcher {
         let __this = this;
         bundle.load(FullURL(url), url.type, (finished, total) => {
             const progress = finished / total;
-            __this.Emit(DEvent.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, url, undefined, progress);
         }, (err, asset) => {
             if (err) {
-                __this.Emit(DEvent.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, url, err);
                 return;
             }
             const urlKey = URL2Key(url);
@@ -19838,7 +19822,7 @@ class CCLoaderImpl extends EventDispatcher {
             res.key = urlKey;
             res.content = asset;
             ResManager.AddRes(res);
-            __this.Emit(DEvent.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, url);
         });
     }
     Reset() {
@@ -21414,6 +21398,7 @@ class ConfigStorage {
     constructor(keys) {
         this.key = StringUtils.PieceTogether(keys);
         this.keys = keys;
+        this.map = new Map();
     }
     Save(value) {
         let values = [];
@@ -21726,7 +21711,7 @@ class FSM extends EventDispatcher {
             Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
         }
         this.__current.Enter(data);
-        this.Emit(DEvent.State_Changed, oldKey);
+        this.Emit(DEvent.STATE_CHANGED, oldKey);
     }
     get state() {
         return this.__state;
@@ -23285,7 +23270,7 @@ class ConfigLoader extends EventDispatcher {
         if (!bundle) {
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(DEvent.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 this.__load(url, bundle);
@@ -23302,10 +23287,10 @@ class ConfigLoader extends EventDispatcher {
         let __this = this;
         bundle.load(FullURL(url), BufferAsset, (finished, total) => {
             const progress = finished / total;
-            __this.Emit(DEvent.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, url, undefined, progress);
         }, (err, asset) => {
             if (err) {
-                __this.Emit(DEvent.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, url, err);
                 return;
             }
             const urlKey = URL2Key(url);
@@ -23315,7 +23300,7 @@ class ConfigLoader extends EventDispatcher {
             res.key = urlKey;
             res.content = accessor;
             ResManager.AddRes(res);
-            __this.Emit(DEvent.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, url);
         });
     }
     __parseConfig(sheet, buffer) {
@@ -23385,7 +23370,7 @@ class FGUILoader extends EventDispatcher {
             if (!bundle) {
                 assetManager.loadBundle(url.bundle, (err, bundle) => {
                     if (err) {
-                        __this.Emit(DEvent.ERROR, { url, err });
+                        __this.Emit(DEvent.ERROR, url, err);
                         return;
                     }
                     __this.loadUIPackge(url, bundle);
@@ -23403,10 +23388,10 @@ class FGUILoader extends EventDispatcher {
         let __this = this;
         UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
             const progress = finish / total;
-            __this.Emit(DEvent.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, url, undefined, progress);
         }, (err, pkg) => {
             if (err) {
-                __this.Emit(DEvent.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, url, err);
                 return;
             }
             const urlKey = URL2Key(url);
@@ -23414,7 +23399,7 @@ class FGUILoader extends EventDispatcher {
             res.key = urlKey;
             res.content = pkg;
             ResManager.AddRes(res);
-            __this.Emit(DEvent.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, url);
         });
     }
     Reset() {
@@ -23533,7 +23518,8 @@ class Drongo {
                 GUIManager.Register(element);
             }
             result.Dispose();
-            this.__callback();
+            if (this.__callback)
+                this.__callback();
         }, (reason) => {
             if (this.__callback)
                 this.__callback(reason);
@@ -23607,12 +23593,12 @@ class ServiceLoader extends EventDispatcher {
         }
         //加载
         Res.GetResRefList(urls, this.service.name, (progress) => {
-            this.Emit(DEvent.PROGRESS, { service: this.serviceClass, progress });
+            this.Emit(DEvent.PROGRESS, this.serviceClass, undefined, progress);
         }).then((value) => {
             this.refs = value;
             this.__assetReady();
         }, (reason) => {
-            this.Emit(DEvent.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) });
+            this.Emit(DEvent.ERROR, this.serviceClass, reason);
         });
     }
     /**
@@ -23667,19 +23653,21 @@ class ServiceQueue {
         target.On(DEvent.ERROR, this.__eventHandler, this);
         target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
-    __eventHandler(type, target, data) {
-        if (type == DEvent.PROGRESS) {
-            ServiceManager.ChildProgress(data.service, data.progress);
+    __eventHandler(evt) {
+        let target = evt.target;
+        if (evt.type == DEvent.PROGRESS) {
+            ServiceManager.ChildProgress(evt.data.service, evt.progress);
             return;
         }
         target.OffAllEvent();
-        this.running.Delete(data.service);
-        if (type == DEvent.ERROR) {
-            ServiceManager.ChildError(data.service, data.err);
+        if (evt.type == DEvent.ERROR) {
+            this.running.Delete(evt.data);
+            ServiceManager.ChildError(evt.data.service, evt.error);
             return;
         }
-        if (type == DEvent.COMPLETE) {
-            ServiceManager.ChildComplete(data.service, data.proxy);
+        if (evt.type == DEvent.COMPLETE) {
+            this.running.Delete(evt.data.service);
+            ServiceManager.ChildComplete(evt.data.service, evt.data.proxy);
             target.Reset();
             this.pool.push(target);
         }
@@ -24030,12 +24018,12 @@ class GUIProxy {
                 this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
             }
             else {
-                DEvent.Emit(DEvent.SHOW, this.info.key);
+                EventDispatcher.Global.Emit(DEvent.SHOW, this.info.key);
             }
         }
     }
     __showAnimationPlayed() {
-        DEvent.Emit(DEvent.SHOW, this.info.key);
+        EventDispatcher.Global.Emit(DEvent.SHOW, this.info.key);
     }
     Hide() {
         if (this.__loadState == LoadState.Loading) {
@@ -24062,7 +24050,7 @@ class GUIProxy {
         this.mediator.viewComponent.visible = false;
         this.mediator.Hide();
         this.__showing = false;
-        DEvent.Emit(DEvent.HIDE, this.info.key);
+        EventDispatcher.Global.Emit(DEvent.HIDE, this.info.key);
     }
     Destroy() {
         var _a;
@@ -24117,13 +24105,13 @@ class GUIManagerImpl {
         this.__destryList = [];
         TickerManager.AddTicker(this);
         //监听打开和关闭事件
-        DEvent.On(DEvent.SHOW, this.__showedHandler, this);
-        DEvent.On(DEvent.HIDE, this.__closedHandler, this);
+        EventDispatcher.Global.On(DEvent.SHOW, this.__showedHandler, this);
+        EventDispatcher.Global.On(DEvent.HIDE, this.__closedHandler, this);
     }
     /**获取某个组件 */
     GetUIComponent(key, path) {
         if (!this.__instances.has(key)) {
-            throw new Error("GUI：" + key + "实例，不存在！");
+            throw new Error("GUI:" + key + "实例，不存在！");
         }
         let guiProxy = this.__instances.get(key);
         return guiProxy.getComponent(path);
@@ -24138,12 +24126,12 @@ class GUIManagerImpl {
         }
         return this.__instances.get(key).mediator;
     }
-    __showedHandler(type, target, data) {
-        let guiKey = data;
+    __showedHandler(e) {
+        let guiKey = e.data;
         this.SetGUIState(guiKey, GUIState.Showed);
     }
-    __closedHandler(type, target, data) {
-        let guiKey = data;
+    __closedHandler(e) {
+        let guiKey = e.data;
         this.SetGUIState(guiKey, GUIState.Closed);
     }
     Register(info) {
@@ -25554,16 +25542,17 @@ class TaskQueue extends EventDispatcher {
             this.Emit(DEvent.COMPLETE);
         }
     }
-    __subTaskEventHandler(key, target, data) {
-        if (key == DEvent.PROGRESS) {
-            let dataValue = Number(data) == undefined ? 0 : Number(data);
+    __subTaskEventHandler(evt) {
+        let target = evt.target;
+        if (evt.type == DEvent.PROGRESS) {
+            let dataValue = Number(evt.progress) == undefined ? 0 : Number(evt.progress);
             let progress = (this.__index + dataValue) / this.__taskList.length;
             this.Emit(DEvent.PROGRESS, progress);
             return;
         }
         target.OffAllEvent();
-        if (key == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, data);
+        if (evt.type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, evt.error);
             return;
         }
         target.Destroy();
@@ -25610,21 +25599,21 @@ class TaskSequence extends EventDispatcher {
             element.Start(this.__data);
         }
     }
-    __subTaskEventHandler(type, target, data) {
-        if (type == DEvent.PROGRESS) {
+    __subTaskEventHandler(evt) {
+        if (evt.type == DEvent.PROGRESS) {
             this.Emit(DEvent.PROGRESS, this.__index / this.__taskList.length);
             return;
         }
-        target.OffAllEvent();
-        if (type == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, data);
+        evt.target.OffAllEvent();
+        if (evt.type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, evt.error);
             return;
         }
         this.__index++;
         if (this.__index < this.__taskList.length) {
             return;
         }
-        target.Destroy();
+        evt.target.Destroy();
         //完成
         this.Emit(DEvent.COMPLETE);
     }
@@ -25734,21 +25723,17 @@ var SerializationMode;
     SerializationMode[SerializationMode["JSON"] = 0] = "JSON";
 })(SerializationMode || (SerializationMode = {}));
 
-class ModelEvent {
+class ChangedData {
     constructor() {
     }
     static Create(newValue, oldValue, key) {
-        let result = new ModelEvent();
+        let result = new ChangedData();
         result.oldValue = oldValue;
         result.newValue = newValue;
         result.key = key;
         return result;
     }
 }
-ModelEvent.VALUE_CHANGED = "ModelEvent.VALUE_CHANGED";
-ModelEvent.ADD_CHILD = "ModelEvent.ADD_CHILD";
-ModelEvent.REMOVE_CHILD = "ModelEvent.REMOVE_CHILD";
-ModelEvent.CHILD_VALUE_CHANGED = "ModelEvent.CHILD_VALUE_CHANGED";
 
 /**
  * 值抽象类
@@ -25768,8 +25753,8 @@ class BaseValue extends EventDispatcher {
         }
     }
     SendEvent(newValue, oldValue) {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue));
         }
     }
     /**
@@ -25837,11 +25822,11 @@ class ArrayValue extends BaseValue {
     AddAt(index, value) {
         if (index < this.elements.length - 1) {
             this.elements.splice(index, 0, value);
-            if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-                this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+            if (this.HasEvent(DEvent.ADD_CHILD)) {
+                this.Emit(DEvent.ADD_CHILD, ChangedData.Create(index));
             }
-            value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-            value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+            value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+            value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         }
         else {
             throw new Error("索引" + index + " 超出可添加范围:" + (this.elements.length - 1));
@@ -25865,11 +25850,11 @@ class ArrayValue extends BaseValue {
         }
         let result = this.elements[index];
         this.elements.splice(index, 1);
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(index));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
     /**
@@ -25883,11 +25868,11 @@ class ArrayValue extends BaseValue {
         }
         index = this.elements.length;
         this.elements.push(value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(index));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
     }
     /**
      * 添加到头部
@@ -25899,11 +25884,11 @@ class ArrayValue extends BaseValue {
             throw new Error("重复添加！");
         }
         this.elements.unshift(value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(0));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(0));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
     }
     /**
      * 删除并返回第一个元素
@@ -25913,11 +25898,11 @@ class ArrayValue extends BaseValue {
             throw new Error("数组为空！");
         }
         let result = this.elements.shift();
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(0));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(0));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
     /**
@@ -25929,11 +25914,11 @@ class ArrayValue extends BaseValue {
         }
         let index = this.elements.length - 1;
         let result = this.elements.pop();
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(index));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(index));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
     /**
@@ -25987,9 +25972,9 @@ class ArrayValue extends BaseValue {
         }
         return false;
     }
-    ChildValueChanged(data) {
-        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
-            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+    ChildValueChanged(e) {
+        if (this.HasEvent(DEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(DEvent.CHILD_VALUE_CHANGED, e.data);
         }
     }
     /**
@@ -26067,11 +26052,11 @@ class DictionaryValue extends BaseValue {
             throw new Error("重复添加相同KEY的属性！");
         }
         this.map.Set(value.key, value);
-        if (this.HasEvent(ModelEvent.ADD_CHILD)) {
-            this.Emit(ModelEvent.ADD_CHILD, ModelEvent.Create(value, null, value.key));
+        if (this.HasEvent(DEvent.ADD_CHILD)) {
+            this.Emit(DEvent.ADD_CHILD, ChangedData.Create(value, null, value.key));
         }
-        value.On(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        value.On(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        value.On(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return value;
     }
     /**
@@ -26091,11 +26076,11 @@ class DictionaryValue extends BaseValue {
         }
         let result = this.map.Get(key);
         this.map.Delete(key);
-        if (this.HasEvent(ModelEvent.REMOVE_CHILD)) {
-            this.Emit(ModelEvent.REMOVE_CHILD, ModelEvent.Create(null, result, key));
+        if (this.HasEvent(DEvent.REMOVE_CHILD)) {
+            this.Emit(DEvent.REMOVE_CHILD, ChangedData.Create(null, result, key));
         }
-        result.Off(ModelEvent.VALUE_CHANGED, this.ChildValueChanged, this);
-        result.Off(ModelEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
+        result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
     }
     /**
@@ -26165,9 +26150,9 @@ class DictionaryValue extends BaseValue {
     Clear() {
         this.map.Clear();
     }
-    ChildValueChanged(data) {
-        if (this.HasEvent(ModelEvent.CHILD_VALUE_CHANGED)) {
-            this.Emit(ModelEvent.CHILD_VALUE_CHANGED, data);
+    ChildValueChanged(e) {
+        if (this.HasEvent(DEvent.CHILD_VALUE_CHANGED)) {
+            this.Emit(DEvent.CHILD_VALUE_CHANGED, e.data);
         }
     }
     get elements() {
@@ -26229,8 +26214,8 @@ class ArrayProperty extends ArrayValue {
         }
     }
     SendEvent(newValue, oldValue) {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue, this.key));
         }
     }
     /**
@@ -26261,8 +26246,8 @@ class DictionaryProperty extends DictionaryValue {
         }
     }
     SendEvent(newValue, oldValue) {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue, this.key));
         }
     }
 }
@@ -26296,8 +26281,8 @@ class NumberProperty extends NumberValue {
         }
     }
     SendEvent(newValue, oldValue) {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue, this.key));
         }
     }
 }
@@ -26326,8 +26311,8 @@ class StringProperty extends StringValue {
         }
     }
     SendEvent(newValue, oldValue) {
-        if (this.HasEvent(ModelEvent.VALUE_CHANGED)) {
-            this.Emit(ModelEvent.VALUE_CHANGED, ModelEvent.Create(newValue, oldValue, this.key));
+        if (this.HasEvent(DEvent.VALUE_CHANGED)) {
+            this.Emit(DEvent.VALUE_CHANGED, ChangedData.Create(newValue, oldValue, this.key));
         }
     }
 }
@@ -26462,4 +26447,4 @@ class BaseModel {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
