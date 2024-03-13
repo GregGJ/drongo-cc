@@ -87,7 +87,7 @@ export { Debuger } from "./drongo/debugers/Debuger"
 // export { IDebuger } from "./drongo/debugers/IDebuger"
 
 //events
-export { DEvent as Event } from "./drongo/events/DEvent"
+export { DEvent} from "./drongo/events/DEvent"
 export { EventDispatcher } from "./drongo/events/EventDispatcher"
 export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 

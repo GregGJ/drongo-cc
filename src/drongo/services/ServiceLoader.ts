@@ -1,4 +1,4 @@
-import { ConfigManager, Event, Res, ResRef, ResURL, StringUtils } from "../../drongo-cc";
+import { ConfigManager, DEvent, Res, ResRef, ResURL, StringUtils } from "../../drongo-cc";
 import { EventDispatcher } from "../events/EventDispatcher";
 import { IService } from "./IService";
 import { ServiceProxy } from "./ServiceProxy";
@@ -41,13 +41,13 @@ export class ServiceLoader extends EventDispatcher {
         //加载
         Res.GetResRefList(urls, this.service.name,
             (progress: number) => {
-                this.Emit(Event.PROGRESS, { service: this.serviceClass, progress });
+                this.Emit(DEvent.PROGRESS, { service: this.serviceClass, progress });
             }).then(
                 (value) => {
                     this.refs = value;
                     this.__assetReady();
                 }, (reason) => {
-                    this.Emit(Event.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) })
+                    this.Emit(DEvent.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) })
                 }
             );
     }
@@ -58,7 +58,7 @@ export class ServiceLoader extends EventDispatcher {
     protected __assetReady(): void {
         this.service.Init();
         let proxy = new ServiceProxy(this.service, this.refs);
-        this.Emit(Event.COMPLETE, { service: this.serviceClass, proxy });
+        this.Emit(DEvent.COMPLETE, { service: this.serviceClass, proxy });
     }
 
     Reset(): void {

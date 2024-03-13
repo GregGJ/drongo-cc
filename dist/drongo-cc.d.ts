@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$2, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
 
 declare class ByteBuffer {
     stringTable: Array<string>;
@@ -847,7 +847,7 @@ declare class InputProcessor extends Component {
     private getEvent;
 }
 
-declare class FGUIEvent extends Event$2 {
+declare class FGUIEvent extends Event$1 {
     static TOUCH_BEGIN: string;
     static TOUCH_MOVE: string;
     static TOUCH_END: string;
@@ -3435,7 +3435,7 @@ declare class Debuger {
     private static get impl();
 }
 
-declare class Event$1 {
+declare class DEvent {
     static readonly START: string;
     static readonly PROGRESS: string;
     static readonly COMPLETE: string;
@@ -3493,6 +3493,31 @@ declare class Event$1 {
      * @returns
      */
     static OffAll(channel?: string): void;
+    /**
+     * 事件类型
+     */
+    type: string;
+    /**
+     * 事件派发者
+     */
+    target: IEventDispatcher;
+    /**
+     * 停止派发
+     */
+    propagationStopped: boolean;
+    /**
+     * 错误对象
+     */
+    error: Error;
+    /**
+     * 进度
+     */
+    progress: number;
+    /**
+     * 事件数据
+     */
+    data: any;
+    constructor(type: string, target: IEventDispatcher);
 }
 
 /**
@@ -4673,6 +4698,7 @@ interface ITask extends IEventDispatcher {
 declare class TaskQueue extends EventDispatcher implements ITask {
     private __taskList;
     private __index;
+    private __data;
     constructor();
     AddTask(value: ITask): void;
     RemoveTask(value: ITask): void;
@@ -4688,6 +4714,7 @@ declare class TaskQueue extends EventDispatcher implements ITask {
 declare class TaskSequence extends EventDispatcher implements ITask {
     private __taskList;
     private __index;
+    private __data;
     constructor();
     AddTask(value: ITask): void;
     RemoveTask(value: ITask): void;
@@ -5895,4 +5922,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event$1 as Event, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

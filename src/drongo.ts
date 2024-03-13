@@ -141,7 +141,7 @@ export class Drongo {
                         GUIManager.Register(element);
                     }
                     result.Dispose();
-                    this.__callback();
+                    if (this.__callback) this.__callback();
                 }, (reason) => {
                     if (this.__callback) this.__callback(reason);
                 }

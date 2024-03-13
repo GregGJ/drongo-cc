@@ -11,7 +11,7 @@ export class TaskSequence extends EventDispatcher implements ITask {
 
     private __taskList: Array<ITask> = new Array<ITask>();
     private __index: number = 0;
-
+    private __data: any;
     constructor() {
         super();
     }
@@ -32,12 +32,13 @@ export class TaskSequence extends EventDispatcher implements ITask {
     }
 
     Start(data?: any): void {
+        this.__data = data;
         for (let index = 0; index < this.__taskList.length; index++) {
             const element = this.__taskList[index];
             element.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
             element.On(DEvent.ERROR, this.__subTaskEventHandler, this);
             element.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
-            element.Start();
+            element.Start(this.__data);
         }
     }
 
@@ -64,5 +65,6 @@ export class TaskSequence extends EventDispatcher implements ITask {
         super.Destroy();
         this.__taskList.length = 0;
         this.__index = 0;
+        this.__data = null;
     }
 }

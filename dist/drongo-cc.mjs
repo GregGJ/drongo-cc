@@ -1,4 +1,4 @@
-import { gfx, UIRenderer, Event as Event$1, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, isValid, Size, screen, view, assetManager, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, InstanceMaterialType, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset } from 'cc';
+import { gfx, UIRenderer, Event, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, isValid, Size, screen, view, assetManager, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, InstanceMaterialType, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset } from 'cc';
 import { EDITOR } from 'cc/env';
 
 var ButtonMode;
@@ -239,7 +239,7 @@ const factors = [
     [gfx.BlendFactor.SRC_ALPHA, gfx.BlendFactor.ONE_MINUS_SRC_ALPHA], //custom2
 ];
 
-class FGUIEvent extends Event$1 {
+class FGUIEvent extends Event {
     constructor(type, bubbles) {
         super(type, bubbles);
         this.pos = new Vec2();
@@ -18894,7 +18894,7 @@ class EventInfo {
     }
 }
 
-class Event {
+class DEvent {
     /**
      * 获取事件通道
      * @param key
@@ -18984,20 +18984,26 @@ class Event {
         }
         eventChannel.OffAllEvent();
     }
+    constructor(type, target) {
+        /**
+         * 停止派发
+         */
+        this.propagationStopped = false;
+    }
 }
-Event.START = "start";
-Event.PROGRESS = "progress";
-Event.COMPLETE = "complete";
-Event.ERROR = "error";
-Event.SHOW = "show";
-Event.HIDE = "hide";
-Event.ADD = "add";
-Event.REMOVE = "remove";
-Event.UPDATE = "update";
-Event.CLEAR = "clear";
-Event.State_Changed = "stateChanged";
+DEvent.START = "start";
+DEvent.PROGRESS = "progress";
+DEvent.COMPLETE = "complete";
+DEvent.ERROR = "error";
+DEvent.SHOW = "show";
+DEvent.HIDE = "hide";
+DEvent.ADD = "add";
+DEvent.REMOVE = "remove";
+DEvent.UPDATE = "update";
+DEvent.CLEAR = "clear";
+DEvent.State_Changed = "stateChanged";
 /**事件通道 */
-Event.channels = new Map();
+DEvent.channels = new Map();
 
 /**
  * 字典
@@ -19024,11 +19030,11 @@ class Dictionary extends EventDispatcher {
             }
             this.__map.delete(key);
             this.__list.splice(index, 1);
-            this.Emit(Event.REMOVE, old);
+            this.Emit(DEvent.REMOVE, old);
         }
         this.__map.set(key, value);
         this.__list.push(value);
-        this.Emit(Event.ADD, value);
+        this.Emit(DEvent.ADD, value);
     }
     /**
      * 是否拥有指定KEY的元素
@@ -19074,8 +19080,8 @@ class Dictionary extends EventDispatcher {
         this.__list.splice(index, 1);
         this.__map.delete(key);
         //派发删除事件
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
         return result;
     }
@@ -19421,12 +19427,12 @@ class LoaderQueue {
         }
     }
     __addEvent(target) {
-        target.On(Event.COMPLETE, this.__eventHandler, this);
-        target.On(Event.ERROR, this.__eventHandler, this);
-        target.On(Event.PROGRESS, this.__eventHandler, this);
+        target.On(DEvent.COMPLETE, this.__eventHandler, this);
+        target.On(DEvent.ERROR, this.__eventHandler, this);
+        target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
     __eventHandler(type, target, data) {
-        if (type == Event.PROGRESS) {
+        if (type == DEvent.PROGRESS) {
             Loader.single.ChildProgress(data.url, data.progress);
             return;
         }
@@ -19434,11 +19440,11 @@ class LoaderQueue {
         target.OffAllEvent();
         //从运行列表中删除
         this.running.Delete(URL2Key(data.url));
-        if (type == Event.ERROR) {
+        if (type == DEvent.ERROR) {
             Loader.single.ChildError(data.url, data.err);
             return;
         }
-        if (type == Event.COMPLETE) {
+        if (type == DEvent.COMPLETE) {
             Loader.single.ChildComplete(data.url);
             //重置并回收
             target.Reset();
@@ -19804,7 +19810,7 @@ class CCLoaderImpl extends EventDispatcher {
         if (!bundle) {
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 this.__load(url, bundle);
@@ -19821,10 +19827,10 @@ class CCLoaderImpl extends EventDispatcher {
         let __this = this;
         bundle.load(FullURL(url), url.type, (finished, total) => {
             const progress = finished / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, { url, progress });
         }, (err, asset) => {
             if (err) {
-                __this.Emit(Event.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, { url, err });
                 return;
             }
             const urlKey = URL2Key(url);
@@ -19832,7 +19838,7 @@ class CCLoaderImpl extends EventDispatcher {
             res.key = urlKey;
             res.content = asset;
             ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, { url });
         });
     }
     Reset() {
@@ -21528,8 +21534,8 @@ class List extends EventDispatcher {
         }
         this.__element.push(value);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
+        if (this.HasEvent(DEvent.ADD)) {
+            this.Emit(DEvent.ADD, value);
         }
         return true;
     }
@@ -21547,8 +21553,8 @@ class List extends EventDispatcher {
         }
         this.__element.unshift(value);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.ADD)) {
-            this.Emit(Event.ADD, value);
+        if (this.HasEvent(DEvent.ADD)) {
+            this.Emit(DEvent.ADD, value);
         }
         return true;
     }
@@ -21560,8 +21566,8 @@ class List extends EventDispatcher {
         if (this.__element.length > 0) {
             const result = this.__element.pop();
             this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+            if (this.HasEvent(DEvent.REMOVE)) {
+                this.Emit(DEvent.REMOVE, result);
             }
             return result;
         }
@@ -21575,8 +21581,8 @@ class List extends EventDispatcher {
         if (this.__element.length > 0) {
             const result = this.__element.shift();
             this.count = this.__element.length;
-            if (this.HasEvent(Event.REMOVE)) {
-                this.Emit(Event.REMOVE, result);
+            if (this.HasEvent(DEvent.REMOVE)) {
+                this.Emit(DEvent.REMOVE, result);
             }
             return result;
         }
@@ -21593,8 +21599,8 @@ class List extends EventDispatcher {
         const result = this.__element[index];
         this.__element.splice(index, 1);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
         return result;
     }
@@ -21610,8 +21616,8 @@ class List extends EventDispatcher {
         const result = this.__element[index];
         this.__element.splice(index, 1);
         this.count = this.__element.length;
-        if (this.HasEvent(Event.REMOVE)) {
-            this.Emit(Event.REMOVE, result);
+        if (this.HasEvent(DEvent.REMOVE)) {
+            this.Emit(DEvent.REMOVE, result);
         }
     }
     /**
@@ -21620,8 +21626,8 @@ class List extends EventDispatcher {
     Clear() {
         this.count = 0;
         this.__element.length = 0;
-        if (this.HasEvent(Event.CLEAR)) {
-            this.Emit(Event.CLEAR);
+        if (this.HasEvent(DEvent.CLEAR)) {
+            this.Emit(DEvent.CLEAR);
         }
     }
     /**
@@ -21720,7 +21726,7 @@ class FSM extends EventDispatcher {
             Debuger.Log("FSM", this.__name + " 所属:" + this.owner.name + " 进入状态==>" + this.__current.name);
         }
         this.__current.Enter(data);
-        this.Emit(Event.State_Changed, oldKey);
+        this.Emit(DEvent.State_Changed, oldKey);
     }
     get state() {
         return this.__state;
@@ -23279,7 +23285,7 @@ class ConfigLoader extends EventDispatcher {
         if (!bundle) {
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(Event.ERROR, { url, err });
+                    this.Emit(DEvent.ERROR, { url, err });
                     return;
                 }
                 this.__load(url, bundle);
@@ -23296,10 +23302,10 @@ class ConfigLoader extends EventDispatcher {
         let __this = this;
         bundle.load(FullURL(url), BufferAsset, (finished, total) => {
             const progress = finished / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, { url, progress });
         }, (err, asset) => {
             if (err) {
-                __this.Emit(Event.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, { url, err });
                 return;
             }
             const urlKey = URL2Key(url);
@@ -23309,7 +23315,7 @@ class ConfigLoader extends EventDispatcher {
             res.key = urlKey;
             res.content = accessor;
             ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, { url });
         });
     }
     __parseConfig(sheet, buffer) {
@@ -23379,7 +23385,7 @@ class FGUILoader extends EventDispatcher {
             if (!bundle) {
                 assetManager.loadBundle(url.bundle, (err, bundle) => {
                     if (err) {
-                        __this.Emit(Event.ERROR, { url, err });
+                        __this.Emit(DEvent.ERROR, { url, err });
                         return;
                     }
                     __this.loadUIPackge(url, bundle);
@@ -23397,10 +23403,10 @@ class FGUILoader extends EventDispatcher {
         let __this = this;
         UIPackage.loadPackage(bundle, url.url, (finish, total, item) => {
             const progress = finish / total;
-            __this.Emit(Event.PROGRESS, { url, progress });
+            __this.Emit(DEvent.PROGRESS, { url, progress });
         }, (err, pkg) => {
             if (err) {
-                __this.Emit(Event.ERROR, { url, err });
+                __this.Emit(DEvent.ERROR, { url, err });
                 return;
             }
             const urlKey = URL2Key(url);
@@ -23408,7 +23414,7 @@ class FGUILoader extends EventDispatcher {
             res.key = urlKey;
             res.content = pkg;
             ResManager.AddRes(res);
-            __this.Emit(Event.COMPLETE, { url });
+            __this.Emit(DEvent.COMPLETE, { url });
         });
     }
     Reset() {
@@ -23601,12 +23607,12 @@ class ServiceLoader extends EventDispatcher {
         }
         //加载
         Res.GetResRefList(urls, this.service.name, (progress) => {
-            this.Emit(Event.PROGRESS, { service: this.serviceClass, progress });
+            this.Emit(DEvent.PROGRESS, { service: this.serviceClass, progress });
         }).then((value) => {
             this.refs = value;
             this.__assetReady();
         }, (reason) => {
-            this.Emit(Event.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) });
+            this.Emit(DEvent.ERROR, { service: this.serviceClass, err: new Error(this.service.name + "依赖资源加载出错:" + reason) });
         });
     }
     /**
@@ -23615,7 +23621,7 @@ class ServiceLoader extends EventDispatcher {
     __assetReady() {
         this.service.Init();
         let proxy = new ServiceProxy(this.service, this.refs);
-        this.Emit(Event.COMPLETE, { service: this.serviceClass, proxy });
+        this.Emit(DEvent.COMPLETE, { service: this.serviceClass, proxy });
     }
     Reset() {
         this.serviceClass = null;
@@ -23657,22 +23663,22 @@ class ServiceQueue {
         }
     }
     __addEvent(target) {
-        target.On(Event.COMPLETE, this.__eventHandler, this);
-        target.On(Event.ERROR, this.__eventHandler, this);
-        target.On(Event.PROGRESS, this.__eventHandler, this);
+        target.On(DEvent.COMPLETE, this.__eventHandler, this);
+        target.On(DEvent.ERROR, this.__eventHandler, this);
+        target.On(DEvent.PROGRESS, this.__eventHandler, this);
     }
     __eventHandler(type, target, data) {
-        if (type == Event.PROGRESS) {
+        if (type == DEvent.PROGRESS) {
             ServiceManager.ChildProgress(data.service, data.progress);
             return;
         }
         target.OffAllEvent();
         this.running.Delete(data.service);
-        if (type == Event.ERROR) {
+        if (type == DEvent.ERROR) {
             ServiceManager.ChildError(data.service, data.err);
             return;
         }
-        if (type == Event.COMPLETE) {
+        if (type == DEvent.COMPLETE) {
             ServiceManager.ChildComplete(data.service, data.proxy);
             target.Reset();
             this.pool.push(target);
@@ -24024,12 +24030,12 @@ class GUIProxy {
                 this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
             }
             else {
-                Event.Emit(Event.SHOW, this.info.key);
+                DEvent.Emit(DEvent.SHOW, this.info.key);
             }
         }
     }
     __showAnimationPlayed() {
-        Event.Emit(Event.SHOW, this.info.key);
+        DEvent.Emit(DEvent.SHOW, this.info.key);
     }
     Hide() {
         if (this.__loadState == LoadState.Loading) {
@@ -24056,7 +24062,7 @@ class GUIProxy {
         this.mediator.viewComponent.visible = false;
         this.mediator.Hide();
         this.__showing = false;
-        Event.Emit(Event.HIDE, this.info.key);
+        DEvent.Emit(DEvent.HIDE, this.info.key);
     }
     Destroy() {
         var _a;
@@ -24111,8 +24117,8 @@ class GUIManagerImpl {
         this.__destryList = [];
         TickerManager.AddTicker(this);
         //监听打开和关闭事件
-        Event.On(Event.SHOW, this.__showedHandler, this);
-        Event.On(Event.HIDE, this.__closedHandler, this);
+        DEvent.On(DEvent.SHOW, this.__showedHandler, this);
+        DEvent.On(DEvent.HIDE, this.__closedHandler, this);
     }
     /**获取某个组件 */
     GetUIComponent(key, path) {
@@ -25532,31 +25538,32 @@ class TaskQueue extends EventDispatcher {
     }
     Start(data) {
         this.__index = 0;
+        this.__data = data;
         this.__tryNext();
     }
     __tryNext() {
         if (this.__index < this.__taskList.length) {
             let task = this.__taskList[this.__index];
-            task.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            task.On(Event.PROGRESS, this.__subTaskEventHandler, this);
-            task.On(Event.ERROR, this.__subTaskEventHandler, this);
-            task.Start();
+            task.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
+            task.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
+            task.On(DEvent.ERROR, this.__subTaskEventHandler, this);
+            task.Start(this.__data);
         }
         else {
             //结束
-            this.Emit(Event.COMPLETE);
+            this.Emit(DEvent.COMPLETE);
         }
     }
     __subTaskEventHandler(key, target, data) {
-        if (key == Event.PROGRESS) {
+        if (key == DEvent.PROGRESS) {
             let dataValue = Number(data) == undefined ? 0 : Number(data);
             let progress = (this.__index + dataValue) / this.__taskList.length;
-            this.Emit(Event.PROGRESS, progress);
+            this.Emit(DEvent.PROGRESS, progress);
             return;
         }
         target.OffAllEvent();
-        if (key == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
+        if (key == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, data);
             return;
         }
         target.Destroy();
@@ -25567,6 +25574,7 @@ class TaskQueue extends EventDispatcher {
         super.Destroy();
         this.__taskList.length = 0;
         this.__index = 0;
+        this.__data = null;
     }
 }
 
@@ -25593,22 +25601,23 @@ class TaskSequence extends EventDispatcher {
         this.__taskList.splice(index, 1);
     }
     Start(data) {
+        this.__data = data;
         for (let index = 0; index < this.__taskList.length; index++) {
             const element = this.__taskList[index];
-            element.On(Event.COMPLETE, this.__subTaskEventHandler, this);
-            element.On(Event.ERROR, this.__subTaskEventHandler, this);
-            element.On(Event.PROGRESS, this.__subTaskEventHandler, this);
-            element.Start();
+            element.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
+            element.On(DEvent.ERROR, this.__subTaskEventHandler, this);
+            element.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
+            element.Start(this.__data);
         }
     }
     __subTaskEventHandler(type, target, data) {
-        if (type == Event.PROGRESS) {
-            this.Emit(Event.PROGRESS, this.__index / this.__taskList.length);
+        if (type == DEvent.PROGRESS) {
+            this.Emit(DEvent.PROGRESS, this.__index / this.__taskList.length);
             return;
         }
         target.OffAllEvent();
-        if (type == Event.ERROR) {
-            this.Emit(Event.ERROR, data);
+        if (type == DEvent.ERROR) {
+            this.Emit(DEvent.ERROR, data);
             return;
         }
         this.__index++;
@@ -25617,12 +25626,13 @@ class TaskSequence extends EventDispatcher {
         }
         target.Destroy();
         //完成
-        this.Emit(Event.COMPLETE);
+        this.Emit(DEvent.COMPLETE);
     }
     Destroy() {
         super.Destroy();
         this.__taskList.length = 0;
         this.__index = 0;
+        this.__data = null;
     }
 }
 
@@ -26452,4 +26462,4 @@ class BaseModel {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, Event, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

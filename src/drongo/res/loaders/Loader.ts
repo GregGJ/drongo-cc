@@ -1,5 +1,4 @@
 import { ResURL, URL2Key } from "../core/ResURL";
-import { ResManager } from "../res/ResManager";
 import { ResRequest } from "./ResRequest";
 
 

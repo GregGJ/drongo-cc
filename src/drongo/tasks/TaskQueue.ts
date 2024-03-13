@@ -10,7 +10,7 @@ export class TaskQueue extends EventDispatcher implements ITask {
 
     private __taskList: Array<ITask>;
     private __index: number = 0;
-
+    private __data: any;
     constructor() {
         super();
         this.__taskList = [];
@@ -33,6 +33,7 @@ export class TaskQueue extends EventDispatcher implements ITask {
 
     Start(data?: any): void {
         this.__index = 0;
+        this.__data = data;
         this.__tryNext();
     }
 
@@ -42,7 +43,7 @@ export class TaskQueue extends EventDispatcher implements ITask {
             task.On(DEvent.COMPLETE, this.__subTaskEventHandler, this);
             task.On(DEvent.PROGRESS, this.__subTaskEventHandler, this);
             task.On(DEvent.ERROR, this.__subTaskEventHandler, this);
-            task.Start();
+            task.Start(this.__data);
         } else {
             //结束
             this.Emit(DEvent.COMPLETE);
@@ -70,5 +71,6 @@ export class TaskQueue extends EventDispatcher implements ITask {
         super.Destroy();
         this.__taskList.length = 0;
         this.__index = 0;
+        this.__data = null;
     }
 }

@@ -2,7 +2,6 @@ import { AssetManager, BufferAsset, assetManager } from "cc";
 import { ConfigManager } from "../../configs/ConfigManager";
 import { ConfigUtils } from "../../configs/ConfigUtils";
 import { IConfigAccessor } from "../../configs/core/IConfigAccessor";
-import { Debuger } from "../../debugers/Debuger";
 import { DEvent } from "../../events/DEvent";
 import { EventDispatcher } from "../../events/EventDispatcher";
 import { ByteArray } from "../../utils/ByteArray";
