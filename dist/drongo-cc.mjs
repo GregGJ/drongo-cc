@@ -18362,18 +18362,7 @@ class StringUtils {
      * @returns
      */
     static PieceTogether(keys, sp = "_") {
-        const end = keys.length - 1;
-        let result = "";
-        for (let index = 0; index < keys.length; index++) {
-            const key = keys[index];
-            if (index < end) {
-                result += key + sp;
-            }
-            else {
-                result += key;
-            }
-        }
-        return result;
+        return keys.join(sp);
     }
     /**
      * 获取单词指定位置单词
@@ -21407,8 +21396,11 @@ class ConfigStorage {
             values.push(value[key]);
         }
         const saveKey = StringUtils.PieceTogether(values);
+        if (StringUtils.IsEmpty(saveKey)) {
+            return;
+        }
         if (this.map.has(saveKey)) {
-            throw new Error("配置表唯一Key存在重复内容:" + saveKey);
+            Debuger.Err(Debuger.DRONGO, "配置表唯一Key存在重复内容:" + saveKey);
         }
         this.map.set(saveKey, value);
     }
@@ -24015,7 +24007,7 @@ class GUIProxy {
                 return;
             }
             if (this.mediator.PlayShowAnimation) {
-                this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
+                this.mediator.PlayShowAnimation(this.__showAnimationPlayed.bind(this));
             }
             else {
                 EventDispatcher.Global.Emit(DEvent.SHOW, this.info.key);
@@ -24033,7 +24025,7 @@ class GUIProxy {
             //如果在显示中
             if (this.__showing) {
                 if (this.mediator.PlayHideAnimation) {
-                    this.mediator.PlayHideAnimation(this.__hideAnimationPlayed);
+                    this.mediator.PlayHideAnimation(this.__hideAnimationPlayed.bind(this));
                 }
                 else {
                     this.__hide();
@@ -24772,10 +24764,23 @@ class GUIMediator extends BaseMediator {
 class SubGUIMediator extends BaseMediator {
     constructor(ui, owner) {
         super();
+        if (ui == null) {
+            throw new Error("ui组件为空");
+        }
         this.ui = ui;
         this.owner = owner;
-        this.Init();
         this.inited = true;
+    }
+    /**
+     * 子类必须在构造函数中调用
+     */
+    Init() {
+    }
+    Show(data) {
+        super.Show(data);
+    }
+    Hide() {
+        super.Hide();
     }
     Destroy() {
         super.Destroy();

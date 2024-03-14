@@ -1,3 +1,4 @@
+import { Debuger } from "../debugers/Debuger";
 import { StringUtils } from "../utils/StringUtils";
 
 
@@ -20,8 +21,11 @@ export class ConfigStorage {
             values.push(value[key]);
         }
         const saveKey = StringUtils.PieceTogether(values);
+        if (StringUtils.IsEmpty(saveKey)) {
+            return;
+        }
         if (this.map.has(saveKey)) {
-            throw new Error("配置表唯一Key存在重复内容:" + saveKey);
+            Debuger.Err(Debuger.DRONGO,"配置表唯一Key存在重复内容:" + saveKey)
         }
         this.map.set(saveKey, value);
     }

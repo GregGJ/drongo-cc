@@ -126,17 +126,7 @@ export class StringUtils {
      * @returns 
      */
     static PieceTogether(keys: Array<string>, sp: string = "_"): string {
-        const end = keys.length - 1;
-        let result: string = "";
-        for (let index = 0; index < keys.length; index++) {
-            const key = keys[index];
-            if (index < end) {
-                result += key + sp;
-            } else {
-                result += key;
-            }
-        }
-        return result;
+        return keys.join(sp);
     }
 
     /**

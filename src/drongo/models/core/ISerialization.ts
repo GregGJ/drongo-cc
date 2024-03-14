@@ -10,12 +10,12 @@ export interface ISerialization {
      * @param type  
      * @param data 
      */
-    Encode(type: Number, data?: any): any;
+    Encode(type: number, data?: any): any;
 
     /**
      * 解码
      * @param type  
      * @param data 
      */
-    Decode(type: Number, data: any): void;
+    Decode(type: number, data: any): void;
 }

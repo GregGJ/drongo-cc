@@ -1,21 +1,20 @@
 
 
 
-export class ChangedData
-{
-    public key:string;
-    public newValue:any;
-    public oldValue:any;
+export class ChangedData {
+    public key: number | string;
+    public newValue: any;
+    public oldValue: any;
 
-    constructor(){
+    constructor() {
 
     }
 
-    public static Create(newValue?:any,oldValue?:any,key?:string):ChangedData{
-        let result:ChangedData=new ChangedData();
-        result.oldValue=oldValue;
-        result.newValue=newValue;
-        result.key=key;
+    public static Create(newValue?: any, oldValue?: any, key?: number | string): ChangedData {
+        let result: ChangedData = new ChangedData();
+        result.oldValue = oldValue;
+        result.newValue = newValue;
+        result.key = key;
         return result;
     }
 }

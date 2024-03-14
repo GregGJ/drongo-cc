@@ -206,7 +206,7 @@ export class GUIProxy {
                 return;
             }
             if (this.mediator.PlayShowAnimation) {
-                this.mediator.PlayShowAnimation(this.__showAnimationPlayed);
+                this.mediator.PlayShowAnimation(this.__showAnimationPlayed.bind(this));
             } else {
                 EventDispatcher.Global.Emit(DEvent.SHOW, this.info!.key);
             }
@@ -224,7 +224,7 @@ export class GUIProxy {
             //如果在显示中
             if (this.__showing) {
                 if (this.mediator.PlayHideAnimation) {
-                    this.mediator.PlayHideAnimation(this.__hideAnimationPlayed);
+                    this.mediator.PlayHideAnimation(this.__hideAnimationPlayed.bind(this));
                 } else {
                     this.__hide();
                 }
@@ -244,7 +244,7 @@ export class GUIProxy {
         this.__showing = false;
         EventDispatcher.Global.Emit(DEvent.HIDE, this.info!.key);
     }
-    
+
     Destroy(): void {
         console.log("UI销毁=>" + this.info?.key);
         for (let index = 0; index < this.assets.length; index++) {

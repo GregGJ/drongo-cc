@@ -65,7 +65,7 @@ export class BaseValue extends EventDispatcher implements IValue {
      * @param data 
      * @returns 
      */
-    Encode(type: Number, data?: any): any {
+    Encode(type: number, data?: any): any {
         switch (type) {
             case SerializationMode.JSON:
                 return this.value;

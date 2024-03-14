@@ -15,7 +15,7 @@ export class DictionaryValue extends BaseValue {
 
     constructor() {
         super();
-        this.value = new Dictionary<string, IProperty>();
+        this.value = new Dictionary<number | string, IProperty>();
     }
 
     /**
@@ -47,7 +47,7 @@ export class DictionaryValue extends BaseValue {
      * 通过属性key删除并返回
      * @param key 
      */
-    RemoveByKey(key: string): IValue {
+    RemoveByKey(key: number | string): IValue {
         if (!this.map.Has(key)) {
             throw new Error("要删除的属性不在集合内!");
         }
@@ -66,7 +66,7 @@ export class DictionaryValue extends BaseValue {
      * @param key 
      * @param data 
      */
-    Update(key: string, data: any): void {
+    Update(key: number | string, data: any): void {
         if (this.map.Has(key) == false) {
             throw new Error("要更新的属性不存在！" + key);
         }
@@ -79,14 +79,14 @@ export class DictionaryValue extends BaseValue {
      * @param keys 
      * @param values 
      */
-    MultUpdate(keys: Array<string>, values: Array<any>): void {
+    MultUpdate(keys: Array<number | string>, values: Array<any>): void {
         if (keys == null || values == null) {
             throw new Error("Keys和values不能为空！");
         }
         if (keys.length != values.length) {
             throw new Error("keys.length!=values.length");
         }
-        var key: string;
+        var key: number | string;
         var value: any;
         for (var i: number = 0; i < keys.length; i++) {
             key = keys[i];
@@ -99,7 +99,7 @@ export class DictionaryValue extends BaseValue {
      * 获取属性
      * @param key 
      */
-    Get(key: string): IValue {
+    Get(key: number | string): IValue {
         return this.map.Get(key);
     }
 
@@ -143,7 +143,7 @@ export class DictionaryValue extends BaseValue {
         return this.map.elements;
     }
 
-    private get map(): Dictionary<string, IValue> {
+    private get map(): Dictionary<number | string, IValue> {
         return this.value;
     }
 
@@ -152,7 +152,7 @@ export class DictionaryValue extends BaseValue {
      * @param type 
      * @param data 
      */
-    Decode(type: Number, data: any): void {
+    Decode(type: number, data: any): void {
         switch (type) {
             case SerializationMode.JSON:
                 let item: any;

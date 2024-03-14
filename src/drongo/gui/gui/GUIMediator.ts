@@ -35,23 +35,23 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     private __mask: GGraph | null = null;
 
     /**创建UI完成回调*/
-    private __createdCallBack: Function;
+    private __createdCallBack: () => void;
 
-    /**子Mediator(用于代码拆分)*/
+    /**子Mediator(用于代码拆分),记住只能在Init函数中赋值*/
     protected $subMediators: Array<SubGUIMediator>;
-
+    
     /**
      * 播放显示动画
      * @param complete 
      */
-    PlayShowAnimation?: (complete:()=>void) => void;
+    PlayShowAnimation?: (complete: () => void) => void;
 
     /**
      * 界面关闭时播放的动画
      * @param complete 
      */
-    PlayHideAnimation?: (complete:()=>void) => void;
-    
+    PlayHideAnimation?: (complete: () => void) => void;
+
     constructor() {
         super();
     }
@@ -61,7 +61,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
      * @param info 
      * @param created 
      */
-    CreateUI(info: any, created: Function): void {
+    CreateUI(info: any, created: () => void): void {
         this.info = info;
         if (this.info == null) {
             throw new Error("GUI 信息不能为空");
@@ -97,7 +97,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
             this.viewComponent.makeFullScreen();
 
             this.__mask = new GGraph();
-            this.__mask.touchable=true;
+            this.__mask.touchable = true;
             this.__mask.makeFullScreen();
 
             this.__mask.drawRect(0, Color.BLACK, Drongo.MaskColor);
@@ -122,7 +122,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     }
 
     Init(): void {
-
+        
     }
 
     Show(data?: any): void {

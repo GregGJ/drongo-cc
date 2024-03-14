@@ -16,7 +16,7 @@ export default [
         ],
         output: {
             file: "./dist/drongo-cc.mjs",
-            format: 'es',
+            format: 'esm',
             name:"drongo-cc",
         }
     },
@@ -24,7 +24,7 @@ export default [
         input:"./src/drongo-cc.ts",
         plugins: [dts()],
         output:{
-            format:"es",
+            format:"esm",
             file:"./dist/drongo-cc.d.ts"
         }
     }

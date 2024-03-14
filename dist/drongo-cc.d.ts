@@ -4105,8 +4105,14 @@ interface IGUIInfo {
  */
 declare class SubGUIMediator extends BaseMediator {
     /**所属GUI*/
-    owner: GUIMediator;
-    constructor(ui: GComponent, owner: GUIMediator);
+    owner: GUIMediator | null;
+    constructor(ui: GComponent | null, owner: GUIMediator | null);
+    /**
+     * 子类必须在构造函数中调用
+     */
+    Init(): void;
+    Show(data: any): void;
+    Hide(): void;
     Destroy(): void;
 }
 
@@ -4129,7 +4135,7 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     private __mask;
     /**创建UI完成回调*/
     private __createdCallBack;
-    /**子Mediator(用于代码拆分)*/
+    /**子Mediator(用于代码拆分),记住只能在Init函数中赋值*/
     protected $subMediators: Array<SubGUIMediator>;
     /**
      * 播放显示动画
@@ -4147,7 +4153,7 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
      * @param info
      * @param created
      */
-    CreateUI(info: any, created: Function): void;
+    CreateUI(info: any, created: () => void): void;
     private __asyncCreator;
     private __createUI;
     private __uiCreated;
@@ -5542,11 +5548,11 @@ declare enum SerializationMode {
 }
 
 declare class ChangedData {
-    key: string;
+    key: number | string;
     newValue: any;
     oldValue: any;
     constructor();
-    static Create(newValue?: any, oldValue?: any, key?: string): ChangedData;
+    static Create(newValue?: any, oldValue?: any, key?: number | string): ChangedData;
 }
 
 /**
@@ -5558,13 +5564,13 @@ interface ISerialization {
      * @param type
      * @param data
      */
-    Encode(type: Number, data?: any): any;
+    Encode(type: number, data?: any): any;
     /**
      * 解码
      * @param type
      * @param data
      */
-    Decode(type: Number, data: any): void;
+    Decode(type: number, data: any): void;
 }
 
 /**
@@ -5595,7 +5601,7 @@ interface IValue extends IEventDispatcher, ISerialization {
  * 属性接口
  */
 interface IProperty extends IValue {
-    key: string;
+    key: number | string;
 }
 
 declare class ModelFactory {
@@ -5638,7 +5644,7 @@ declare class BaseValue extends EventDispatcher implements IValue {
      * @param data
      * @returns
      */
-    Encode(type: Number, data?: any): any;
+    Encode(type: number, data?: any): any;
     Equality(value: IValue): boolean;
 }
 
@@ -5736,7 +5742,7 @@ declare class ArrayValue extends BaseValue {
      * @param type
      * @param data
      */
-    Decode(type: Number, data: any): void;
+    Decode(type: number, data: any): void;
     /**
      * 序列化
      * @param type
@@ -5764,24 +5770,24 @@ declare class DictionaryValue extends BaseValue {
      * 通过属性key删除并返回
      * @param key
      */
-    RemoveByKey(key: string): IValue;
+    RemoveByKey(key: number | string): IValue;
     /**
      * 更新属性
      * @param key
      * @param data
      */
-    Update(key: string, data: any): void;
+    Update(key: number | string, data: any): void;
     /**
      * 更新多项属性
      * @param keys
      * @param values
      */
-    MultUpdate(keys: Array<string>, values: Array<any>): void;
+    MultUpdate(keys: Array<number | string>, values: Array<any>): void;
     /**
      * 获取属性
      * @param key
      */
-    Get(key: string): IValue;
+    Get(key: number | string): IValue;
     /**
      * 对比
      * @param value
@@ -5799,7 +5805,7 @@ declare class DictionaryValue extends BaseValue {
      * @param type
      * @param data
      */
-    Decode(type: Number, data: any): void;
+    Decode(type: number, data: any): void;
     /**
      * 序列化
      * @param type
@@ -5810,26 +5816,26 @@ declare class DictionaryValue extends BaseValue {
 }
 
 declare class StringProperty extends StringValue implements IProperty {
-    key: string;
+    key: number | string;
     constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class NumberProperty extends NumberValue implements IProperty {
-    key: string;
-    constructor(key?: string, value?: any);
+    key: number | string;
+    constructor(key?: number | string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class DictionaryProperty extends DictionaryValue implements IProperty {
-    key: string;
-    constructor(key?: string, value?: any);
+    key: number | string;
+    constructor(key?: number | string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class ArrayProperty extends ArrayValue implements IProperty {
-    key: string;
-    constructor(key?: string, value?: any);
+    key: number | string;
+    constructor(key?: number | string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
     /**
      * 判断某个子内容的某个属性相同则返回true

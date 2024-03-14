@@ -8,9 +8,9 @@ import { DictionaryValue } from "../values/DictionaryValue";
 
 
 export class ArrayProperty extends ArrayValue implements IProperty {
-    key: string;
+    key: number | string;
 
-    constructor(key?: string, value?: any) {
+    constructor(key?: number | string, value?: any) {
         super();
         this.key = key;
         if (value != null && value != undefined) {

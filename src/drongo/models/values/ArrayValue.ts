@@ -226,7 +226,7 @@ export class ArrayValue extends BaseValue {
      * @param type 
      * @param data 
      */
-    Decode(type: Number, data: any): void {
+    Decode(type: number, data: any): void {
         switch (type) {
             case SerializationMode.JSON:
                 let item: any;
