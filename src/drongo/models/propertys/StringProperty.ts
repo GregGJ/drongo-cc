@@ -7,7 +7,7 @@ import { StringValue } from "../values/StringValue";
 
 export class StringProperty extends StringValue implements IProperty {
 
-    key: number | string;
+    key: string;
 
     constructor(key?: string, value?: any) {
         super();

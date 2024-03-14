@@ -26379,6 +26379,10 @@ class ModelFactory {
 
 class BaseModel {
     constructor(gameName, userID) {
+        /**
+         * 是否开启调试日志
+         */
+        this.debugLog = false;
         this.gameName = gameName;
         this.userID = userID;
         this.__playerPrefs = new DictionaryValue();
@@ -26411,7 +26415,11 @@ class BaseModel {
     }
     __save() {
         let data = this.__playerPrefs.Encode(SerializationMode.JSON);
-        localStorage.setItem(this.uuid, JSON.stringify(data));
+        let jsonStr = JSON.stringify(data, null, 4);
+        if (this.debugLog) {
+            console.log(jsonStr);
+        }
+        localStorage.setItem(this.uuid, jsonStr);
     }
     /**
      * 从本地读取存档
@@ -26425,6 +26433,9 @@ class BaseModel {
         else {
             try {
                 let jsonData = JSON.parse(jsonStr);
+                if (this.debugLog) {
+                    console.log(jsonStr);
+                }
                 this.__playerPrefs.Decode(SerializationMode.JSON, jsonData);
                 this.isNewPlayer = false;
             }

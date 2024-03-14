@@ -48,7 +48,7 @@ export class BaseValue extends EventDispatcher implements IValue {
      * @param type 
      * @param data 
      */
-    Decode(type: Number, data: any): void {
+    Decode(type: number, data: any): void {
         switch (type) {
             case SerializationMode.JSON:
                 this.SetValue(data);

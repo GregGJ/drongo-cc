@@ -10,6 +10,10 @@ export class BaseModel {
      * 是否是新玩家
      */
     isNewPlayer: boolean;
+    /**
+     * 是否开启调试日志
+     */
+    debugLog: boolean = false;
 
     gameName: string;
     userID: string;
@@ -55,7 +59,11 @@ export class BaseModel {
 
     private __save(): void {
         let data: any = this.__playerPrefs.Encode(SerializationMode.JSON);
-        localStorage.setItem(this.uuid, JSON.stringify(data));
+        let jsonStr = JSON.stringify(data, null, 4)
+        if (this.debugLog) {
+            console.log(jsonStr);
+        }
+        localStorage.setItem(this.uuid, jsonStr);
     }
 
     /**
@@ -69,6 +77,9 @@ export class BaseModel {
         } else {
             try {
                 let jsonData: any = JSON.parse(jsonStr);
+                if (this.debugLog) {
+                    console.log(jsonStr);
+                }
                 this.__playerPrefs.Decode(SerializationMode.JSON, jsonData);
                 this.isNewPlayer = false;
             } catch (error) {

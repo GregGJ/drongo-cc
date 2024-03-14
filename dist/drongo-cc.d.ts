@@ -5548,11 +5548,11 @@ declare enum SerializationMode {
 }
 
 declare class ChangedData {
-    key: number | string;
+    key: string;
     newValue: any;
     oldValue: any;
     constructor();
-    static Create(newValue?: any, oldValue?: any, key?: number | string): ChangedData;
+    static Create(newValue?: any, oldValue?: any, key?: string): ChangedData;
 }
 
 /**
@@ -5601,7 +5601,7 @@ interface IValue extends IEventDispatcher, ISerialization {
  * 属性接口
  */
 interface IProperty extends IValue {
-    key: number | string;
+    key: string;
 }
 
 declare class ModelFactory {
@@ -5637,7 +5637,7 @@ declare class BaseValue extends EventDispatcher implements IValue {
      * @param type
      * @param data
      */
-    Decode(type: Number, data: any): void;
+    Decode(type: number, data: any): void;
     /**
      * 序列化
      * @param type
@@ -5770,24 +5770,24 @@ declare class DictionaryValue extends BaseValue {
      * 通过属性key删除并返回
      * @param key
      */
-    RemoveByKey(key: number | string): IValue;
+    RemoveByKey(key: string): IValue;
     /**
      * 更新属性
      * @param key
      * @param data
      */
-    Update(key: number | string, data: any): void;
+    Update(key: string, data: any): void;
     /**
      * 更新多项属性
      * @param keys
      * @param values
      */
-    MultUpdate(keys: Array<number | string>, values: Array<any>): void;
+    MultUpdate(keys: Array<string>, values: Array<any>): void;
     /**
      * 获取属性
      * @param key
      */
-    Get(key: number | string): IValue;
+    Get(key: string): IValue;
     /**
      * 对比
      * @param value
@@ -5816,26 +5816,26 @@ declare class DictionaryValue extends BaseValue {
 }
 
 declare class StringProperty extends StringValue implements IProperty {
-    key: number | string;
+    key: string;
     constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class NumberProperty extends NumberValue implements IProperty {
-    key: number | string;
-    constructor(key?: number | string, value?: any);
+    key: string;
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class DictionaryProperty extends DictionaryValue implements IProperty {
-    key: number | string;
-    constructor(key?: number | string, value?: any);
+    key: string;
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
 }
 
 declare class ArrayProperty extends ArrayValue implements IProperty {
-    key: number | string;
-    constructor(key?: number | string, value?: any);
+    key: string;
+    constructor(key?: string, value?: any);
     protected SendEvent(newValue: any, oldValue: any): void;
     /**
      * 判断某个子内容的某个属性相同则返回true
@@ -5848,6 +5848,10 @@ declare class BaseModel {
      * 是否是新玩家
      */
     isNewPlayer: boolean;
+    /**
+     * 是否开启调试日志
+     */
+    debugLog: boolean;
     gameName: string;
     userID: string;
     /**

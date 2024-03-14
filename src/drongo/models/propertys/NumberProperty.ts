@@ -6,9 +6,9 @@ import { NumberValue } from "../values/NumberValue";
 
 
 export class NumberProperty extends NumberValue implements IProperty {
-    key: number | string;
+    key: string;
 
-    constructor(key?: number | string, value?: any) {
+    constructor(key?: string, value?: any) {
         super();
         this.key = key;
         if (value != null && value != undefined) {

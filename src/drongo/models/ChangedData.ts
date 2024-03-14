@@ -2,7 +2,7 @@
 
 
 export class ChangedData {
-    public key: number | string;
+    public key: string;
     public newValue: any;
     public oldValue: any;
 
@@ -10,7 +10,7 @@ export class ChangedData {
 
     }
 
-    public static Create(newValue?: any, oldValue?: any, key?: number | string): ChangedData {
+    public static Create(newValue?: any, oldValue?: any, key?: string): ChangedData {
         let result: ChangedData = new ChangedData();
         result.oldValue = oldValue;
         result.newValue = newValue;
