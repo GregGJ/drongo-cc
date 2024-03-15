@@ -19783,7 +19783,7 @@ class CCLoaderImpl extends EventDispatcher {
         if (!bundle) {
             assetManager.loadBundle(url.bundle, (err, bundle) => {
                 if (err) {
-                    this.Emit(DEvent.ERROR, { url }, err);
+                    this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 this.__load(url, bundle);
@@ -25552,12 +25552,12 @@ class TaskQueue extends EventDispatcher {
         if (evt.type == DEvent.PROGRESS) {
             let dataValue = Number(evt.progress) == undefined ? 0 : Number(evt.progress);
             let progress = (this.__index + dataValue) / this.__taskList.length;
-            this.Emit(DEvent.PROGRESS, progress);
+            this.Emit(DEvent.PROGRESS, undefined, undefined, progress);
             return;
         }
         target.OffAllEvent();
         if (evt.type == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, evt.error);
+            this.Emit(DEvent.ERROR, undefined, evt.error);
             return;
         }
         target.Destroy();
@@ -25606,12 +25606,12 @@ class TaskSequence extends EventDispatcher {
     }
     __subTaskEventHandler(evt) {
         if (evt.type == DEvent.PROGRESS) {
-            this.Emit(DEvent.PROGRESS, this.__index / this.__taskList.length);
+            this.Emit(DEvent.PROGRESS, null, null, this.__index / this.__taskList.length);
             return;
         }
         evt.target.OffAllEvent();
         if (evt.type == DEvent.ERROR) {
-            this.Emit(DEvent.ERROR, evt.error);
+            this.Emit(DEvent.ERROR, null, evt.error);
             return;
         }
         this.__index++;

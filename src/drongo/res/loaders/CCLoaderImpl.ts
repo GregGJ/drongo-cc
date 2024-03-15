@@ -28,7 +28,7 @@ export class CCLoaderImpl extends EventDispatcher implements ILoader {
             let __this = this;
             assetManager.loadBundle(url.bundle, (err: Error, bundle: AssetManager.Bundle) => {
                 if (err) {
-                    this.Emit(DEvent.ERROR, { url }, err);
+                    this.Emit(DEvent.ERROR, url, err);
                     return;
                 }
                 this.__load(url, bundle);
