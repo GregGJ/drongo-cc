@@ -62,6 +62,15 @@ export class DictionaryValue extends BaseValue {
     }
 
     /**
+     * 查询是否存在
+     * @param key 
+     * @returns 
+     */
+    Has(key: string): boolean {
+        return this.map.Has(key);
+    }
+
+    /**
      * 更新属性
      * @param key 
      * @param data 
