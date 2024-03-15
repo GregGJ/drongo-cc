@@ -20,7 +20,7 @@ export class ConfigUtils {
             type = typeList[index];
             switch (type) {
                 case -1://nuil
-                    continue;
+                    break;
                 case 0: //byte
                 case 1://ubyte
                 case 2: //short

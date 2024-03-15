@@ -12,10 +12,10 @@ export class ConfigManagerImpl implements IConfigManager {
     /**
      * 存取器
      */
-    private __accessors: Map<string, IConfigAccessor>;
+    private __accessors: Map<string, new () => IConfigAccessor>;
 
     constructor() {
-        this.__accessors = new Map<string, IConfigAccessor>();
+        this.__accessors = new Map<string, new () => IConfigAccessor>();
     }
 
     /**
@@ -23,17 +23,22 @@ export class ConfigManagerImpl implements IConfigManager {
      * @param sheet 
      * @param accessor
      */
-    Register(sheet: string, accessor: IConfigAccessor): void {
+    Register(sheet: string, accessor: new () => IConfigAccessor): void {
         this.__accessors.set(sheet, accessor);
     }
 
-    _GetAccessor(sheet: string): IConfigAccessor {
+    /**
+     * 获取存取器类
+     * @param sheet 
+     * @returns 
+     */
+    GetAccessorClass(sheet: string): new () => IConfigAccessor {
         if (!this.__accessors.has(sheet)) {
-            return new BaseConfigAccessor();
+            return BaseConfigAccessor;
         }
         return this.__accessors.get(sheet);
     }
-    
+
     /**
      * 获取存取器
      * @param sheet 

@@ -19,21 +19,21 @@ export class ConfigManager {
     static URL2Sheet: (url: ResURL) => string;
 
     /**
-     * 注册存取器
-     * @param sheet 
-     * @param accessors 
-     */
-    static Register(sheet: string, accessors: IConfigAccessor): void {
+      * 注册存取器
+      * @param sheet 
+      * @param accessors 
+      */
+    static Register(sheet: string, accessors: new () => IConfigAccessor): void {
         this.impl.Register(sheet, accessors);
     }
 
     /**
-     * 获取已注册的存取器
+     * 获取存取器类
      * @param sheet 
      * @returns 
      */
-    static _GetAccessor(sheet: string): IConfigAccessor {
-        return this.impl._GetAccessor(sheet);
+    static GetAccessorClass(sheet: string): new () => IConfigAccessor {
+        return this.impl.GetAccessorClass(sheet);
     }
 
     /**

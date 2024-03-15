@@ -21322,9 +21322,14 @@ class ConfigManagerImpl {
     Register(sheet, accessor) {
         this.__accessors.set(sheet, accessor);
     }
-    _GetAccessor(sheet) {
+    /**
+     * 获取存取器类
+     * @param sheet
+     * @returns
+     */
+    GetAccessorClass(sheet) {
         if (!this.__accessors.has(sheet)) {
-            return new BaseConfigAccessor();
+            return BaseConfigAccessor;
         }
         return this.__accessors.get(sheet);
     }
@@ -21349,20 +21354,20 @@ class ConfigManagerImpl {
  */
 class ConfigManager {
     /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
-     */
+      * 注册存取器
+      * @param sheet
+      * @param accessors
+      */
     static Register(sheet, accessors) {
         this.impl.Register(sheet, accessors);
     }
     /**
-     * 获取已注册的存取器
+     * 获取存取器类
      * @param sheet
      * @returns
      */
-    static _GetAccessor(sheet) {
-        return this.impl._GetAccessor(sheet);
+    static GetAccessorClass(sheet) {
+        return this.impl.GetAccessorClass(sheet);
     }
     /**
      * 获取配置存取器
@@ -21419,10 +21424,9 @@ class ConfigStorage {
 }
 
 class MapConfigAccessor extends BaseConfigAccessor {
-    constructor(keys) {
+    constructor() {
         super();
         this.$storages = new Map();
-        this.AddStorage(keys);
     }
     /**
      * 增加存储方式
@@ -22042,7 +22046,7 @@ class ConfigUtils {
             type = typeList[index];
             switch (type) {
                 case -1: //nuil
-                    continue;
+                    break;
                 case 0: //byte
                 case 1: //ubyte
                 case 2: //short
@@ -23311,11 +23315,14 @@ class ConfigLoader extends EventDispatcher {
         }
         //数据数量
         len = byte.ReadUnsignedInt();
-        let data;
         //存取器
-        let accessor = ConfigManager._GetAccessor(sheet);
+        let accessorClass = ConfigManager.GetAccessorClass(sheet);
+        if (accessorClass == null) {
+            Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
+        }
+        let accessor = new accessorClass();
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
-            data = ConfigUtils.ParseConfig(titleList, typeList, byte);
+            const data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             accessor.Save(data);
         }
         return accessor;
@@ -26087,6 +26094,14 @@ class DictionaryValue extends BaseValue {
         result.Off(DEvent.VALUE_CHANGED, this.ChildValueChanged, this);
         result.Off(DEvent.CHILD_VALUE_CHANGED, this.ChildValueChanged, this);
         return result;
+    }
+    /**
+     * 查询是否存在
+     * @param key
+     * @returns
+     */
+    Has(key) {
+        return this.map.Has(key);
     }
     /**
      * 更新属性

@@ -9,6 +9,7 @@ import { ILoader } from "../core/ILoader";
 import { FullURL, ResURL, URL2Key } from "../core/ResURL";
 import { ResManager } from "../res/ResManager";
 import { Resource } from "../res/Resource";
+import { Debuger } from "../../debugers/Debuger";
 
 
 
@@ -80,11 +81,14 @@ export class ConfigLoader extends EventDispatcher implements ILoader {
         }
         //数据数量
         len = byte.ReadUnsignedInt();
-        let data: any;
         //存取器
-        let accessor: IConfigAccessor = ConfigManager._GetAccessor(sheet);
+        let accessorClass: new () => IConfigAccessor = ConfigManager.GetAccessorClass(sheet);
+        if (accessorClass == null) {
+            Debuger.Warn(Debuger.DRONGO, "配置表：" + sheet + "未注册存取器！");
+        }
+        let accessor: IConfigAccessor = new accessorClass();
         for (let dataIndex = 0; dataIndex < len; dataIndex++) {
-            data = ConfigUtils.ParseConfig(titleList, typeList, byte);
+            const data = ConfigUtils.ParseConfig(titleList, typeList, byte);
             accessor.Save(data);
         }
         return accessor;

@@ -3111,17 +3111,17 @@ declare class ConfigManager {
     /**地址转配置表名 */
     static URL2Sheet: (url: ResURL) => string;
     /**
-     * 注册存取器
-     * @param sheet
-     * @param accessors
-     */
-    static Register(sheet: string, accessors: IConfigAccessor): void;
+      * 注册存取器
+      * @param sheet
+      * @param accessors
+      */
+    static Register(sheet: string, accessors: new () => IConfigAccessor): void;
     /**
-     * 获取已注册的存取器
+     * 获取存取器类
      * @param sheet
      * @returns
      */
-    static _GetAccessor(sheet: string): IConfigAccessor;
+    static GetAccessorClass(sheet: string): new () => IConfigAccessor;
     /**
      * 获取配置存取器
      * @param sheet
@@ -3143,12 +3143,12 @@ declare class ConfigStorage {
 
 declare class MapConfigAccessor extends BaseConfigAccessor implements IConfigAccessor {
     protected $storages: Map<string, ConfigStorage>;
-    constructor(keys: Array<string>);
+    constructor();
     /**
      * 增加存储方式
      * @param keys
      */
-    AddStorage(keys: Array<string>): void;
+    protected AddStorage(keys: Array<string>): void;
     Save(value: any): boolean;
     /**
       * 获取
@@ -5771,6 +5771,12 @@ declare class DictionaryValue extends BaseValue {
      * @param key
      */
     RemoveByKey(key: string): IValue;
+    /**
+     * 查询是否存在
+     * @param key
+     * @returns
+     */
+    Has(key: string): boolean;
     /**
      * 更新属性
      * @param key

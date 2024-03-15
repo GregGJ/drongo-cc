@@ -8,17 +8,16 @@ export class MapConfigAccessor extends BaseConfigAccessor implements IConfigAcce
 
     protected $storages: Map<string, ConfigStorage>;
 
-    constructor(keys: Array<string>) {
+    constructor() {
         super();
         this.$storages = new Map<string, ConfigStorage>();
-        this.AddStorage(keys);
     }
 
     /**
      * 增加存储方式
      * @param keys 
      */
-    AddStorage(keys: Array<string>): void {
+    protected AddStorage(keys: Array<string>): void {
         const key = StringUtils.PieceTogether(keys);
         if (this.$storages.has(key)) {
             throw new Error("重复添加配置表存储方式：" + key);
