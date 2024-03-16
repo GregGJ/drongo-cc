@@ -185,6 +185,7 @@ export { BitFlag } from "./drongo/utils/BitFlag"
 export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
+export { Tr as Lang } from "./drongo/utils/Tr"
 export { StringUtils } from "./drongo/utils/StringUtils"
 
 
@@ -209,6 +210,32 @@ export { DictionaryProperty } from "./drongo/models/propertys/DictionaryProperty
 export { ArrayProperty } from "./drongo/models/propertys/ArrayProperty"
 
 export { BaseModel } from "./drongo/models/BaseModel"
+
+
+//导航
+export { DDLSAStar } from "./drongo/navigations/ddls2d/ai/DDLSAStar"
+export { DDLSEntityAI } from "./drongo/navigations/ddls2d/ai/DDLSEntityAI"
+export { DDLSFieldOfView } from "./drongo/navigations/ddls2d/ai/DDLSFieldOfView"
+export { DDLSFunnel } from "./drongo/navigations/ddls2d/ai/DDLSFunnel"
+export { DDLSPathFinder } from "./drongo/navigations/ddls2d/ai/DDLSPathFinder"
+
+export { DDLSGraph } from "./drongo/navigations/ddls2d/data/graph/DDLSGraph"
+export { DDLSGraphEdge } from "./drongo/navigations/ddls2d/data/graph/DDLSGraphEdge"
+export { DDLSGraphNode } from "./drongo/navigations/ddls2d/data/graph/DDLSGraphNode"
+
+
+export { DDLSEdge } from "./drongo/navigations/ddls2d/data/DDLSEdge"
+export { DDLSFace } from "./drongo/navigations/ddls2d/data/DDLSFace"
+export { DDLSMesh } from "./drongo/navigations/ddls2d/data/DDLSMesh"
+export { DDLSObject } from "./drongo/navigations/ddls2d/data/DDLSObject"
+export { DDLSVertex } from "./drongo/navigations/ddls2d/data/DDLSVertex"
+
+export { DDLSRectMeshFactory } from "./drongo/navigations/ddls2d/factories/DDLSRectMeshFactory"
+export { DDLSBitmapObjectFactory } from "./drongo/navigations/ddls2d/factories/DDLSBitmapObjectFactory"
+export { DDLSBitmapMeshFactory } from "./drongo/navigations/ddls2d/factories/DDLSBitmapMeshFactory"
+
+export { Polygon } from "./drongo/navigations/ddls2d/utils/Polygon"
+export { DDLSSimpleView } from "./drongo/navigations/ddls2d/view/DDLSSimpleView"
 
 //框架对外接口
 export { Drongo } from "./drongo"

@@ -8,7 +8,7 @@ import { FSM } from "./FSM";
     export interface IState {
         name: string;
         /**初始化 */
-        Init(content: FSM): void;
+        Init(fsm: FSM): void;
         /**进入 */
         Enter(data?:any): void;
         /**心跳 */

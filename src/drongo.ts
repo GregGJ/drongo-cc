@@ -83,7 +83,7 @@ export class Drongo {
                         const url: ResURL = Key2URL(ref.key);
                         if (typeof url != "string") {
                             //字体
-                            if (url.type == StringUtils.GetClassName(Font) && url.data != undefined) {
+                            if (url.type == Font && url.data != undefined) {
                                 registerFont(url.data, ref.content);
                             }
                         }

@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, Texture2D, gfx } from 'cc';
 
 declare class ByteBuffer {
     stringTable: Array<string>;
@@ -3517,7 +3517,7 @@ declare class Debuger {
 interface IState {
     name: string;
     /**初始化 */
-    Init(content: FSM): void;
+    Init(fsm: FSM): void;
     /**进入 */
     Enter(data?: any): void;
     /**心跳 */
@@ -3631,6 +3631,10 @@ interface IGUIMediator {
      * 是否显示进度条
      */
     showLoadingView: boolean;
+    /**
+     * 显示界面时是否关闭进度条
+     */
+    closeLoadingView: boolean;
     /**初始化完毕 */
     inited: boolean;
     /**
@@ -4129,6 +4133,8 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     configs: Array<string>;
     /**是否显示进度界面 */
     showLoadingView: boolean;
+    /**显示界面时是否关闭进度条*/
+    closeLoadingView: boolean;
     /**根节点 */
     viewComponent: GComponent | null;
     /**遮罩 */
@@ -5471,6 +5477,35 @@ declare class Injector {
     static GetInject(customKey: string): any | null;
 }
 
+declare class Tr {
+    /**
+    * 当前语言
+    */
+    static lang: string;
+    /**
+     * 语言数据
+     */
+    private static langPacks;
+    /**
+     * 初始化
+     * @param langPacks
+     */
+    static init(langPacks: any): void;
+    /**
+     * 转换文字语言
+     */
+    static Traslate(value: string, ...rest: any[]): string;
+    /**
+     * 替换参数
+     * substitute("你好{0},你吃{1}了吗?","蝈蝈","饭")
+     * 返回 你好蝈蝈你吃饭了吗?
+     * @param value
+     * @param rest
+     * @returns
+     */
+    static Substitute(value: string, ...rest: any[]): string;
+}
+
 declare class StringUtils {
     /**
      * 是否为空
@@ -5893,6 +5928,599 @@ declare class BaseModel {
     get uuid(): string;
 }
 
+declare class DDLSConstraintShape {
+    private static INC;
+    private _id;
+    private _segments;
+    constructor();
+    get id(): number;
+    get segments(): Array<DDLSConstraintSegment>;
+    Dispose(): void;
+}
+
+declare class DDLSConstraintSegment {
+    private static INC;
+    private _id;
+    private _edges;
+    private _fromShape;
+    constructor();
+    get id(): number;
+    get fromShape(): DDLSConstraintShape;
+    set fromShape(value: DDLSConstraintShape);
+    AddEdge(edge: DDLSEdge): void;
+    RemoveEdge(edge: DDLSEdge): void;
+    get edges(): Array<DDLSEdge>;
+    Dispose(): void;
+    toString(): String;
+}
+
+declare class DDLSFace {
+    private static INC;
+    private _id;
+    private _isReal;
+    private _edge;
+    colorDebug: number;
+    constructor();
+    get id(): number;
+    get isReal(): boolean;
+    SetDatas(edge: DDLSEdge, isReal?: boolean): void;
+    Dispose(): void;
+    get edge(): DDLSEdge;
+}
+
+declare class DDLSMatrix2D {
+    private _a;
+    private _b;
+    private _c;
+    private _d;
+    private _e;
+    private _f;
+    constructor(a?: number, b?: number, c?: number, d?: number, e?: number, f?: number);
+    Identity(): void;
+    Translate(tx: number, ty: number): void;
+    Scale(sx: number, sy: number): void;
+    Rotate(rad: number): void;
+    Clone(): DDLSMatrix2D;
+    Tranform(point: DDLSPoint2D): void;
+    TransformX(x: number, y: number): number;
+    TransformY(x: number, y: number): number;
+    Concat(matrix: DDLSMatrix2D): void;
+    get a(): number;
+    set a(value: number);
+    get b(): number;
+    set b(value: number);
+    get c(): number;
+    set c(value: number);
+    get d(): number;
+    set d(value: number);
+    get e(): number;
+    set e(value: number);
+    get f(): number;
+    set f(value: number);
+}
+
+declare class DDLSPoint2D {
+    private _x;
+    private _y;
+    constructor(x?: number, y?: number);
+    Transform(matrix: DDLSMatrix2D): void;
+    Set(x: number, y: number): void;
+    Clone(): DDLSPoint2D;
+    Substract(p: DDLSPoint2D): void;
+    get length(): number;
+    get x(): number;
+    set x(value: number);
+    get y(): number;
+    set y(value: number);
+    Normalize(): void;
+    Scale(s: number): void;
+    DistanceTo(p: DDLSPoint2D): number;
+    DistanceSquaredTo(p: DDLSPoint2D): number;
+}
+
+declare class DDLSVertex {
+    private static INC;
+    private _id;
+    private _pos;
+    private _isReal;
+    private _edge;
+    private _fromConstraintSegments;
+    colorDebug: number;
+    constructor();
+    get id(): number;
+    get isReal(): Boolean;
+    get pos(): DDLSPoint2D;
+    get fromConstraintSegments(): Array<DDLSConstraintSegment>;
+    set fromConstraintSegments(value: Array<DDLSConstraintSegment>);
+    SetDatas(edge: DDLSEdge, isReal?: boolean): void;
+    AddFromConstraintSegment(segment: DDLSConstraintSegment): void;
+    RemoveFromConstraintSegment(segment: DDLSConstraintSegment): void;
+    Dispose(): void;
+    get edge(): DDLSEdge;
+    set edge(value: DDLSEdge);
+    toString(): String;
+}
+
+declare class DDLSEdge {
+    private static INC;
+    private _id;
+    private _isReal;
+    private _isConstrained;
+    private _originVertex;
+    private _oppositeEdge;
+    private _nextLeftEdge;
+    private _leftFace;
+    private _fromConstraintSegments;
+    colorDebug: number;
+    constructor();
+    get id(): number;
+    get isReal(): boolean;
+    get isConstrained(): boolean;
+    SetDatas(originVertex: DDLSVertex, oppositeEdge: DDLSEdge, nextLeftEdge: DDLSEdge, leftFace: DDLSFace, isReal?: boolean, isConstrained?: boolean): void;
+    AddFromConstraintSegment(segment: DDLSConstraintSegment): void;
+    RemoveFromConstraintSegment(segment: DDLSConstraintSegment): void;
+    set originVertex(value: DDLSVertex);
+    set nextLeftEdge(value: DDLSEdge);
+    set leftFace(value: DDLSFace);
+    set isConstrained(value: boolean);
+    get fromConstraintSegments(): Array<DDLSConstraintSegment>;
+    set fromConstraintSegments(value: Array<DDLSConstraintSegment>);
+    Dispose(): void;
+    get originVertex(): DDLSVertex;
+    get destinationVertex(): DDLSVertex;
+    get oppositeEdge(): DDLSEdge;
+    get nextLeftEdge(): DDLSEdge;
+    get prevLeftEdge(): DDLSEdge;
+    get nextRightEdge(): DDLSEdge;
+    get prevRightEdge(): DDLSEdge;
+    get rotLeftEdge(): DDLSEdge;
+    get rotRightEdge(): DDLSEdge;
+    get leftFace(): DDLSFace;
+    get rightFace(): DDLSFace;
+    toString(): String;
+}
+
+declare class DDLSObject {
+    private static INC;
+    private _id;
+    private _matrix;
+    private _coordinates;
+    private _constraintShape;
+    private _pivotX;
+    private _pivotY;
+    private _scaleX;
+    private _scaleY;
+    private _rotation;
+    private _x;
+    private _y;
+    private _hasChanged;
+    constructor();
+    get id(): number;
+    Dispose(): void;
+    UpdateValuesFromMatrix(): void;
+    UpdateMatrixFromValues(): void;
+    get pivotX(): number;
+    set pivotX(value: number);
+    get pivotY(): number;
+    set pivotY(value: number);
+    get scaleX(): number;
+    set scaleX(value: number);
+    get scaleY(): number;
+    set scaleY(value: number);
+    get rotation(): number;
+    set rotation(value: number);
+    get x(): number;
+    set x(value: number);
+    get y(): number;
+    set y(value: number);
+    get matrix(): DDLSMatrix2D;
+    set matrix(value: DDLSMatrix2D);
+    get coordinates(): Array<number>;
+    set coordinates(value: Array<number>);
+    get constraintShape(): DDLSConstraintShape;
+    set constraintShape(value: DDLSConstraintShape);
+    get hasChanged(): boolean;
+    set hasChanged(value: boolean);
+    get edges(): Array<DDLSEdge>;
+}
+
+declare class DDLSMesh {
+    private static INC;
+    private _id;
+    private _width;
+    private _height;
+    private _clipping;
+    private _vertices;
+    private _edges;
+    private _faces;
+    private _constraintShapes;
+    private _objects;
+    private __centerVertex;
+    private __edgesToCheck;
+    constructor(width: number, height: number);
+    get height(): number;
+    get width(): number;
+    get clipping(): boolean;
+    set clipping(value: boolean);
+    get id(): number;
+    Dispose(): void;
+    get __vertices(): Array<DDLSVertex>;
+    get __edges(): Array<DDLSEdge>;
+    get __faces(): Array<DDLSFace>;
+    get __constraintShapes(): Array<DDLSConstraintShape>;
+    BuildFromRecord(rec: string): void;
+    InsertObject(object: DDLSObject): void;
+    DeleteObject(object: DDLSObject): void;
+    private __objectsUpdateInProgress;
+    UpdateObjects(): void;
+    InsertConstraintShape(coordinates: Array<number>): DDLSConstraintShape;
+    DeleteConstraintShape(shape: DDLSConstraintShape): void;
+    InsertConstraintSegment(x1: number, y1: number, x2: number, y2: number): DDLSConstraintSegment;
+    private InsertNewConstrainedEdge;
+    DeleteConstraintSegment(segment: DDLSConstraintSegment): void;
+    private Check;
+    InsertVertex(x: number, y: number): DDLSVertex;
+    FlipEdge(edge: DDLSEdge): DDLSEdge;
+    SplitEdge(edge: DDLSEdge, x: number, y: number): DDLSVertex;
+    SplitFace(face: DDLSFace, x: number, y: number): DDLSVertex;
+    RestoreAsDelaunay(): void;
+    DeleteVertex(vertex: DDLSVertex): Boolean;
+    private untriangulate;
+    private Triangulate;
+    Debug(): void;
+}
+
+declare class DDLSAStar {
+    private _mesh;
+    private __closedFaces;
+    private __sortedOpenedFaces;
+    private __openedFaces;
+    private __entryEdges;
+    private __entryX;
+    private __entryY;
+    private __scoreF;
+    private __scoreG;
+    private __scoreH;
+    private __predecessor;
+    private __iterEdge;
+    private _radius;
+    private _radiusSquared;
+    private _diameter;
+    private _diameterSquared;
+    constructor();
+    Dispose(): void;
+    get radius(): number;
+    set radius(value: number);
+    set mesh(value: DDLSMesh);
+    private __fromFace;
+    private __toFace;
+    private __curFace;
+    FindPath(fromX: number, fromY: number, toX: number, toY: number, resultListFaces: Array<DDLSFace>, resultListEdges: Array<DDLSEdge>): void;
+    private sortingFaces;
+    private isWalkableByRadius;
+}
+
+declare class DDLSEntityAI {
+    private static NUM_SEGMENTS;
+    private _radius;
+    private _radiusSquared;
+    private _x;
+    private _y;
+    private _dirNormX;
+    private _dirNormY;
+    private _angleFOV;
+    private _radiusFOV;
+    private _radiusSquaredFOV;
+    private _approximateObject;
+    constructor();
+    BuildApproximation(): void;
+    get approximateObject(): DDLSObject;
+    get radiusFOV(): number;
+    set radiusFOV(value: number);
+    get angleFOV(): number;
+    set angleFOV(value: number);
+    get dirNormY(): number;
+    set dirNormY(value: number);
+    get dirNormX(): number;
+    set dirNormX(value: number);
+    get y(): number;
+    set y(value: number);
+    get x(): number;
+    set x(value: number);
+    get radius(): number;
+    get radiusSquared(): number;
+    set radius(value: number);
+}
+
+declare class DDLSFieldOfView {
+    private _fromEntity;
+    private _mesh;
+    _debug: Graphics;
+    constructor();
+    get fromEntity(): DDLSEntityAI;
+    set fromEntity(value: DDLSEntityAI);
+    set mesh(value: DDLSMesh);
+    IsInField(targetEntity: DDLSEntityAI): Boolean;
+}
+
+declare class DDLSFunnel {
+    private _radius;
+    private _radiusSquared;
+    private _numSamplesCircle;
+    private _sampleCircle;
+    private _sampleCircleDistanceSquared;
+    debugSurface: Graphics;
+    constructor();
+    Dispose(): void;
+    private _poolPointsSize;
+    private _poolPoints;
+    private _currPoolPointsIndex;
+    private __point;
+    GetPoint(x?: number, y?: number): DDLSPoint2D;
+    GetCopyPoint(pointToCopy: DDLSPoint2D): DDLSPoint2D;
+    get radius(): number;
+    set radius(value: number);
+    FindPath(fromX: number, fromY: number, toX: number, toY: number, listFaces: Array<DDLSFace>, listEdges: Array<DDLSEdge>, resultPath: Array<number>): void;
+    private AdjustWithTangents;
+    private CheckAdjustedPath;
+    private SmoothAngle;
+}
+
+declare class DDLSPathFinder {
+    private _mesh;
+    private _astar;
+    private _funnel;
+    private _radius;
+    private __listFaces;
+    private __listEdges;
+    constructor();
+    Dispose(): void;
+    get mesh(): DDLSMesh;
+    set mesh(value: DDLSMesh);
+    FindPath(startX: number, startY: number, toX: number, toY: number, resultPath: Array<number>, radius?: number): void;
+}
+
+declare class DDLSGraphNode {
+    private static INC;
+    private _id;
+    private _prev;
+    private _next;
+    private _outgoingEdge;
+    private _successorNodes;
+    private _data;
+    constructor();
+    get id(): number;
+    Dispose(): void;
+    get prev(): DDLSGraphNode;
+    set prev(value: DDLSGraphNode);
+    get next(): DDLSGraphNode;
+    set next(value: DDLSGraphNode);
+    get outgoingEdge(): DDLSGraphEdge;
+    set outgoingEdge(value: DDLSGraphEdge);
+    get successorNodes(): Map<DDLSGraphNode, DDLSGraphEdge>;
+    set successorNodes(value: Map<DDLSGraphNode, DDLSGraphEdge>);
+    get data(): {
+        index: number;
+        point: DDLSPoint2D;
+    };
+    set data(value: {
+        index: number;
+        point: DDLSPoint2D;
+    });
+}
+
+declare class DDLSGraphEdge {
+    private static INC;
+    private _id;
+    private _prev;
+    private _next;
+    private _rotPrevEdge;
+    private _rotNextEdge;
+    private _oppositeEdge;
+    private _sourceNode;
+    private _destinationNode;
+    private _data;
+    constructor();
+    get id(): number;
+    Dispose(): void;
+    get prev(): DDLSGraphEdge;
+    set prev(value: DDLSGraphEdge);
+    get next(): DDLSGraphEdge;
+    set next(value: DDLSGraphEdge);
+    get rotPrevEdge(): DDLSGraphEdge;
+    set rotPrevEdge(value: DDLSGraphEdge);
+    get rotNextEdge(): DDLSGraphEdge;
+    set rotNextEdge(value: DDLSGraphEdge);
+    get oppositeEdge(): DDLSGraphEdge;
+    set oppositeEdge(value: DDLSGraphEdge);
+    get sourceNode(): DDLSGraphNode;
+    set sourceNode(value: DDLSGraphNode);
+    get destinationNode(): DDLSGraphNode;
+    set destinationNode(value: DDLSGraphNode);
+    get data(): {
+        sumDistancesSquared: number;
+        length: number;
+        nodesCount: number;
+    };
+    set data(value: {
+        sumDistancesSquared: number;
+        length: number;
+        nodesCount: number;
+    });
+}
+
+declare class DDLSGraph {
+    private static INC;
+    private _id;
+    private _node;
+    private _edge;
+    constructor();
+    get id(): number;
+    Dispose(): void;
+    get edge(): DDLSGraphEdge;
+    get node(): DDLSGraphNode;
+    InsertNode(): DDLSGraphNode;
+    DeleteNode(node: DDLSGraphNode): void;
+    InsertEdge(fromNode: DDLSGraphNode, toNode: DDLSGraphNode): DDLSGraphEdge;
+    DeleteEdge(edge: DDLSGraphEdge): void;
+}
+
+declare class DDLSRectMeshFactory {
+    static BuildRectangle(width: number, height: number): DDLSMesh;
+}
+
+/**
+ * RGBA8888二进制纹理
+ */
+declare class RGBA8888Texture extends Texture2D {
+    private bytes;
+    constructor(width: number, height: number);
+    /**
+     * 填充颜色
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @param color
+     */
+    FillRect(x: number, y: number, width: number, height: number, color: number): void;
+    private __fillRect;
+    /**
+     * 通过颜色分量设置
+     * @param r
+     * @param g
+     * @param b
+     * @param a
+     * @param x
+     * @param y
+     */
+    SetPixel(r: number, g: number, b: number, a: number, x: number, y: number): void;
+    /**
+     * 通过单个颜色值设置
+     * @param color
+     * @param x
+     * @param y
+     */
+    SetPixel32(color: number, x: number, y: number): void;
+    GetPixel(x: number, y: number): number;
+    /**
+     * 将纹理绘制到纹理
+     * @param texture
+     * @param sx
+     * @param sy
+     * @param width
+     * @param height
+     * @param tx
+     * @param ty
+     * @param filter
+     * @returns
+     */
+    Draw2Texture(texture: Texture2D, sx: number, sy: number, width: number, height: number, tx: number, ty: number, filter?: gfx.Filter): void;
+    /**
+     * 将二进制数据填充到纹理的指定区域
+     * @param buffer
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     * @returns
+    */
+    CopyBuffersToTexture(buffer: ArrayBufferView, x: number, y: number, width: number, height: number): void;
+}
+
+declare class DDLSBitmapObjectFactory {
+    static buildFromBmpData(bmpData: RGBA8888Texture, scale?: number, debugBmp?: RGBA8888Texture, debugShape?: Graphics): DDLSObject;
+}
+
+declare class DDLSBitmapMeshFactory {
+    static buildFromBmpData(bmpData: RGBA8888Texture, debugBmp?: RGBA8888Texture, debugShape?: Graphics): DDLSMesh;
+}
+
+/** A polygon describes a closed two-dimensional shape bounded by a number of straight
+ *  line segments.
+ *
+ *  <p>The vertices of a polygon form a closed path (i.e. the last vertex will be connected
+ *  to the first). It is recommended to provide the vertices in clockwise order.
+ *  Self-intersecting paths are not supported and will give wrong results on triangulation,
+ *  area calculation, etc.</p>
+ */
+declare class Polygon {
+    _coords: Array<number>;
+    private static sRestIndices;
+    /** Creates a Polygon with the given coordinates.
+     *  @param vertices an array that contains either 'Point' instances or
+     *                  alternating 'x' and 'y' coordinates.
+     */
+    constructor(vertices?: Array<number>);
+    /** Creates a clone of this polygon. */
+    Clone(): Polygon;
+    /** Reverses the order of the vertices. Note that some methods of the Polygon class
+     *  require the vertices in clockwise order. */
+    Reverse(): void;
+    /** Adds vertices to the polygon. Pass either a list of 'Point' instances or alternating
+     *  'x' and 'y' coordinates. */
+    AddVertices(...args: any): void;
+    /** Moves a given vertex to a certain position or adds a new vertex at the end. */
+    SetVertex(index: number, x: number, y: number): void;
+    /** Returns the coordinates of a certain vertex. */
+    GetVertex(index: number, out?: Vec2): Vec2;
+    /** Figures out if the given coordinates lie within the polygon. */
+    Contains(x: number, y: number): Boolean;
+    /** Figures out if the given point lies within the polygon. */
+    ContainsPoint(point: Vec2): Boolean;
+    /** Creates a string that contains the values of all included points. */
+    toString(): string;
+    /** Calculates if the area of the triangle a->b->c is to on the right-hand side of a->b. */
+    private static IsConvexTriangle;
+    /** Finds out if the vector a->b intersects c->d. */
+    private static AreVectorsIntersecting;
+    /** Indicates if the polygon's line segments are not self-intersecting.
+     *  Beware: this is a brute-force implementation with <code>O(n^2)</code>. */
+    get isSimple(): Boolean;
+    /** Indicates if the polygon is convex. In a convex polygon, the vector between any two
+     *  points inside the polygon lies inside it, as well. */
+    get isConvex(): Boolean;
+    /** Calculates the total area of the polygon. */
+    get area(): number;
+    /** Returns the total number of vertices spawning up the polygon. Assigning a value
+     *  that's smaller than the current number of vertices will crop the path; a bigger
+     *  value will fill up the path with zeros. */
+    get numVertices(): number;
+    set numVertices(value: number);
+    /** Returns the number of triangles that will be required when triangulating the polygon. */
+    get numTriangles(): number;
+}
+
+declare class DDLSSimpleView {
+    colorEdges: number;
+    colorConstraints: number;
+    colorVertices: number;
+    colorPaths: number;
+    colorEntities: number;
+    private _edges;
+    private _edgesGraphics;
+    private _constraints;
+    private _constraintsGraphics;
+    private _vertices;
+    private _verticesGraphics;
+    private _paths;
+    private _pathsGraphics;
+    private _entities;
+    private _entitiesGraphics;
+    private _surface;
+    private _surfaceGraphics;
+    private _showVerticesIndices;
+    constructor();
+    get surface(): Node;
+    clean(): void;
+    DrawMesh(mesh: DDLSMesh): void;
+    private GetColor;
+    DrawEntity(entity: DDLSEntityAI, cleanBefore?: boolean): void;
+    DrawEntities(vEntities: Array<DDLSEntityAI>, cleanBefore?: boolean): void;
+    DrawPath(path: Array<number>, cleanBefore?: boolean): void;
+    private VertexIsInsideAABB;
+}
+
 declare class Drongo {
     /**UI资源AssetBundle */
     static UIBundle: string;
@@ -5925,4 +6553,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Tr as Lang, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

@@ -19,6 +19,10 @@ export interface IGUIMediator {
      * 是否显示进度条
      */
     showLoadingView: boolean;
+    /**
+     * 显示界面时是否关闭进度条
+     */
+    closeLoadingView:boolean;
 
     /**初始化完毕 */
     inited: boolean;

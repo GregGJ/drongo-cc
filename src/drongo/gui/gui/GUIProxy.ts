@@ -196,7 +196,7 @@ export class GUIProxy {
         } else {
             this.__addToLayer();
             //进度界面
-            if (this.mediator!.showLoadingView) {
+            if (this.mediator!.showLoadingView && this.mediator!.closeLoadingView) {
                 LoadingView.Hide();
             }
             this.mediator!.Show(this.data);

@@ -27,6 +27,8 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     configs: Array<string>;
     /**是否显示进度界面 */
     showLoadingView: boolean = false;
+    /**显示界面时是否关闭进度条*/
+    closeLoadingView: boolean = true;
 
     /**根节点 */
     viewComponent: GComponent | null = null;
@@ -39,7 +41,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
 
     /**子Mediator(用于代码拆分),记住只能在Init函数中赋值*/
     protected $subMediators: Array<SubGUIMediator>;
-    
+
     /**
      * 播放显示动画
      * @param complete 
@@ -122,7 +124,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     }
 
     Init(): void {
-        
+
     }
 
     Show(data?: any): void {
