@@ -1,5 +1,5 @@
 import { Vec2 } from "cc";
-import { FGUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
 import { ScrollPane } from "./ScrollPane";
@@ -152,6 +152,7 @@ export class GScrollBar extends GComponent {
     }
 
     private onBarTouchBegin(evt: FGUIEvent): void {
+        evt.propagationStopped = true;
         var pt: Vec2 = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
         if (this._vertical) {
             if (pt.y < 0)

@@ -1,5 +1,5 @@
-import { Component, game, Node } from "cc";
-import { ObjectType, PackageItemType } from "./FieldTypes";
+import { Component, director, game, Node } from "cc";
+import { PackageItemType, ObjectType } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GList } from "./GList";
 import { constructingDepth, GObject } from "./GObject";

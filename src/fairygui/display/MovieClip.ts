@@ -1,12 +1,10 @@
 import { Rect, Sprite, SpriteFrame } from "cc";
 import { Image } from "./Image";
-import { PackageItem } from "../PackageItem";
 
 export interface Frame {
     rect: Rect;
     addDelay: number;
     texture: SpriteFrame | null;
-    altasPackageItem: PackageItem;
 }
 
 export class MovieClip extends Image {

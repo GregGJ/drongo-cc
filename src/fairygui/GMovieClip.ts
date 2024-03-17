@@ -1,15 +1,13 @@
-import { Sprite, Color, isValid } from "cc";
+import { Sprite, Color } from "cc";
 import { MovieClip } from "./display/MovieClip";
 import { ObjectPropID } from "./FieldTypes";
 import { GObject } from "./GObject";
 import { PackageItem } from "./PackageItem";
 import { ByteBuffer } from "./utils/ByteBuffer";
-import { UIConfig } from "./UIConfig";
 
 
 export class GMovieClip extends GObject {
     public _content: MovieClip;
-    private _contentPackageItem?: PackageItem;
 
     public constructor() {
         super();
@@ -128,21 +126,6 @@ export class GMovieClip extends GObject {
         }
     }
 
-    private init(contentItem: PackageItem) {
-        if(!isValid(this.node)) {
-            return;
-        }
-
-        this._content.interval = contentItem.interval;
-        this._content.swing = contentItem.swing;
-        this._content.repeatDelay = contentItem.repeatDelay;
-        this._content.frames = contentItem.frames;
-        this._content.smoothing = contentItem.smoothing;
-
-        this._contentPackageItem = contentItem;
-        this._contentPackageItem.addRef();
-    }
-
     public constructFromResource(): void {
         var contentItem: PackageItem = this.packageItem.getBranch();
         this.sourceWidth = contentItem.width;
@@ -153,23 +136,13 @@ export class GMovieClip extends GObject {
         this.setSize(this.sourceWidth, this.sourceHeight);
 
         contentItem = contentItem.getHighResolution();
-        if(!UIConfig.enableDelayLoad || contentItem.__loaded && contentItem.decoded) {
-            contentItem.load();
-            this.init(contentItem);
-        }else{
-            contentItem.loadAsync().then(()=>{
-                this.init(contentItem);
-            });
-        }
-    }
+        contentItem.load();
 
-    protected onDestroy(): void {
-        if (this._contentPackageItem) {
-            this._contentPackageItem.decRef();
-            this._contentPackageItem = null;
-        }
-
-        super.onDestroy();
+        this._content.interval = contentItem.interval;
+        this._content.swing = contentItem.swing;
+        this._content.repeatDelay = contentItem.repeatDelay;
+        this._content.frames = contentItem.frames;
+        this._content.smoothing = contentItem.smoothing;
     }
 
     public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {

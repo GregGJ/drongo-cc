@@ -257,8 +257,8 @@ export class GLoader3D extends GObject {
         this.updateLayout();
     }
 
-    public freeSpine(){
-        if(this._content){
+    public freeSpine() {
+        if (this._content) {
             this._content.destroy();
         }
     }
@@ -277,7 +277,7 @@ export class GLoader3D extends GObject {
         this._content.dragonAtlasAsset = atlasAsset;
         this._content.color = this._color;
 
-        let armatureKey = asset.init(atlasAsset._factory, atlasAsset["_uuid"]);
+        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
         let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
         this._content.armatureName = dragonBonesData.armatureNames[0];
 
@@ -286,20 +286,20 @@ export class GLoader3D extends GObject {
         this.updateLayout();
     }
 
-    public freeDragonBones():void{
-        if(this._content){
+    public freeDragonBones(): void {
+        if (this._content) {
             this._content.destroy();
         }
     }
 
     private onChange(): void {
-        if(this._contentItem == null)
+        if (this._contentItem == null)
             return;
-            
-        if(this._contentItem.type == PackageItemType.Spine){
+
+        if (this._contentItem.type == PackageItemType.Spine) {
             this.onChangeSpine();
         }
-        if(this._contentItem.type == PackageItemType.DragonBones){
+        if (this._contentItem.type == PackageItemType.DragonBones) {
             this.onChangeDragonBones();
         }
     }

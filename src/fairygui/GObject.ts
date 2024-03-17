@@ -1,7 +1,7 @@
-import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3, Constructor } from "cc";
+import { Vec2, Rect, Component, director, Node, UITransform, UIOpacity, Vec3 } from "cc";
 import { Controller } from "./Controller";
 import { BlendMode, BlendModeUtils } from "./display/BlendMode";
-import { FGUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { RelationType, ObjectPropID } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GearAnimation } from "./gears/GearAnimation";
@@ -21,8 +21,8 @@ import { PackageItem } from "./PackageItem";
 import { Relations } from "./Relations";
 import { UIConfig } from "./UIConfig";
 import { ByteBuffer } from "./utils/ByteBuffer";
-import { ResURL } from "../drongo-cc";
 import { TooltipsData } from "./tooltips/TooltipsData";
+import { ResURL } from "../drongo-cc";
 
 export class GObject {
     public data?: any;
@@ -111,7 +111,7 @@ export class GObject {
 
     public set name(value: string) {
         this._name = value;
-        this._node.name = value;
+        this._node.name = value || "";
     }
 
     public get x(): number {
@@ -1149,7 +1149,7 @@ export class GObjectPartner extends Component {
     public _emitDisplayEvents?: boolean;
 
     public callLater(callback: any, delay?: number): void {
-        if (!director.getScheduler().isScheduled(callback, this))
+        if (!director.getScheduler().isScheduled(callback, <any>this))
             this.scheduleOnce(callback, delay);
     }
 

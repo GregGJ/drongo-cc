@@ -1,4 +1,4 @@
-import { FGUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { RelationType } from "./FieldTypes";
 import { GObject } from "./GObject";
 

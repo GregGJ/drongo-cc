@@ -1,4 +1,4 @@
-import { gfx, UIRenderer, Event, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, isValid, Size, screen, view, assetManager, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, LabelOutline, LabelShadow, InstanceMaterialType, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset, color } from 'cc';
+import { gfx, UIRenderer, Event, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, screen, view, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, assetManager, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, isValid, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset, color } from 'cc';
 import { EDITOR } from 'cc/env';
 
 var ButtonMode;
@@ -915,9 +915,6 @@ class GTweener {
         this._value = new TweenValue();
         this._deltaValue = new TweenValue();
         this._reset();
-    }
-    get elapsedTime() {
-        return this._elapsedTime;
     }
     setDelay(value) {
         this._delay = value;
@@ -2484,9 +2481,6 @@ UIConfig.frameTimeForAsyncUIConstruction = 0.002;
 UIConfig.linkUnderline = true;
 //Default group name of UI node.<br/>
 UIConfig.defaultUILayer = Layers.Enum.UI_2D;
-UIConfig.enableDelayLoad = true;
-// 
-UIConfig.autoReleaseAssets = false;
 let _fontRegistry = {};
 function registerFont(name, font, bundle) {
     if (font instanceof Font)
@@ -2548,7 +2542,7 @@ class GObject {
     }
     set name(value) {
         this._name = value;
-        this._node.name = value;
+        this._node.name = value || "";
     }
     get x() {
         return this._x;
@@ -4024,7 +4018,7 @@ class GGraph extends GObject {
     }
 }
 
-class Image extends Sprite {
+let Image$1 = class Image extends Sprite {
     constructor() {
         super();
         this._flip = FlipType.None;
@@ -4057,24 +4051,18 @@ class Image extends Sprite {
         if (this._fillMethod != value) {
             this._fillMethod = value;
             if (this._fillMethod != 0) {
-                this.updateFillType();
+                this.type = Sprite.Type.FILLED;
+                if (this._fillMethod <= 3)
+                    this.fillType = this._fillMethod - 1;
+                else
+                    this.fillType = Sprite.FillType.RADIAL;
+                this.fillCenter = new Vec2(0.5, 0.5);
                 this.setupFill();
             }
             else {
                 this.type = Sprite.Type.SIMPLE;
             }
         }
-    }
-    updateFillType() {
-        if (!this.spriteFrame) {
-            return;
-        }
-        this.type = Sprite.Type.FILLED;
-        if (this._fillMethod <= 3)
-            this.fillType = this._fillMethod - 1;
-        else
-            this.fillType = Sprite.FillType.RADIAL;
-        this.fillCenter = new Vec2(0.5, 0.5);
     }
     get fillOrigin() {
         return this._fillOrigin;
@@ -4103,30 +4091,14 @@ class Image extends Sprite {
         if (this._fillAmount != value) {
             this._fillAmount = value;
             if (this._fillMethod != 0) {
-                this.updateFillRange();
+                if (this._fillClockwise)
+                    this.fillRange = -this._fillAmount;
+                else
+                    this.fillRange = this._fillAmount;
             }
         }
     }
-    updateFillRange() {
-        if (!this.spriteFrame) {
-            return;
-        }
-        if (this._fillClockwise)
-            this.fillRange = -this._fillAmount;
-        else
-            this.fillRange = this._fillAmount;
-    }
-    __update() {
-        if (this._fillMethod != 0) {
-            this.updateFillType();
-            this.setupFill();
-            this.updateFillRange();
-        }
-    }
     setupFill() {
-        if (!this.spriteFrame) {
-            return;
-        }
         if (this._fillMethod == FillMethod.Horizontal) {
             this._fillClockwise = this._fillOrigin == FillOrigin.Right || this._fillOrigin == FillOrigin.Bottom;
             this.fillStart = this._fillClockwise ? 1 : 0;
@@ -4152,14 +4124,14 @@ class Image extends Sprite {
             }
         }
     }
-}
+};
 
 class GImage extends GObject {
     constructor() {
         super();
         this._node.name = "GImage";
         this._touchDisabled = true;
-        this._content = this._node.addComponent(Image);
+        this._content = this._node.addComponent(Image$1);
         this._content.sizeMode = Sprite.SizeMode.CUSTOM;
         this._content.trim = false;
     }
@@ -4200,19 +4172,6 @@ class GImage extends GObject {
     set fillAmount(value) {
         this._content.fillAmount = value;
     }
-    init(contentItem) {
-        if (!isValid(this.node)) {
-            return;
-        }
-        this._content.spriteFrame = contentItem.asset;
-        this._content.__update();
-        this._contentPackageItem = contentItem;
-        this._contentPackageItem.addRef();
-        if (this.onReady) {
-            this.onReady();
-            this.onReady = null;
-        }
-    }
     constructFromResource() {
         var contentItem = this.packageItem.getBranch();
         this.sourceWidth = contentItem.width;
@@ -4221,26 +4180,12 @@ class GImage extends GObject {
         this.initHeight = this.sourceHeight;
         this.setSize(this.sourceWidth, this.sourceHeight);
         contentItem = contentItem.getHighResolution();
+        contentItem.load();
         if (contentItem.scale9Grid)
             this._content.type = Sprite.Type.SLICED;
         else if (contentItem.scaleByTile)
             this._content.type = Sprite.Type.TILED;
-        if (!UIConfig.enableDelayLoad || contentItem.__loaded && contentItem.decoded) {
-            contentItem.load();
-            this.init(contentItem);
-        }
-        else {
-            contentItem.loadAsync().then(() => {
-                this.init(contentItem);
-            });
-        }
-    }
-    dispose() {
-        if (this._contentPackageItem) {
-            this._contentPackageItem.decRef();
-            this._contentPackageItem = null;
-        }
-        super.dispose();
+        this._content.spriteFrame = contentItem.asset;
     }
     handleGrayedChanged() {
         this._content.grayscale = this._grayed;
@@ -4272,7 +4217,7 @@ class GImage extends GObject {
     }
 }
 
-class MovieClip extends Image {
+class MovieClip extends Image$1 {
     constructor() {
         super();
         this.interval = 0;
@@ -4604,18 +4549,6 @@ class GMovieClip extends GObject {
                 break;
         }
     }
-    init(contentItem) {
-        if (!isValid(this.node)) {
-            return;
-        }
-        this._content.interval = contentItem.interval;
-        this._content.swing = contentItem.swing;
-        this._content.repeatDelay = contentItem.repeatDelay;
-        this._content.frames = contentItem.frames;
-        this._content.smoothing = contentItem.smoothing;
-        this._contentPackageItem = contentItem;
-        this._contentPackageItem.addRef();
-    }
     constructFromResource() {
         var contentItem = this.packageItem.getBranch();
         this.sourceWidth = contentItem.width;
@@ -4624,22 +4557,12 @@ class GMovieClip extends GObject {
         this.initHeight = this.sourceHeight;
         this.setSize(this.sourceWidth, this.sourceHeight);
         contentItem = contentItem.getHighResolution();
-        if (!UIConfig.enableDelayLoad || contentItem.__loaded && contentItem.decoded) {
-            contentItem.load();
-            this.init(contentItem);
-        }
-        else {
-            contentItem.loadAsync().then(() => {
-                this.init(contentItem);
-            });
-        }
-    }
-    onDestroy() {
-        if (this._contentPackageItem) {
-            this._contentPackageItem.decRef();
-            this._contentPackageItem = null;
-        }
-        super.onDestroy();
+        contentItem.load();
+        this._content.interval = contentItem.interval;
+        this._content.swing = contentItem.swing;
+        this._content.repeatDelay = contentItem.repeatDelay;
+        this._content.frames = contentItem.frames;
+        this._content.smoothing = contentItem.smoothing;
     }
     setup_beforeAdd(buffer, beginPos) {
         super.setup_beforeAdd(buffer, beginPos);
@@ -4652,37 +4575,44 @@ class GMovieClip extends GObject {
     }
 }
 
-/******************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol */
-
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+class PixelHitTest {
+    constructor(data, offsetX, offsetY) {
+        this._data = data;
+        this.offsetX = offsetX == undefined ? 0 : offsetX;
+        this.offsetY = offsetY == undefined ? 0 : offsetY;
+        this.scaleX = 1;
+        this.scaleY = 1;
+    }
+    hitTest(pt) {
+        let x = Math.floor((pt.x / this.scaleX - this.offsetX) * this._data.scale);
+        let y = Math.floor((pt.y / this.scaleY - this.offsetY) * this._data.scale);
+        if (x < 0 || y < 0 || x >= this._data.pixelWidth)
+            return false;
+        var pos = y * this._data.pixelWidth + x;
+        var pos2 = Math.floor(pos / 8);
+        var pos3 = pos % 8;
+        if (pos2 >= 0 && pos2 < this._data.pixels.length)
+            return ((this._data.pixels[pos2] >> pos3) & 0x1) == 1;
+        else
+            return false;
+    }
 }
-
-typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
-    var e = new Error(message);
-    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
-};
+class PixelHitTestData {
+    constructor(ba) {
+        ba.readInt();
+        this.pixelWidth = ba.readInt();
+        this.scale = 1 / ba.readByte();
+        this.pixels = ba.readBuffer().data;
+    }
+}
+class ChildHitArea {
+    constructor(child) {
+        this._child = child;
+    }
+    hitTest(pt, globalPt) {
+        return this._child.hitTest(globalPt, false) != null;
+    }
+}
 
 class UIContentScaler {
 }
@@ -4706,45 +4636,13 @@ function updateScaler() {
         UIContentScaler.scaleLevel = 0;
 }
 
-class RefMannager {
-    static deleteItem(item) {
-        this._deletes.push(item);
-    }
-    static update(dt) {
-        if (this._deletes.length == 0) {
-            return;
-        }
-        this._timer += dt;
-        if (this._timer >= 5) {
-            this._timer = 0;
-            for (let i = this._deletes.length - 1; i >= 0; i--) {
-                let item = this._deletes[i];
-                if (item.ref <= 0) {
-                    this._deletes.splice(i, 1);
-                    item.doRelease();
-                }
-            }
-        }
-    }
-}
-RefMannager._timer = 0;
-RefMannager._deletes = [];
-
 class PackageItem {
-    get ref() {
-        return this._ref;
-    }
     constructor() {
         this.width = 0;
         this.height = 0;
-        this.__loaded = false;
-        this._ref = 0;
     }
     load() {
         return this.owner.getItemAsset(this);
-    }
-    loadAsync() {
-        return this.owner.getItemAssetAsync2(this);
     }
     getBranch() {
         if (this.branches && this.owner._branchIndex != -1) {
@@ -4765,86 +4663,6 @@ class PackageItem {
     toString() {
         return this.name;
     }
-    addRef() {
-        var _a, _b;
-        this._ref++;
-        (_a = this.parent) === null || _a === void 0 ? void 0 : _a.addRef();
-        (_b = this.asset) === null || _b === void 0 ? void 0 : _b.addRef();
-        switch (this.type) {
-            case PackageItemType.MovieClip:
-                if (this.frames) {
-                    for (var i = 0; i < this.frames.length; i++) {
-                        var frame = this.frames[i];
-                        if (frame.texture) {
-                            frame.texture.addRef();
-                        }
-                        if (frame.altasPackageItem) {
-                            frame.altasPackageItem.addRef();
-                        }
-                    }
-                }
-                break;
-        }
-    }
-    doRelease() {
-        switch (this.type) {
-            case PackageItemType.MovieClip:
-                if (this.frames) {
-                    for (var i = 0; i < this.frames.length; i++) {
-                        var frame = this.frames[i];
-                        if (frame.texture) {
-                            frame.texture.decRef(true);
-                            if (UIConfig.autoReleaseAssets) {
-                                if (frame.texture.refCount == 0) {
-                                    assetManager.releaseAsset(frame.texture);
-                                }
-                            }
-                        }
-                        if (frame.altasPackageItem) {
-                            frame.altasPackageItem.decRef();
-                        }
-                    }
-                }
-                break;
-        }
-        if (UIConfig.autoReleaseAssets) {
-            if (this.asset && this.asset.refCount == 0) {
-                assetManager.releaseAsset(this.asset);
-            }
-            if (this._ref == 0) {
-                this.__loaded = false;
-                this.decoded = false;
-                this.frames = null;
-                this.asset = null;
-                this.parent = null;
-            }
-        }
-    }
-    decRef() {
-        var _a, _b;
-        if (this._ref > 0) {
-            this._ref--;
-        }
-        else {
-            return;
-        }
-        (_a = this.parent) === null || _a === void 0 ? void 0 : _a.decRef();
-        (_b = this.asset) === null || _b === void 0 ? void 0 : _b.decRef(false);
-        if (this._ref <= 0) {
-            RefMannager.deleteItem(this);
-        }
-    }
-    dispose(force = false) {
-        if (this.asset) {
-            if (force) {
-                assetManager.releaseAsset(this.asset);
-            }
-            else {
-                this.asset.decRef(true);
-            }
-            this.asset = null;
-        }
-    }
 }
 
 class TranslationHelper {
@@ -4862,8 +4680,8 @@ class TranslationHelper {
                 var i = key.indexOf("-");
                 if (i == -1)
                     continue;
-                var key2 = key.substr(0, i);
-                var key3 = key.substr(i + 1);
+                var key2 = key.substring(0, i);
+                var key3 = key.substring(i + 1);
                 var col = strings[key2];
                 if (!col) {
                     col = {};
@@ -5065,7 +4883,7 @@ class ByteBuffer {
     }
     set position(value) {
         if (value > this._length)
-            throw "Out of bounds";
+            throw new Error("Out of bounds");
         this._pos = value;
     }
     skip(count) {
@@ -5073,7 +4891,7 @@ class ByteBuffer {
     }
     validate(forward) {
         if (this._pos + forward > this._length)
-            throw "Out of bounds";
+            throw new Error("Out of bounds");
     }
     readByte() {
         this.validate(1);
@@ -5213,45 +5031,6 @@ class ByteBuffer {
     }
 }
 
-class PixelHitTest {
-    constructor(data, offsetX, offsetY) {
-        this._data = data;
-        this.offsetX = offsetX == undefined ? 0 : offsetX;
-        this.offsetY = offsetY == undefined ? 0 : offsetY;
-        this.scaleX = 1;
-        this.scaleY = 1;
-    }
-    hitTest(pt) {
-        let x = Math.floor((pt.x / this.scaleX - this.offsetX) * this._data.scale);
-        let y = Math.floor((pt.y / this.scaleY - this.offsetY) * this._data.scale);
-        if (x < 0 || y < 0 || x >= this._data.pixelWidth)
-            return false;
-        var pos = y * this._data.pixelWidth + x;
-        var pos2 = Math.floor(pos / 8);
-        var pos3 = pos % 8;
-        if (pos2 >= 0 && pos2 < this._data.pixels.length)
-            return ((this._data.pixels[pos2] >> pos3) & 0x1) == 1;
-        else
-            return false;
-    }
-}
-class PixelHitTestData {
-    constructor(ba) {
-        ba.readInt();
-        this.pixelWidth = ba.readInt();
-        this.scale = 1 / ba.readByte();
-        this.pixels = ba.readBuffer().data;
-    }
-}
-class ChildHitArea {
-    constructor(child) {
-        this._child = child;
-    }
-    hitTest(pt, globalPt) {
-        return this._child.hitTest(globalPt, false) != null;
-    }
-}
-
 var PathUtils = path;
 class UIPackage {
     constructor() {
@@ -5297,14 +5076,13 @@ class UIPackage {
             return pkg;
         let asset = resources.get(path, BufferAsset);
         if (!asset)
-            throw "Resource '" + path + "' not ready";
+            throw new Error("Resource '" + path + "' not ready");
         const buffer = asset.buffer();
         if (!buffer)
-            throw "Missing asset data.";
+            throw new Error("Missing asset data.");
         pkg = new UIPackage();
         pkg._bundle = resources;
         pkg.loadPackage(new ByteBuffer(buffer), path);
-        assetManager.releaseAsset(asset);
         _instById[pkg.id] = pkg;
         _instByName[pkg.name] = pkg;
         _instById[pkg._path] = pkg;
@@ -5315,16 +5093,10 @@ class UIPackage {
         let onProgress;
         let onComplete;
         let bundle;
-        let delayLoad = UIConfig.enableDelayLoad;
         if (args[0] instanceof AssetManager.Bundle) {
             bundle = args[0];
             path = args[1];
-            if (args.length > 4) {
-                onProgress = args[2];
-                onComplete = args[3];
-                delayLoad = args[4];
-            }
-            else if (args.length > 3) {
+            if (args.length > 3) {
                 onProgress = args[2];
                 onComplete = args[3];
             }
@@ -5333,22 +5105,12 @@ class UIPackage {
         }
         else {
             path = args[0];
-            if (args.length > 3) {
-                onProgress = args[1];
-                onComplete = args[2];
-                delayLoad = args[3];
-            }
-            else if (args.length > 2) {
+            if (args.length > 2) {
                 onProgress = args[1];
                 onComplete = args[2];
             }
             else
                 onComplete = args[1];
-        }
-        let p = _instById[path];
-        if (p) {
-            onComplete === null || onComplete === void 0 ? void 0 : onComplete.call(this, null, p);
-            return;
         }
         bundle = bundle || resources;
         bundle.load(path, Asset, onProgress, (err, asset) => {
@@ -5361,12 +5123,11 @@ class UIPackage {
             pkg._bundle = bundle;
             let buffer = asset.buffer ? asset.buffer() : asset._nativeAsset;
             pkg.loadPackage(new ByteBuffer(buffer), path);
-            assetManager.releaseAsset(asset);
             let cnt = pkg._items.length;
             let urls = [];
             for (var i = 0; i < cnt; i++) {
                 var pi = pkg._items[i];
-                if (pi.type == PackageItemType.Atlas && !delayLoad || pi.type == PackageItemType.Sound) {
+                if (pi.type == PackageItemType.Atlas || pi.type == PackageItemType.Sound) {
                     ItemTypeToAssetType[pi.type];
                     urls.push(pi.file);
                 }
@@ -5395,13 +5156,13 @@ class UIPackage {
                 taskComplete(null);
         });
     }
-    static removePackage(packageIdOrName, disposeAll = false) {
+    static removePackage(packageIdOrName) {
         var pkg = _instById[packageIdOrName];
         if (!pkg)
             pkg = _instByName[packageIdOrName];
         if (!pkg)
-            throw "No package found: " + packageIdOrName;
-        pkg.dispose(disposeAll);
+            throw new Error("No package found: " + packageIdOrName);
+        pkg.dispose();
         delete _instById[pkg.id];
         delete _instByName[pkg.name];
         if (pkg._path)
@@ -5437,19 +5198,19 @@ class UIPackage {
         var pos2 = url.indexOf("/", pos1 + 2);
         if (pos2 == -1) {
             if (url.length > 13) {
-                var pkgId = url.substr(5, 8);
+                var pkgId = url.substring(5, 13);
                 var pkg = UIPackage.getById(pkgId);
                 if (pkg != null) {
-                    var srcId = url.substr(13);
+                    var srcId = url.substring(13);
                     return pkg.getItemById(srcId);
                 }
             }
         }
         else {
-            var pkgName = url.substr(pos1 + 2, pos2 - pos1 - 2);
+            var pkgName = url.substring(pos1 + 2, pos2);
             pkg = UIPackage.getByName(pkgName);
             if (pkg != null) {
-                var srcName = url.substr(pos2 + 1);
+                var srcName = url.substring(pos2 + 1);
                 return pkg.getItemByName(srcName);
             }
         }
@@ -5464,8 +5225,8 @@ class UIPackage {
         var pos2 = url.indexOf("/", pos1 + 2);
         if (pos2 == -1)
             return url;
-        var pkgName = url.substr(pos1 + 2, pos2 - pos1 - 2);
-        var srcName = url.substr(pos2 + 1);
+        var pkgName = url.substring(pos1 + 2, pos2);
+        var srcName = url.substring(pos2 + 1);
         return UIPackage.getItemURL(pkgName, srcName);
     }
     static setStringsSource(source) {
@@ -5473,7 +5234,7 @@ class UIPackage {
     }
     loadPackage(buffer, path) {
         if (buffer.readUint() != 0x46475549)
-            throw "FairyGUI: old package format found in '" + path + "'";
+            throw new Error("FairyGUI: old package format found in '" + path + "'");
         this._path = path;
         buffer.version = buffer.readInt();
         var ver2 = buffer.version >= 2;
@@ -5517,7 +5278,7 @@ class UIPackage {
         buffer.seek(indexTablePos, 1);
         var pi;
         let pos = path.lastIndexOf('/');
-        let shortPath = pos == -1 ? "" : path.substr(0, pos + 1);
+        let shortPath = pos == -1 ? "" : path.substring(0, pos + 1);
         path = path + "_";
         cnt = buffer.readShort();
         for (i = 0; i < cnt; i++) {
@@ -5651,11 +5412,12 @@ class UIPackage {
             }
         }
     }
-    dispose(force = false) {
+    dispose() {
         var cnt = this._items.length;
         for (var i = 0; i < cnt; i++) {
             var pi = this._items[i];
-            pi.dispose(force);
+            if (pi.asset)
+                assetManager.releaseAsset(pi.asset);
         }
     }
     get id() {
@@ -5695,7 +5457,7 @@ class UIPackage {
     getItemAssetByName(resName) {
         var pi = this._itemsByName[resName];
         if (pi == null) {
-            throw "Resource not found -" + resName;
+            throw new Error("Resource not found -" + resName);
         }
         return this.getItemAsset(pi);
     }
@@ -5706,7 +5468,6 @@ class UIPackage {
                     item.decoded = true;
                     var sprite = this._sprites[item.id];
                     if (sprite) {
-                        item.parent = sprite.atlas;
                         let atlasTexture = this.getItemAsset(sprite.atlas);
                         if (atlasTexture) {
                             let sf = new SpriteFrame();
@@ -5723,9 +5484,6 @@ class UIPackage {
                             }
                             item.asset = sf;
                         }
-                    }
-                    if (!UIConfig.autoReleaseAssets) {
-                        item.addRef();
                     }
                 }
                 break;
@@ -5749,140 +5507,22 @@ class UIPackage {
                     else {
                         item.asset = item.asset;
                     }
-                    if (!UIConfig.autoReleaseAssets || item.type == PackageItemType.Sound) {
-                        item.addRef();
-                    }
                 }
                 break;
             case PackageItemType.Font:
                 if (!item.decoded) {
                     item.decoded = true;
                     this.loadFont(item);
-                    item.addRef();
                 }
                 break;
             case PackageItemType.MovieClip:
                 if (!item.decoded) {
                     item.decoded = true;
                     this.loadMovieClip(item);
-                    if (!UIConfig.autoReleaseAssets) {
-                        item.addRef();
-                    }
                 }
                 break;
         }
         return item.asset;
-    }
-    loadAssetAsync(bundle, path, type) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                bundle.load(path, type, null, (err, asset) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(asset);
-                });
-            });
-        });
-    }
-    getItemAssetAsync2(item) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (item.__loaded) {
-                return item.asset;
-            }
-            switch (item.type) {
-                case PackageItemType.Image:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        var sprite = this._sprites[item.id];
-                        if (sprite) {
-                            item.parent = sprite.atlas;
-                            let atlasTexture = yield this.getItemAssetAsync2(sprite.atlas);
-                            if (atlasTexture) {
-                                let sf = new SpriteFrame();
-                                sf.texture = atlasTexture;
-                                sf.rect = sprite.rect;
-                                sf.rotated = sprite.rotated;
-                                sf.offset = new Vec2(sprite.offset.x - (sprite.originalSize.width - sprite.rect.width) / 2, -(sprite.offset.y - (sprite.originalSize.height - sprite.rect.height) / 2));
-                                sf.originalSize = sprite.originalSize;
-                                if (item.scale9Grid) {
-                                    sf.insetLeft = item.scale9Grid.x;
-                                    sf.insetTop = item.scale9Grid.y;
-                                    sf.insetRight = item.width - item.scale9Grid.xMax;
-                                    sf.insetBottom = item.height - item.scale9Grid.yMax;
-                                }
-                                item.asset = sf;
-                            }
-                        }
-                        item.__loaded = true;
-                        if (!UIConfig.autoReleaseAssets) {
-                            item.addRef();
-                        }
-                    }
-                    break;
-                case PackageItemType.Atlas:
-                case PackageItemType.Sound:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        item.asset = (yield this.loadAssetAsync(this._bundle, item.file, ItemTypeToAssetType[item.type]));
-                        if (!item.asset)
-                            console.log("Resource '" + item.file + "' not found");
-                        else if (item.type == PackageItemType.Atlas) {
-                            const asset = item.asset;
-                            let tex = asset['_texture'];
-                            if (!tex) {
-                                tex = new Texture2D();
-                                tex.name = asset.nativeUrl;
-                                tex.image = asset;
-                            }
-                            item.asset = tex;
-                        }
-                        else {
-                            item.asset = item.asset;
-                        }
-                        if (!UIConfig.autoReleaseAssets || item.type == PackageItemType.Sound) {
-                            item.addRef();
-                        }
-                        item.__loaded = true;
-                    }
-                    break;
-                case PackageItemType.Font:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        yield this.loadFontAsync(item);
-                        if (!UIConfig.autoReleaseAssets) {
-                            item.addRef();
-                        }
-                        item.__loaded = true;
-                    }
-                    break;
-                case PackageItemType.MovieClip:
-                    if (!item.decoded) {
-                        item.decoded = true;
-                        yield this.loadMovieClipAsync(item);
-                        item.__loaded = true;
-                        if (!UIConfig.autoReleaseAssets) {
-                            item.addRef();
-                        }
-                    }
-                    break;
-            }
-            let check = (done) => {
-                if (!item.__loaded) {
-                    setTimeout(() => {
-                        check(done);
-                    }, 10, this);
-                }
-                else {
-                    done(true);
-                }
-            };
-            yield new Promise((resolve, reject) => {
-                check(resolve);
-            });
-            return item.asset;
-        });
     }
     getItemAssetAsync(item, onComplete) {
         if (item.decoded) {
@@ -5915,49 +5555,6 @@ class UIPackage {
             this.getItemAsset(pi);
         }
     }
-    loadMovieClipAsync(item) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var buffer = item.rawData;
-            buffer.seek(0, 0);
-            item.interval = buffer.readInt() / 1000;
-            item.swing = buffer.readBool();
-            item.repeatDelay = buffer.readInt() / 1000;
-            buffer.seek(0, 1);
-            var frameCount = buffer.readShort();
-            item.frames = [];
-            var spriteId;
-            var sprite;
-            for (var i = 0; i < frameCount; i++) {
-                var nextPos = buffer.readShort();
-                nextPos += buffer.position;
-                let rect = new Rect$1();
-                rect.x = buffer.readInt();
-                rect.y = buffer.readInt();
-                rect.width = buffer.readInt();
-                rect.height = buffer.readInt();
-                let addDelay = buffer.readInt() / 1000;
-                let frame = { rect: rect, addDelay: addDelay, texture: null, altasPackageItem: null };
-                spriteId = buffer.readS();
-                if (spriteId != null && (sprite = this._sprites[spriteId]) != null) {
-                    let atlasTexture = null;
-                    atlasTexture = (yield this.getItemAssetAsync2(sprite.atlas));
-                    frame.altasPackageItem = sprite.atlas;
-                    if (atlasTexture) {
-                        item.width / frame.rect.width;
-                        let sf = new SpriteFrame();
-                        sf.texture = atlasTexture;
-                        sf.rect = sprite.rect;
-                        sf.rotated = sprite.rotated;
-                        sf.offset = new Vec2(frame.rect.x - (item.width - frame.rect.width) / 2, -(frame.rect.y - (item.height - frame.rect.height) / 2));
-                        sf.originalSize = new Size(item.width, item.height);
-                        frame.texture = sf;
-                    }
-                }
-                item.frames.push(frame);
-                buffer.position = nextPos;
-            }
-        });
-    }
     loadMovieClip(item) {
         var buffer = item.rawData;
         buffer.seek(0, 0);
@@ -5978,11 +5575,10 @@ class UIPackage {
             rect.width = buffer.readInt();
             rect.height = buffer.readInt();
             let addDelay = buffer.readInt() / 1000;
-            let frame = { rect: rect, addDelay: addDelay, texture: null, altasPackageItem: null };
+            let frame = { rect: rect, addDelay: addDelay, texture: null };
             spriteId = buffer.readS();
             if (spriteId != null && (sprite = this._sprites[spriteId]) != null) {
                 let atlasTexture = this.getItemAsset(sprite.atlas);
-                frame.altasPackageItem = sprite.atlas;
                 if (atlasTexture) {
                     item.width / frame.rect.width;
                     let sf = new SpriteFrame();
@@ -6054,14 +5650,15 @@ class UIPackage {
             else {
                 let sprite = this._sprites[img];
                 if (sprite) {
-                    if (!mainSprite) {
-                        mainSprite = sprite;
-                    }
                     rect.set(sprite.rect);
                     bg.xOffset += sprite.offset.x;
                     bg.yOffset += sprite.offset.y;
                     if (fontSize == 0)
                         fontSize = sprite.originalSize.height;
+                    if (!mainTexture) {
+                        sprite.atlas.load();
+                        mainTexture = sprite.atlas.asset;
+                    }
                 }
                 if (bg.xAdvance == 0) {
                     if (xadvance == 0)
@@ -6077,107 +5674,10 @@ class UIPackage {
         font.fntConfig.commonHeight = lineHeight == 0 ? fontSize : lineHeight;
         font.fntConfig.resizable = resizable;
         font.fntConfig.canTint = canTint;
-        if (!mainTexture && mainSprite) {
-            mainSprite.atlas.load();
-            mainTexture = mainSprite.atlas.asset;
-        }
         let spriteFrame = new SpriteFrame();
         spriteFrame.texture = mainTexture;
         font.spriteFrame = spriteFrame;
         font.onLoaded();
-    }
-    loadFontAsync(item) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var font = new BitmapFont();
-            item.asset = font;
-            font.fntConfig = {
-                commonHeight: 0,
-                fontSize: 0,
-                kerningDict: {},
-                fontDefDictionary: {}
-            };
-            let dict = font.fntConfig.fontDefDictionary;
-            var buffer = item.rawData;
-            buffer.seek(0, 0);
-            let ttf = buffer.readBool();
-            let canTint = buffer.readBool();
-            let resizable = buffer.readBool();
-            buffer.readBool(); //has channel
-            let fontSize = buffer.readInt();
-            var xadvance = buffer.readInt();
-            var lineHeight = buffer.readInt();
-            let mainTexture;
-            var mainSprite = this._sprites[item.id];
-            if (mainSprite)
-                mainTexture = (this.getItemAsset(mainSprite.atlas));
-            buffer.seek(0, 1);
-            var bg;
-            var cnt = buffer.readInt();
-            for (var i = 0; i < cnt; i++) {
-                var nextPos = buffer.readShort();
-                nextPos += buffer.position;
-                bg = {};
-                var ch = buffer.readUshort();
-                dict[ch] = bg;
-                let rect = new Rect$1();
-                bg.rect = rect;
-                var img = buffer.readS();
-                rect.x = buffer.readInt();
-                rect.y = buffer.readInt();
-                bg.xOffset = buffer.readInt();
-                bg.yOffset = buffer.readInt();
-                rect.width = buffer.readInt();
-                rect.height = buffer.readInt();
-                bg.xAdvance = buffer.readInt();
-                bg.channel = buffer.readByte();
-                if (bg.channel == 1)
-                    bg.channel = 3;
-                else if (bg.channel == 2)
-                    bg.channel = 2;
-                else if (bg.channel == 3)
-                    bg.channel = 1;
-                if (ttf) {
-                    rect.x += mainSprite.rect.x;
-                    rect.y += mainSprite.rect.y;
-                }
-                else {
-                    let sprite = this._sprites[img];
-                    if (sprite) {
-                        if (!mainSprite) {
-                            mainSprite = sprite;
-                        }
-                        rect.set(sprite.rect);
-                        bg.xOffset += sprite.offset.x;
-                        bg.yOffset += sprite.offset.y;
-                        if (fontSize == 0)
-                            fontSize = sprite.originalSize.height;
-                    }
-                    if (bg.xAdvance == 0) {
-                        if (xadvance == 0)
-                            bg.xAdvance = bg.xOffset + bg.rect.width;
-                        else
-                            bg.xAdvance = xadvance;
-                    }
-                }
-                buffer.position = nextPos;
-            }
-            font.fontSize = fontSize;
-            font.fntConfig.fontSize = fontSize;
-            font.fntConfig.commonHeight = lineHeight == 0 ? fontSize : lineHeight;
-            font.fntConfig.resizable = resizable;
-            font.fntConfig.canTint = canTint;
-            if (mainSprite) {
-                if (!mainTexture) {
-                    yield mainSprite.atlas.loadAsync();
-                    mainTexture = mainSprite.atlas.asset;
-                }
-                item.parent = mainSprite.atlas;
-            }
-            let spriteFrame = new SpriteFrame();
-            spriteFrame.texture = mainTexture;
-            font.spriteFrame = spriteFrame;
-            font.onLoaded();
-        });
     }
     loadSpine(item) {
         this._bundle.load(item.file, sp.SkeletonData, (err, asset) => {
@@ -6201,7 +5701,7 @@ class UIPackage {
             let atlasFile = item.file.replace("_ske", "_tex");
             let pos = atlasFile.lastIndexOf('.');
             if (pos != -1)
-                atlasFile = atlasFile.substr(0, pos + 1) + "json";
+                atlasFile = atlasFile.substring(0, pos + 1) + "json";
             this._bundle.load(atlasFile, dragonBones.DragonBonesAtlasAsset, (err, asset) => {
                 item.decoded = true;
                 item.atlasAsset = asset;
@@ -6369,7 +5869,7 @@ class UBBParser {
             pos1 = this._readPos;
         }
         if (pos1 < this._text.length)
-            result += this._text.substr(pos1);
+            result += this._text.substring(pos1);
         this._text = null;
         return result;
     }
@@ -6381,7 +5881,6 @@ class GTextField extends GObject {
         super();
         this._fontSize = 0;
         this._leading = 0;
-        this._dirtyVersion = 0;
         this._node.name = "GTextField";
         this._touchDisabled = true;
         this._text = "";
@@ -6396,7 +5895,6 @@ class GTextField extends GObject {
     createRenderer() {
         this._label = this._node.addComponent(Label);
         this._label.string = "";
-        // this._label.getComponent(UITransform).setAnchorPoint(0, 1);
         this.autoSize = AutoSizeType.Both;
     }
     set text(value) {
@@ -6413,54 +5911,20 @@ class GTextField extends GObject {
     get font() {
         return this._font;
     }
-    init(fontItem, font) {
-        this._fontPackageItem = fontItem;
-        if (fontItem) {
-            fontItem.addRef();
-        }
-        this._realFont = font;
-        this.updateFont();
-        this.updateFontSize();
-    }
     set font(value) {
         if (this._font != value || !value) {
-            this._dirtyVersion++;
-            let dirtyVersion = this._dirtyVersion;
             this._font = value;
             this.markSizeChanged();
             let newFont = value ? value : UIConfig.defaultFont;
-            var pi = null;
             if (newFont.startsWith("ui://")) {
-                pi = UIPackage.getItemByURL(newFont);
-                if (pi) {
-                    if (!UIConfig.enableDelayLoad || pi.__loaded && pi.decoded) {
-                        newFont = pi.owner.getItemAsset(pi);
-                    }
-                    else {
-                        newFont = pi.owner.getItemAssetAsync2(pi);
-                    }
-                }
+                var pi = UIPackage.getItemByURL(newFont);
+                if (pi)
+                    newFont = pi.owner.getItemAsset(pi);
                 else
                     newFont = UIConfig.defaultFont;
             }
-            if (newFont instanceof Promise) {
-                newFont.then((asset) => {
-                    if (!isValid(this._node) || this._dirtyVersion != dirtyVersion) {
-                        return;
-                    }
-                    this.init(pi, asset);
-                });
-            }
-            else {
-                this.init(pi, newFont);
-            }
-        }
-    }
-    dispose() {
-        super.dispose();
-        if (this._fontPackageItem) {
-            this._fontPackageItem.decRef();
-            this._fontPackageItem = null;
+            this._realFont = newFont;
+            this.updateFont();
         }
     }
     get fontSize() {
@@ -6545,22 +6009,15 @@ class GTextField extends GObject {
             this._label.enableWrapText = !value;
     }
     get stroke() {
-        return (this._outline && this._outline.enabled) ? this._outline.width : 0;
+        return this._label ? this._label.outlineWidth : 0;
     }
     set stroke(value) {
-        if (value == 0) {
-            if (this._outline)
-                this._outline.enabled = false;
-        }
-        else {
-            if (!this._outline) {
-                this._outline = this._node.addComponent(LabelOutline);
-                this.updateStrokeColor();
-            }
-            else
-                this._outline.enabled = true;
-            this._outline.width = value;
-        }
+        if (!this._label)
+            return;
+        this._label.outlineWidth = value;
+        this._label.enableOutline = value > 0;
+        if (value > 0)
+            this.updateStrokeColor();
     }
     get strokeColor() {
         return this._strokeColor;
@@ -6579,18 +6036,12 @@ class GTextField extends GObject {
         if (!this._shadowOffset)
             this._shadowOffset = new Vec2();
         this._shadowOffset.set(value);
-        if (this._shadowOffset.x != 0 || this._shadowOffset.y != 0) {
-            if (!this._shadow) {
-                this._shadow = this._node.addComponent(LabelShadow);
-                this.updateShadowColor();
-            }
-            else
-                this._shadow.enabled = true;
-            this._shadow.offset.x = value.x;
-            this._shadow.offset.y = -value.y;
-        }
-        else if (this._shadow)
-            this._shadow.enabled = false;
+        if (!this._label)
+            return;
+        this._label.shadowOffset = new Vec2(this._shadowOffset.x, -this._shadowOffset.y);
+        this._label.enableShadow = value.x != 0 || value.y != 0;
+        if (this._label.enableShadow)
+            this.updateShadowColor();
     }
     get shadowColor() {
         return this._shadowColor;
@@ -6640,7 +6091,7 @@ class GTextField extends GObject {
             if (pos2 == -1)
                 break;
             if (pos2 == pos1 + 1) {
-                result += template.substr(pos1, 2);
+                result += template.substring(pos1, pos1 + 2);
                 pos1 = pos2 + 1;
                 continue;
             }
@@ -6661,7 +6112,7 @@ class GTextField extends GObject {
             pos1 = pos2 + 1;
         }
         if (pos1 < template.length)
-            result += template.substr(pos1);
+            result += template.substring(pos1);
         return result;
     }
     get templateVars() {
@@ -6685,7 +6136,7 @@ class GTextField extends GObject {
     }
     get textWidth() {
         this.ensureSizeCorrect();
-        return this._node._uiProps.uiTransformComp.width;
+        return this._uiTrans.width;
     }
     ensureSizeCorrect() {
         if (this._sizeDirty) {
@@ -6713,30 +6164,13 @@ class GTextField extends GObject {
             else
                 label.font = font;
         }
-        this.updateFontColor();
     }
     assignFontColor(label, value) {
         let font = label.font;
         if ((font instanceof BitmapFont) && !(font.fntConfig.canTint))
             value = Color.WHITE;
-        if (label instanceof Label) {
-            if (font instanceof BitmapFont && this._grayed) {
-                //@ts-ignore
-                label._instanceMaterialType = InstanceMaterialType.GRAYSCALE;
-                //@ts-ignore
-                label.updateMaterial();
-            }
-            else {
-                //@ts-ignore
-                label.changeMaterialForDefine();
-                if (this._grayed)
-                    value = toGrayedColor(value);
-            }
-        }
-        else {
-            if (this._grayed)
-                value = toGrayedColor(value);
-        }
+        if (this._grayed)
+            value = toGrayedColor(value);
         label.color = value;
     }
     updateFont() {
@@ -6746,24 +6180,24 @@ class GTextField extends GObject {
         this.assignFontColor(this._label, this._color);
     }
     updateStrokeColor() {
-        if (!this._outline)
+        if (!this._label || !this._label.enableOutline)
             return;
         if (!this._strokeColor)
             this._strokeColor = new Color();
         if (this._grayed)
-            this._outline.color = toGrayedColor(this._strokeColor);
+            this._label.outlineColor = toGrayedColor(this._strokeColor);
         else
-            this._outline.color = this._strokeColor;
+            this._label.outlineColor = this._strokeColor;
     }
     updateShadowColor() {
-        if (!this._shadow)
+        if (!this._label || !this._label.enableShadow)
             return;
         if (!this._shadowColor)
             this._shadowColor = new Color();
         if (this._grayed)
-            this._shadow.color = toGrayedColor(this._shadowColor);
+            this._label.shadowColor = toGrayedColor(this._shadowColor);
         else
-            this._shadow.color = this._shadowColor;
+            this._label.shadowColor = this._shadowColor;
     }
     updateFontSize() {
         let font = this._label.font;
@@ -6781,20 +6215,19 @@ class GTextField extends GObject {
         }
     }
     updateOverflow() {
-        const uiComp = this._node._uiProps.uiTransformComp;
         if (this._autoSize == AutoSizeType.Both)
             this._label.overflow = Label.Overflow.NONE;
         else if (this._autoSize == AutoSizeType.Height) {
             this._label.overflow = Label.Overflow.RESIZE_HEIGHT;
-            uiComp.width = this._width;
+            this._uiTrans.width = this._width;
         }
         else if (this._autoSize == AutoSizeType.Shrink) {
             this._label.overflow = Label.Overflow.SHRINK;
-            uiComp.setContentSize(this._width, this._height);
+            this._uiTrans.setContentSize(this._width, this._height);
         }
         else {
             this._label.overflow = Label.Overflow.CLAMP;
-            uiComp.setContentSize(this._width, this._height);
+            this._uiTrans.setContentSize(this._width, this._height);
         }
     }
     markSizeChanged() {
@@ -6813,7 +6246,7 @@ class GTextField extends GObject {
             return;
         if (this._autoSize == AutoSizeType.Both || this._autoSize == AutoSizeType.Height) {
             this._updatingSize = true;
-            this.setSize(this._node._uiProps.uiTransformComp.width, this._node._uiProps.uiTransformComp.height);
+            this.setSize(this._uiTrans.width, this._uiTrans.height);
             this._updatingSize = false;
         }
     }
@@ -6821,10 +6254,10 @@ class GTextField extends GObject {
         if (this._updatingSize)
             return;
         if (this._autoSize == AutoSizeType.None || this._autoSize == AutoSizeType.Shrink) {
-            this._node._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            this._uiTrans.setContentSize(this._width, this._height);
         }
         else if (this._autoSize == AutoSizeType.Height)
-            this._node._uiProps.uiTransformComp.width = this._width;
+            this._uiTrans.width = this._width;
     }
     handleGrayedChanged() {
         this.updateFontColor();
@@ -6891,8 +6324,12 @@ class GTextField extends GObject {
         super.setup_afterAdd(buffer, beginPos);
         buffer.seek(beginPos, 6);
         var str = buffer.readS();
-        if (str != null)
+        if (str != null) {
             this.text = str;
+        }
+        else {
+            this.text = "";
+        }
     }
 }
 
@@ -6907,22 +6344,6 @@ class RichTextImageAtlas extends SpriteAtlas {
                 return pi.frames[0].texture;
         }
         return super.getSpriteFrame(key);
-    }
-    getSpriteFrameAsync(key) {
-        const _super = Object.create(null, {
-            getSpriteFrame: { get: () => super.getSpriteFrame }
-        });
-        return __awaiter(this, void 0, void 0, function* () {
-            let pi = UIPackage.getItemByURL(key);
-            if (pi) {
-                yield pi.loadAsync();
-                if (pi.type == PackageItemType.Image)
-                    return pi.asset;
-                else if (pi.type == PackageItemType.MovieClip)
-                    return pi.frames[0].texture;
-            }
-            return _super.getSpriteFrame.call(this, key);
-        });
     }
 }
 const imageAtlas = new RichTextImageAtlas();
@@ -6998,7 +6419,7 @@ class GRichTextField extends GTextField {
             if (this._richText.maxWidth != 0)
                 this._richText["_maxWidth"] = 0;
             this._richText.string = text2;
-            if (this.maxWidth != 0 && this._node._uiProps.uiTransformComp.contentSize.width > this.maxWidth)
+            if (this.maxWidth != 0 && this._uiTrans.contentSize.width > this.maxWidth)
                 this._richText.maxWidth = this.maxWidth;
         }
         else
@@ -7035,12 +6456,8 @@ class GRichTextField extends GTextField {
 }
 
 class InputProcessor extends Component {
-    get touching() {
-        return this._touching;
-    }
     constructor() {
         super();
-        this._touching = false;
         this._touches = new Array();
         this._rollOutChain = new Array();
         this._rollOverChain = new Array();
@@ -7148,7 +6565,6 @@ class InputProcessor extends Component {
         returnEvent(evt);
     }
     touchBeginHandler(evt) {
-        this._touching = true;
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         this.setBegin(ti);
         if (this._touchListener) {
@@ -7196,7 +6612,6 @@ class InputProcessor extends Component {
         }
     }
     touchEndHandler(evt) {
-        this._touching = false;
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt;
@@ -7239,7 +6654,6 @@ class InputProcessor extends Component {
         ti.button = -1;
     }
     touchCancelHandler(evt) {
-        this._touching = false;
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt;
@@ -7573,7 +6987,7 @@ class Controller extends EventTarget {
     set selectedIndex(value) {
         if (this._selectedIndex != value) {
             if (value > this._pageIds.length - 1)
-                throw "index out of bounds: " + value;
+                throw new Error("index out of bounds: " + value);
             this.changing = true;
             this._previousIndex = this._selectedIndex;
             this._selectedIndex = value;
@@ -7592,7 +7006,7 @@ class Controller extends EventTarget {
     setSelectedIndex(value) {
         if (this._selectedIndex != value) {
             if (value > this._pageIds.length - 1)
-                throw "index out of bounds: " + value;
+                throw new Error("index out of bounds: " + value);
             this.changing = true;
             this._previousIndex = this._selectedIndex;
             this._selectedIndex = value;
@@ -7783,11 +7197,6 @@ class Controller extends EventTarget {
         else
             this._selectedIndex = -1;
     }
-    addAction(action) {
-        if (!this._actions)
-            this._actions = new Array();
-        this._actions.push(action);
-    }
 }
 function createAction(type) {
     switch (type) {
@@ -7826,7 +7235,8 @@ class ScrollPane extends Component {
         const o = this._owner = GObject.cast(this.node);
         this._maskContainer = new Node("ScrollPane");
         this._maskContainer.layer = UIConfig.defaultUILayer;
-        this._maskContainer.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._maskContainerUITrans = this._maskContainer.addComponent(UITransform);
+        this._maskContainerUITrans.setAnchorPoint(0, 1);
         this._maskContainer.parent = o.node;
         this._container = o._container;
         this._container.parent = this._maskContainer;
@@ -7908,7 +7318,7 @@ class ScrollPane extends Component {
                 if (res) {
                     this._vtScrollBar = (UIPackage.createObjectFromURL(res));
                     if (!this._vtScrollBar)
-                        throw "cannot create scrollbar from " + res;
+                        throw new Error("cannot create scrollbar from " + res);
                     this._vtScrollBar.setScrollPane(this, true);
                     this._vtScrollBar.node.parent = o.node;
                 }
@@ -7918,7 +7328,7 @@ class ScrollPane extends Component {
                 if (res) {
                     this._hzScrollBar = (UIPackage.createObjectFromURL(res));
                     if (!this._hzScrollBar)
-                        throw "cannot create scrollbar from " + res;
+                        throw new Error("cannot create scrollbar from " + res);
                     this._hzScrollBar.setScrollPane(this, false);
                     this._hzScrollBar.node.parent = o.node;
                 }
@@ -7937,14 +7347,14 @@ class ScrollPane extends Component {
         if (headerRes) {
             this._header = (UIPackage.createObjectFromURL(headerRes));
             if (this._header == null)
-                throw "cannot create scrollPane header from " + headerRes;
+                throw new Error("cannot create scrollPane header from " + headerRes);
             else
                 this._maskContainer.insertChild(this._header.node, 0);
         }
         if (footerRes) {
             this._footer = (UIPackage.createObjectFromURL(footerRes));
             if (this._footer == null)
-                throw "cannot create scrollPane footer from " + footerRes;
+                throw new Error("cannot create scrollPane footer from " + footerRes);
             else
                 this._maskContainer.insertChild(this._footer.node, 0);
         }
@@ -7984,11 +7394,7 @@ class ScrollPane extends Component {
             if (target)
                 return target;
         }
-        if (pt.x >= this._owner.margin.left && pt.y >= this._owner.margin.top
-            && pt.x < this._owner.margin.left + this._viewSize.x && pt.y < this._owner.margin.top + this._viewSize.y)
-            return this._owner;
-        else
-            return null;
+        return this._owner;
     }
     get owner() {
         return this._owner;
@@ -8367,9 +7773,9 @@ class ScrollPane extends Component {
             mx = this._vtScrollBar.width;
         const o = this._owner;
         if (this._dontClipMargin)
-            this._maskContainer._uiProps.uiTransformComp.setAnchorPoint((o.margin.left + o._alignOffset.x) / o.width, 1 - (o.margin.top + o._alignOffset.y) / o.height);
+            this._maskContainerUITrans.setAnchorPoint((o.margin.left + o._alignOffset.x) / o.width, 1 - (o.margin.top + o._alignOffset.y) / o.height);
         else
-            this._maskContainer._uiProps.uiTransformComp.setAnchorPoint(o._alignOffset.x / this._viewSize.x, 1 - o._alignOffset.y / this._viewSize.y);
+            this._maskContainerUITrans.setAnchorPoint(o._alignOffset.x / this._viewSize.x, 1 - o._alignOffset.y / this._viewSize.y);
         if (o._customMask)
             this._maskContainer.setPosition(mx + o._alignOffset.x, -o._alignOffset.y);
         else
@@ -8507,7 +7913,7 @@ class ScrollPane extends Component {
             maskWidth += (this._owner.margin.left + this._owner.margin.right);
             maskHeight += (this._owner.margin.top + this._owner.margin.bottom);
         }
-        this._maskContainer._uiProps.uiTransformComp.setContentSize(maskWidth, maskHeight);
+        this._maskContainerUITrans.setContentSize(maskWidth, maskHeight);
         if (this._vtScrollBar)
             this._vtScrollBar.handlePositionChanged();
         if (this._hzScrollBar)
@@ -9134,7 +8540,7 @@ class ScrollPane extends Component {
             pos = -this._overlapSize[axis];
         else {
             //以屏幕像素为基准
-            var isMobile = false; // sys.isMobile;
+            var isMobile = sys.isMobile;
             var v2 = Math.abs(v) * this._velocityScale;
             const winSize = screen.windowSize;
             //在移动设备上，需要对不同分辨率做一个适配，我们的速度判断以1136分辨率为基准
@@ -10607,43 +10013,6 @@ class Transition {
                 break;
         }
     }
-    copyFrom(source, applyBaseValue = true) {
-        let cnt = source._items.length;
-        this.name = source.name;
-        this._options = source._options;
-        this._autoPlay = source._autoPlay;
-        this._autoPlayTimes = source._autoPlayTimes;
-        this._autoPlayDelay = source._autoPlayDelay;
-        this._totalDuration = source._totalDuration;
-        for (let i = 0; i < cnt; i++) {
-            let item = source._items[i].clone();
-            if (applyBaseValue) {
-                let config = item.tweenConfig;
-                let rawConfig = source._items[i].tweenConfig;
-                if (config) {
-                    if (item.type == ActionType.Scale) {
-                        if (config.startValue) {
-                            config.startValue.f1 = rawConfig.startValue.f1 * this._owner.scaleX;
-                            config.startValue.f2 = rawConfig.startValue.f2 * this._owner.scaleY;
-                        }
-                        if (config.endValue) {
-                            config.endValue.f1 = rawConfig.endValue.f1 * this._owner.scaleX;
-                            config.endValue.f2 = rawConfig.endValue.f2 * this._owner.scaleY;
-                        }
-                    }
-                    else if (item.type == ActionType.Alpha) {
-                        if (config.startValue) {
-                            config.startValue.f1 = rawConfig.startValue.f1 * this._owner.alpha;
-                        }
-                        if (config.endValue) {
-                            config.endValue.f1 = rawConfig.endValue.f1 * this._owner.alpha;
-                        }
-                    }
-                }
-            }
-            this._items.push(item);
-        }
-    }
 }
 const OPTION_IGNORE_DISPLAY_CONTROLLER = 1;
 const OPTION_AUTO_STOP_DISABLED = 2;
@@ -10674,16 +10043,6 @@ class Item {
         this.value = {};
         this.displayLockToken = 0;
     }
-    clone() {
-        let item = new Item(this.type);
-        item.time = this.time;
-        item.targetId = this.targetId;
-        if (this.tweenConfig)
-            item.tweenConfig = this.tweenConfig.clone();
-        item.label = this.label;
-        item.value = Object.assign({}, this.value);
-        return item;
-    }
 }
 class TweenConfig {
     constructor() {
@@ -10691,36 +10050,15 @@ class TweenConfig {
         this.startValue = { b1: true, b2: true };
         this.endValue = { b1: true, b2: true };
     }
-    clone() {
-        let keys = Object.keys(this);
-        let tc = new TweenConfig();
-        for (let i = 0; i < keys.length; i++) {
-            let k = keys[i];
-            // @ts-ignore
-            let value = this[k];
-            if (value == null) {
-                continue;
-            }
-            if (k == "endHook") {
-                continue;
-            }
-            if (typeof value == "object") {
-                value = Object.assign({}, value);
-            }
-            tc[k] = value;
-        }
-        return tc;
-    }
 }
 
 class GComponent extends GObject {
     constructor() {
         super();
         this._sortingChildCount = 0;
+        this._invertedMask = false;
         this._childrenRenderOrder = ChildrenRenderOrder.Ascent;
         this._apexIndex = 0;
-        this._invertedMask = false;
-        this._excludeInvisibles = false;
         this._node.name = "GComponent";
         this._children = new Array();
         this._controllers = new Array();
@@ -10729,17 +10067,9 @@ class GComponent extends GObject {
         this._alignOffset = new Vec2();
         this._container = new Node("Container");
         this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._containerUITrans = this._container.addComponent(UITransform);
+        this._containerUITrans.setAnchorPoint(0, 1);
         this._node.addChild(this._container);
-    }
-    get excludeInvisibles() {
-        return this._excludeInvisibles;
-    }
-    set excludeInvisibles(value) {
-        if (this._excludeInvisibles != value) {
-            this._excludeInvisibles = value;
-            this.setBoundsChangedFlag();
-        }
     }
     dispose() {
         var i;
@@ -10774,7 +10104,7 @@ class GComponent extends GObject {
     }
     addChildAt(child, index) {
         if (!child)
-            throw "child is null";
+            throw new Error("child is null");
         var numChildren = this._children.length;
         if (index >= 0 && index <= numChildren) {
             if (child.parent == this) {
@@ -10802,7 +10132,7 @@ class GComponent extends GObject {
             return child;
         }
         else {
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
         }
     }
     getInsertPosForSortingChild(target) {
@@ -10843,7 +10173,7 @@ class GComponent extends GObject {
             return child;
         }
         else {
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
         }
     }
     removeChildren(beginIndex, endIndex, dispose) {
@@ -10860,7 +10190,7 @@ class GComponent extends GObject {
         if (index >= 0 && index < this.numChildren)
             return this._children[index];
         else
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
     }
     getChild(name, classType) {
         var cnt = this._children.length;
@@ -10922,7 +10252,7 @@ class GComponent extends GObject {
     setChildIndex(child, index) {
         var oldIndex = this._children.indexOf(child);
         if (oldIndex == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         if (child.sortingOrder != 0) //no effect
             return;
         var cnt = this._children.length;
@@ -10935,7 +10265,7 @@ class GComponent extends GObject {
     setChildIndexBefore(child, index) {
         var oldIndex = this._children.indexOf(child);
         if (oldIndex == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         if (child.sortingOrder != 0) //no effect
             return oldIndex;
         var cnt = this._children.length;
@@ -10969,7 +10299,7 @@ class GComponent extends GObject {
         var index1 = this._children.indexOf(child1);
         var index2 = this._children.indexOf(child2);
         if (index1 == -1 || index2 == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         this.swapChildrenAt(index1, index2);
     }
     swapChildrenAt(index1, index2) {
@@ -11012,7 +10342,7 @@ class GComponent extends GObject {
     removeController(c) {
         var index = this._controllers.indexOf(c);
         if (index == -1)
-            throw "controller not exists";
+            throw new Error("controller not exists");
         c.parent = null;
         this._controllers.splice(index, 1);
         var length = this._children.length;
@@ -11025,10 +10355,6 @@ class GComponent extends GObject {
         return this._controllers;
     }
     onChildAdd(child, index) {
-        if (!child.node) {
-            console.error("child.node is null");
-            return;
-        }
         child.node.parent = this._container;
         child.node.active = child._finalVisible;
         if (this._buildingDisplayList)
@@ -11223,12 +10549,15 @@ class GComponent extends GObject {
             value.node.on(Node.EventType.SIZE_CHANGED, this.onMaskContentChanged, this);
             value.node.on(Node.EventType.ANCHOR_CHANGED, this.onMaskContentChanged, this);
             this._invertedMask = inverted;
-            if (UIConfig.enableDelayLoad && this._maskContent instanceof GImage && !this._maskContent._content.spriteFrame) {
-                this._maskContent.onReady = this.onMaskContentReady.bind(this);
-            }
-            else {
-                this.onMaskContentReady();
-            }
+            if (this._node.activeInHierarchy)
+                this.onMaskReady();
+            else
+                this.on(FGUIEvent.DISPLAY, this.onMaskReady, this);
+            this.onMaskContentChanged();
+            if (this._scrollPane)
+                this._scrollPane.adjustMaskContainer();
+            else
+                this._container.setPosition(0, 0);
         }
         else if (this._customMask) {
             if (this._scrollPane)
@@ -11242,17 +10571,6 @@ class GComponent extends GObject {
             else
                 this._container.setPosition(this._pivotCorrectX, this._pivotCorrectY);
         }
-    }
-    onMaskContentReady() {
-        if (this._node.activeInHierarchy)
-            this.onMaskReady();
-        else
-            this.on(FGUIEvent.DISPLAY, this.onMaskReady, this);
-        this.onMaskContentChanged();
-        if (this._scrollPane)
-            this._scrollPane.adjustMaskContainer();
-        else
-            this._container.setPosition(0, 0);
     }
     onMaskReady() {
         this.off(FGUIEvent.DISPLAY, this.onMaskReady, this);
@@ -11321,7 +10639,7 @@ class GComponent extends GObject {
         if (this._scrollPane)
             this._scrollPane.onOwnerSizeChanged();
         else
-            this._container._uiProps.uiTransformComp.setContentSize(this.viewWidth, this.viewHeight);
+            this._containerUITrans.setContentSize(this.viewWidth, this.viewHeight);
     }
     handleGrayedChanged() {
         var c = this.getController("grayed");
@@ -11356,7 +10674,7 @@ class GComponent extends GObject {
             s_vec2$2.set(pt);
             s_vec2$2.x += this._container.position.x;
             s_vec2$2.y += this._container.position.y;
-            let clippingSize = this._container._uiProps.uiTransformComp.contentSize;
+            let clippingSize = this._containerUITrans.contentSize;
             if (s_vec2$2.x < 0 || s_vec2$2.y < 0 || s_vec2$2.x >= clippingSize.width || s_vec2$2.y >= clippingSize.height)
                 return null;
         }
@@ -11427,8 +10745,6 @@ class GComponent extends GObject {
             var i = 0;
             for (var i = 0; i < len; i++) {
                 var child = this._children[i];
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
                 tmp = child.x;
                 if (tmp < ax)
                     ax = tmp;
@@ -11751,35 +11067,6 @@ class GComponent extends GObject {
         for (let i = 0; i < cnt; ++i)
             this._transitions[i].onDisable();
     }
-    addTransition(transition, newName, applyBaseValue = true) {
-        let trans = new Transition(this);
-        trans.copyFrom(transition, applyBaseValue);
-        if (newName) {
-            trans.name = newName;
-        }
-        this._transitions.push(trans);
-    }
-    addControllerAction(controlName, transition, fromPages, toPages, applyBaseValue = true) {
-        let ctrl = this.getController(controlName);
-        if (!ctrl)
-            return;
-        this.addTransition(transition, null, applyBaseValue);
-        var action = createAction(0);
-        action.transitionName = transition.name;
-        if (fromPages) {
-            fromPages = fromPages.map((it) => {
-                return ctrl.getPageIdByName(it);
-            });
-        }
-        if (toPages) {
-            toPages = toPages.map((it) => {
-                return ctrl.getPageIdByName(it);
-            });
-        }
-        action.fromPage = fromPages;
-        action.toPage = toPages;
-        ctrl.addAction(action);
-    }
 }
 var s_vec2$2 = new Vec2();
 
@@ -12099,11 +11386,7 @@ class GRoot extends GComponent {
             this.setChildIndex(win, i);
     }
     showModalWait(msg) {
-        var _a;
         if (UIConfig.globalModalWaiting != null) {
-            if ((_a = this._modalWaitPane) === null || _a === void 0 ? void 0 : _a.isDisposed) {
-                this._modalWaitPane = null;
-            }
             if (this._modalWaitPane == null)
                 this._modalWaitPane = UIPackage.createObjectFromURL(UIConfig.globalModalWaiting);
             this._modalWaitPane.setSize(this.width, this.height);
@@ -12158,9 +11441,9 @@ class GRoot extends GComponent {
         var sizeW = 0, sizeH = 0;
         if (target) {
             pos = target.localToGlobal();
-            GRoot.inst.globalToLocal(pos.x, pos.y, pos);
+            this.globalToLocal(pos.x, pos.y, pos);
             let pos2 = target.localToGlobal(target.width, target.height);
-            GRoot.inst.globalToLocal(pos2.x, pos2.y, pos2);
+            this.globalToLocal(pos2.x, pos2.y, pos2);
             sizeW = pos2.x - pos.x;
             sizeH = pos2.y - pos.y;
         }
@@ -12180,15 +11463,6 @@ class GRoot extends GComponent {
             }
         }
         return pos;
-    }
-    removeChildAt(index, dispose) {
-        let ret = super.removeChildAt(index, dispose);
-        if (dispose) {
-            if (ret == this._modalWaitPane) {
-                this._modalWaitPane = null;
-            }
-        }
-        return ret;
     }
     showPopup(popup, target, dir) {
         if (this._popupStack.length > 0) {
@@ -12352,17 +11626,11 @@ class GRoot extends GComponent {
     onWinResize() {
         updateScaler();
         this.setSize(UIContentScaler.rootSize.width, UIContentScaler.rootSize.height);
-        let anchorPoint = this.node.getParent()._uiProps.uiTransformComp.anchorPoint;
+        let anchorPoint = this.node.getParent().getComponent(UITransform).anchorPoint;
         this.node.setPosition(-this._width * anchorPoint.x, this._height * (1 - anchorPoint.y));
     }
     handlePositionChanged() {
         //nothing here
-    }
-    onUpdate() {
-        super.onUpdate();
-        if (!this._inputProcessor.touching) {
-            RefMannager.update(game.frameTime / 1000);
-        }
     }
 }
 Decls$1.GRoot = GRoot;
@@ -12491,6 +11759,7 @@ class GTextInput extends GTextField {
     }
     onTouchEnd1(evt) {
         this._editBox.openKeyboard();
+        evt.propagationStopped = true;
     }
     setup_beforeAdd(buffer, beginPos) {
         super.setup_beforeAdd(buffer, beginPos);
@@ -12519,22 +11788,16 @@ class GTextInput extends GTextField {
     }
 }
 class MyEditBox extends EditBox {
-    _registerEvent() {
-        //取消掉原来的事件处理
+    _init() {
+        super._init();
         this.placeholderLabel.getComponent(UITransform).setAnchorPoint(0, 1);
         this.textLabel.getComponent(UITransform).setAnchorPoint(0, 1);
         this.placeholderLabel.overflow = Overflow.CLAMP;
         this.textLabel.overflow = Overflow.CLAMP;
     }
-    // _syncSize() {
-    //     let size = this.node._uiProps.uiTransformComp.contentSize;
-    //     let impl = this["_impl"];
-    //     impl.setSize(size.width, size.height);
-    //     if (this.textLabel)
-    //         this.textLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    //     if (this.placeholderLabel)
-    //         this.placeholderLabel.node._uiProps.uiTransformComp.setContentSize(size.width, size.height);
-    // }
+    _registerEvent() {
+        //取消掉原来的事件处理
+    }
     openKeyboard() {
         let impl = this["_impl"];
         if (impl) {
@@ -12590,13 +11853,7 @@ class GObjectPool {
 class GLoader extends GObject {
     constructor() {
         super();
-        /**
-         * 用于无后缀url的情况，指定使用哪种资源类型。默认为null，表示使用自动识别。
-         */
-        this.extension = "";
         this._frame = 0;
-        this._dirtyVersion = 0;
-        this._externalAssets = {};
         this._node.name = "GLoader";
         this._playing = true;
         this._url = "";
@@ -12607,7 +11864,8 @@ class GLoader extends GObject {
         this._color = new Color(255, 255, 255, 255);
         this._container = new Node("Image");
         this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._containerUITrans = this._container.addComponent(UITransform);
+        this._containerUITrans.setAnchorPoint(0, 1);
         this._node.addChild(this._container);
         this._content = this._container.addComponent(MovieClip);
         this._content.sizeMode = Sprite.SizeMode.CUSTOM;
@@ -12615,12 +11873,13 @@ class GLoader extends GObject {
         this._content.setPlaySettings();
     }
     dispose() {
-        if (this._content2) {
-            this._content2.dispose();
-            this._content2 = null;
+        if (this._contentItem == null) {
+            if (this._content.spriteFrame)
+                this.freeExternal(this._content.spriteFrame);
         }
+        if (this._content2)
+            this._content2.dispose();
         super.dispose();
-        this.clearContent();
     }
     get url() {
         return this._url;
@@ -12631,6 +11890,24 @@ class GLoader extends GObject {
         this._url = value;
         this.loadContent();
         this.updateGear(7);
+    }
+    /**
+     * 设置图片
+     * @param url
+     * @param bundleStr 远程包名称
+     */
+    setUrlWithBundle(url, bundleStr = '') {
+        this.bundle = bundleStr;
+        this.url = url;
+    }
+    set bundle(val) {
+        this._assetBundle = val;
+    }
+    get bundle() {
+        if (this._assetBundle) {
+            return this._assetBundle;
+        }
+        return UIConfig.loaderAssetsBundleName;
     }
     get icon() {
         return this._url;
@@ -12751,12 +12028,11 @@ class GLoader extends GObject {
     }
     set texture(value) {
         this.url = null;
-        this.clearContent();
         this._content.spriteFrame = value;
         this._content.type = Sprite.Type.SIMPLE;
         if (value != null) {
-            this.sourceWidth = value.getRect().width;
-            this.sourceHeight = value.getRect().height;
+            this.sourceWidth = value.rect.width;
+            this.sourceHeight = value.rect.height;
         }
         else {
             this.sourceWidth = this.sourceHeight = 0;
@@ -12772,24 +12048,30 @@ class GLoader extends GObject {
         else
             this.loadExternal();
     }
-    init(contentItem, itemURL, dirtyVersion) {
-        if (!isValid(this.node) || this._dirtyVersion != dirtyVersion) {
+    loadFromPackage(itemURL) {
+        let contentItem = UIPackage.getItemByURL(itemURL);
+        this._contentItem = contentItem;
+        if (!contentItem) {
+            this.setErrorState();
             return;
         }
-        this._contentItem = contentItem;
-        this._contentItem.addRef();
+        contentItem = contentItem.getBranch();
+        this.sourceWidth = contentItem.width;
+        this.sourceHeight = contentItem.height;
+        contentItem = contentItem.getHighResolution();
+        contentItem.load();
         if (this._autoSize)
             this.setSize(this.sourceWidth, this.sourceHeight);
-        if (this._contentItem.type == PackageItemType.Image) {
-            if (!this._contentItem.asset) {
+        if (contentItem.type == PackageItemType.Image) {
+            if (!contentItem.asset) {
                 this.setErrorState();
             }
             else {
-                this._content.spriteFrame = this._contentItem.asset;
+                this._content.spriteFrame = contentItem.asset;
                 if (this._content.fillMethod == 0) {
-                    if (this._contentItem.scale9Grid)
+                    if (contentItem.scale9Grid)
                         this._content.type = Sprite.Type.SLICED;
-                    else if (this._contentItem.scaleByTile)
+                    else if (contentItem.scaleByTile)
                         this._content.type = Sprite.Type.TILED;
                     else
                         this._content.type = Sprite.Type.SIMPLE;
@@ -12797,18 +12079,17 @@ class GLoader extends GObject {
                 else {
                     this._content.type = Sprite.Type.FILLED;
                 }
-                this._content.__update();
                 this.updateLayout();
             }
         }
-        else if (this._contentItem.type == PackageItemType.MovieClip) {
-            this._content.interval = this._contentItem.interval;
-            this._content.swing = this._contentItem.swing;
-            this._content.repeatDelay = this._contentItem.repeatDelay;
-            this._content.frames = this._contentItem.frames;
+        else if (contentItem.type == PackageItemType.MovieClip) {
+            this._content.interval = contentItem.interval;
+            this._content.swing = contentItem.swing;
+            this._content.repeatDelay = contentItem.repeatDelay;
+            this._content.frames = contentItem.frames;
             this.updateLayout();
         }
-        else if (this._contentItem.type == PackageItemType.Component) {
+        else if (contentItem.type == PackageItemType.Component) {
             var obj = UIPackage.createObjectFromURL(itemURL);
             if (!obj)
                 this.setErrorState();
@@ -12825,116 +12106,70 @@ class GLoader extends GObject {
         else
             this.setErrorState();
     }
-    loadFromPackage(itemURL) {
-        this._dirtyVersion++;
-        let dirtyVersion = this._dirtyVersion;
-        let contentItem = UIPackage.getItemByURL(itemURL);
-        if (contentItem) {
-            contentItem = contentItem.getBranch();
-            this.sourceWidth = contentItem.width;
-            this.sourceHeight = contentItem.height;
-            contentItem = contentItem.getHighResolution();
-            if (!UIConfig.enableDelayLoad ||
-                contentItem.__loaded && contentItem.decoded ||
-                contentItem.type == PackageItemType.Component) {
-                contentItem.load();
-                this.init(contentItem, itemURL, dirtyVersion);
-            }
-            else {
-                contentItem.loadAsync().then(() => {
-                    this.init(contentItem, itemURL, dirtyVersion);
-                });
-            }
-        }
-        else
-            this.setErrorState();
-    }
     loadExternal() {
         let url = this.url;
         let callback = (err, asset) => {
             //因为是异步返回的，而这时可能url已经被改变，所以不能直接用返回的结果
-            if (this.url != url || !isValid(this._node))
+            if (this._url != url || !isValid(this._node))
                 return;
             if (err)
                 console.warn(err);
-            if (typeof this._url != "string") {
-                return;
-            }
-            this.addExternalAssetRef(this._url, asset);
             if (asset instanceof SpriteFrame)
                 this.onExternalLoadSuccess(asset);
             else if (asset instanceof Texture2D) {
-                let sp = new SpriteFrame();
-                sp.texture = asset;
-                this.onExternalLoadSuccess(sp);
+                let sf = new SpriteFrame();
+                sf.texture = asset;
+                this.onExternalLoadSuccess(sf);
             }
             else if (asset instanceof ImageAsset) {
-                let tex = new Texture2D();
-                if (sys.isNative) {
-                    tex.image = asset;
-                }
-                else {
-                    tex.reset({
-                        width: asset.width,
-                        height: asset.height,
-                    });
-                    tex.uploadData(asset.data);
-                }
-                let sp = new SpriteFrame();
-                sp.texture = tex;
-                this.onExternalLoadSuccess(sp);
-            }
-        };
-        if (typeof this.url == "string") {
-            if (this.url.startsWith("http://")
-                || this.url.startsWith("https://")
-                || this.url.startsWith('/')) {
-                if (this.extension) {
-                    assetManager.loadRemote(this.url, { ext: this.extension }, callback);
-                }
-                else {
-                    assetManager.loadRemote(this.url, callback);
-                }
+                let texture = new Texture2D();
+                texture.image = asset;
+                let sf = new SpriteFrame();
+                sf.texture = texture;
+                this.onExternalLoadSuccess(sf);
             }
             else {
-                resources.load(this.url, Asset, callback);
+                console.warn("GLoader:cant load", this.url);
+            }
+        };
+        if (typeof this._url == "string") {
+            if (this._url.startsWith("http://")
+                || this._url.startsWith("https://")
+                || this._url.startsWith('/'))
+                assetManager.loadRemote(this._url, callback);
+            else if (this._url.startsWith('data:image/')) {
+                const img = new Image();
+                img.src = this._url;
+                img.onload = () => {
+                    const tex = new Texture2D();
+                    tex.reset({
+                        width: img.width,
+                        height: img.height,
+                    });
+                    tex.uploadData(img, 0, 0);
+                    callback(null, tex);
+                };
+            }
+            else {
+                let bundle = resources;
+                //如果有设置远程包 从远程包加载
+                if (this.bundle && assetManager.bundles.has(this.bundle)) {
+                    bundle = assetManager.getBundle(this.bundle);
+                }
+                bundle.load(this._url + "/spriteFrame", Asset, callback);
             }
         }
         else {
             throw new Error("fgui底层未实现CCURL的非string资源加载！");
         }
     }
-    addExternalAssetRef(url, asset) {
-        if (!this._externalAssets[url]) {
-            this._externalAssets[url] = asset;
-            asset.addRef();
-        }
-    }
-    freeExternal() {
-        const bundle = resources;
-        for (const key in this._externalAssets) {
-            if (!Object.prototype.hasOwnProperty.call(this._externalAssets, key)) {
-                continue;
-            }
-            const asset = this._externalAssets[key];
-            asset.decRef();
-            if (asset.refCount <= 0 && UIConfig.autoReleaseAssets) {
-                assetManager.releaseAsset(asset);
-                if (key.startsWith("http://")
-                    || key.startsWith("https://")
-                    || key.startsWith('/')) ;
-                else {
-                    bundle.release(key + "/spriteFrame");
-                }
-            }
-        }
-        this._externalAssets = {};
+    freeExternal(texture) {
     }
     onExternalLoadSuccess(texture) {
         this._content.spriteFrame = texture;
         this._content.type = Sprite.Type.SIMPLE;
-        this.sourceWidth = texture.getRect().width;
-        this.sourceHeight = texture.getRect().height;
+        this.sourceWidth = texture.originalSize.width;
+        this.sourceHeight = texture.originalSize.height;
         if (this._autoSize)
             this.setSize(this.sourceWidth, this.sourceHeight);
         this.updateLayout();
@@ -12983,7 +12218,7 @@ class GLoader extends GObject {
                 ch = 30;
             this.setSize(cw, ch);
             this._updatingLayout = false;
-            this._container._uiProps.uiTransformComp.setContentSize(this._width, this._height);
+            this._containerUITrans.setContentSize(this._width, this._height);
             this._container.setPosition(pivotCorrectX, pivotCorrectY);
             if (this._content2) {
                 this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
@@ -13023,7 +12258,7 @@ class GLoader extends GObject {
                 ch = this.sourceHeight * sy;
             }
         }
-        this._container._uiProps.uiTransformComp.setContentSize(cw, ch);
+        this._containerUITrans.setContentSize(cw, ch);
         if (this._content2) {
             this._content2.setPosition(pivotCorrectX + this._width * this.pivotX, pivotCorrectY - this._height * this.pivotY);
             this._content2.setScale(sx, sy);
@@ -13046,8 +12281,10 @@ class GLoader extends GObject {
     }
     clearContent() {
         this.clearErrorState();
-        if (this._contentItem) {
-            this._contentItem.decRef();
+        if (!this._contentItem) {
+            var texture = this._content.spriteFrame;
+            if (texture)
+                this.freeExternal(texture);
         }
         if (this._content2) {
             this._container.removeChild(this._content2.node);
@@ -13057,7 +12294,6 @@ class GLoader extends GObject {
         this._content.frames = null;
         this._content.spriteFrame = null;
         this._contentItem = null;
-        this.freeExternal();
     }
     handleSizeChanged() {
         super.handleSizeChanged();
@@ -13133,14 +12369,14 @@ class GLoader extends GObject {
         this._frame = buffer.readInt();
         if (buffer.readBool())
             this.color = buffer.readColor();
-        if (this._url)
-            this.loadContent();
         this._content.fillMethod = buffer.readByte();
         if (this._content.fillMethod != 0) {
             this._content.fillOrigin = buffer.readByte();
             this._content.fillClockwise = buffer.readBool();
             this._content.fillAmount = buffer.readFloat();
         }
+        if (this._url)
+            this.loadContent();
     }
 }
 GLoader._errorSignPool = new GObjectPool();
@@ -13347,7 +12583,7 @@ class GLoader3D extends GObject {
         this._content.dragonAsset = asset;
         this._content.dragonAtlasAsset = atlasAsset;
         this._content.color = this._color;
-        let armatureKey = asset.init(atlasAsset._factory, atlasAsset["_uuid"]);
+        let armatureKey = asset["init"](dragonBones.CCFactory.getInstance(), atlasAsset["_uuid"]);
         let dragonBonesData = this._content["_factory"].getDragonBonesData(armatureKey);
         this._content.armatureName = dragonBonesData.armatureNames[0];
         this.onChangeDragonBones();
@@ -14895,7 +14131,7 @@ class GList extends GComponent {
                 return;
             this.checkVirtualList();
             if (index >= this._virtualItems.length)
-                throw "Invalid child index: " + index + ">" + this._virtualItems.length;
+                throw new Error("Invalid child index: " + index + ">" + this._virtualItems.length);
             if (this._loop)
                 index = Math.floor(this._firstIndex / this._numItems) * this._numItems + index;
             var rect;
@@ -14986,10 +14222,10 @@ class GList extends GComponent {
     _setVirtual(loop) {
         if (!this._virtual) {
             if (!this._scrollPane)
-                throw "Virtual list must be scrollable!";
+                throw new Error("Virtual list must be scrollable!");
             if (loop) {
                 if (this._layout == ListLayoutType.FlowHorizontal || this._layout == ListLayoutType.FlowVertical)
-                    throw "Loop list is not supported for FlowHorizontal or FlowVertical layout!";
+                    throw new Error("Loop list is not supported for FlowHorizontal or FlowVertical layout!");
                 this._scrollPane.bouncebackEffect = false;
             }
             this._virtual = true;
@@ -15000,7 +14236,7 @@ class GList extends GComponent {
                 this._itemSize = new Size(0, 0);
                 var obj = this.getFromPool(null);
                 if (!obj) {
-                    throw "Virtual List must have a default list item resource.";
+                    throw new Error("Virtual List must have a default list item resource.");
                 }
                 else {
                     this._itemSize.width = obj.width;
@@ -15036,7 +14272,7 @@ class GList extends GComponent {
     set numItems(value) {
         if (this._virtual) {
             if (this.itemRenderer == null)
-                throw "Set itemRenderer first!";
+                throw new Error("Set itemRenderer first!");
             this._numItems = value;
             if (this._loop)
                 this._realNumItems = this._numItems * 6; //设置6倍数量，用于循环滚动
@@ -16532,9 +15768,9 @@ class GComboBox extends GComponent {
         if (this._itemsUpdated) {
             this._itemsUpdated = false;
             this._list.removeChildrenToPool();
-            var cnt = this._items.length;
-            for (var i = 0; i < cnt; i++) {
-                var item = this._list.addItemFromPool();
+            let cnt = this._items.length;
+            for (let i = 0; i < cnt; i++) {
+                let item = this._list.addItemFromPool();
                 item.name = i < this._values.length ? this._values[i] : "";
                 item.text = this._items[i];
                 item.icon = (this._icons && i < this._icons.length) ? this._icons[i] : null;
@@ -17090,6 +16326,7 @@ class GScrollBar extends GComponent {
             this._target.scrollRight();
     }
     onBarTouchBegin(evt) {
+        evt.propagationStopped = true;
         var pt = this._grip.globalToLocal(evt.pos.x, evt.pos.y, s_vec2);
         if (this._vertical) {
             if (pt.y < 0)
@@ -17216,7 +16453,7 @@ class GTreeNode {
             return child;
         }
         else {
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
         }
     }
     removeChildren(beginIndex, endIndex) {
@@ -17232,7 +16469,7 @@ class GTreeNode {
         if (index >= 0 && index < this.numChildren)
             return this._children[index];
         else
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
     }
     getChildIndex(child) {
         return this._children.indexOf(child);
@@ -17256,7 +16493,7 @@ class GTreeNode {
     setChildIndex(child, index) {
         var oldIndex = this._children.indexOf(child);
         if (oldIndex == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         var cnt = this._children.length;
         if (index < 0)
             index = 0;
@@ -17273,7 +16510,7 @@ class GTreeNode {
         var index1 = this._children.indexOf(child1);
         var index2 = this._children.indexOf(child2);
         if (index1 == -1 || index2 == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         this.swapChildrenAt(index1, index2);
     }
     swapChildrenAt(index1, index2) {
@@ -17625,7 +16862,7 @@ class PopupMenu {
         if (!url) {
             url = UIConfig.popupMenu;
             if (!url)
-                throw "UIConfig.popupMenu not defined";
+                throw new Error("UIConfig.popupMenu not defined");
         }
         this._contentPane = UIPackage.createObjectFromURL(url);
         this._contentPane.on(FGUIEvent.DISPLAY, this.onDisplay, this);
@@ -17662,7 +16899,7 @@ class PopupMenu {
     }
     addSeperator() {
         if (UIConfig.popupMenu_seperator == null)
-            throw "UIConfig.popupMenu_seperator not defined";
+            throw new Error("UIConfig.popupMenu_seperator not defined");
         this.list.addItemFromPool(UIConfig.popupMenu_seperator);
     }
     getItemName(index) {
@@ -22016,8 +21253,7 @@ class CCFLoader extends GLoader {
             Debuger.Err(Debuger.DRONGO, "图片加载出错：" + err);
         });
     }
-    freeExternal() {
-        super.freeExternal();
+    freeExternal(texture) {
         if (this.__spriteFrame) {
             this.__spriteFrame.destroy();
             this.__spriteFrame = null;
@@ -32099,4 +31335,4 @@ class ESCSystem {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

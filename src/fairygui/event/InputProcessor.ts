@@ -1,4 +1,4 @@
-import { Component, Vec2, RichText, sys, Node, Touch, Event, EventMouse, EventTouch, director, Vec3, ccenum, game } from "cc";
+import { Component, Vec2, RichText, sys, Node, EventMouse, EventTouch, director, Vec3, game } from "cc";
 import { GObject } from "../GObject";
 import { GRichTextField } from "../GRichTextField";
 import { UIContentScaler } from "../UIContentScaler";
@@ -11,12 +11,8 @@ export class InputProcessor extends Component {
     private _touches: Array<TouchInfo>;
     private _rollOutChain: Array<GObject>;
     private _rollOverChain: Array<GObject>;
-    private _touching: boolean = false;
 
     public _captureCallback: (evt: FGUIEvent) => void;
-    public get touching(): boolean {
-        return this._touching;
-    }
 
     public constructor() {
         super();
@@ -43,7 +39,7 @@ export class InputProcessor extends Component {
         node.on(Node.EventType.MOUSE_UP, this.mouseUpHandler, this);
         node.on(Node.EventType.MOUSE_WHEEL, this.mouseWheelHandler, this);
 
-        this._touchListener = this.node.eventProcessor.touchListener;
+        this._touchListener = (<any>this.node.eventProcessor).touchListener;
     }
 
     onDisable() {
@@ -153,8 +149,6 @@ export class InputProcessor extends Component {
     }
 
     private touchBeginHandler(evt: EventTouch): Boolean {
-        this._touching = true;
-
         let ti: TouchInfo = this.updateInfo(evt.getID(), evt.getLocation());
         this.setBegin(ti);
         if (this._touchListener) {
@@ -213,8 +207,6 @@ export class InputProcessor extends Component {
     }
 
     private touchEndHandler(evt: EventTouch): void {
-        this._touching = false;
-
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt as any;
@@ -267,8 +259,6 @@ export class InputProcessor extends Component {
     }
 
     private touchCancelHandler(evt: EventTouch): void {
-        this._touching = false;
-
         let ti = this.updateInfo(evt.getID(), evt.getLocation());
         if (!this._touchListener) {
             let e = evt as any;

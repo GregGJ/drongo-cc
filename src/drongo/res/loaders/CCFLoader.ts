@@ -46,9 +46,7 @@ export class CCFLoader extends GLoader {
         });
     }
 
-
-    protected freeExternal(): void {
-        super.freeExternal();
+    protected freeExternal(texture: SpriteFrame): void {
         if (this.__spriteFrame) {
             this.__spriteFrame.destroy();
             this.__spriteFrame = null;

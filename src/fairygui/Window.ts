@@ -1,11 +1,11 @@
 import { Node, Vec2 } from "cc";
-import { FGUIEvent } from "./event/FGUIEvent";
 import { RelationType } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
 import { GRoot } from "./GRoot";
 import { UIConfig } from "./UIConfig";
 import { UIPackage } from "./UIPackage";
+import { FGUIEvent } from "./event/FGUIEvent";
 
 export interface IUISource {
     fileName: string;

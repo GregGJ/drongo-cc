@@ -1,7 +1,6 @@
 import { AudioClip, Color, EventMouse } from "cc";
-import { ResURL } from "../drongo/res/core/ResURL";
 import { Controller } from "./Controller";
-import { FGUIEvent as FUIEvent } from "./event/FGUIEvent";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { ButtonMode, ObjectPropID } from "./FieldTypes";
 import { GComponent } from "./GComponent";
 import { GObject } from "./GObject";
@@ -12,6 +11,7 @@ import { UIConfig } from "./UIConfig";
 import { UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
 import { Window } from "./Window";
+import { ResURL } from "../drongo-cc";
 
 export class GButton extends GComponent {
     protected _titleObject: GObject;
@@ -137,7 +137,7 @@ export class GButton extends GComponent {
         if (tf)
             tf.fontSize = value;
     }
-
+    
     public get sound(): string | null {
         return this._sound;
     }
@@ -393,11 +393,11 @@ export class GButton extends GComponent {
         if (this._mode == ButtonMode.Common)
             this.setState(GButton.UP);
 
-        this._node.on(FUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this);
-        this._node.on(FUIEvent.TOUCH_END, this.onTouchEnd_1, this);
-        this._node.on(FUIEvent.ROLL_OVER, this.onRollOver_1, this);
-        this._node.on(FUIEvent.ROLL_OUT, this.onRollOut_1, this);
-        this._node.on(FUIEvent.CLICK, this.onClick_1, this);
+        this._node.on(FGUIEvent.TOUCH_BEGIN, this.onTouchBegin_1, this);
+        this._node.on(FGUIEvent.TOUCH_END, this.onTouchEnd_1, this);
+        this._node.on(FGUIEvent.ROLL_OVER, this.onRollOver_1, this);
+        this._node.on(FGUIEvent.ROLL_OUT, this.onRollOut_1, this);
+        this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
     }
 
     public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
@@ -471,7 +471,7 @@ export class GButton extends GComponent {
         this.setState(this._selected ? GButton.DOWN : GButton.UP);
     }
 
-    private onTouchBegin_1(evt: FUIEvent): void {
+    private onTouchBegin_1(evt: FGUIEvent): void {
         if (evt.button != EventMouse.BUTTON_LEFT)
             return;
 
@@ -493,7 +493,7 @@ export class GButton extends GComponent {
         }
     }
 
-    private onTouchEnd_1(evt: FUIEvent): void {
+    private onTouchEnd_1(evt: FGUIEvent): void {
         if (evt.button != EventMouse.BUTTON_LEFT)
             return;
 
@@ -535,13 +535,13 @@ export class GButton extends GComponent {
         if (this._mode == ButtonMode.Check) {
             if (this._changeStateOnClick) {
                 this.selected = !this._selected;
-                this._node.emit(FUIEvent.STATUS_CHANGED, this);
+                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
             }
         }
         else if (this._mode == ButtonMode.Radio) {
             if (this._changeStateOnClick && !this._selected) {
                 this.selected = true;
-                this._node.emit(FUIEvent.STATUS_CHANGED, this);
+                this._node.emit(FGUIEvent.STATUS_CHANGED, this);
             }
         }
         else {

@@ -199,7 +199,7 @@ export class GLabel extends GComponent {
         str = buffer.readS();
         if (str != null) {
             this._sound = str;
-            if (buffer.readBool()){
+            if (buffer.readBool()) {
                 this._soundVolumeScale = buffer.readFloat();
             }
             this._node.on(FGUIEvent.CLICK, this.onClick_1, this);
@@ -207,8 +207,8 @@ export class GLabel extends GComponent {
 
     }
 
-    private onClick_1():void{
-        if(this._sound){
+    private onClick_1(): void {
+        if (this._sound) {
             var pi: PackageItem = UIPackage.getItemByURL(this._sound);
             if (pi) {
                 var sound: AudioClip = <AudioClip>pi.owner.getItemAsset(pi);

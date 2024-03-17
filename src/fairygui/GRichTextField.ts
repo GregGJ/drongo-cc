@@ -1,11 +1,11 @@
-import { BitmapFont, HorizontalTextAlignment, Label, RichText, SpriteAtlas, SpriteFrame } from "cc";
+import { BitmapFont, HorizontalTextAlignment, RichText, SpriteAtlas, SpriteFrame } from "cc";
 import { PackageItemType, AutoSizeType } from "./FieldTypes";
 import { GTextField } from "./GTextField";
 import { PackageItem } from "./PackageItem";
 import { UIConfig } from "./UIConfig";
 import { UIPackage } from "./UIPackage";
 import { toGrayedColor } from "./utils/ToolSet";
-import { defaultParser, UBBParser } from "./utils/UBBParser";
+import { defaultParser } from "./utils/UBBParser";
 
 export class RichTextImageAtlas extends SpriteAtlas {
 
@@ -13,19 +13,6 @@ export class RichTextImageAtlas extends SpriteAtlas {
         let pi: PackageItem = UIPackage.getItemByURL(key);
         if (pi) {
             pi.load();
-            if (pi.type == PackageItemType.Image)
-                return <SpriteFrame>pi.asset;
-            else if (pi.type == PackageItemType.MovieClip)
-                return pi.frames[0].texture;
-        }
-
-        return super.getSpriteFrame(key);
-    }
-
-    public async getSpriteFrameAsync(key: string) {
-        let pi: PackageItem = UIPackage.getItemByURL(key);
-        if (pi) {
-            await pi.loadAsync();
             if (pi.type == PackageItemType.Image)
                 return <SpriteFrame>pi.asset;
             else if (pi.type == PackageItemType.MovieClip)
@@ -139,7 +126,7 @@ export class GRichTextField extends GTextField {
             if (this._richText.maxWidth != 0)
                 this._richText["_maxWidth"] = 0;
             this._richText.string = text2;
-            if (this.maxWidth != 0 && this._node._uiProps.uiTransformComp.contentSize.width > this.maxWidth)
+            if (this.maxWidth != 0 && this._uiTrans.contentSize.width > this.maxWidth)
                 this._richText.maxWidth = this.maxWidth;
         }
         else

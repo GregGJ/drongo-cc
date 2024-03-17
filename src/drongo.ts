@@ -1,12 +1,12 @@
-import { Color, Font, JsonAsset, Node, assetManager } from "cc";
-import { Debuger, StringUtils, UIConfig, UIObjectFactory, registerFont } from "./drongo-cc";
+import { Color, Font, JsonAsset, Node } from "cc";
+import { Debuger, UIObjectFactory, registerFont } from "./drongo-cc";
 import { ConfigManager } from "./drongo/configs/ConfigManager";
 import { GUIManager } from "./drongo/gui/GUIManager";
 import { LayerManager } from "./drongo/gui/core/layer/LayerManager";
 import { Layer } from "./drongo/gui/layer/Layer";
 import { Res } from "./drongo/res/Res";
 import { ResRef } from "./drongo/res/core/ResRef";
-import { Key2URL, ResURL, URL2Key } from "./drongo/res/core/ResURL";
+import { Key2URL, ResURL } from "./drongo/res/core/ResURL";
 import { CCFLoader } from "./drongo/res/loaders/CCFLoader";
 import { ConfigLoader } from "./drongo/res/loaders/ConfigLoader";
 import { FGUILoader } from "./drongo/res/loaders/FGUILoader";

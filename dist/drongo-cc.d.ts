@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, LabelOutline, LabelShadow, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, Texture2D, gfx } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, Texture2D, gfx } from 'cc';
 
 declare class ByteBuffer {
     stringTable: Array<string>;
@@ -29,16 +29,6 @@ declare class ByteBuffer {
     readChar(): string;
     readBuffer(): ByteBuffer;
     seek(indexTablePos: number, blockIndex: number): boolean;
-}
-
-declare class ControllerAction {
-    fromPage: Array<string>;
-    toPage: Array<string>;
-    constructor();
-    run(controller: Controller, prevPage: string, curPage: string): void;
-    protected enter(controller: Controller): void;
-    protected leave(controller: Controller): void;
-    setup(buffer: ByteBuffer): void;
 }
 
 interface IHitTest {
@@ -236,6 +226,7 @@ declare class ScrollPane extends Component {
     private _owner;
     private _container;
     private _maskContainer;
+    private _maskContainerUITrans;
     private _scrollType;
     private _scrollStep;
     private _mouseWheelStep;
@@ -447,7 +438,6 @@ declare class Transition {
     private applyValue;
     setup(buffer: ByteBuffer): void;
     private decodeValue;
-    copyFrom(source: Transition, applyBaseValue?: boolean): void;
 }
 
 declare class GComponent extends GObject {
@@ -457,6 +447,8 @@ declare class GComponent extends GObject {
     private _applyingController?;
     private _rectMask?;
     private _maskContent?;
+    private _invertedMask?;
+    private _containerUITrans;
     protected _margin: Margin;
     protected _trackBounds: boolean;
     protected _boundsChanged: boolean;
@@ -470,11 +462,7 @@ declare class GComponent extends GObject {
     _scrollPane?: ScrollPane;
     _alignOffset: Vec2;
     _customMask?: Mask;
-    private _invertedMask;
-    private _excludeInvisibles;
     constructor();
-    get excludeInvisibles(): boolean;
-    set excludeInvisibles(value: boolean);
     dispose(): void;
     get displayListContainer(): Node;
     addChild(child: GObject): GObject;
@@ -523,7 +511,6 @@ declare class GComponent extends GObject {
     get mask(): GObject;
     set mask(value: GObject);
     setMask(value: GObject, inverted: boolean): void;
-    private onMaskContentReady;
     private onMaskReady;
     private onMaskContentChanged;
     get _pivotCorrectX(): number;
@@ -554,8 +541,6 @@ declare class GComponent extends GObject {
     setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     protected onEnable(): void;
     protected onDisable(): void;
-    addTransition(transition: Transition, newName?: string, applyBaseValue?: boolean): void;
-    addControllerAction(controlName: string, transition: Transition, fromPages: string[], toPages: string[], applyBaseValue?: boolean): void;
 }
 
 declare class Controller extends EventTarget {
@@ -598,7 +583,6 @@ declare class Controller extends EventTarget {
     get previousPageId(): string | null;
     runActions(): void;
     setup(buffer: ByteBuffer): void;
-    addAction(action: ControllerAction): void;
 }
 
 declare enum BlendMode {
@@ -696,7 +680,6 @@ declare class GTweener {
     private _elapsedTime;
     private _normalizedTime;
     constructor();
-    get elapsedTime(): number;
     setDelay(value: number): GTweener;
     get delay(): number;
     setDuration(value: number): GTweener;
@@ -816,9 +799,7 @@ declare class InputProcessor extends Component {
     private _touches;
     private _rollOutChain;
     private _rollOverChain;
-    private _touching;
     _captureCallback: (evt: FGUIEvent) => void;
-    get touching(): boolean;
     constructor();
     onLoad(): void;
     onEnable(): void;
@@ -1105,15 +1086,12 @@ declare class Image extends Sprite {
     set flip(value: FlipType);
     get fillMethod(): FillMethod;
     set fillMethod(value: FillMethod);
-    private updateFillType;
     get fillOrigin(): FillOrigin;
     set fillOrigin(value: FillOrigin);
     get fillClockwise(): boolean;
     set fillClockwise(value: boolean);
     get fillAmount(): number;
     set fillAmount(value: number);
-    private updateFillRange;
-    __update(): void;
     private setupFill;
 }
 
@@ -1121,7 +1099,6 @@ interface Frame {
     rect: Rect$1;
     addDelay: number;
     texture: SpriteFrame | null;
-    altasPackageItem: PackageItem;
 }
 declare class MovieClip extends Image {
     interval: number;
@@ -1204,15 +1181,6 @@ declare class UIPackage {
      */
     static loadPackage(bundle: AssetManager.Bundle, path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void): void;
     /**
-     * 载入一个包。包的资源从Asset Bundle加载.
-     * @param bundle Asset Bundle 对象.
-     * @param path 资源相对 Asset Bundle 目录的路径.
-     * @param onProgress 加载进度回调.
-     * @param onComplete 载入成功后的回调.
-     * @param delayLoad 延迟加载资源.
-     */
-    static loadPackage(bundle: AssetManager.Bundle, path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: any, pkg: UIPackage) => void, delayLoad?: boolean): void;
-    /**
      * 载入一个包。包的资源从resources加载.
      * @param path 资源相对 resources 的路径.
      * @param onComplete 载入成功后的回调.
@@ -1225,15 +1193,7 @@ declare class UIPackage {
      * @param onComplete 载入成功后的回调.
      */
     static loadPackage(path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: Error, pkg: UIPackage) => void): void;
-    /**
-     * 载入一个包。包的资源从resources加载.
-     * @param path 资源相对 resources 的路径.
-     * @param onProgress 加载进度回调.
-     * @param onComplete 载入成功后的回调.
-     * @param delayLoad 延迟加载资源.
-     */
-    static loadPackage(path: string, onProgress?: (finish: number, total: number, item: AssetManager.RequestItem) => void, onComplete?: (error: Error, pkg: UIPackage) => void, delayLoad?: boolean): void;
-    static removePackage(packageIdOrName: string, disposeAll?: boolean): void;
+    static removePackage(packageIdOrName: string): void;
     static createObject(pkgName: string, resName: string, userClass?: new () => GObject): GObject;
     static createObjectFromURL(url: string, userClass?: new () => GObject): GObject;
     static getItemURL(pkgName: string, resName: string): string;
@@ -1241,7 +1201,7 @@ declare class UIPackage {
     static normalizeURL(url: string): string;
     static setStringsSource(source: string): void;
     private loadPackage;
-    dispose(force?: boolean): void;
+    dispose(): void;
     get id(): string;
     get name(): string;
     get path(): string;
@@ -1252,21 +1212,16 @@ declare class UIPackage {
     getItemByName(resName: string): PackageItem;
     getItemAssetByName(resName: string): Asset;
     getItemAsset(item: PackageItem): Asset;
-    private loadAssetAsync;
-    getItemAssetAsync2(item: PackageItem): Promise<Asset>;
     getItemAssetAsync(item: PackageItem, onComplete?: (err: Error, item: PackageItem) => void): void;
     loadAllAssets(): void;
-    private loadMovieClipAsync;
     private loadMovieClip;
     private loadFont;
-    private loadFontAsync;
     private loadSpine;
     private loadDragonBones;
 }
 
 declare class PackageItem {
     owner: UIPackage;
-    parent?: PackageItem;
     type: PackageItemType;
     objectType?: ObjectType;
     id: string;
@@ -1278,7 +1233,6 @@ declare class PackageItem {
     loading?: Array<Function>;
     rawData?: ByteBuffer;
     asset?: Asset;
-    __loaded: boolean;
     highResolution?: Array<string>;
     branches?: Array<string>;
     scale9Grid?: Rect$1;
@@ -1293,18 +1247,11 @@ declare class PackageItem {
     extensionType?: any;
     skeletonAnchor?: Vec2;
     atlasAsset?: dragonBones.DragonBonesAtlasAsset;
-    private _ref;
-    get ref(): number;
     constructor();
     load(): Asset;
-    loadAsync(): Promise<Asset>;
     getBranch(): PackageItem;
     getHighResolution(): PackageItem;
     toString(): string;
-    addRef(): void;
-    doRelease(): void;
-    decRef(): void;
-    dispose(force?: boolean): void;
 }
 
 declare class Relations {
@@ -1607,8 +1554,6 @@ declare class GGraph extends GObject {
 
 declare class GImage extends GObject {
     _content: Image;
-    private _contentPackageItem?;
-    onReady: Function;
     constructor();
     get color(): Color;
     set color(value: Color);
@@ -1622,9 +1567,7 @@ declare class GImage extends GObject {
     set fillClockwise(value: boolean);
     get fillAmount(): number;
     set fillAmount(value: number);
-    private init;
     constructFromResource(): void;
-    dispose(): void;
     protected handleGrayedChanged(): void;
     getProp(index: number): any;
     setProp(index: number, value: any): void;
@@ -1633,7 +1576,6 @@ declare class GImage extends GObject {
 
 declare class GMovieClip extends GObject {
     _content: MovieClip;
-    private _contentPackageItem?;
     constructor();
     get color(): Color;
     set color(value: Color);
@@ -1651,9 +1593,7 @@ declare class GMovieClip extends GObject {
     protected handleSizeChanged(): void;
     getProp(index: number): any;
     setProp(index: number, value: any): void;
-    private init;
     constructFromResource(): void;
-    protected onDestroy(): void;
     setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
 }
 
@@ -1749,7 +1689,6 @@ declare class GRoot extends GComponent {
     get hasModalWindow(): boolean;
     get modalWaiting(): boolean;
     getPopupPosition(popup: GObject, target?: GObject, dir?: PopupDirection | boolean, result?: Vec2): Vec2;
-    removeChildAt(index: number, dispose?: boolean): GObject;
     showPopup(popup: GObject, target?: GObject | null, dir?: PopupDirection | boolean): void;
     togglePopup(popup: GObject, target?: GObject, dir?: PopupDirection | boolean): void;
     hidePopup(popup?: GObject): void;
@@ -1765,7 +1704,6 @@ declare class GRoot extends GComponent {
     private onTouchBegin_1;
     onWinResize(): void;
     handlePositionChanged(): void;
-    protected onUpdate(): void;
 }
 
 declare class GTextField extends GObject {
@@ -1786,18 +1724,12 @@ declare class GTextField extends GObject {
     protected _autoSize: AutoSizeType;
     protected _updatingSize: boolean;
     protected _sizeDirty: boolean;
-    protected _outline?: LabelOutline;
-    protected _shadow?: LabelShadow;
-    protected _fontPackageItem?: PackageItem;
-    private _dirtyVersion;
     constructor();
     protected createRenderer(): void;
     set text(value: string | null);
     get text(): string | null;
     get font(): string | null;
-    private init;
     set font(value: string | null);
-    dispose(): void;
     get fontSize(): number;
     set fontSize(value: number);
     get color(): Color;
@@ -1921,10 +1853,6 @@ declare class GTextInput extends GTextField {
 
 declare class GLoader extends GObject {
     _content: MovieClip;
-    /**
-     * 用于无后缀url的情况，指定使用哪种资源类型。默认为null，表示使用自动识别。
-     */
-    extension: string;
     private _url;
     private _align;
     private _verticalAlign;
@@ -1940,13 +1868,21 @@ declare class GLoader extends GObject {
     private _errorSign?;
     private _content2?;
     private _updatingLayout;
-    private _dirtyVersion;
-    private _externalAssets;
+    private _assetBundle;
+    private _containerUITrans;
     private static _errorSignPool;
     constructor();
     dispose(): void;
     get url(): ResURL | null;
     set url(value: ResURL | null);
+    /**
+     * 设置图片
+     * @param url
+     * @param bundleStr 远程包名称
+     */
+    setUrlWithBundle(url: ResURL, bundleStr?: string): void;
+    set bundle(val: string);
+    get bundle(): string;
     get icon(): ResURL | null;
     set icon(value: ResURL | null);
     get align(): AlignType;
@@ -1979,11 +1915,9 @@ declare class GLoader extends GObject {
     get texture(): SpriteFrame;
     set texture(value: SpriteFrame);
     protected loadContent(): void;
-    private init;
     protected loadFromPackage(itemURL: string): void;
     protected loadExternal(): void;
-    private addExternalAssetRef;
-    protected freeExternal(): void;
+    protected freeExternal(texture: SpriteFrame): void;
     protected onExternalLoadSuccess(texture: SpriteFrame): void;
     protected onExternalLoadFailed(): void;
     private setErrorState;
@@ -2092,40 +2026,6 @@ declare class GLabel extends GComponent {
     setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     private onClick_1;
 }
-
-/**
- * 资源地址
- */
-type ResURL = string | {
-    url: string;
-    bundle: string;
-    type: string | any;
-    data?: string;
-};
-/**
- * 资源地址转唯一KEY
- * @param url
- * @returns
- */
-declare function URL2Key(url: ResURL): string;
-/**
- * 是否相等
- * @param a
- * @param b
- */
-declare function URLEqual(a: ResURL, b: ResURL): boolean;
-/**
- * 唯一key转URL
- * @param key
- * @returns
- */
-declare function Key2URL(key: string): ResURL;
-/**
- * 获取全路径
- * @param url
- * @returns
- */
-declare function FullURL(url: ResURL): string;
 
 declare class GButton extends GComponent {
     protected _titleObject: GObject;
@@ -2442,18 +2342,17 @@ declare class UIConfig {
     static popupMenu_seperator: string;
     static loaderErrorSign: string;
     static tooltipsWin: string;
-    /**提示管理器 */
-    static tooltipsManager: ITooltipsManager;
     static defaultComboBoxVisibleItemCount: number;
     static touchScrollSensitivity: number;
+    static loaderAssetsBundleName: string;
     static touchDragSensitivity: number;
     static clickDragSensitivity: number;
     static bringWindowToFrontOnClick: boolean;
     static frameTimeForAsyncUIConstruction: number;
     static linkUnderline: boolean;
     static defaultUILayer: number;
-    static enableDelayLoad: boolean;
-    static autoReleaseAssets: boolean;
+    /**提示管理器 */
+    static tooltipsManager: ITooltipsManager;
 }
 declare function registerFont(name: string, font: Font | string, bundle?: AssetManager.Bundle): void;
 
@@ -2624,6 +2523,40 @@ declare class UBBParser {
     protected getTagText(remove?: boolean): string;
     parse(text: string, remove?: boolean): string;
 }
+
+/**
+ * 资源地址
+ */
+type ResURL = string | {
+    url: string;
+    bundle: string;
+    type: string | any;
+    data?: string;
+};
+/**
+ * 资源地址转唯一KEY
+ * @param url
+ * @returns
+ */
+declare function URL2Key(url: ResURL): string;
+/**
+ * 是否相等
+ * @param a
+ * @param b
+ */
+declare function URLEqual(a: ResURL, b: ResURL): boolean;
+/**
+ * 唯一key转URL
+ * @param key
+ * @returns
+ */
+declare function Key2URL(key: string): ResURL;
+/**
+ * 获取全路径
+ * @param url
+ * @returns
+ */
+declare function FullURL(url: ResURL): string;
 
 /**
  * 音频通道

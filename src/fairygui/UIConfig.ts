@@ -43,14 +43,15 @@ export class UIConfig {
     public static loaderErrorSign: string;
     //Resources for tooltips.
     public static tooltipsWin: string;
-    /**提示管理器 */
-    public static tooltipsManager:ITooltipsManager
 
     //Max items displayed in combobox without scrolling.
     public static defaultComboBoxVisibleItemCount: number = 10;
 
     // Pixel offsets of finger to trigger scrolling.
     public static touchScrollSensitivity: number = 20;
+
+    //Default Gloader assetsBundle Name.
+    public static loaderAssetsBundleName:string;
 
     // Pixel offsets of finger to trigger dragging.
     public static touchDragSensitivity: number = 10;
@@ -68,9 +69,8 @@ export class UIConfig {
     //Default group name of UI node.<br/>
     public static defaultUILayer: number = Layers.Enum.UI_2D;
 
-    public static enableDelayLoad: boolean = true;
-    // 
-    public static autoReleaseAssets: boolean = false;
+    /**提示管理器 */
+    public static tooltipsManager:ITooltipsManager
 }
 
 let _fontRegistry: { [index: string]: Font } = {};

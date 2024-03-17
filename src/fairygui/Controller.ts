@@ -36,7 +36,7 @@ export class Controller extends EventTarget {
     public set selectedIndex(value: number) {
         if (this._selectedIndex != value) {
             if (value > this._pageIds.length - 1)
-                throw "index out of bounds: " + value;
+                throw new Error("index out of bounds: " + value);
 
             this.changing = true;
             this._previousIndex = this._selectedIndex;
@@ -61,7 +61,7 @@ export class Controller extends EventTarget {
     public setSelectedIndex(value: number): void {
         if (this._selectedIndex != value) {
             if (value > this._pageIds.length - 1)
-                throw "index out of bounds: " + value;
+                throw new Error("index out of bounds: " + value);
 
             this.changing = true;
             this._previousIndex = this._selectedIndex;
@@ -289,13 +289,6 @@ export class Controller extends EventTarget {
         else
             this._selectedIndex = -1;
     }
-
-    addAction(action: ControllerAction): void {
-        if (!this._actions)
-            this._actions = new Array<ControllerAction>();
-        
-        this._actions.push(action);
-    }
 }
 
 
@@ -304,7 +297,7 @@ import { ChangePageAction } from "./action/ChangePageAction"
 import { EventTarget } from "cc";
 import { GComponent } from "./GComponent";
 
-export function createAction(type: number): ControllerAction {
+function createAction(type: number): ControllerAction {
     switch (type) {
         case 0:
             return new PlayTransitionAction();

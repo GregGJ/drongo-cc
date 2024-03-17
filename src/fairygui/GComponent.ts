@@ -1,6 +1,6 @@
 import { Mask, Vec2, Size, Node, UITransform, Constructor } from "cc";
-import { Controller, createAction } from "./Controller";
-import { FGUIEvent } from "./event/FGUIEvent";
+import { Controller } from "./Controller";
+import { FGUIEvent} from "./event/FGUIEvent";
 import { IHitTest, PixelHitTest, ChildHitArea } from "./event/HitTest";
 import { ChildrenRenderOrder, OverflowType, ObjectType } from "./FieldTypes";
 import { GGraph } from "./GGraph";
@@ -14,9 +14,8 @@ import { Transition } from "./Transition";
 import { TranslationHelper } from "./TranslationHelper";
 import { UIConfig } from "./UIConfig";
 import { UIContentScaler } from "./UIContentScaler";
-import { Decls, IObjectFactoryType, UIPackage } from "./UIPackage";
+import { Decls, UIPackage } from "./UIPackage";
 import { ByteBuffer } from "./utils/ByteBuffer";
-import { PlayTransitionAction } from "./action/PlayTransitionAction";
 
 export class GComponent extends GObject {
     public hitArea?: IHitTest;
@@ -26,6 +25,8 @@ export class GComponent extends GObject {
     private _applyingController?: Controller;
     private _rectMask?: Mask;
     private _maskContent?: GObject;
+    private _invertedMask?: boolean = false;
+    private _containerUITrans: UITransform;
 
     protected _margin: Margin;
     protected _trackBounds: boolean;
@@ -40,10 +41,7 @@ export class GComponent extends GObject {
     public _container: Node;
     public _scrollPane?: ScrollPane;
     public _alignOffset: Vec2;
-    public _customMask?: Mask
-
-    private _invertedMask: boolean = false;
-    private _excludeInvisibles: boolean = false;
+    public _customMask?: Mask;
 
     public constructor() {
         super();
@@ -57,19 +55,9 @@ export class GComponent extends GObject {
 
         this._container = new Node("Container");
         this._container.layer = UIConfig.defaultUILayer;
-        this._container.addComponent(UITransform).setAnchorPoint(0, 1);
+        this._containerUITrans = this._container.addComponent(UITransform);
+        this._containerUITrans.setAnchorPoint(0, 1);
         this._node.addChild(this._container);
-    }
-
-    public get excludeInvisibles(): boolean {
-        return this._excludeInvisibles;
-    }
-
-    public set excludeInvisibles(value: boolean) {
-        if (this._excludeInvisibles != value) {
-            this._excludeInvisibles = value;
-            this.setBoundsChangedFlag();
-        }
     }
 
     public dispose(): void {
@@ -113,7 +101,7 @@ export class GComponent extends GObject {
 
     public addChildAt(child: GObject, index: number): GObject {
         if (!child)
-            throw "child is null";
+            throw new Error("child is null");
 
         var numChildren: number = this._children.length;
 
@@ -147,7 +135,7 @@ export class GComponent extends GObject {
             return child;
         }
         else {
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
         }
     }
 
@@ -197,7 +185,7 @@ export class GComponent extends GObject {
             return child;
         }
         else {
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
         }
     }
 
@@ -216,7 +204,7 @@ export class GComponent extends GObject {
         if (index >= 0 && index < this.numChildren)
             return this._children[index] as T;
         else
-            throw "Invalid child index";
+            throw new Error("Invalid child index");
     }
 
     public getChild<T extends GObject>(name: string, classType?: Constructor<T>): T {
@@ -291,7 +279,7 @@ export class GComponent extends GObject {
     public setChildIndex(child: GObject, index: number): void {
         var oldIndex: number = this._children.indexOf(child);
         if (oldIndex == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
 
         if (child.sortingOrder != 0) //no effect
             return;
@@ -308,7 +296,7 @@ export class GComponent extends GObject {
     public setChildIndexBefore(child: GObject, index: number): number {
         var oldIndex: number = this._children.indexOf(child);
         if (oldIndex == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
 
         if (child.sortingOrder != 0) //no effect
             return oldIndex;
@@ -352,7 +340,7 @@ export class GComponent extends GObject {
         var index1: number = this._children.indexOf(child1);
         var index2: number = this._children.indexOf(child2);
         if (index1 == -1 || index2 == -1)
-            throw "Not a child of this container";
+            throw new Error("Not a child of this container");
         this.swapChildrenAt(index1, index2);
     }
 
@@ -406,7 +394,7 @@ export class GComponent extends GObject {
     public removeController(c: Controller): void {
         var index: number = this._controllers.indexOf(c);
         if (index == -1)
-            throw "controller not exists";
+            throw new Error("controller not exists");
 
         c.parent = null;
         this._controllers.splice(index, 1);
@@ -423,11 +411,6 @@ export class GComponent extends GObject {
     }
 
     private onChildAdd(child: GObject, index: number): void {
-        if(!child.node) {
-            console.error("child.node is null");
-            return;
-        }
-        
         child.node.parent = this._container;
         child.node.active = child._finalVisible;
 
@@ -654,12 +637,16 @@ export class GComponent extends GObject {
             value.node.on(Node.EventType.ANCHOR_CHANGED, this.onMaskContentChanged, this);
 
             this._invertedMask = inverted;
-            
-            if(UIConfig.enableDelayLoad && this._maskContent instanceof GImage && !this._maskContent._content.spriteFrame) {
-                this._maskContent.onReady = this.onMaskContentReady.bind(this);
-            }else{
-                this.onMaskContentReady();
-            }
+            if (this._node.activeInHierarchy)
+                this.onMaskReady();
+            else
+                this.on(FGUIEvent.DISPLAY, this.onMaskReady, this);
+
+            this.onMaskContentChanged();
+            if (this._scrollPane)
+                this._scrollPane.adjustMaskContainer();
+            else
+                this._container.setPosition(0, 0);
         }
         else if (this._customMask) {
             if (this._scrollPane)
@@ -674,19 +661,6 @@ export class GComponent extends GObject {
             else
                 this._container.setPosition(this._pivotCorrectX, this._pivotCorrectY);
         }
-    }
-
-    private onMaskContentReady() {
-        if (this._node.activeInHierarchy)
-            this.onMaskReady();
-        else
-            this.on(FGUIEvent.DISPLAY, this.onMaskReady, this);
-
-        this.onMaskContentChanged();
-        if (this._scrollPane)
-            this._scrollPane.adjustMaskContainer();
-        else
-            this._container.setPosition(0, 0);
     }
 
     private onMaskReady() {
@@ -775,7 +749,7 @@ export class GComponent extends GObject {
         if (this._scrollPane)
             this._scrollPane.onOwnerSizeChanged();
         else
-            this._container._uiProps.uiTransformComp.setContentSize(this.viewWidth, this.viewHeight);
+            this._containerUITrans.setContentSize(this.viewWidth, this.viewHeight);
     }
 
     protected handleGrayedChanged(): void {
@@ -817,7 +791,7 @@ export class GComponent extends GObject {
             s_vec2.x += this._container.position.x;
             s_vec2.y += this._container.position.y;
 
-            let clippingSize: Size = this._container._uiProps.uiTransformComp.contentSize;
+            let clippingSize: Size = this._containerUITrans.contentSize;
             if (s_vec2.x < 0 || s_vec2.y < 0 || s_vec2.x >= clippingSize.width || s_vec2.y >= clippingSize.height)
                 return null;
         }
@@ -905,9 +879,6 @@ export class GComponent extends GObject {
 
             for (var i: number = 0; i < len; i++) {
                 var child: GObject = this._children[i];
-                if (this._excludeInvisibles && !child.internalVisible3)
-                    continue;
-
                 tmp = child.x;
                 if (tmp < ax)
                     ax = tmp;
@@ -1304,42 +1275,6 @@ export class GComponent extends GObject {
         let cnt: number = this._transitions.length;
         for (let i: number = 0; i < cnt; ++i)
             this._transitions[i].onDisable();
-    }
-
-    addTransition(transition: Transition, newName?: string, applyBaseValue = true): void {
-        let trans = new Transition(this);
-        trans.copyFrom(transition, applyBaseValue);
-        if(newName) {
-            trans.name = newName;
-        }
-        this._transitions.push(trans);
-    }
-
-    addControllerAction(controlName: string, transition: Transition, fromPages: string[], toPages: string[], applyBaseValue = true): void {
-        let ctrl = this.getController(controlName);
-        if (!ctrl)
-            return;
-
-        this.addTransition(transition, null, applyBaseValue);
-
-        var action = createAction(0) as PlayTransitionAction;
-        action.transitionName = transition.name;
-
-        if(fromPages) {
-            fromPages = fromPages.map((it) => {
-                return ctrl.getPageIdByName(it);
-            });
-        }
-        if(toPages) {
-            toPages = toPages.map((it) => {
-                return ctrl.getPageIdByName(it);
-            });
-        }
-
-        action.fromPage = fromPages;
-        action.toPage = toPages;
-
-        ctrl.addAction(action);
     }
 }
 
