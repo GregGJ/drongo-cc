@@ -94,10 +94,17 @@ export class GUIProxy {
         //销毁组件
         viewCreatorCom.destroy();
         //配置表
-        if (this.mediator.configs != null && this.mediator.configs.length > 0) {
+        if (this.mediator.configs && this.mediator.configs.length > 0) {
             for (let index = 0; index < this.mediator.configs.length; index++) {
                 const sheet = this.mediator.configs[index];
                 const url = ConfigManager.Sheet2URL(sheet);
+                this.urls.push(url);
+            }
+        }
+        //依赖的资源
+        if (this.mediator.assets && this.mediator.assets.length > 0) {
+            for (let index = 0; index < this.mediator.assets.length; index++) {
+                const url = this.mediator.assets[index];
                 this.urls.push(url);
             }
         }
@@ -107,8 +114,14 @@ export class GUIProxy {
     //加载UI资源
     private __loadAssets(): void {
         Res.GetResRefList(this.urls, this.info.key,
-            (progress: number) => {
-                LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress * 0.5 })
+            (p_progress: number) => {
+                let progress: number = 0;
+                if (this.mediator.services && this.mediator.services.length > 0) {
+                    progress = p_progress * 0.5 * this.mediator.loadingViewTotalRatio;
+                } else {
+                    progress = p_progress * 0.9 * this.mediator.loadingViewTotalRatio;
+                }
+                LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress })
             }).then(
                 (result: Array<ResRef>) => {
                     this.assets = result;
@@ -127,7 +140,13 @@ export class GUIProxy {
             return;
         }
         ServiceManager.Load(this.mediator.services,
-            (progress: number) => {
+            (p_progress: number) => {
+                let progress: number = 0;
+                if (this.mediator.configs && this.mediator.configs.length > 0) {
+                    progress = 0.5 + p_progress * 0.4 * this.mediator.loadingViewTotalRatio;
+                } else {
+                    progress = p_progress * 0.9 * this.mediator.loadingViewTotalRatio;
+                }
                 LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 0.5 + progress * 0.4 });
             }, (err: Error) => {
                 if (err) {
@@ -153,7 +172,7 @@ export class GUIProxy {
      * UI创建完成回调
      */
     private __createUICallBack(): void {
-        LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 1 });
+        LoadingView.ChangeData({ progress: this.mediator.loadingViewTotalRatio });
         this.__loadState = LoadState.Loaded;
         this.mediator!.Init();
         this.mediator.inited = true;

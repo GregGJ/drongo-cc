@@ -3621,6 +3621,8 @@ interface IGUIMediator {
      * 依赖的配置
      */
     configs: Array<string>;
+    /**依赖的资源*/
+    assets: Array<ResURL>;
     /**
      * 依赖的服务
      */
@@ -3635,6 +3637,10 @@ interface IGUIMediator {
      * 显示界面时是否关闭进度条
      */
     closeLoadingView: boolean;
+    /**
+     * 界面准备时汇报总比值
+     */
+    loadingViewTotalRatio: number;
     /**初始化完毕 */
     inited: boolean;
     /**
@@ -4131,10 +4137,14 @@ declare class GUIMediator extends BaseMediator implements IGUIMediator {
     }>;
     /**依赖的配置表 */
     configs: Array<string>;
+    /**依赖的资源*/
+    assets: Array<ResURL>;
     /**是否显示进度界面 */
     showLoadingView: boolean;
     /**显示界面时是否关闭进度条*/
     closeLoadingView: boolean;
+    /**界面从开始加载到底层调用Show方法之前的进度总比值 */
+    loadingViewTotalRatio: number;
     /**根节点 */
     viewComponent: GComponent | null;
     /**遮罩 */
@@ -6521,6 +6531,178 @@ declare class DDLSSimpleView {
     private VertexIsInsideAABB;
 }
 
+interface IMatcher {
+    readonly flags: number;
+    readonly elements: Array<number>;
+}
+
+declare class Matcher extends BitFlag implements IMatcher {
+    constructor(flags: Array<number>);
+}
+
+/**
+ * 必须所有成立
+ */
+declare class MatcherAllOf extends Matcher {
+}
+
+/**
+ * 任意一个成立
+ */
+declare class MatcherAnyOf extends Matcher {
+}
+
+/**
+ * 不能包含
+ */
+declare class MatcherNoneOf extends Matcher {
+}
+
+declare class ESCGroup {
+    /**
+     * 全部包含或任意包含
+     */
+    matcher: MatcherAllOf | MatcherAnyOf;
+    /**
+     * 不能包含的
+     */
+    matcherNoneOf: MatcherNoneOf;
+    /**
+     * 编组所匹配的元素(内部接口)
+     */
+    _entitys: Dictionary<string, ESCEntity>;
+    private __id;
+    constructor();
+    Init(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): void;
+    get id(): string;
+    private static __pool;
+    static Create(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): ESCGroup;
+    static Recycle(value: ESCGroup): void;
+}
+
+declare class ESCSystem {
+    /**
+     * 内部接口
+     */
+    _group: ESCGroup;
+    /**
+     * 系统
+     * @param allOrAny  所有或任意一个包含
+     * @param none      不能包含
+     */
+    constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
+    Tick(time: number): void;
+}
+
+declare class ESCWorld {
+    /**组件 */
+    private __components;
+    /**实体*/
+    private __entitys;
+    /**系统*/
+    private __systems;
+    constructor();
+    /**
+     * 心跳驱动
+     * @param time
+     */
+    Tick(time: number): void;
+    /**
+     * 创建一个实体
+     */
+    CreateEntity(id: string): ESCEntity;
+    /**
+     * 通过ID获取实体
+     * @param id
+     */
+    GetEntity(id: string): ESCEntity;
+    /**
+     * 添加系统
+     */
+    AddSystem(value: ESCSystem): void;
+    /**
+     * 删除系统
+     * @param value
+     */
+    RemoveSystem(value: ESCSystem): void;
+    /**
+     * 根据类型获取组件列表
+     * @param type
+     */
+    GetComponent(type: number): ESCComponent[];
+    _matcherGroup(group: ESCGroup): void;
+    /**
+     * 内部接口，请勿调用
+     * @param com
+     */
+    _addComponent(com: ESCComponent): void;
+    /**
+     * 内部接口，请勿调用
+     * @param com
+     */
+    _removeComponent(com: ESCComponent): void;
+    /**
+     * 内部接口，请勿调用
+     * @param value
+     */
+    _removeEntity(value: ESCEntity): void;
+}
+
+declare class ESCEntity {
+    private __components;
+    private __world;
+    private __id;
+    private __componentFlags;
+    constructor(id: string, world: ESCWorld);
+    /**
+     * 添加组件
+     * @param value
+     */
+    AddComponent(value: ESCComponent): ESCComponent;
+    /**
+     * 删除组件
+     * @param id
+     */
+    RemoveComponent(value: ESCComponent): void;
+    /**
+     * 获取组件
+     * @param type
+     */
+    GetComponent(type: number): ESCComponent;
+    /**
+     * 获取组件列表
+     * @param type
+     * @returns
+     */
+    GetComponents(type: number): Array<ESCComponent>;
+    private __removeComponent;
+    /**
+     * 唯一ID
+     */
+    get id(): string;
+    /**
+     * 销毁
+     */
+    Dispose(): void;
+    /**
+     * 是否符合匹配规则
+     * @param group
+     */
+    _matcherGroup(group: ESCGroup): boolean;
+}
+
+declare class ESCComponent {
+    /**
+     * 所属实体
+     */
+    entity: ESCEntity;
+    /**
+     * 类型
+     */
+    get type(): number;
+    dispose(): void;
+}
+
 declare class Drongo {
     /**UI资源AssetBundle */
     static UIBundle: string;
@@ -6553,4 +6735,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Tr as Lang, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

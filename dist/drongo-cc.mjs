@@ -23914,10 +23914,17 @@ class GUIProxy {
         //销毁组件
         viewCreatorCom.destroy();
         //配置表
-        if (this.mediator.configs != null && this.mediator.configs.length > 0) {
+        if (this.mediator.configs && this.mediator.configs.length > 0) {
             for (let index = 0; index < this.mediator.configs.length; index++) {
                 const sheet = this.mediator.configs[index];
                 const url = ConfigManager.Sheet2URL(sheet);
+                this.urls.push(url);
+            }
+        }
+        //依赖的资源
+        if (this.mediator.assets && this.mediator.assets.length > 0) {
+            for (let index = 0; index < this.mediator.assets.length; index++) {
+                const url = this.mediator.assets[index];
                 this.urls.push(url);
             }
         }
@@ -23925,8 +23932,15 @@ class GUIProxy {
     }
     //加载UI资源
     __loadAssets() {
-        Res.GetResRefList(this.urls, this.info.key, (progress) => {
-            LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress * 0.5 });
+        Res.GetResRefList(this.urls, this.info.key, (p_progress) => {
+            let progress = 0;
+            if (this.mediator.services && this.mediator.services.length > 0) {
+                progress = p_progress * 0.5 * this.mediator.loadingViewTotalRatio;
+            }
+            else {
+                progress = p_progress * 0.9 * this.mediator.loadingViewTotalRatio;
+            }
+            LoadingView.ChangeData({ label: this.info.key + " Res Loading...", progress: progress });
         }).then((result) => {
             this.assets = result;
             this.__initServices();
@@ -23942,7 +23956,14 @@ class GUIProxy {
             this.__createUI();
             return;
         }
-        ServiceManager.Load(this.mediator.services, (progress) => {
+        ServiceManager.Load(this.mediator.services, (p_progress) => {
+            let progress = 0;
+            if (this.mediator.configs && this.mediator.configs.length > 0) {
+                progress = 0.5 + p_progress * 0.4 * this.mediator.loadingViewTotalRatio;
+            }
+            else {
+                progress = p_progress * 0.9 * this.mediator.loadingViewTotalRatio;
+            }
             LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 0.5 + progress * 0.4 });
         }, (err) => {
             if (err) {
@@ -23966,7 +23987,7 @@ class GUIProxy {
      * UI创建完成回调
      */
     __createUICallBack() {
-        LoadingView.ChangeData({ label: this.info.key + " Services Init...", progress: 1 });
+        LoadingView.ChangeData({ progress: this.mediator.loadingViewTotalRatio });
         this.__loadState = LoadState.Loaded;
         this.mediator.Init();
         this.mediator.inited = true;
@@ -24622,6 +24643,8 @@ class GUIMediator extends BaseMediator {
         this.showLoadingView = false;
         /**显示界面时是否关闭进度条*/
         this.closeLoadingView = true;
+        /**界面从开始加载到底层调用Show方法之前的进度总比值 */
+        this.loadingViewTotalRatio = 1;
         /**根节点 */
         this.viewComponent = null;
         /**遮罩 */
@@ -24757,6 +24780,7 @@ class GUIMediator extends BaseMediator {
         }
         //依赖的配置
         this.configs = null;
+        this.assets = null;
         if (this.services) {
             for (let index = 0; index < this.services.length; index++) {
                 const element = this.services[index];
@@ -31717,4 +31741,362 @@ class DDLSSimpleView {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Tr as Lang, Layer, LayerManager, List, LoadingView, MapConfigAccessor, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+class Matcher extends BitFlag {
+    constructor(flags) {
+        super();
+        for (let index = 0; index < flags.length; index++) {
+            this.Add(flags[index]);
+        }
+    }
+}
+
+/**
+ * 必须所有成立
+ */
+class MatcherAllOf extends Matcher {
+}
+
+/**
+ * 任意一个成立
+ */
+class MatcherAnyOf extends Matcher {
+}
+
+/**
+ * 不能包含
+ */
+class MatcherNoneOf extends Matcher {
+}
+
+class ESCComponent {
+    /**
+     * 类型
+     */
+    get type() {
+        return 0;
+    }
+    dispose() {
+    }
+}
+
+class ESCEntity {
+    constructor(id, world) {
+        this.__id = id;
+        this.__world = world;
+        this.__components = new Dictionary();
+        this.__componentFlags = new BitFlag();
+    }
+    /**
+     * 添加组件
+     * @param value
+     */
+    AddComponent(value) {
+        let list = this.__components.Get(value.type);
+        if (list) {
+            let index = list.indexOf(value);
+            if (index >= 0) {
+                throw new Error("重复添加Component到Entity");
+            }
+        }
+        else {
+            list = [];
+            this.__components.Set(value.type, list);
+        }
+        let world = true;
+        //如果已经在实体上
+        if (value.entity) {
+            value.entity.__removeComponent(value, false);
+            world = false;
+        }
+        value.entity = this;
+        list.push(value);
+        this.__componentFlags.Add(value.type);
+        if (world) {
+            this.__world._addComponent(value);
+        }
+        return value;
+    }
+    /**
+     * 删除组件
+     * @param id
+     */
+    RemoveComponent(value) {
+        this.__removeComponent(value, true);
+    }
+    /**
+     * 获取组件
+     * @param type
+     */
+    GetComponent(type) {
+        let list = this.__components.Get(type);
+        if (list && list.length > 0) {
+            return list[0];
+        }
+        return null;
+    }
+    /**
+     * 获取组件列表
+     * @param type
+     * @returns
+     */
+    GetComponents(type) {
+        return this.__components.Get(type);
+    }
+    __removeComponent(value, world) {
+        let list = this.__components.Get(value.type);
+        if (list == null && list.length == 0) {
+            throw new Error("该组件不是属于Entity:" + this.__id);
+        }
+        let index = list.indexOf(value);
+        if (index < 0) {
+            throw new Error("该组件不是属于Entity:" + this.__id);
+        }
+        this.__componentFlags.Remove(value.type);
+        if (world) {
+            this.__world._removeComponent(value);
+        }
+        list.splice(index, 1);
+        value.entity = null;
+    }
+    /**
+     * 唯一ID
+     */
+    get id() {
+        return this.__id;
+    }
+    /**
+     * 销毁
+     */
+    Dispose() {
+        //从世界中删除组件记录
+        let components = this.__components.elements;
+        let comList;
+        let com;
+        for (let index = 0; index < components.length; index++) {
+            comList = components[index];
+            for (let index = 0; index < comList.length; index++) {
+                com = comList[index];
+                this.__world._removeComponent(com);
+            }
+        }
+        this.__world._removeEntity(this);
+        this.__components = null;
+        this.__world = null;
+        this.__componentFlags.Destroy();
+        this.__componentFlags = null;
+    }
+    /**
+     * 是否符合匹配规则
+     * @param group
+     */
+    _matcherGroup(group) {
+        let mainMatcher = false;
+        if (group.matcher instanceof MatcherAllOf) {
+            if (this.__componentFlags.Has(group.matcher.flags)) {
+                mainMatcher = true;
+            }
+        }
+        else {
+            if (this.__componentFlags.flags & group.matcher.flags) {
+                mainMatcher = true;
+            }
+        }
+        let noneMatcher = true;
+        if (group.matcherNoneOf) {
+            if (this.__componentFlags.flags & group.matcherNoneOf.flags) {
+                noneMatcher = false;
+            }
+        }
+        return mainMatcher && noneMatcher;
+    }
+}
+
+class ESCGroup {
+    constructor() {
+        /**
+         * 编组所匹配的元素(内部接口)
+         */
+        this._entitys = new Dictionary();
+    }
+    Init(allOrAny, none) {
+        this.matcher = allOrAny;
+        this.matcherNoneOf = none;
+        if (none) {
+            this.__id = "id:" + this.matcher.flags + "|" + none.flags;
+        }
+        else {
+            this.__id = "id:" + this.matcher.flags;
+        }
+    }
+    get id() {
+        return this.__id;
+    }
+    static Create(allOrAny, none) {
+        let result;
+        if (this.__pool.length) {
+            result = this.__pool.shift();
+        }
+        else {
+            result = new ESCGroup();
+        }
+        result.Init(allOrAny, none);
+        return result;
+    }
+    static Recycle(value) {
+        let index = this.__pool.indexOf(value);
+        if (index >= 0) {
+            throw new Error("重复回收!");
+        }
+        this.__pool.push(value);
+    }
+}
+ESCGroup.__pool = [];
+
+class ESCWorld {
+    constructor() {
+        this.__components = new Dictionary();
+        this.__entitys = new Dictionary();
+        this.__systems = [];
+    }
+    /**
+     * 心跳驱动
+     * @param time
+     */
+    Tick(time) {
+        for (var system of this.__systems) {
+            system.Tick(time);
+        }
+    }
+    /**
+     * 创建一个实体
+     */
+    CreateEntity(id) {
+        let entity = new ESCEntity(id, this);
+        this.__entitys.Set(entity.id, entity);
+        return entity;
+    }
+    /**
+     * 通过ID获取实体
+     * @param id
+     */
+    GetEntity(id) {
+        return this.__entitys.Get(id);
+    }
+    /**
+     * 添加系统
+     */
+    AddSystem(value) {
+        let index = this.__systems.indexOf(value);
+        if (index >= 0) {
+            throw new Error("重复添加系统");
+        }
+        this.__systems.push(value);
+        //按照编组规则匹配
+        this._matcherGroup(value._group);
+    }
+    /**
+     * 删除系统
+     * @param value
+     */
+    RemoveSystem(value) {
+        let index = this.__systems.indexOf(value);
+        if (index < 0) {
+            throw new Error("找不到要删除的系统");
+        }
+        this.__systems.splice(index, 1);
+        //回收
+        ESCGroup.Recycle(value._group);
+    }
+    /**
+     * 根据类型获取组件列表
+     * @param type
+     */
+    GetComponent(type) {
+        return this.__components.Get(type);
+    }
+    //=====================================内部接口=======================================================//
+    _matcherGroup(group) {
+        //通过主匹配规则筛选出最短的
+        for (let index = 0; index < group.matcher.elements.length; index++) {
+            group.matcher.elements[index];
+            {
+                continue;
+            }
+        }
+        {
+            return;
+        }
+    }
+    /**
+     * 内部接口，请勿调用
+     * @param com
+     */
+    _addComponent(com) {
+        let list = this.__components.Get(com.type);
+        if (list == null) {
+            list = [];
+            this.__components.Set(com.type, list);
+        }
+        let index = list.indexOf(com);
+        if (index >= 0) {
+            throw new Error("重复添加组件！");
+        }
+        list.push(com);
+        for (let index = 0; index < this.__systems.length; index++) {
+            const system = this.__systems[index];
+            //已经在里面了，就不管这个组了
+            if (system._group._entitys.Has(com.entity.id)) {
+                continue;
+            }
+            if (com.entity._matcherGroup(system._group)) {
+                system._group._entitys.Set(com.entity.id, com.entity);
+            }
+        }
+    }
+    /**
+     * 内部接口，请勿调用
+     * @param com
+     */
+    _removeComponent(com) {
+        let list = this.__components.Get(com.type);
+        if (list == null) {
+            return;
+        }
+        let index = list.indexOf(com);
+        if (index < 0) {
+            throw new Error("找不到要删除的组件");
+        }
+        list.splice(index, 0);
+        for (let index = 0; index < this.__systems.length; index++) {
+            const system = this.__systems[index];
+            if (system._group._entitys.Has(com.entity.id)) {
+                system._group._entitys.Delete(com.entity.id);
+            }
+        }
+    }
+    /**
+     * 内部接口，请勿调用
+     * @param value
+     */
+    _removeEntity(value) {
+        if (!this.__entitys.Has(value.id)) {
+            throw new Error("找不到要删除的entity:" + value.id);
+        }
+        this.__entitys.Delete(value.id);
+    }
+}
+
+class ESCSystem {
+    /**
+     * 系统
+     * @param allOrAny  所有或任意一个包含
+     * @param none      不能包含
+     */
+    constructor(allOrAny, none) {
+        this._group = ESCGroup.Create(allOrAny, none);
+    }
+    Tick(time) {
+    }
+}
+
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

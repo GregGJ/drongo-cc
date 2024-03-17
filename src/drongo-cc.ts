@@ -87,7 +87,7 @@ export { Debuger } from "./drongo/debugers/Debuger"
 // export { IDebuger } from "./drongo/debugers/IDebuger"
 
 //events
-export { DEvent} from "./drongo/events/DEvent"
+export { DEvent } from "./drongo/events/DEvent"
 export { EventDispatcher } from "./drongo/events/EventDispatcher"
 export { IEventDispatcher } from "./drongo/events/IEventDispatcher"
 
@@ -144,7 +144,7 @@ export { ILoader } from "./drongo/res/core/ILoader"
 // export { IResManager } from "./drongo/res/core/IResManager"
 export { IResource } from "./drongo/res/core/IResource"
 export { ResRef } from "./drongo/res/core/ResRef"
-export { FullURL, Key2URL,URLEqual, ResURL, URL2Key } from "./drongo/res/core/ResURL"
+export { FullURL, Key2URL, URLEqual, ResURL, URL2Key } from "./drongo/res/core/ResURL"
 //res/loader
 // export { CCLoaderImpl } from "./drongo/res/loaders/CCLoaderImpl"
 // export { FGUILoader } from "./drongo/res/loaders/FGUILoader"
@@ -156,7 +156,7 @@ export { FullURL, Key2URL,URLEqual, ResURL, URL2Key } from "./drongo/res/core/Re
 // export { ResImpl } from "./drongo/res/res/ResImpl"
 export { ResManager } from "./drongo/res//res/ResManager"
 // export { ResManagerImpl } from "./drongo/res//res/ResManagerImpl"
-export { Resource} from "./drongo/res/res/Resource"
+export { Resource } from "./drongo/res/res/Resource"
 
 
 //services
@@ -185,7 +185,7 @@ export { BitFlag } from "./drongo/utils/BitFlag"
 export { ByteArray } from "./drongo/utils/ByteArray"
 export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
-export { Tr as Lang } from "./drongo/utils/Tr"
+export { Tr } from "./drongo/utils/Tr"
 export { StringUtils } from "./drongo/utils/StringUtils"
 
 
@@ -236,6 +236,21 @@ export { DDLSBitmapMeshFactory } from "./drongo/navigations/ddls2d/factories/DDL
 
 export { Polygon } from "./drongo/navigations/ddls2d/utils/Polygon"
 export { DDLSSimpleView } from "./drongo/navigations/ddls2d/view/DDLSSimpleView"
+
+//esc系统
+export { IMatcher } from "./drongo/entitys/matchers/IMatcher"
+export { Matcher } from "./drongo/entitys/matchers/Matcher"
+export { MatcherAllOf } from "./drongo/entitys/matchers/MatcherAllOf"
+export { MatcherAnyOf } from "./drongo/entitys/matchers/MatcherAnyOf"
+export { MatcherNoneOf } from "./drongo/entitys/matchers/MatcherNoneOf"
+
+export { ESCComponent } from "./drongo/entitys/ESCComponent"
+export { ESCEntity } from "./drongo/entitys/ESCEntity"
+export { ESCGroup } from "./drongo/entitys/ESCGroup"
+export { ESCWorld } from "./drongo/entitys/ESCWorld"
+export { ESCSystem } from "./drongo/entitys/ESCSystem"
+
+
 
 //框架对外接口
 export { Drongo } from "./drongo"

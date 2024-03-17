@@ -12,6 +12,7 @@ import { IGUIMediator } from "../core/IGUIMediator";
 import { BaseMediator } from "./BaseMediator";
 import { IGUIInfo } from "./IGUIInfo";
 import { SubGUIMediator } from "./SubGUIMediator";
+import { ResURL } from "../../../drongo-cc";
 
 
 /**
@@ -25,11 +26,14 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
     services: Array<{ new(): IService }>;
     /**依赖的配置表 */
     configs: Array<string>;
+    /**依赖的资源*/
+    assets: Array<ResURL>;
     /**是否显示进度界面 */
     showLoadingView: boolean = false;
     /**显示界面时是否关闭进度条*/
     closeLoadingView: boolean = true;
-
+    /**界面从开始加载到底层调用Show方法之前的进度总比值 */
+    loadingViewTotalRatio: number = 1;
     /**根节点 */
     viewComponent: GComponent | null = null;
 
@@ -201,6 +205,7 @@ export class GUIMediator extends BaseMediator implements IGUIMediator {
         }
         //依赖的配置
         this.configs = null;
+        this.assets = null;
         if (this.services) {
             for (let index = 0; index < this.services.length; index++) {
                 const element = this.services[index];

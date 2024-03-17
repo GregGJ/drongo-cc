@@ -1,3 +1,4 @@
+import { ResURL } from "../../../drongo-cc";
 import { IService } from "../../services/IService";
 import { IViewComponent } from "./IViewComponent";
 
@@ -10,11 +11,12 @@ export interface IGUIMediator {
      * 依赖的配置
      */
     configs: Array<string>;
+    /**依赖的资源*/
+    assets: Array<ResURL>;
     /**
      * 依赖的服务
      */
     services: Array<{ new(): IService }>;
-
     /**
      * 是否显示进度条
      */
@@ -22,8 +24,12 @@ export interface IGUIMediator {
     /**
      * 显示界面时是否关闭进度条
      */
-    closeLoadingView:boolean;
-
+    closeLoadingView: boolean;
+    /**
+     * 界面准备时汇报总比值
+     */
+    loadingViewTotalRatio:number;
+    
     /**初始化完毕 */
     inited: boolean;
 
