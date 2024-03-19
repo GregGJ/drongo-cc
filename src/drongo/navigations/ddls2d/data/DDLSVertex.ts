@@ -56,7 +56,7 @@ export class DDLSVertex {
 	}
 
 	RemoveFromConstraintSegment(segment: DDLSConstraintSegment): void {
-		var index: number = this._fromConstraintSegments.indexOf(segment);
+		let index: number = this._fromConstraintSegments.indexOf(segment);
 		if (index != -1)
 			this._fromConstraintSegments.splice(index, 1);
 	}

@@ -45,7 +45,7 @@ export class Handler {
      * @returns 
      */
     static Create(caller: any, method: Function | undefined, once: boolean = false): Handler {
-        var h = new Handler();
+        let h = new Handler();
         h.caller = caller;
         h.method = method;
         h.once = once;

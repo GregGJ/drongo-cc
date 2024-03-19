@@ -172,10 +172,10 @@ export class DDLSObject {
 	}
 
 	get edges(): Array<DDLSEdge> {
-		var res: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let res: Array<DDLSEdge> = new Array<DDLSEdge>();
 
-		for (var i: number = 0; i < this._constraintShape.segments.length; i++) {
-			for (var j: number = 0; j < this._constraintShape.segments[i].edges.length; j++)
+		for (let i: number = 0; i < this._constraintShape.segments.length; i++) {
+			for (let j: number = 0; j < this._constraintShape.segments[i].edges.length; j++)
 				res.push(this._constraintShape.segments[i].edges[j]);
 		}
 

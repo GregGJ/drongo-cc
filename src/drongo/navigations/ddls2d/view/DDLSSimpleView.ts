@@ -9,11 +9,15 @@ import { IteratorFromVertexToIncomingEdges } from "../iterators/IteratorFromVert
 
 export class DDLSSimpleView {
 
-    public colorEdges: number = 0x999999;
-    public colorConstraints: number = 0xFF0000;
-    public colorVertices: number = 0x0000FF;
-    public colorPaths: number = 0xFF00FF;
-    public colorEntities: number = 0x00FF00;
+    public colorEdges: number = 0x999999FF;
+    public colorConstraints: number = 0xFF0000FF;
+    public colorVertices: number = 0x0000FFFF;
+    public colorPaths: number = 0xFF00FFFF;
+    public colorEntities: number = 0x00FF00FF;
+    /**
+     * 反转Y轴坐标
+     */
+    mirrorY: boolean = true;
 
     private _edges: Node;
     private _edgesGraphics: Graphics;
@@ -35,30 +39,38 @@ export class DDLSSimpleView {
     private _showVerticesIndices: boolean = false;
 
     constructor() {
-        this._edges = new Node("edges");
+        this._edges = this.__createNode("edges");
         this._edgesGraphics = this._edges.addComponent(Graphics);
 
-        this._constraints = new Node("constraints");
+        this._constraints = this.__createNode("constraints");
         this._constraintsGraphics = this._constraints.addComponent(Graphics);
 
-        this._vertices = new Node("vertices");
-        this._constraintsGraphics = this._vertices.addComponent(Graphics);
+        this._vertices = this.__createNode("vertices");
+        this._verticesGraphics = this._vertices.addComponent(Graphics);
 
-        this._entities = new Node("entities");
-        this._pathsGraphics = this._vertices.addComponent(Graphics);
+        this._entities = this.__createNode("entities");
+        this._entitiesGraphics = this._entities.addComponent(Graphics);
 
 
-        this._paths = new Node("paths");
-        this._pathsGraphics = this._vertices.addComponent(Graphics);
+        this._paths = this.__createNode("paths");
+        this._pathsGraphics = this._paths.addComponent(Graphics);
 
-        this._surface = new Node("surface");
-        this._surfaceGraphics = this._vertices.addComponent(Graphics);
+        this._surface = this.__createNode("surface");
+        this._surfaceGraphics = this._surface.addComponent(Graphics);
 
         this._surface.addChild(this._edges);
         this._surface.addChild(this._constraints);
         this._surface.addChild(this._vertices);
         this._surface.addChild(this._paths);
         this._surface.addChild(this._entities);
+    }
+
+    private __createNode(name: string): Node {
+        let result = new Node(name);
+        let trans = result.addComponent(UITransform);
+        trans.anchorX = 0;
+        trans.anchorY = 1;
+        return result;
     }
 
     get surface(): Node {
@@ -78,27 +90,30 @@ export class DDLSSimpleView {
     DrawMesh(mesh: DDLSMesh): void {
         this.clean();
 
-        this._surfaceGraphics.lineWidth = 0;
-        this._surfaceGraphics.color = this.GetColor(0x000000);
-        this._surfaceGraphics.fill();
-
-        this._surfaceGraphics.fillColor = this.GetColor(0x000000);
         this._surfaceGraphics.lineWidth = 1;
-        this._surfaceGraphics.color = this.GetColor(0xFF0000);
-        this._surfaceGraphics.rect(0, 0, mesh.width, mesh.height);
+        this._surfaceGraphics.strokeColor.fromHEX('#FF0000FF');
+        this._surfaceGraphics.fillColor.fromHEX('#00000000');
+        this._surfaceGraphics.moveTo(0, 0);
+        this._surfaceGraphics.lineTo(0, this.mirrorY ? -mesh.height : mesh.height);
+        this._surfaceGraphics.lineTo(mesh.width, this.mirrorY ? -mesh.height : mesh.height);
+        this._surfaceGraphics.lineTo(mesh.width, 0);
+        this._surfaceGraphics.close();
+        this._surfaceGraphics.stroke();
         this._surfaceGraphics.fill();
 
-        var vertex: DDLSVertex;
-        var incomingEdge: DDLSEdge;
-        var holdingFace: DDLSFace;
+        let vertex: DDLSVertex;
+        let incomingEdge: DDLSEdge;
+        let holdingFace: DDLSFace;
 
-        var iterVertices: IteratorFromMeshToVertices;
+        let iterVertices: IteratorFromMeshToVertices;
         iterVertices = new IteratorFromMeshToVertices();
         iterVertices.fromMesh = mesh;
         //
-        var iterEdges: IteratorFromVertexToIncomingEdges;
+        let iterEdges: IteratorFromVertexToIncomingEdges;
         iterEdges = new IteratorFromVertexToIncomingEdges();
-        var dictVerticesDone: Map<DDLSVertex, boolean> = new Map<DDLSVertex, boolean>();
+        let dictVerticesDone: Map<DDLSVertex, boolean> = new Map<DDLSVertex, boolean>();
+        let constraintsFrist: boolean = true;
+        let edgesFrist: boolean = true;
         //
         while (vertex = iterVertices.Next()) {
             dictVerticesDone.set(vertex, true);
@@ -106,46 +121,58 @@ export class DDLSSimpleView {
                 continue;
 
             this._verticesGraphics.lineWidth = 1;
-            this._verticesGraphics.color = this.GetColor(this.colorVertices);
+            this._verticesGraphics.fillColor = this.GetColor(this.colorVertices);
 
-            this._verticesGraphics.circle(vertex.pos.x, vertex.pos.y, 0.5);
+            this._verticesGraphics.circle(vertex.pos.x, this.mirrorY ? -vertex.pos.y : vertex.pos.y, 3);
             this._verticesGraphics.fill();
 
             if (this._showVerticesIndices) {
                 let tfNode = new Node(vertex.id.toString());
-                var tf = tfNode.addComponent(Label);
+                let tf = tfNode.addComponent(Label);
                 let trans = tfNode.addComponent(UITransform);
                 tf.string = vertex.id.toString();
-                tfNode.setPosition(new Vec3(vertex.pos.x + 5, vertex.pos.y + 5));
+                tfNode.setPosition(new Vec3(vertex.pos.x + 5, this.mirrorY ? -vertex.pos.y : vertex.pos.y + 5));
                 trans.width = trans.height = 20;
                 this._vertices.addChild(tfNode);
             }
-
+            constraintsFrist = edgesFrist = true;
             iterEdges.fromVertex = vertex;
             while (incomingEdge = iterEdges.Next()) {
                 if (!dictVerticesDone.has(incomingEdge.originVertex)) {
                     if (incomingEdge.isConstrained) {
-                        this._constraintsGraphics.lineWidth = 2;
-                        this._constraintsGraphics.color = this.GetColor(this.colorConstraints);
-                        this._constraintsGraphics.moveTo(incomingEdge.originVertex.pos.x, incomingEdge.originVertex.pos.y);
-                        this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, incomingEdge.destinationVertex.pos.y);
+                        this._constraintsGraphics.lineWidth = 3;
+                        this._constraintsGraphics.strokeColor = this.GetColor(this.colorConstraints);
+                        if (constraintsFrist) {
+                            constraintsFrist = false;
+                            this._constraintsGraphics.moveTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        } else {
+                            this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        this._constraintsGraphics.lineTo(incomingEdge.originVertex.pos.x, this.mirrorY ? -incomingEdge.originVertex.pos.y : incomingEdge.originVertex.pos.y);
                     }
                     else {
-                        this._constraintsGraphics.lineWidth = 1;
-                        this._constraintsGraphics.color = this.GetColor(this.colorEdges);
-                        this._constraintsGraphics.moveTo(incomingEdge.originVertex.pos.x, incomingEdge.originVertex.pos.y);
-                        this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, incomingEdge.destinationVertex.pos.y);
+                        this._edgesGraphics.lineWidth = 2;
+                        this._edgesGraphics.strokeColor = this.GetColor(this.colorEdges);
+                        if (edgesFrist) {
+                            edgesFrist = false;
+                            this._edgesGraphics.moveTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        } else {
+                            this._edgesGraphics.lineTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        this._edgesGraphics.lineTo(incomingEdge.originVertex.pos.x, this.mirrorY ? -incomingEdge.originVertex.pos.y : incomingEdge.originVertex.pos.y);
                     }
                 }
             }
         }
+        this._constraintsGraphics.stroke();
+        this._edgesGraphics.stroke();
     }
 
     private GetColor(value: number): Color {
-        let r = ((this.colorVertices >> 16) & 0xff);
-        let g = ((this.colorVertices >> 8) & 0xff);
-        let b = ((this.colorVertices) & 0xff);
-        let a = ((this.colorVertices >> 24) & 0xff);
+        let r = ((value >> 24) & 0xff);
+        let g = ((value >> 16) & 0xff);
+        let b = ((value >> 8) & 0xff);
+        let a = ((value) & 0xff);
         return color(r, g, b, a);
     }
 
@@ -177,7 +204,7 @@ export class DDLSSimpleView {
         if (cleanBefore)
             this._entitiesGraphics.clear();
 
-        for (var i = 0; i < vEntities.length; i++) {
+        for (let i = 0; i < vEntities.length; i++) {
             this.DrawEntity(vEntities[i], false);
         }
     }
@@ -190,10 +217,12 @@ export class DDLSSimpleView {
             return;
 
         this._pathsGraphics.lineWidth = 1.5;
-        this._pathsGraphics.color = this.GetColor(this.colorPaths);
-        this._pathsGraphics.moveTo(path[0], path[1]);
-        for (var i = 2; i < path.length; i += 2)
-            this._pathsGraphics.lineTo(path[i], path[i + 1]);
+        this._pathsGraphics.strokeColor = this.GetColor(this.colorPaths);
+        this._pathsGraphics.moveTo(path[0], this.mirrorY ? -path[1] : path[1]);
+        for (let i = 2; i < path.length; i += 2) {
+            this._pathsGraphics.lineTo(path[i], this.mirrorY ? -path[i + 1] : path[i + 1]);
+        }
+        this._pathsGraphics.stroke();
     }
 
     private VertexIsInsideAABB(vertex: DDLSVertex, mesh: DDLSMesh): Boolean {

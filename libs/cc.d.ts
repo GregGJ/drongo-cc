@@ -6680,7 +6680,7 @@ declare module "cc" {
             /**
              * @internal
              */
-            trace(object: unknown, beginIndex?: number, endIndex?: number): unknown;
+            console.log(object: unknown, beginIndex?: number, endIndex?: number): unknown;
             /**
              * @internal
              */

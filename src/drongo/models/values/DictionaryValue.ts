@@ -95,9 +95,9 @@ export class DictionaryValue extends BaseValue {
         if (keys.length != values.length) {
             throw new Error("keys.length!=values.length");
         }
-        var key: string;
-        var value: any;
-        for (var i: number = 0; i < keys.length; i++) {
+        let key: string;
+        let value: any;
+        for (let i: number = 0; i < keys.length; i++) {
             key = keys[i];
             value = values[i];
             this.Update(key, value);
@@ -121,9 +121,9 @@ export class DictionaryValue extends BaseValue {
             if (this.elements.length != value.elements.length) {
                 return false;
             }
-            var a: IValue;
-            var b: IValue;
-            for (var i: number = 0; i < this.elements.length; i++) {
+            let a: IValue;
+            let b: IValue;
+            for (let i: number = 0; i < this.elements.length; i++) {
                 a = this.elements[i];
                 b = value.elements[i];
                 if (a.Equality(b) != false) {

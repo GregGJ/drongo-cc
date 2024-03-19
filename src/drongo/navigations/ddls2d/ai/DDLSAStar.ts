@@ -71,7 +71,7 @@ export class DDLSAStar {
 	FindPath(fromX: number, fromY: number, toX: number, toY: number
 		, resultListFaces: Array<DDLSFace>
 		, resultListEdges: Array<DDLSEdge>): void {
-		//trace("findPath");
+		//console.log("findPath");
 		this.__closedFaces = new Map<DDLSFace, boolean>();
 		this.__sortedOpenedFaces = new Array<DDLSFace>();
 		this.__openedFaces = new Map<DDLSFace, boolean>();
@@ -83,20 +83,21 @@ export class DDLSAStar {
 		this.__scoreH = new Map<DDLSFace, number>();
 		this.__predecessor = new Map<DDLSFace, DDLSFace>();
 
-		var loc: any;
-		var locEdge: DDLSEdge;
-		var locVertex: DDLSVertex;
-		var distance: number;
-		var p1: DDLSPoint2D;
-		var p2: DDLSPoint2D;
-		var p3: DDLSPoint2D;
+		let loc: any;
+		let locEdge: DDLSEdge;
+		let locVertex: DDLSVertex;
+		let distance: number;
+		let p1: DDLSPoint2D;
+		let p2: DDLSPoint2D;
+		let p3: DDLSPoint2D;
 		//
 		loc = DDLSGeom2D.LocatePosition(fromX, fromY, this._mesh);
-		if ((locVertex = loc as DDLSVertex)) {
+		locVertex = loc instanceof DDLSVertex ? loc : null;
+		if (locVertex) {
 			// vertex are always in constraint, so we abort
 			return;
 		}
-		else if ((locEdge = loc as DDLSEdge)) {
+		else if ((locEdge = loc instanceof DDLSEdge ? loc : null)) {
 			// if the vertex lies on a constrained edge, we abort
 			if (locEdge.isConstrained)
 				return;
@@ -108,17 +109,18 @@ export class DDLSAStar {
 		}
 		//
 		loc = DDLSGeom2D.LocatePosition(toX, toY, this._mesh);
-		if ((locVertex = loc as DDLSVertex))
+		locVertex = loc instanceof DDLSVertex ? loc : null;
+		if (locVertex)
 			this.__toFace = locVertex.edge.leftFace;
-		else if ((locEdge = loc as DDLSEdge))
+		else if ((locEdge = loc instanceof DDLSEdge ? loc : null))
 			this.__toFace = locEdge.leftFace;
 		else
-			this.__toFace = loc as DDLSFace;
+			this.__toFace = loc instanceof DDLSFace ? loc : null;
 
 		/*this.__fromFace.colorDebug = 0xFF0000;
 		this.__toFace.colorDebug = 0xFF0000;
-		trace( "from face:", this.__fromFace );
-		trace( "to face:", this.__toFace );*/
+		console.log( "from face:", this.__fromFace );
+		console.log( "to face:", this.__toFace );*/
 
 		this.__sortedOpenedFaces.push(this.__fromFace);
 		this.__entryEdges.set(this.__fromFace, null);
@@ -128,15 +130,15 @@ export class DDLSAStar {
 		this.__scoreH.set(this.__fromFace, Math.sqrt((toX - fromX) * (toX - fromX) + (toY - fromY) * (toY - fromY)));
 		this.__scoreF.set(this.__fromFace, this.__scoreH.get(this.__fromFace) + this.__scoreG.get(this.__fromFace));
 
-		var innerEdge: DDLSEdge;
-		var neighbourFace: DDLSFace;
-		var f: number;
-		var g: number;
-		var h: number;
-		var fromPoint: DDLSPoint2D = new DDLSPoint2D();
-		var entryPoint: DDLSPoint2D = new DDLSPoint2D();
-		var distancePoint: DDLSPoint2D = new DDLSPoint2D();
-		var fillDatas: Boolean;
+		let innerEdge: DDLSEdge;
+		let neighbourFace: DDLSFace;
+		let f: number;
+		let g: number;
+		let h: number;
+		let fromPoint: DDLSPoint2D = new DDLSPoint2D();
+		let entryPoint: DDLSPoint2D = new DDLSPoint2D();
+		let distancePoint: DDLSPoint2D = new DDLSPoint2D();
+		let fillDatas: Boolean;
 		while (true) {
 			// no path found
 			if (this.__sortedOpenedFaces.length == 0) {
@@ -160,10 +162,10 @@ export class DDLSAStar {
 				neighbourFace = innerEdge.rightFace;
 				if (!this.__closedFaces.has(neighbourFace)) {
 					if (this.__curFace != this.__fromFace && this._radius > 0 && !this.isWalkableByRadius(this.__entryEdges.get(this.__curFace), this.__curFace, innerEdge)) {
-						//							trace("- NOT WALKABLE -");
-						//							trace( "from", DDLSEdge(this.__entryEdges[this.__curFace]).originVertex.id, DDLSEdge(this.__entryEdges[this.__curFace]).destinationVertex.id );
-						//							trace( "to", innerEdge.originVertex.id, innerEdge.destinationVertex.id );
-						//							trace("----------------");
+						//							console.log("- NOT WALKABLE -");
+						//							console.log( "from", DDLSEdge(this.__entryEdges[this.__curFace]).originVertex.id, DDLSEdge(this.__entryEdges[this.__curFace]).destinationVertex.id );
+						//							console.log( "to", innerEdge.originVertex.id, innerEdge.destinationVertex.id );
+						//							console.log("----------------");
 						continue;
 					}
 
@@ -232,9 +234,9 @@ export class DDLSAStar {
 	}
 
 	private isWalkableByRadius(fromEdge: DDLSEdge, throughFace: DDLSFace, toEdge: DDLSEdge): Boolean {
-		var vA: DDLSVertex; // the vertex on fromEdge not on toEdge
-		var vB: DDLSVertex; // the vertex on toEdge not on fromEdge
-		var vC: DDLSVertex; // the common vertex of the 2 edges (pivot)
+		let vA: DDLSVertex; // the vertex on fromEdge not on toEdge
+		let vB: DDLSVertex; // the vertex on toEdge not on fromEdge
+		let vC: DDLSVertex; // the common vertex of the 2 edges (pivot)
 
 		// we identify the points
 		if (fromEdge.originVertex == toEdge.originVertex) {
@@ -258,9 +260,9 @@ export class DDLSAStar {
 			vC = fromEdge.destinationVertex;
 		}
 
-		var dot: number;
-		var result: Boolean;
-		var distSquared: number;
+		let dot: number;
+		let result: Boolean;
+		let distSquared: number;
 
 		// if we have a right or obtuse angle on CAB
 		dot = (vC.pos.x - vA.pos.x) * (vB.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vB.pos.y - vA.pos.y);
@@ -285,7 +287,7 @@ export class DDLSAStar {
 		}
 
 		// we identify the adjacent edge (facing pivot vertex)
-		var adjEdge: DDLSEdge;
+		let adjEdge: DDLSEdge;
 		if (throughFace.edge != fromEdge && throughFace.edge.oppositeEdge != fromEdge
 			&& throughFace.edge != toEdge && throughFace.edge.oppositeEdge != toEdge)
 			adjEdge = throughFace.edge;
@@ -297,7 +299,7 @@ export class DDLSAStar {
 
 		// if the adjacent edge is constrained, we check the distance of orthognaly projected
 		if (adjEdge.isConstrained) {
-			var proj: DDLSPoint2D = new DDLSPoint2D(vC.pos.x, vC.pos.y);
+			let proj: DDLSPoint2D = new DDLSPoint2D(vC.pos.x, vC.pos.y);
 			DDLSGeom2D.ProjectOrthogonaly(proj, adjEdge);
 			distSquared = (proj.x - vC.pos.x) * (proj.x - vC.pos.x) + (proj.y - vC.pos.y) * (proj.y - vC.pos.y);
 			if (distSquared >= this._diameterSquared)
@@ -307,15 +309,15 @@ export class DDLSAStar {
 		}
 		else // if the adjacent is not constrained
 		{
-			var distSquaredA: number = (vC.pos.x - vA.pos.x) * (vC.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vC.pos.y - vA.pos.y);
-			var distSquaredB: number = (vC.pos.x - vB.pos.x) * (vC.pos.x - vB.pos.x) + (vC.pos.y - vB.pos.y) * (vC.pos.y - vB.pos.y);
+			let distSquaredA: number = (vC.pos.x - vA.pos.x) * (vC.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vC.pos.y - vA.pos.y);
+			let distSquaredB: number = (vC.pos.x - vB.pos.x) * (vC.pos.x - vB.pos.x) + (vC.pos.y - vB.pos.y) * (vC.pos.y - vB.pos.y);
 			if (distSquaredA < this._diameterSquared || distSquaredB < this._diameterSquared) {
 				return false;
 			}
 			else {
-				var vFaceToCheck: Array<DDLSFace> = new Array<DDLSFace>();
-				var vFaceIsFromEdge: Array<DDLSEdge> = new Array<DDLSEdge>();
-				var facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
+				let vFaceToCheck: Array<DDLSFace> = new Array<DDLSFace>();
+				let vFaceIsFromEdge: Array<DDLSEdge> = new Array<DDLSEdge>();
+				let facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
 				vFaceIsFromEdge.push(adjEdge);
 				if (adjEdge.leftFace == throughFace) {
 					vFaceToCheck.push(adjEdge.rightFace);
@@ -326,12 +328,12 @@ export class DDLSAStar {
 					facesDone.set(adjEdge.leftFace, true);
 				}
 
-				var currFace: DDLSFace;
-				var faceFromEdge: DDLSEdge;
-				var currEdgeA: DDLSEdge;
-				var nextFaceA: DDLSFace;
-				var currEdgeB: DDLSEdge;
-				var nextFaceB: DDLSFace;
+				let currFace: DDLSFace;
+				let faceFromEdge: DDLSEdge;
+				let currEdgeA: DDLSEdge;
+				let nextFaceA: DDLSFace;
+				let currEdgeB: DDLSEdge;
+				let nextFaceB: DDLSFace;
 				while (vFaceToCheck.length > 0) {
 					currFace = vFaceToCheck.shift();
 					faceFromEdge = vFaceIsFromEdge.shift();

@@ -23,40 +23,40 @@ export class DDLSRectMeshFactory {
 		\----------
 		*/
 
-		var vTL: DDLSVertex = new DDLSVertex();
-		var vTR: DDLSVertex = new DDLSVertex();
-		var vBR: DDLSVertex = new DDLSVertex();
-		var vBL: DDLSVertex = new DDLSVertex();
+		let vTL: DDLSVertex = new DDLSVertex();
+		let vTR: DDLSVertex = new DDLSVertex();
+		let vBR: DDLSVertex = new DDLSVertex();
+		let vBL: DDLSVertex = new DDLSVertex();
 
-		var eTL_TR: DDLSEdge = new DDLSEdge();
-		var eTR_TL: DDLSEdge = new DDLSEdge();
-		var eTR_BR: DDLSEdge = new DDLSEdge();
-		var eBR_TR: DDLSEdge = new DDLSEdge();
-		var eBR_BL: DDLSEdge = new DDLSEdge();
-		var eBL_BR: DDLSEdge = new DDLSEdge();
-		var eBL_TL: DDLSEdge = new DDLSEdge();
-		var eTL_BL: DDLSEdge = new DDLSEdge();
-		var eTR_BL: DDLSEdge = new DDLSEdge();
-		var eBL_TR: DDLSEdge = new DDLSEdge();
-		var eTL_BR: DDLSEdge = new DDLSEdge();
-		var eBR_TL: DDLSEdge = new DDLSEdge();
+		let eTL_TR: DDLSEdge = new DDLSEdge();
+		let eTR_TL: DDLSEdge = new DDLSEdge();
+		let eTR_BR: DDLSEdge = new DDLSEdge();
+		let eBR_TR: DDLSEdge = new DDLSEdge();
+		let eBR_BL: DDLSEdge = new DDLSEdge();
+		let eBL_BR: DDLSEdge = new DDLSEdge();
+		let eBL_TL: DDLSEdge = new DDLSEdge();
+		let eTL_BL: DDLSEdge = new DDLSEdge();
+		let eTR_BL: DDLSEdge = new DDLSEdge();
+		let eBL_TR: DDLSEdge = new DDLSEdge();
+		let eTL_BR: DDLSEdge = new DDLSEdge();
+		let eBR_TL: DDLSEdge = new DDLSEdge();
 
-		var fTL_BL_TR: DDLSFace = new DDLSFace();
-		var fTR_BL_BR: DDLSFace = new DDLSFace();
-		var fTL_BR_BL: DDLSFace = new DDLSFace();
-		var fTL_TR_BR: DDLSFace = new DDLSFace();
+		let fTL_BL_TR: DDLSFace = new DDLSFace();
+		let fTR_BL_BR: DDLSFace = new DDLSFace();
+		let fTL_BR_BL: DDLSFace = new DDLSFace();
+		let fTL_TR_BR: DDLSFace = new DDLSFace();
 
-		var boundShape: DDLSConstraintShape = new DDLSConstraintShape();
-		var segTop: DDLSConstraintSegment = new DDLSConstraintSegment();
-		var segRight: DDLSConstraintSegment = new DDLSConstraintSegment();
-		var segBot: DDLSConstraintSegment = new DDLSConstraintSegment();
-		var segLeft: DDLSConstraintSegment = new DDLSConstraintSegment();
+		let boundShape: DDLSConstraintShape = new DDLSConstraintShape();
+		let segTop: DDLSConstraintSegment = new DDLSConstraintSegment();
+		let segRight: DDLSConstraintSegment = new DDLSConstraintSegment();
+		let segBot: DDLSConstraintSegment = new DDLSConstraintSegment();
+		let segLeft: DDLSConstraintSegment = new DDLSConstraintSegment();
 
-		var mesh: DDLSMesh = new DDLSMesh(width, height);
+		let mesh: DDLSMesh = new DDLSMesh(width, height);
 
 		//
 
-		var offset: number = DDLSConstants.EPSILON * 1000;
+		let offset: number = DDLSConstants.EPSILON * 1000;
 		vTL.pos.Set(0 - offset, 0 - offset);
 		vTR.pos.Set(width + offset, 0 - offset);
 		vBR.pos.Set(width + offset, height + offset);
@@ -115,7 +115,7 @@ export class DDLSRectMeshFactory {
 		mesh.__faces.push(fTL_BL_TR, fTR_BL_BR, fTL_BR_BL, fTL_TR_BR);
 		mesh.__constraintShapes.push(boundShape);
 
-		var securityRect: Array<number> = new Array<number>();
+		let securityRect: Array<number> = new Array<number>();
 		securityRect.push(0, 0, width, 0);
 		securityRect.push(width, 0, width, height);
 		securityRect.push(width, height, 0, height);

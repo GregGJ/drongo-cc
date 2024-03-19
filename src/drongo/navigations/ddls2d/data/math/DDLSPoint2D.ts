@@ -50,7 +50,7 @@ export class DDLSPoint2D {
 	}
 
 	Normalize(): void {
-		var norm: number = length;
+		let norm: number = length;
 		this.x = this.x / norm;
 		this.y = this.y / norm;
 	}
@@ -61,14 +61,14 @@ export class DDLSPoint2D {
 	}
 
 	DistanceTo(p: DDLSPoint2D): number {
-		var diffX: number = this.x - p.x;
-		var diffY: number = this.y - p.y;
+		let diffX: number = this.x - p.x;
+		let diffY: number = this.y - p.y;
 		return Math.sqrt(diffX * diffX + diffY * diffY);
 	}
 
 	DistanceSquaredTo(p: DDLSPoint2D): number {
-		var diffX: number = this.x - p.x;
-		var diffY: number = this.y - p.y;
+		let diffX: number = this.x - p.x;
+		let diffY: number = this.y - p.y;
 		return diffX * diffX + diffY * diffY;
 	}
 

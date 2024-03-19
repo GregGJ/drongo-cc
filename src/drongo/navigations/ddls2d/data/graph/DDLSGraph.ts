@@ -33,7 +33,7 @@ export class DDLSGraph {
 	}
 
 	InsertNode(): DDLSGraphNode {
-		var node: DDLSGraphNode = new DDLSGraphNode();
+		let node: DDLSGraphNode = new DDLSGraphNode();
 		if (this._node) {
 			node.next = this._node;
 			this._node.prev = node;
@@ -51,8 +51,8 @@ export class DDLSGraph {
 			this.DeleteEdge(node.outgoingEdge);
 		}
 
-		var otherNode: DDLSGraphNode = this._node;
-		var incomingEdge: DDLSGraphEdge;
+		let otherNode: DDLSGraphNode = this._node;
+		let incomingEdge: DDLSGraphEdge;
 		while (otherNode) {
 			incomingEdge = otherNode.successorNodes.get(node);
 			if (incomingEdge) {
@@ -87,7 +87,7 @@ export class DDLSGraph {
 		if (fromNode.successorNodes.has(toNode))
 			return null;
 
-		var edge: DDLSGraphEdge = new DDLSGraphEdge();
+		let edge: DDLSGraphEdge = new DDLSGraphEdge();
 		if (this._edge) {
 			this._edge.prev = edge;
 			edge.next = this._edge;
@@ -106,7 +106,7 @@ export class DDLSGraph {
 			fromNode.outgoingEdge = edge;
 		}
 
-		var oppositeEdge: DDLSGraphEdge = toNode.successorNodes.get(fromNode);
+		let oppositeEdge: DDLSGraphEdge = toNode.successorNodes.get(fromNode);
 		if (oppositeEdge) {
 			edge.oppositeEdge = oppositeEdge;
 			oppositeEdge.oppositeEdge = edge;

@@ -12,8 +12,7 @@ export interface ILayer {
      * 获取指定索引内容
      * @param index 
      */
-    GetChildAt(index:number):any;
-
+    GetChildAt(index: number): any;
     /**
      * 当前层拥有的子对象数量
      */

@@ -4159,8 +4159,6 @@ declare class GUIProxy {
     mediator?: IGUIMediator;
     /**关闭时间*/
     closeTime: number;
-    /**UI层次*/
-    zIndex: number;
     /**数据 */
     data: any;
     /**引用的资源 */
@@ -5462,8 +5460,8 @@ declare class StringUtils {
      *
      *  @example
      *
-     *  var str:string = "here is some info '{0}' and {1}";
-     *  trace(StringUtil.substitute(str, 15.4, true));
+     *  let str:string = "here is some info '{0}' and {1}";
+     *  console.log(StringUtil.substitute(str, 15.4, true));
      *
      *  // this will output the following string:
      *  // "here is some info '15.4' and true"
@@ -6440,6 +6438,10 @@ declare class DDLSSimpleView {
     colorVertices: number;
     colorPaths: number;
     colorEntities: number;
+    /**
+     * 反转Y轴坐标
+     */
+    mirrorY: boolean;
     private _edges;
     private _edgesGraphics;
     private _constraints;
@@ -6454,6 +6456,7 @@ declare class DDLSSimpleView {
     private _surfaceGraphics;
     private _showVerticesIndices;
     constructor();
+    private __createNode;
     get surface(): Node;
     clean(): void;
     DrawMesh(mesh: DDLSMesh): void;

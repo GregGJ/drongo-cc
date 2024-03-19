@@ -14,6 +14,7 @@ import { LoadingView } from "../core/loadingView/LoadingView";
 import { GUIManager } from "../GUIManager";
 import { IGUIInfo } from "./IGUIInfo";
 import { EventDispatcher } from "../../events/EventDispatcher";
+import { GComponent } from "../../../drongo-cc";
 
 
 
@@ -38,9 +39,6 @@ export class GUIProxy {
 
     /**关闭时间*/
     closeTime: number = 0;
-
-    /**UI层次*/
-    zIndex: number = 0;
 
     /**数据 */
     data: any;
@@ -182,7 +180,7 @@ export class GUIProxy {
     }
 
     private __addToLayer(): void {
-        this.layer.AddChildAt(this.mediator!.viewComponent, this.zIndex);
+        this.layer.AddChildAt(this.mediator!.viewComponent, this.getLayerChildCount());
         this.mediator!.viewComponent!.visible = true;
     }
 
@@ -196,7 +194,6 @@ export class GUIProxy {
 
     Show(data?: any): void {
         this.__showing = true;
-        this.zIndex = this.getLayerChildCount();
         this.data = data;
         this.__show();
     }

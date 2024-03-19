@@ -28,13 +28,13 @@ export class DDLSEntityAI {
 	BuildApproximation(): void {
 		this._approximateObject = new DDLSObject();
 		this._approximateObject.matrix.Translate(this.x, this.y);
-		var coordinates: Array<number> = new Array<number>();
+		let coordinates: Array<number> = new Array<number>();
 		this._approximateObject.coordinates = coordinates;
 
 		if (this._radius == 0)
 			return;
 
-		for (var i = 0; i < DDLSEntityAI.NUM_SEGMENTS; i++) {
+		for (let i = 0; i < DDLSEntityAI.NUM_SEGMENTS; i++) {
 			coordinates.push(this._radius * Math.cos(2 * Math.PI * i / DDLSEntityAI.NUM_SEGMENTS));
 			coordinates.push(this._radius * Math.sin(2 * Math.PI * i / DDLSEntityAI.NUM_SEGMENTS));
 			coordinates.push(this._radius * Math.cos(2 * Math.PI * (i + 1) / DDLSEntityAI.NUM_SEGMENTS));

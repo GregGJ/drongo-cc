@@ -22,8 +22,8 @@ export class StringUtils {
      *  
      *  @example
      *
-     *  var str:string = "here is some info '{0}' and {1}";
-     *  trace(StringUtil.substitute(str, 15.4, true));
+     *  let str:string = "here is some info '{0}' and {1}";
+     *  console.log(StringUtil.substitute(str, 15.4, true));
      *
      *  // this will output the following string:
      *  // "here is some info '15.4' and true"
@@ -32,8 +32,8 @@ export class StringUtils {
         if (str == null) return '';
 
         // Replace all of the parameters in the msg string.
-        var len: number = rest.length;
-        var args: any[];
+        let len: number = rest.length;
+        let args: any[];
         if (len == 1 && rest[0] instanceof Array) {
             args = rest[0];
             len = args.length;
@@ -42,7 +42,7 @@ export class StringUtils {
             args = rest;
         }
 
-        for (var i: number = 0; i < len; i++) {
+        for (let i: number = 0; i < len; i++) {
             str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
         }
 

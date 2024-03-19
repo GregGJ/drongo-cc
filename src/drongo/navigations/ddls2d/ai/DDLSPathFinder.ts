@@ -11,7 +11,7 @@ export class DDLSPathFinder {
 	private _mesh: DDLSMesh;
 	private _astar: DDLSAStar;
 	private _funnel: DDLSFunnel;
-	//		private var _entity:DDLSEntityAI;
+	//private  _entity:DDLSEntityAI;
 	private _radius: number;
 
 

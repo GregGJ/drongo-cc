@@ -13,28 +13,28 @@ import { DDLSFace } from "../DDLSFace";
 export class DDLSTools {
 
 	static ExtractMeshFromBitmap(bmpData: RGBA8888Texture, vertices: Array<Vec2>, triangles: Array<number>): void {
-		var i: number;
-		var j: number;
+		let i: number;
+		let j: number;
 
 		// OUTLINES STEP-LIKE SHAPES GENERATION
-		var shapes: Array<Array<number>> = DDLSPotrace.BuildShapes(bmpData);
+		let shapes: Array<Array<number>> = DDLSPotrace.BuildShapes(bmpData);
 
 		// GRAPHS OF POTENTIAL SEGMENTS GENERATION
-		var graphs: Array<DDLSGraph> = new Array<DDLSGraph>();
+		let graphs: Array<DDLSGraph> = new Array<DDLSGraph>();
 		for (i = 0; i < shapes.length; i++) {
 			graphs.push(DDLSPotrace.BuildGraph(shapes[i]));
 		}
 
 		// OPTIMIZED POLYGONS GENERATION
-		var polygons: Array<Array<number>> = new Array<Array<number>>();
+		let polygons: Array<Array<number>> = new Array<Array<number>>();
 		for (i = 0; i < graphs.length; i++) {
 			polygons.push(DDLSPotrace.BuildPolygon(graphs[i]));
 		}
 
 		// MESH GENERATION
-		var mesh: DDLSMesh = DDLSRectMeshFactory.BuildRectangle(bmpData.width, bmpData.height);
-		var edges: Array<DDLSEdge> = new Array<DDLSEdge>(); // WE KEEP TRACK OF 1 EDGE BY SHAPE
-		var segment: DDLSConstraintSegment;
+		let mesh: DDLSMesh = DDLSRectMeshFactory.BuildRectangle(bmpData.width, bmpData.height);
+		let edges: Array<DDLSEdge> = new Array<DDLSEdge>(); // WE KEEP TRACK OF 1 EDGE BY SHAPE
+		let segment: DDLSConstraintSegment;
 		for (i = 0; i < polygons.length; i++) {
 			for (j = 0; j < polygons[i].length - 2; j += 2) {
 				segment = mesh.InsertConstraintSegment(polygons[i][j], polygons[i][j + 1], polygons[i][j + 2], polygons[i][j + 3]);
@@ -49,9 +49,9 @@ export class DDLSTools {
 		}
 
 		// FINAL EXTRACTION
-		var indicesDict: Map<DDLSVertex, number> = new Map<DDLSVertex, number>();
-		var vertex: DDLSVertex;
-		var point: Vec2;
+		let indicesDict: Map<DDLSVertex, number> = new Map<DDLSVertex, number>();
+		let vertex: DDLSVertex;
+		let point: Vec2;
 		for (i = 0; i < mesh.__vertices.length; i++) {
 			vertex = mesh.__vertices[i];
 			if (vertex.isReal
@@ -63,12 +63,12 @@ export class DDLSTools {
 			}
 		}
 
-		var facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
-		var openFacesList: Array<DDLSFace> = new Array<DDLSFace>();
+		let facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
+		let openFacesList: Array<DDLSFace> = new Array<DDLSFace>();
 		for (i = 0; i < edges.length; i++) {
 			openFacesList.push(edges[i].rightFace);
 		}
-		var currFace: DDLSFace;
+		let currFace: DDLSFace;
 		while (openFacesList.length > 0) {
 			currFace = openFacesList.pop();
 			if (facesDone.has(currFace))

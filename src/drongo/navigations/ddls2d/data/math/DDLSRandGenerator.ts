@@ -37,9 +37,9 @@ export class DDLSRandGenerator {
 			this._tempString = "0" + this._tempString;
 		}
 
-		this._currSeed = Number(this._tempString.substring(1, 5));
+		this._currSeed = Number(this._tempString.substring(1, 6));
 
-		var res: number = Math.round(this._rangeMin + (this._currSeed / 99999) * (this._rangeMax - this._rangeMin));
+		let res: number = Math.round(this._rangeMin + (this._currSeed / 99999) * (this._rangeMax - this._rangeMin));
 
 		if (this._currSeed == 0)
 			this._currSeed = this._originalSeed + this._numIter;

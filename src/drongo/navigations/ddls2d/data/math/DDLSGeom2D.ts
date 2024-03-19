@@ -31,20 +31,20 @@ export class DDLSGeom2D {
 			this._randGen = new DDLSRandGenerator();
 		this._randGen.seed = x * 10 + 4 * y;
 
-		var i: number;
+		let i: number;
 
 		this.__samples.splice(0, this.__samples.length);
-		var numSamples = Math.pow(mesh.__vertices.length, 1 / 3);
+		let numSamples = Math.floor(Math.pow(mesh.__vertices.length, 1 / 3));
 		this._randGen.rangeMin = 0;
 		this._randGen.rangeMax = mesh.__vertices.length - 1;
 		for (i = 0; i < numSamples; i++)
 			this.__samples.push(mesh.__vertices[this._randGen.Next()]);
 
-		var currVertex: DDLSVertex;
-		var currVertexPos: DDLSPoint2D;
-		var distSquared: number;
-		var minDistSquared: number = Number.MAX_VALUE;
-		var closedVertex: DDLSVertex;
+		let currVertex: DDLSVertex;
+		let currVertexPos: DDLSPoint2D;
+		let distSquared: number;
+		let minDistSquared: number = Number.MAX_VALUE;
+		let closedVertex: DDLSVertex;
 		for (i = 0; i < numSamples; i++) {
 			currVertex = this.__samples[i];
 			currVertexPos = currVertex.pos;
@@ -55,17 +55,17 @@ export class DDLSGeom2D {
 			}
 		}
 
-		var currFace: DDLSFace;
-		var iterFace: IteratorFromVertexToHoldingFaces = new IteratorFromVertexToHoldingFaces();
+		let currFace: DDLSFace;
+		let iterFace: IteratorFromVertexToHoldingFaces = new IteratorFromVertexToHoldingFaces();
 		iterFace.fromVertex = closedVertex;
 		currFace = iterFace.Next();
 
-		var faceVisited: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
-		var currEdge: DDLSEdge;
-		var iterEdge: IteratorFromFaceToInnerEdges = new IteratorFromFaceToInnerEdges();
-		var objectContainer: any;
-		var relativPos: number;
-		var numIter: number = 0;
+		let faceVisited: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
+		let currEdge: DDLSEdge;
+		let iterEdge: IteratorFromFaceToInnerEdges = new IteratorFromFaceToInnerEdges();
+		let objectContainer: any;
+		let relativPos: number;
+		let numIter: number = 0;
 		while (faceVisited.has(currFace) || !(objectContainer = this.IsInFace(x, y, currFace))) {
 			faceVisited.set(currFace, true);
 
@@ -111,8 +111,8 @@ export class DDLSGeom2D {
 		if (x <= 0 || x >= mesh.width || y <= 0 || y >= mesh.height)
 			return true;
 
-		var loc: Object = DDLSGeom2D.LocatePosition(x, y, mesh);
-		var face: DDLSFace;
+		let loc: Object = DDLSGeom2D.LocatePosition(x, y, mesh);
+		let face: DDLSFace;
 		if (loc instanceof DDLSVertex)
 			face = (loc as DDLSVertex).edge.leftFace;
 		else if (loc instanceof DDLSEdge)
@@ -122,9 +122,9 @@ export class DDLSGeom2D {
 
 		// if a vertex is in the circle, a contrainst must intersect the circle
 		// because a vertex always belongs to a contrained edge
-		var radiusSquared: number = radius * radius;
-		var pos: DDLSPoint2D;
-		var distSquared: number;
+		let radiusSquared: number = radius * radius;
+		let pos: DDLSPoint2D;
+		let distSquared: number;
 		pos = face.edge.originVertex.pos;
 		distSquared = (pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y);
 		if (distSquared <= radiusSquared) {
@@ -142,16 +142,16 @@ export class DDLSGeom2D {
 		}
 
 		// check if edge intersects
-		var edgesToCheck: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let edgesToCheck: Array<DDLSEdge> = new Array<DDLSEdge>();
 		edgesToCheck.push(face.edge);
 		edgesToCheck.push(face.edge.nextLeftEdge);
 		edgesToCheck.push(face.edge.nextLeftEdge.nextLeftEdge);
 
-		var edge: DDLSEdge;
-		var pos1: DDLSPoint2D;
-		var pos2: DDLSPoint2D;
-		var checkedEdges: Map<DDLSEdge, boolean> = new Map<DDLSEdge, boolean>();
-		var intersecting: boolean;
+		let edge: DDLSEdge;
+		let pos1: DDLSPoint2D;
+		let pos2: DDLSPoint2D;
+		let checkedEdges: Map<DDLSEdge, boolean> = new Map<DDLSEdge, boolean>();
+		let intersecting: boolean;
 		while (edgesToCheck.length > 0) {
 			edge = edgesToCheck.pop();
 			checkedEdges.set(edge, true);
@@ -189,7 +189,7 @@ export class DDLSGeom2D {
 		, x3: number, y3: number): number {
 
 		// dot product with the orthogonal vector pointing left vector of eUp:
-		var dot: number = (x3 - x1) * (y2 - y1) + (y3 - y1) * (- x2 + x1);
+		let dot: number = (x3 - x1) * (y2 - y1) + (y3 - y1) * (- x2 + x1);
 
 		// check sign
 		return (dot == 0) ? 0 : ((dot > 0) ? 1 : -1);
@@ -205,7 +205,7 @@ export class DDLSGeom2D {
 		, x2: number, y2: number
 		, x3: number, y3: number): number {
 		// dot product with the orthogonal vector pointing left vector of eUp:
-		var dot: number = (x3 - x1) * (y2 - y1) + (y3 - y1) * (- x2 + x1);
+		let dot: number = (x3 - x1) * (y2 - y1) + (y3 - y1) * (- x2 + x1);
 
 		// check sign
 		if (dot == 0) {
@@ -253,12 +253,12 @@ export class DDLSGeom2D {
 
 		// set alias letters
 		/*
-		var a:number = x;
-		var b:number = y;
-		var c:number = vOrigin.pos.x;
-		var d:number = vOrigin.pos.y;
-		var e:number = vDestination.pos.x;
-		var f:number = vDestination.pos.y;
+		let a:number = x;
+		let b:number = y;
+		let c:number = vOrigin.pos.x;
+		let d:number = vOrigin.pos.y;
+		let e:number = vDestination.pos.x;
+		let f:number = vDestination.pos.y;
 		*/
 
 		/*
@@ -270,9 +270,9 @@ export class DDLSGeom2D {
 		// giving to wolfram: Solve[{a = c + t2 (f - d) + t1 (e - c) , b = d + t1 (f - d) - t2 (e - c)}, {t1, t2}]
 		// we get:
 		/*
-		var t2:number = (-a*d + a*f + b*c - b*e - c*f + d*e) / (c*c - 2*c*e + d*d - 2*d*f + e*e + f*f);
+		let t2:number = (-a*d + a*f + b*c - b*e - c*f + d*e) / (c*c - 2*c*e + d*d - 2*d*f + e*e + f*f);
 		
-		var result:int;
+		let result:int;
 		if ( t2 == 0 )
 			result = 0;
 		else if ( t2 < 0 )
@@ -299,41 +299,41 @@ export class DDLSGeom2D {
 		// remember polygons are triangle only,
 		// and we suppose we have not degenerated flat polygons !
 
-		var result: any;
+		let result: any;
 
-		var e1_2: DDLSEdge = polygon.edge;
-		var e2_3: DDLSEdge = e1_2.nextLeftEdge;
-		var e3_1: DDLSEdge = e2_3.nextLeftEdge;
+		let e1_2: DDLSEdge = polygon.edge;
+		let e2_3: DDLSEdge = e1_2.nextLeftEdge;
+		let e3_1: DDLSEdge = e2_3.nextLeftEdge;
 		if (this.GetRelativePosition(x, y, e1_2) >= 0 && this.GetRelativePosition(x, y, e2_3) >= 0 && this.GetRelativePosition(x, y, e3_1) >= 0) {
-			var v1: DDLSVertex = e1_2.originVertex;
-			var v2: DDLSVertex = e2_3.originVertex;
-			var v3: DDLSVertex = e3_1.originVertex;
+			let v1: DDLSVertex = e1_2.originVertex;
+			let v2: DDLSVertex = e2_3.originVertex;
+			let v3: DDLSVertex = e3_1.originVertex;
 
-			var x1: number = v1.pos.x;
-			var y1: number = v1.pos.y;
-			var x2: number = v2.pos.x;
-			var y2: number = v2.pos.y;
-			var x3: number = v3.pos.x;
-			var y3: number = v3.pos.y;
+			let x1: number = v1.pos.x;
+			let y1: number = v1.pos.y;
+			let x2: number = v2.pos.x;
+			let y2: number = v2.pos.y;
+			let x3: number = v3.pos.x;
+			let y3: number = v3.pos.y;
 
-			var v_v1squaredLength: number = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
-			var v_v2squaredLength: number = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
-			var v_v3squaredLength: number = (x3 - x) * (x3 - x) + (y3 - y) * (y3 - y);
-			var v1_v2squaredLength: number = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-			var v2_v3squaredLength: number = (x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2);
-			var v3_v1squaredLength: number = (x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3);
+			let v_v1squaredLength: number = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
+			let v_v2squaredLength: number = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
+			let v_v3squaredLength: number = (x3 - x) * (x3 - x) + (y3 - y) * (y3 - y);
+			let v1_v2squaredLength: number = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+			let v2_v3squaredLength: number = (x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2);
+			let v3_v1squaredLength: number = (x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3);
 
-			var dot_v_v1v2: number = (x - x1) * (x2 - x1) + (y - y1) * (y2 - y1);
-			var dot_v_v2v3: number = (x - x2) * (x3 - x2) + (y - y2) * (y3 - y2);
-			var dot_v_v3v1: number = (x - x3) * (x1 - x3) + (y - y3) * (y1 - y3);
+			let dot_v_v1v2: number = (x - x1) * (x2 - x1) + (y - y1) * (y2 - y1);
+			let dot_v_v2v3: number = (x - x2) * (x3 - x2) + (y - y2) * (y3 - y2);
+			let dot_v_v3v1: number = (x - x3) * (x1 - x3) + (y - y3) * (y1 - y3);
 
-			var v_e1_2squaredLength: number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
-			var v_e2_3squaredLength: number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
-			var v_e3_1squaredLength: number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
+			let v_e1_2squaredLength: number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
+			let v_e2_3squaredLength: number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
+			let v_e3_1squaredLength: number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
 
-			var closeTo_e1_2: boolean = v_e1_2squaredLength <= DDLSConstants.EPSILON_SQUARED;
-			var closeTo_e2_3: boolean = v_e2_3squaredLength <= DDLSConstants.EPSILON_SQUARED;
-			var closeTo_e3_1: boolean = v_e3_1squaredLength <= DDLSConstants.EPSILON_SQUARED;
+			let closeTo_e1_2: boolean = v_e1_2squaredLength <= DDLSConstants.EPSILON_SQUARED;
+			let closeTo_e2_3: boolean = v_e2_3squaredLength <= DDLSConstants.EPSILON_SQUARED;
+			let closeTo_e3_1: boolean = v_e3_1squaredLength <= DDLSConstants.EPSILON_SQUARED;
 
 			if (closeTo_e1_2) {
 				if (closeTo_e3_1)
@@ -360,48 +360,48 @@ export class DDLSGeom2D {
 		// we will use barycentric coordinates
 		// see http://en.wikipedia.org/wiki/Barycentric_coordinate_system
 		/*
-		var e1_2:QEEdge = polygon.edge;
-		var e2_3:QEEdge = e1_2.nextLeftEdge;
-		var e3_1:QEEdge = e2_3.nextLeftEdge;
+		let e1_2:QEEdge = polygon.edge;
+		let e2_3:QEEdge = e1_2.nextLeftEdge;
+		let e3_1:QEEdge = e2_3.nextLeftEdge;
 		
-		var v1:QEVertex = e1_2.originVertex;
-		var v2:QEVertex = e2_3.originVertex;
-		var v3:QEVertex = e3_1.originVertex;
+		let v1:QEVertex = e1_2.originVertex;
+		let v2:QEVertex = e2_3.originVertex;
+		let v3:QEVertex = e3_1.originVertex;
 		
-		var x1:number = v1.pos.x;
-		var y1:number = v1.pos.y;
-		var x2:number = v2.pos.x;
-		var y2:number = v2.pos.y;
-		var x3:number = v3.pos.x;
-		var y3:number = v3.pos.y;
+		let x1:number = v1.pos.x;
+		let y1:number = v1.pos.y;
+		let x2:number = v2.pos.x;
+		let y2:number = v2.pos.y;
+		let x3:number = v3.pos.x;
+		let y3:number = v3.pos.y;
 		
-		var coef1:number = ((y2 - y3)*(x - x3) + (x3 - x2)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
-		var coef2:number = ((y3 - y1)*(x - x3) + (x1 - x3)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
-		var coef3:number = 1 - coef1 - coef2;
+		let coef1:number = ((y2 - y3)*(x - x3) + (x3 - x2)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
+		let coef2:number = ((y3 - y1)*(x - x3) + (x1 - x3)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
+		let coef3:number = 1 - coef1 - coef2;
 		
-		trace("isInFace:", coef1, coef2, coef3);
+		console.log("isInFace:", coef1, coef2, coef3);
 		
-		var result:Object;
+		let result:Object;
 		if ( 0 <= coef1 && coef1 <= 1 && 0 <= coef2 && coef2 <= 1 && 0 <= coef3 && coef3 <= 1 )
 		{
-			var v_v1squaredLength:number = (x1 - x)*(x1 - x) + (y1 - y)*(y1 - y);
-			var v_v2squaredLength:number = (x2 - x)*(x2 - x) + (y2 - y)*(y2 - y);
-			var v_v3squaredLength:number = (x3 - x)*(x3 - x) + (y3 - y)*(y3 - y);
-			var v1_v2squaredLength:number = (x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1);
-			var v2_v3squaredLength:number = (x3 - x2)*(x3 - x2) + (y3 - y2)*(y3 - y2);
-			var v3_v1squaredLength:number = (x1 - x3)*(x1 - x3) + (y1 - y3)*(y1 - y3);
+			let v_v1squaredLength:number = (x1 - x)*(x1 - x) + (y1 - y)*(y1 - y);
+			let v_v2squaredLength:number = (x2 - x)*(x2 - x) + (y2 - y)*(y2 - y);
+			let v_v3squaredLength:number = (x3 - x)*(x3 - x) + (y3 - y)*(y3 - y);
+			let v1_v2squaredLength:number = (x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1);
+			let v2_v3squaredLength:number = (x3 - x2)*(x3 - x2) + (y3 - y2)*(y3 - y2);
+			let v3_v1squaredLength:number = (x1 - x3)*(x1 - x3) + (y1 - y3)*(y1 - y3);
 			
-			var dot_v_v1v2:number = (x - x1)*(x2 - x1) + (y - y1)*(y2 - y1);
-			var dot_v_v2v3:number = (x - x2)*(x3 - x2) + (y - y2)*(y3 - y2);
-			var dot_v_v3v1:number = (x - x3)*(x1 - x3) + (y - y3)*(y1 - y3);
+			let dot_v_v1v2:number = (x - x1)*(x2 - x1) + (y - y1)*(y2 - y1);
+			let dot_v_v2v3:number = (x - x2)*(x3 - x2) + (y - y2)*(y3 - y2);
+			let dot_v_v3v1:number = (x - x3)*(x1 - x3) + (y - y3)*(y1 - y3);
 				
-			var v_e1_2squaredLength:number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
-			var v_e2_3squaredLength:number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
-			var v_e3_1squaredLength:number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
+			let v_e1_2squaredLength:number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
+			let v_e2_3squaredLength:number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
+			let v_e3_1squaredLength:number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
 			
-			var closeTo_e1_2:boolean = v_e1_2squaredLength <= QEConstants.EPSILON_SQUARED;
-			var closeTo_e2_3:boolean = v_e2_3squaredLength <= QEConstants.EPSILON_SQUARED;
-			var closeTo_e3_1:boolean = v_e3_1squaredLength <= QEConstants.EPSILON_SQUARED;
+			let closeTo_e1_2:boolean = v_e1_2squaredLength <= QEConstants.EPSILON_SQUARED;
+			let closeTo_e2_3:boolean = v_e2_3squaredLength <= QEConstants.EPSILON_SQUARED;
+			let closeTo_e3_1:boolean = v_e3_1squaredLength <= QEConstants.EPSILON_SQUARED;
 			
 			if ( closeTo_e1_2 )
 			{
@@ -448,14 +448,14 @@ export class DDLSGeom2D {
 		*/
 		/*
 		// set alias letters
-		var a:number = x;
-		var b:number = y;
-		var c:number = vCorner.pos.x;
-		var d:number = vCorner.pos.y;
-		var e:number = vLeft.pos.x;
-		var f:number = vLeft.pos.y;
-		var g:number = vRight.pos.x;
-		var h:number = vRight.pos.y;
+		let a:number = x;
+		let b:number = y;
+		let c:number = vCorner.pos.x;
+		let d:number = vCorner.pos.y;
+		let e:number = vLeft.pos.x;
+		let f:number = vLeft.pos.y;
+		let g:number = vRight.pos.x;
+		let h:number = vRight.pos.y;
 		
 		/*
 		system to solve:
@@ -465,13 +465,13 @@ export class DDLSGeom2D {
 		/*
 		// giving to wolfram: Solve[{a = c + t1 (e - c) + t2 (g - c) , b = d + t1 (f - d) + t2 (h - d)}, {t1, t2}]
 		// we get:
-		var denominator:number = (c*(f - h) + d*(g - e) + e*h - f*g);
-		var t1:number = (a*(h - d) + b*(c - g) - c*h + d*g) / denominator;
-		var t2:number = (a*(f - d) + b*(c - e) - c*f + d*e) / -denominator;
+		let denominator:number = (c*(f - h) + d*(g - e) + e*h - f*g);
+		let t1:number = (a*(h - d) + b*(c - g) - c*h + d*g) / denominator;
+		let t2:number = (a*(f - d) + b*(c - e) - c*f + d*e) / -denominator;
 		// then we deduce:
-		var s:number = t1 + t2;
+		let s:number = t1 + t2;
 		
-		var result:Object;
+		let result:Object;
 		// if inside triangle:
 		if (0 <= t1 && t1 <=1 && 0 <= t2 && t2 <=1 && 0 <= s && s <=1)
 		{
@@ -500,24 +500,24 @@ export class DDLSGeom2D {
 	static ClipSegmentByTriangle(s1x: number, s1y: number, s2x: number, s2y: number
 		, t1x: number, t1y: number, t2x: number, t2y: number, t3x: number, t3y: number
 		, pResult1: DDLSPoint2D = null, pResult2: DDLSPoint2D = null): boolean {
-		var side1_1: number;
-		var side1_2: number;
+		let side1_1: number;
+		let side1_2: number;
 		side1_1 = this.GetDirection(t1x, t1y, t2x, t2y, s1x, s1y);
 		side1_2 = this.GetDirection(t1x, t1y, t2x, t2y, s2x, s2y);
 		// if both segment points are on right side
 		if (side1_1 <= 0 && side1_2 <= 0)
 			return false;
 
-		var side2_1: number;
-		var side2_2: number;
+		let side2_1: number;
+		let side2_2: number;
 		side2_1 = this.GetDirection(t2x, t2y, t3x, t3y, s1x, s1y);
 		side2_2 = this.GetDirection(t2x, t2y, t3x, t3y, s2x, s2y);
 		// if both segment points are on right side
 		if (side2_1 <= 0 && side2_2 <= 0)
 			return false;
 
-		var side3_1: number;
-		var side3_2: number;
+		let side3_1: number;
+		let side3_2: number;
 		side3_1 = this.GetDirection(t3x, t3y, t1x, t1y, s1x, s1y);
 		side3_2 = this.GetDirection(t3x, t3y, t1x, t1y, s2x, s2y);
 		// if both segment points are on right side
@@ -533,7 +533,7 @@ export class DDLSGeom2D {
 			return true;
 		}
 
-		var n: number = 0;
+		let n: number = 0;
 		// check intersection between segment and 1st side triangle
 		if (this.Intersections2segments(s1x, s1y, s2x, s2y, t1x, t1y, t2x, t2y, pResult1, null)) {
 			n++;
@@ -602,24 +602,24 @@ export class DDLSGeom2D {
 		, t1x: number, t1y: number, t2x: number, t2y: number, t3x: number, t3y: number): boolean {
 		// check sides
 
-		var side1_1: number;
-		var side1_2: number;
+		let side1_1: number;
+		let side1_2: number;
 		side1_1 = this.GetDirection(t1x, t1y, t2x, t2y, s1x, s1y);
 		side1_2 = this.GetDirection(t1x, t1y, t2x, t2y, s2x, s2y);
 		// if both segment points are on right side
 		if (side1_1 <= 0 && side1_2 <= 0)
 			return false;
 
-		var side2_1: number;
-		var side2_2: number;
+		let side2_1: number;
+		let side2_2: number;
 		side2_1 = this.GetDirection(t2x, t2y, t3x, t3y, s1x, s1y);
 		side2_2 = this.GetDirection(t2x, t2y, t3x, t3y, s2x, s2y);
 		// if both segment points are on right side
 		if (side2_1 <= 0 && side2_2 <= 0)
 			return false;
 
-		var side3_1: number;
-		var side3_2: number;
+		let side3_1: number;
+		let side3_2: number;
 		side3_1 = this.GetDirection(t3x, t3y, t1x, t1y, s1x, s1y);
 		side3_2 = this.GetDirection(t3x, t3y, t1x, t1y, s2x, s2y);
 		// if both segment points are on right side
@@ -634,8 +634,8 @@ export class DDLSGeom2D {
 		if (side1_1 == 1 && side2_1 == 1 && side3_1 == 1)
 			return true;
 
-		var side1: number;
-		var side2: number;
+		let side1: number;
+		let side2: number;
 		// if both segment points are on different sides of the 1st triangle side
 		if ((side1_1 == 1 && side1_2 <= 0) || (side1_1 <= 0 && side1_2 == 1)) {
 			side1 = this.GetDirection(s1x, s1y, s2x, s2y, t1x, t1y);
@@ -667,17 +667,17 @@ export class DDLSGeom2D {
 	private static __circumcenter: DDLSPoint2D = new DDLSPoint2D();
 
 	static IsDelaunay(edge: DDLSEdge): boolean {
-		var vLeft: DDLSVertex = edge.originVertex;
-		var vRight: DDLSVertex = edge.destinationVertex;
-		var vCorner: DDLSVertex = edge.nextLeftEdge.destinationVertex;
-		var vOpposite: DDLSVertex = edge.nextRightEdge.destinationVertex;
+		let vLeft: DDLSVertex = edge.originVertex;
+		let vRight: DDLSVertex = edge.destinationVertex;
+		let vCorner: DDLSVertex = edge.nextLeftEdge.destinationVertex;
+		let vOpposite: DDLSVertex = edge.nextRightEdge.destinationVertex;
 		/*
 		// middle points
-		var vMidLeft:Point = new Point();
+		let vMidLeft:Point = new Point();
 		vMidLeft.x = (vCorner.pos.x + vLeft.pos.x) / 2;
 		vMidLeft.y = (vCorner.pos.y + vLeft.pos.y) / 2;
 		
-		var vMidRight:Point = new Point();
+		let vMidRight:Point = new Point();
 		vMidRight.x = (vCorner.pos.x + vRight.pos.x) / 2;
 		vMidRight.y = (vCorner.pos.y + vRight.pos.y) / 2;
 		*/
@@ -695,18 +695,18 @@ export class DDLSGeom2D {
 		*/
 		/*
 		// set alias letters
-		var a:number = vMidLeft.x;
-		var b:number = vLeft.pos.y;
-		var c:number = vCorner.pos.y;
-		var d:number = vMidRight.x;
-		var e:number = vRight.pos.y;
-		var f:number = vCorner.pos.y;
-		var g:number = vMidLeft.y;
-		var h:number = vLeft.pos.x;
-		var i:number = vCorner.pos.x;
-		var j:number = vMidRight.y;
-		var k:number = vRight.pos.x;
-		var l:number = vCorner.pos.x;
+		let a:number = vMidLeft.x;
+		let b:number = vLeft.pos.y;
+		let c:number = vCorner.pos.y;
+		let d:number = vMidRight.x;
+		let e:number = vRight.pos.y;
+		let f:number = vCorner.pos.y;
+		let g:number = vMidLeft.y;
+		let h:number = vLeft.pos.x;
+		let i:number = vCorner.pos.x;
+		let j:number = vMidRight.y;
+		let k:number = vRight.pos.x;
+		let l:number = vCorner.pos.x;
 		*/
 		/*
 		system to solve:
@@ -716,7 +716,7 @@ export class DDLSGeom2D {
 
 		//giving to wolfram: Solve[{a + t1 (b - c) = d + t2 (e - f) , g - t1 (h - i) = j - t2 (k - l)}, {t1, t2}]
 		//we get:
-		//var t1:number = (-(a-d)*(k-l) + e*(j-g) + f*(g-j)) / ((b-c)*(k-l) + e*(i-h) + f*(h-i));
+		//let t1:number = (-(a-d)*(k-l) + e*(j-g) + f*(g-j)) / ((b-c)*(k-l) + e*(i-h) + f*(h-i));
 		/*
 		__barycenter.x = a + t1 * (b - c);
 		__barycenter.y = g - t1 * (h - i);
@@ -724,8 +724,8 @@ export class DDLSGeom2D {
 		this.GetCircumcenter(vCorner.pos.x, vCorner.pos.y, vLeft.pos.x, vLeft.pos.y, vRight.pos.x, vRight.pos.y, this.__circumcenter);
 
 		// check if the opposite vertex lies outside the circle
-		var squaredRadius: number = (vCorner.pos.x - this.__circumcenter.x) * (vCorner.pos.x - this.__circumcenter.x) + (vCorner.pos.y - this.__circumcenter.y) * (vCorner.pos.y - this.__circumcenter.y);
-		var squaredDistance: number = (vOpposite.pos.x - this.__circumcenter.x) * (vOpposite.pos.x - this.__circumcenter.x) + (vOpposite.pos.y - this.__circumcenter.y) * (vOpposite.pos.y - this.__circumcenter.y);
+		let squaredRadius: number = (vCorner.pos.x - this.__circumcenter.x) * (vCorner.pos.x - this.__circumcenter.x) + (vCorner.pos.y - this.__circumcenter.y) * (vCorner.pos.y - this.__circumcenter.y);
+		let squaredDistance: number = (vOpposite.pos.x - this.__circumcenter.x) * (vOpposite.pos.x - this.__circumcenter.x) + (vOpposite.pos.y - this.__circumcenter.y) * (vOpposite.pos.y - this.__circumcenter.y);
 
 		return squaredDistance >= squaredRadius;
 	}
@@ -736,10 +736,10 @@ export class DDLSGeom2D {
 		}
 
 		// middle points
-		var m1: number = (x1 + x2) / 2;
-		var m2: number = (y1 + y2) / 2;
-		var m3: number = (x1 + x3) / 2;
-		var m4: number = (y1 + y3) / 2;
+		let m1: number = (x1 + x2) / 2;
+		let m2: number = (y1 + y2) / 2;
+		let m3: number = (x1 + x3) / 2;
+		let m4: number = (y1 + y3) / 2;
 		/*
 		- parametric expression of orthogonal segments
 		segOrtho1X(t1) = m1 + t1 * (y2 - y1)
@@ -759,7 +759,7 @@ export class DDLSGeom2D {
 		giving to wolfram: Solve[{m1 + t1 (y2 - y1) = m3 + t2 (y3 - y1) , m2 - t1 (x2 - x1) = m4 - t2 (x3 - x1)}, {t1, t2}]
 		we get:
 		*/
-		var t1: number = (m1 * (x1 - x3) + (m2 - m4) * (y1 - y3) + m3 * (x3 - x1)) / (x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1));
+		let t1: number = (m1 * (x1 - x3) + (m2 - m4) * (y1 - y3) + m3 * (x3 - x1)) / (x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1));
 
 		result.x = m1 + t1 * (y2 - y1);
 		result.y = m2 - t1 * (x2 - x1);
@@ -771,11 +771,11 @@ export class DDLSGeom2D {
 		, s2p1x: number, s2p1y: number, s2p2x: number, s2p2y: number
 		, posIntersection: DDLSPoint2D = null, paramIntersection: Array<number> = null
 		, infiniteLineMode: boolean = false): boolean {
-		var t1: number;
-		var t2: number;
+		let t1: number;
+		let t2: number;
 
-		var result: boolean;
-		var divisor: number = (s1p1x - s1p2x) * (s2p1y - s2p2y) + (s1p2y - s1p1y) * (s2p1x - s2p2x);
+		let result: boolean;
+		let divisor: number = (s1p1x - s1p2x) * (s2p1y - s2p2y) + (s1p2y - s1p1y) * (s2p1x - s2p2x);
 		if (divisor == 0) {
 			result = false; // parallel case, no intersection
 		}
@@ -816,10 +816,10 @@ export class DDLSGeom2D {
 
 	// a edge is convex if the polygon formed by the 2 faces at left and right of this edge is convex
 	static IsConvex(edge: DDLSEdge): boolean {
-		var result: boolean = true;
+		let result: boolean = true;
 
-		var eLeft: DDLSEdge;
-		var vRight: DDLSVertex;
+		let eLeft: DDLSEdge;
+		let vRight: DDLSVertex;
 
 		eLeft = edge.nextLeftEdge.oppositeEdge;
 		vRight = edge.nextRightEdge.destinationVertex;
@@ -851,19 +851,19 @@ export class DDLSGeom2D {
 		// y(t1) = y(t2)
 
 		// set alias letters
-		var a: number = edge.originVertex.pos.x;
-		var b: number = edge.originVertex.pos.y;
-		var c: number = edge.destinationVertex.pos.x;
-		var d: number = edge.destinationVertex.pos.y;
-		var e: number = vertexPos.x;
-		var f: number = vertexPos.y;
+		let a: number = edge.originVertex.pos.x;
+		let b: number = edge.originVertex.pos.y;
+		let c: number = edge.destinationVertex.pos.x;
+		let d: number = edge.destinationVertex.pos.y;
+		let e: number = vertexPos.x;
+		let f: number = vertexPos.y;
 
 		// system to solve:
 		// a + t1 (c - a) = e + t2 (d - b)
 		// b + t1 (d - b) = f - t2 (c - a)
 
 		// solution:
-		var t1: number = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
+		let t1: number = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
 
 		// set position:
 		vertexPos.x = a + t1 * (c - a);
@@ -872,19 +872,19 @@ export class DDLSGeom2D {
 
 	static ProjectOrthogonalyOnSegment(px: number, py: number, sp1x: number, sp1y: number, sp2x: number, sp2y: number, result: DDLSPoint2D): void {
 		// set alias letters
-		var a: number = sp1x;
-		var b: number = sp1y;
-		var c: number = sp2x;
-		var d: number = sp2y;
-		var e: number = px;
-		var f: number = py;
+		let a: number = sp1x;
+		let b: number = sp1y;
+		let c: number = sp2x;
+		let d: number = sp2y;
+		let e: number = px;
+		let f: number = py;
 
 		// system to solve:
 		// a + t1 (c - a) = e + t2 (d - b)
 		// b + t1 (d - b) = f - t2 (c - a)
 
 		// solution:
-		var t1: number = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
+		let t1: number = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
 
 		// set position:
 		result.x = a + t1 * (c - a);
@@ -895,17 +895,17 @@ export class DDLSGeom2D {
 	// [intersect0.x, intersect0.y, intersect1.x, intersect1.y]
 	// empty if no intersection
 	static Intersections2Circles(cx1: number, cy1: number, r1: number, cx2: number, cy2: number, r2: number, result: Array<number> = null): boolean {
-		var distRadiusSQRD: number = ((cx2 - cx1) * (cx2 - cx1) + (cy2 - cy1) * (cy2 - cy1));
+		let distRadiusSQRD: number = ((cx2 - cx1) * (cx2 - cx1) + (cy2 - cy1) * (cy2 - cy1));
 
 		if ((cx1 != cx2 || cy1 != cy2)
 			&& distRadiusSQRD <= ((r1 + r2) * (r1 + r2))
 			&& distRadiusSQRD >= ((r1 - r2) * (r1 - r2))) {
-			var transcendPart: number = Math.sqrt(((r1 + r2) * (r1 + r2) - distRadiusSQRD)
+			let transcendPart: number = Math.sqrt(((r1 + r2) * (r1 + r2) - distRadiusSQRD)
 				* (distRadiusSQRD - (r2 - r1) * (r2 - r1)));
-			var xFirstPart: number = (cx1 + cx2) / 2 + (cx2 - cx1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
-			var yFirstPart: number = (cy1 + cy2) / 2 + (cy2 - cy1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
-			var xFactor: number = (cy2 - cy1) / (2 * distRadiusSQRD);
-			var yFactor: number = (cx2 - cx1) / (2 * distRadiusSQRD);
+			let xFirstPart: number = (cx1 + cx2) / 2 + (cx2 - cx1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
+			let yFirstPart: number = (cy1 + cy2) / 2 + (cy2 - cy1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
+			let xFactor: number = (cy2 - cy1) / (2 * distRadiusSQRD);
+			let yFactor: number = (cx2 - cx1) / (2 * distRadiusSQRD);
 
 			if (result) {
 				result.push(xFirstPart + xFactor * transcendPart
@@ -925,16 +925,16 @@ export class DDLSGeom2D {
 		, cx: number, cy: number, r: number
 		, result: Array<number> = null): boolean {
 
-		var p0xSQD: number = p0x * p0x;
-		var p0ySQD: number = p0y * p0y;
-		var a: number = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
-		var b: number = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
-		var c: number = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
-		var delta: number = b * b - 4 * a * c;
-		var deltaSQRT: number;
+		let p0xSQD: number = p0x * p0x;
+		let p0ySQD: number = p0y * p0y;
+		let a: number = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
+		let b: number = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
+		let c: number = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
+		let delta: number = b * b - 4 * a * c;
+		let deltaSQRT: number;
 
-		var t0: number;
-		var t1: number;
+		let t0: number;
+		let t1: number;
 		if (delta < 0) {
 			// no solution
 			return false;
@@ -959,7 +959,7 @@ export class DDLSGeom2D {
 			// we return a n elements array, under the form:
 			//  [intersect0.x, intersect0.y, t0
 			//	, intersect1.x, intersect1.y, t1]
-			var intersecting: boolean = false;
+			let intersecting: boolean = false;
 			if (0 <= t0 && t0 <= 1) {
 				if (result)
 					result.push(p0x + t0 * (p1x - p0x), p0y + t0 * (p1y - p0y), t0);
@@ -979,16 +979,16 @@ export class DDLSGeom2D {
 		, p1x: number, p1y: number
 		, cx: number, cy: number, r: number
 		, result: Array<number>): boolean {
-		var p0xSQD: number = p0x * p0x;
-		var p0ySQD: number = p0y * p0y;
-		var a: number = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
-		var b: number = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
-		var c: number = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
-		var delta: number = b * b - 4 * a * c;
-		var deltaSQRT: number;
+		let p0xSQD: number = p0x * p0x;
+		let p0ySQD: number = p0y * p0y;
+		let a: number = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
+		let b: number = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
+		let c: number = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
+		let delta: number = b * b - 4 * a * c;
+		let deltaSQRT: number;
 
-		var t0: number;
-		var t1: number;
+		let t0: number;
+		let t1: number;
 		if (delta < 0) {
 			// no solution
 			return false;
@@ -1018,41 +1018,41 @@ export class DDLSGeom2D {
 	// [point_tangent1.x, point_tangent1.y, point_tangent2.x, point_tangent2.y]
 	// empty if no tangent
 	static TangentsPointToCircle(px: number, py: number, cx: number, cy: number, r: number, result: Array<number>): void {
-		var c2x: number = (px + cx) / 2;
-		var c2y: number = (py + cy) / 2;
-		var r2: number = 0.5 * Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+		let c2x: number = (px + cx) / 2;
+		let c2y: number = (py + cy) / 2;
+		let r2: number = 0.5 * Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
 
 		this.Intersections2Circles(c2x, c2y, r2, cx, cy, r, result);
 	}
 
 	// <!!!> CIRCLES MUST HAVE SAME RADIUS
 	static TangentsCrossCircleToCircle(r: number, c1x: number, c1y: number, c2x: number, c2y: number, result: Array<number>): boolean {
-		var distance: number = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
+		let distance: number = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
 
 		// new circle
-		var radius: number = distance / 4;
-		var centerX: number = c1x + (c2x - c1x) / 4;
-		var centerY: number = c1y + (c2y - c1y) / 4;
+		let radius: number = distance / 4;
+		let centerX: number = c1x + (c2x - c1x) / 4;
+		let centerY: number = c1y + (c2y - c1y) / 4;
 
 		if (this.Intersections2Circles(c1x, c1y, r, centerX, centerY, radius, result)) {
-			var t1x: number = result[0];
-			var t1y: number = result[1];
-			var t2x: number = result[2];
-			var t2y: number = result[3];
+			let t1x: number = result[0];
+			let t1y: number = result[1];
+			let t2x: number = result[2];
+			let t2y: number = result[3];
 
-			var midX: number = (c1x + c2x) / 2;
-			var midY: number = (c1y + c2y) / 2;
-			var dotProd: number = (t1x - midX) * (c2y - c1y) + (t1y - midY) * (- c2x + c1x);
-			var tproj: number = dotProd / (distance * distance);
-			var projx: number = midX + tproj * (c2y - c1y);
-			var projy: number = midY - tproj * (c2x - c1x);
+			let midX: number = (c1x + c2x) / 2;
+			let midY: number = (c1y + c2y) / 2;
+			let dotProd: number = (t1x - midX) * (c2y - c1y) + (t1y - midY) * (- c2x + c1x);
+			let tproj: number = dotProd / (distance * distance);
+			let projx: number = midX + tproj * (c2y - c1y);
+			let projy: number = midY - tproj * (c2x - c1x);
 
 
-			var t4x: number = 2 * projx - t1x;
-			var t4y: number = 2 * projy - t1y;
+			let t4x: number = 2 * projx - t1x;
+			let t4y: number = 2 * projy - t1y;
 
-			var t3x: number = t4x + t2x - t1x;
-			var t3y: number = t2y + t4y - t1y;
+			let t3x: number = t4x + t2x - t1x;
+			let t3y: number = t2y + t4y - t1y;
 
 			result.push(t3x, t3y, t4x, t4y);
 
@@ -1066,35 +1066,35 @@ export class DDLSGeom2D {
 
 	// <!!!> CIRCLES MUST HAVE SAME RADIUS
 	static TangentsParalCircleToCircle(r: number, c1x: number, c1y: number, c2x: number, c2y: number, result: Array<number>): void {
-		var distance: number = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
-		var t1x: number = c1x + r * (c2y - c1y) / distance;
-		var t1y: number = c1y + r * (- c2x + c1x) / distance;
-		var t2x: number = 2 * c1x - t1x;
-		var t2y: number = 2 * c1y - t1y;
-		var t3x: number = t2x + c2x - c1x;
-		var t3y: number = t2y + c2y - c1y;
-		var t4x: number = t1x + c2x - c1x;
-		var t4y: number = t1y + c2y - c1y
+		let distance: number = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
+		let t1x: number = c1x + r * (c2y - c1y) / distance;
+		let t1y: number = c1y + r * (- c2x + c1x) / distance;
+		let t2x: number = 2 * c1x - t1x;
+		let t2y: number = 2 * c1y - t1y;
+		let t3x: number = t2x + c2x - c1x;
+		let t3y: number = t2y + c2y - c1y;
+		let t4x: number = t1x + c2x - c1x;
+		let t4y: number = t1y + c2y - c1y
 		result.push(t1x, t1y, t2x, t2y, t3x, t3y, t4x, t4y);
 	}
 
 	// squared distance from point p to infinite line (a, b)
 	static DistanceSquaredPointToLine(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
-		var a_b_squaredLength: number = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
-		var dotProduct: number = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
-		var p_a_squaredLength: number = (ax - px) * (ax - px) + (ay - py) * (ay - py);
+		let a_b_squaredLength: number = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+		let dotProduct: number = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
+		let p_a_squaredLength: number = (ax - px) * (ax - px) + (ay - py) * (ay - py);
 		return p_a_squaredLength - dotProduct * dotProduct / a_b_squaredLength;
 	}
 
 	// squared distance from point p to finite segment [a, b]
 	static DistanceSquaredPointToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
-		var a_b_squaredLength: number = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
-		var dotProduct: number = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / a_b_squaredLength;
+		let a_b_squaredLength: number = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+		let dotProduct: number = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / a_b_squaredLength;
 		if (dotProduct < 0) {
 			return (px - ax) * (px - ax) + (py - ay) * (py - ay);
 		}
 		else if (dotProduct <= 1) {
-			var p_a_squaredLength: number = (ax - px) * (ax - px) + (ay - py) * (ay - py);
+			let p_a_squaredLength: number = (ax - px) * (ax - px) + (ay - py) * (ay - py);
 			return p_a_squaredLength - dotProduct * dotProduct * a_b_squaredLength;
 		}
 		else {
@@ -1109,15 +1109,15 @@ export class DDLSGeom2D {
 	}
 
 	static PathLength(path: Array<number>): number {
-		var sumDistance: number = 0;
-		var fromX: number = path[0];
-		var fromY: number = path[1];
-		var nextX: number;
-		var nextY: number;
-		var x: number;
-		var y: number;
-		var distance: number;
-		for (var i = 2; i < path.length; i += 2) {
+		let sumDistance: number = 0;
+		let fromX: number = path[0];
+		let fromY: number = path[1];
+		let nextX: number;
+		let nextY: number;
+		let x: number;
+		let y: number;
+		let distance: number;
+		for (let i = 2; i < path.length; i += 2) {
 			nextX = path[i];
 			nextY = path[i + 1];
 			x = nextX - fromX;

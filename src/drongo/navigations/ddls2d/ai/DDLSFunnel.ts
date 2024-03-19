@@ -18,7 +18,7 @@ export class DDLSFunnel {
 
 	constructor() {
 		this._poolPoints = new Array<DDLSPoint2D>();
-		for (var i = 0; i < this._poolPointsSize; i++) {
+		for (let i = 0; i < this._poolPointsSize; i++) {
 			this._poolPoints.push(new DDLSPoint2D());
 		}
 	}
@@ -61,7 +61,7 @@ export class DDLSFunnel {
 		if (this.radius == 0)
 			return;
 
-		for (var i = 0; i < this._numSamplesCircle; i++) {
+		for (let i = 0; i < this._numSamplesCircle; i++) {
 			this._sampleCircle.push(new DDLSPoint2D(this._radius * Math.cos(-2 * Math.PI * i / this._numSamplesCircle), this._radius * Math.sin(-2 * Math.PI * i / this._numSamplesCircle)));
 		}
 
@@ -77,12 +77,12 @@ export class DDLSFunnel {
 
 		// we check the start and goal
 		if (this._radius > 0) {
-			var checkFace: DDLSFace = listFaces[0];
-			var distanceSquared: number;
-			var distance: number;
-			var p1: DDLSPoint2D;
-			var p2: DDLSPoint2D;
-			var p3: DDLSPoint2D;
+			let checkFace: DDLSFace = listFaces[0];
+			let distanceSquared: number;
+			let distance: number;
+			let p1: DDLSPoint2D;
+			let p2: DDLSPoint2D;
+			let p3: DDLSPoint2D;
 			p1 = checkFace.edge.originVertex.pos;
 			p2 = checkFace.edge.destinationVertex.pos;
 			p3 = checkFace.edge.nextLeftEdge.destinationVertex.pos;
@@ -140,8 +140,8 @@ export class DDLSFunnel {
 
 
 		// we build starting and ending points
-		var startPoint: DDLSPoint2D;
-		var endPoint: DDLSPoint2D;
+		let startPoint: DDLSPoint2D;
+		let endPoint: DDLSPoint2D;
 		startPoint = new DDLSPoint2D(fromX, fromY);
 		endPoint = new DDLSPoint2D(toX, toY);
 
@@ -154,12 +154,12 @@ export class DDLSFunnel {
 		}
 
 		// useful
-		var i: number;
-		var j: number;
-		var k: number;
-		var currEdge: DDLSEdge;
-		var currVertex: DDLSVertex;
-		var direction: number;
+		let i: number;
+		let j: number;
+		let k: number;
+		let currEdge: DDLSEdge;
+		let currVertex: DDLSVertex;
+		let direction: number;
 
 		// first we skip the first face and first edge if the starting point lies on the first interior edge:
 		if (listEdges[0] == DDLSGeom2D.IsInFace(fromX, fromY, listFaces[0])) {
@@ -176,27 +176,27 @@ export class DDLSFunnel {
 		}
 
 		// our funnels, inited with starting point
-		var funnelLeft: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
-		var funnelRight: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+		let funnelLeft: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+		let funnelRight: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
 		funnelLeft.push(startPoint);
 		funnelRight.push(startPoint);
 
 		// useful to keep track of done vertices and compare the sides
-		var verticesDoneSide: Map<DDLSVertex, number> = new Map<DDLSVertex, number>();
+		let verticesDoneSide: Map<DDLSVertex, number> = new Map<DDLSVertex, number>();
 
 		// we extract the vertices positions and sides from the edges list
-		var pointsList: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
-		var pointSides: Map<DDLSPoint2D, number> = new Map<DDLSPoint2D, number>();
+		let pointsList: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+		let pointSides: Map<DDLSPoint2D, number> = new Map<DDLSPoint2D, number>();
 		// we keep the successor relation in a dictionnary
-		var pointSuccessor: Map<DDLSPoint2D, DDLSPoint2D> = new Map<DDLSPoint2D, DDLSPoint2D>();
+		let pointSuccessor: Map<DDLSPoint2D, DDLSPoint2D> = new Map<DDLSPoint2D, DDLSPoint2D>();
 		//
 		pointSides.set(startPoint, 0);
 		// we begin with the vertices in first edge
 		currEdge = listEdges[0];
-		var relativPos: number = DDLSGeom2D.GetRelativePosition2(fromX, fromY, currEdge);
-		var prevPoint: DDLSPoint2D;
-		var newPointA: DDLSPoint2D;
-		var newPointB: DDLSPoint2D;
+		let relativPos: number = DDLSGeom2D.GetRelativePosition2(fromX, fromY, currEdge);
+		let prevPoint: DDLSPoint2D;
+		let newPointA: DDLSPoint2D;
+		let newPointB: DDLSPoint2D;
 		newPointA = this.GetCopyPoint(currEdge.destinationVertex.pos);
 		newPointB = this.GetCopyPoint(currEdge.originVertex.pos);
 
@@ -219,8 +219,8 @@ export class DDLSFunnel {
 		}
 
 		// then we iterate through the edges
-		var fromVertex: DDLSVertex = listEdges[0].originVertex;
-		var fromFromVertex: DDLSVertex = listEdges[0].destinationVertex;
+		let fromVertex: DDLSVertex = listEdges[0].originVertex;
+		let fromFromVertex: DDLSVertex = listEdges[0].destinationVertex;
 		for (i = 1; i < listEdges.length; i++) {
 			// we identify the current vertex and his origin vertex
 			currEdge = listEdges[i];
@@ -259,8 +259,8 @@ export class DDLSFunnel {
 		/*
 		debugSurface.graphics.clear();
 		debugSurface.graphics.lineStyle(1, 0x0000FF);
-		var ppp1:Point = startPoint;
-		var ppp2:Point = pointSuccessor[ppp1];
+		let ppp1:Point = startPoint;
+		let ppp2:Point = pointSuccessor[ppp1];
 		while (ppp2)
 		{
 		debugSurface.graphics.moveTo(ppp1.x, ppp1.y+2);
@@ -279,24 +279,24 @@ export class DDLSFunnel {
 		*/
 
 		// we will keep the points and funnel sides of the optimized path
-		var pathPoints: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
-		var pathSides: Map<DDLSPoint2D, number> = new Map<DDLSPoint2D, number>();
+		let pathPoints: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+		let pathSides: Map<DDLSPoint2D, number> = new Map<DDLSPoint2D, number>();
 		pathPoints.push(startPoint);
 		pathSides.set(startPoint, 0);
 
 		// now we process the points by order
-		var currPos: DDLSPoint2D;
+		let currPos: DDLSPoint2D;
 		for (i = 0; i < pointsList.length; i++) {
 			currPos = pointsList[i];
 
 			// we identify the current vertex funnel's position by the position of his origin vertex
 			if (pointSides.get(currPos) == -1) {
 				// current vertex is at right
-				//trace("current vertex is at right");
+				//console.log("current vertex is at right");
 				for (j = funnelLeft.length - 2; j >= 0; j--) {
 					direction = DDLSGeom2D.GetDirection(funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j + 1].x, funnelLeft[j + 1].y, currPos.x, currPos.y);
 					if (direction != -1) {
-						//trace("funnels are crossing");
+						//console.log("funnels are crossing");
 
 						funnelLeft.shift();
 						for (k = 0; k <= j - 1; k++) {
@@ -356,13 +356,13 @@ export class DDLSFunnel {
 		}
 
 		// check if the goal is blocked by one funnel's right vertex
-		var blocked: Boolean = false;
-		//trace("check if the goal is blocked by one funnel right vertex");
+		let blocked: Boolean = false;
+		//console.log("check if the goal is blocked by one funnel right vertex");
 		for (j = funnelRight.length - 2; j >= 0; j--) {
 			direction = DDLSGeom2D.GetDirection(funnelRight[j].x, funnelRight[j].y, funnelRight[j + 1].x, funnelRight[j + 1].y, toX, toY);
-			//trace("dir", funnelRight[j].x, funnelRight[j].y, funnelRight[j+1].x, funnelRight[j+1].y, toX, toY);
+			//console.log("dir", funnelRight[j].x, funnelRight[j].y, funnelRight[j+1].x, funnelRight[j+1].y, toX, toY);
 			if (direction != 1) {
-				//trace("goal access right blocked");
+				//console.log("goal access right blocked");
 				// access blocked
 				funnelRight.shift();
 				for (k = 0; k <= j; k++) {
@@ -379,12 +379,12 @@ export class DDLSFunnel {
 
 		if (!blocked) {
 			// check if the goal is blocked by one funnel's left vertex
-			//trace("check if the goal is blocked by one funnel left vertex");
+			//console.log("check if the goal is blocked by one funnel left vertex");
 			for (j = funnelLeft.length - 2; j >= 0; j--) {
 				direction = DDLSGeom2D.GetDirection(funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j + 1].x, funnelLeft[j + 1].y, toX, toY);
-				//trace("dir", funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j+1].x, funnelLeft[j+1].y, toX, toY);
+				//console.log("dir", funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j+1].x, funnelLeft[j+1].y, toX, toY);
 				if (direction != -1) {
-					//trace("goal access left blocked");
+					//console.log("goal access left blocked");
 					// access blocked
 					funnelLeft.shift();
 					for (k = 0; k <= j; k++) {
@@ -407,11 +407,11 @@ export class DDLSFunnel {
 			pathSides.set(endPoint, 0);
 			blocked = true;
 		}
-
+		let adjustedPoints: Array<DDLSPoint2D>;
 		// if radius is non zero
 		if (this.radius > 0) {
-			var adjustedPoints: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
-			var newPath: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+			adjustedPoints = new Array<DDLSPoint2D>();
+			let newPath: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
 
 			if (pathPoints.length == 2) {
 				this.AdjustWithTangents(pathPoints[0], false, pathPoints[1], false, pointSides, pointSuccessor, newPath, adjustedPoints);
@@ -428,7 +428,7 @@ export class DDLSFunnel {
 				}
 
 				// tangent from last-1 point to end point
-				var pathLength: number = pathPoints.length;
+				let pathLength: number = pathPoints.length;
 				this.AdjustWithTangents(pathPoints[pathLength - 2], true, pathPoints[pathLength - 1], false, pointSides, pointSuccessor, newPath, adjustedPoints);
 			}
 
@@ -437,7 +437,7 @@ export class DDLSFunnel {
 			// adjusted path can have useless tangents, we check it
 			this.CheckAdjustedPath(newPath, adjustedPoints, pointSides);
 
-			var smoothPoints: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
+			let smoothPoints: Array<DDLSPoint2D> = new Array<DDLSPoint2D>();
 			for (i = newPath.length - 2; i >= 1; i--) {
 				this.SmoothAngle(adjustedPoints[i * 2 - 1], newPath[i], adjustedPoints[i * 2], pointSides.get(newPath[i]), smoothPoints);
 				while (smoothPoints.length) {
@@ -458,32 +458,32 @@ export class DDLSFunnel {
 
 	private AdjustWithTangents(p1: DDLSPoint2D, applyRadiusToP1: boolean
 		, p2: DDLSPoint2D, applyRadiusToP2: boolean
-		, pointSides: Map<DDLSPoint2D, number>, pointSuccessor: Map<DDLSPoint2D,DDLSPoint2D>
+		, pointSides: Map<DDLSPoint2D, number>, pointSuccessor: Map<DDLSPoint2D, DDLSPoint2D>
 		, newPath: Array<DDLSPoint2D>
 		, adjustedPoints: Array<DDLSPoint2D>): void {
 		// we find the tangent T between the points pathPoints[i] - pathPoints[i+1]
 		// then we check the unused intermediate points between pathPoints[i] and pathPoints[i+1]
 		// if a point P is too close from the segment, we replace T by 2 tangents T1, T2, between the points pathPoints[i] P and P - pathPoints[i+1]
 
-		//trace("adjustWithTangents");
+		//console.log("adjustWithTangents");
 
-		var tangentsResult: Array<number> = new Array<number>();
+		let tangentsResult: Array<number> = new Array<number>();
 
-		var side1: number = pointSides.get(p1);
-		var side2: number = pointSides.get(p2);
+		let side1: number = pointSides.get(p1);
+		let side2: number = pointSides.get(p2);
 
-		var pTangent1: DDLSPoint2D;
-		var pTangent2: DDLSPoint2D;
+		let pTangent1: DDLSPoint2D;
+		let pTangent2: DDLSPoint2D;
 
 		// if no radius application
 		if (!applyRadiusToP1 && !applyRadiusToP2) {
-			//trace("no radius applied");
+			//console.log("no radius applied");
 			pTangent1 = p1;
 			pTangent2 = p2;
 		}
 		// we apply radius to p2 only
 		else if (!applyRadiusToP1) {
-			//trace("! applyRadiusToP1");
+			//console.log("! applyRadiusToP1");
 			DDLSGeom2D.TangentsPointToCircle(p1.x, p1.y, p2.x, p2.y, this._radius, tangentsResult);
 			// p2 lies on the left funnel
 			if (side2 == 1) {
@@ -498,7 +498,7 @@ export class DDLSFunnel {
 		}
 		// we apply radius to p1 only
 		else if (!applyRadiusToP2) {
-			//trace("! applyRadiusToP2");
+			//console.log("! applyRadiusToP2");
 			DDLSGeom2D.TangentsPointToCircle(p2.x, p2.y, p1.x, p1.y, this._radius, tangentsResult);
 			// p1 lies on the left funnel
 			if (side1 == 1) {
@@ -513,7 +513,7 @@ export class DDLSFunnel {
 		}
 		// we apply radius to both points
 		else {
-			//trace("we apply radius to both points");
+			//console.log("we apply radius to both points");
 			// both points lie on left funnel
 			if (side1 == 1 && side2 == 1) {
 				DDLSGeom2D.TangentsParalCircleToCircle(this._radius, p1.x, p1.y, p2.x, p2.y, tangentsResult);
@@ -558,8 +558,8 @@ export class DDLSFunnel {
 			}
 		}
 
-		var successor: DDLSPoint2D = pointSuccessor.get(p1);
-		var distance: number;
+		let successor: DDLSPoint2D = pointSuccessor.get(p1);
+		let distance: number;
 		while (successor != p2) {
 			distance = DDLSGeom2D.DistanceSquaredPointToSegment(successor.x, successor.y, pTangent1.x, pTangent1.y, pTangent2.x, pTangent2.y);
 			if (distance < this._radiusSquared) {
@@ -575,8 +575,8 @@ export class DDLSFunnel {
 		// we check distance in order to remove useless close points due to straight line subdivision
 		/*if ( adjustedPoints.length > 0 )
 		{
-		var distanceSquared:Number;
-		var lastPoint:Point = adjustedPoints[adjustedPoints.length-1];
+		let distanceSquared:Number;
+		let lastPoint:Point = adjustedPoints[adjustedPoints.length-1];
 		distanceSquared = (lastPoint.x - pTangent1.x)*(lastPoint.x - pTangent1.x) + (lastPoint.y - pTangent1.y)*(lastPoint.y - pTangent1.y);
 		if (distanceSquared <= QEConstants.EPSILON_SQUARED)
 		{
@@ -589,29 +589,29 @@ export class DDLSFunnel {
 		newPath.push(p1);
 	}
 
-	private CheckAdjustedPath(newPath: Array<DDLSPoint2D>, adjustedPoints: Array<DDLSPoint2D>, pointSides: Map<DDLSPoint2D,number>): void {
+	private CheckAdjustedPath(newPath: Array<DDLSPoint2D>, adjustedPoints: Array<DDLSPoint2D>, pointSides: Map<DDLSPoint2D, number>): void {
 
-		var needCheck: Boolean = true;
+		let needCheck: Boolean = true;
 
-		var point0: DDLSPoint2D;
-		var point0Side: number;
-		var point1: DDLSPoint2D;
-		var point1Side: number;
-		var point2: DDLSPoint2D;
-		var point2Side: number;
+		let point0: DDLSPoint2D;
+		let point0Side: number;
+		let point1: DDLSPoint2D;
+		let point1Side: number;
+		let point2: DDLSPoint2D;
+		let point2Side: number;
 
-		var pt1: DDLSPoint2D;
-		var pt2: DDLSPoint2D;
-		var pt3: DDLSPoint2D;
-		var dot: number;
+		let pt1: DDLSPoint2D;
+		let pt2: DDLSPoint2D;
+		let pt3: DDLSPoint2D;
+		let dot: number;
 
-		var tangentsResult: Array<number> = new Array<number>();
-		var pTangent1: DDLSPoint2D;
-		var pTangent2: DDLSPoint2D;
+		let tangentsResult: Array<number> = new Array<number>();
+		let pTangent1: DDLSPoint2D;
+		let pTangent2: DDLSPoint2D;
 
 		while (needCheck) {
 			needCheck = false;
-			for (var i = 2; i < newPath.length; i++) {
+			for (let i = 2; i < newPath.length; i++) {
 				point2 = newPath[i];
 				point2Side = pointSides.get(point2);
 				point1 = newPath[i - 1];
@@ -626,7 +626,7 @@ export class DDLSFunnel {
 					dot = (pt1.x - pt2.x) * (pt3.x - pt2.x) + (pt1.y - pt2.y) * (pt3.y - pt2.y)
 					if (dot > 0) {
 						//needCheck = true;
-						//trace("dot > 0");
+						//console.log("dot > 0");
 						// rework the tangent
 						if (i == 2) {
 							// tangent from start point
@@ -658,7 +658,7 @@ export class DDLSFunnel {
 						else {
 							// 1st point lies on left funnel, 2nd on right funnel
 							if (point0Side == 1 && point2Side == -1) {
-								//trace("point0Side == 1 && point2Side == -1");
+								//console.log("point0Side == 1 && point2Side == -1");
 								DDLSGeom2D.TangentsCrossCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult)
 								// we keep the points of the right-left tangent
 								pTangent1 = this.GetPoint(tangentsResult[2], tangentsResult[3]);
@@ -666,7 +666,7 @@ export class DDLSFunnel {
 							}
 							// 1st point lies on right funnel, 2nd on left funnel
 							else if (point0Side == -1 && point2Side == 1) {
-								//trace("point0Side == -1 && point2Side == 1");
+								//console.log("point0Side == -1 && point2Side == 1");
 								DDLSGeom2D.TangentsCrossCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult)
 								// we keep the points of the right-left tangent
 								pTangent1 = this.GetPoint(tangentsResult[0], tangentsResult[1]);
@@ -674,7 +674,7 @@ export class DDLSFunnel {
 							}
 							// both points lie on left funnel
 							else if (point0Side == 1 && point2Side == 1) {
-								//trace("point0Side == 1 && point2Side == 1");
+								//console.log("point0Side == 1 && point2Side == 1");
 								DDLSGeom2D.TangentsParalCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
 								// we keep the points of the right tangent
 								pTangent1 = this.GetPoint(tangentsResult[2], tangentsResult[3]);
@@ -682,7 +682,7 @@ export class DDLSFunnel {
 							}
 							// both points lie on right funnel
 							else if (point0Side == -1 && point2Side == -1) {
-								//trace("point0Side == -1 && point2Side == -1");
+								//console.log("point0Side == -1 && point2Side == -1");
 								DDLSGeom2D.TangentsParalCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
 								// we keep the points of the right tangent
 								pTangent1 = this.GetPoint(tangentsResult[0], tangentsResult[1]);
@@ -708,29 +708,29 @@ export class DDLSFunnel {
 	}
 
 	private SmoothAngle(prevPoint: DDLSPoint2D, pointToSmooth: DDLSPoint2D, nextPoint: DDLSPoint2D, side: number, encirclePoints: Array<DDLSPoint2D>): void {
-		var angleType: number = DDLSGeom2D.GetDirection(prevPoint.x, prevPoint.y
+		let angleType: number = DDLSGeom2D.GetDirection(prevPoint.x, prevPoint.y
 			, pointToSmooth.x, pointToSmooth.y
 			, nextPoint.x, nextPoint.y);
 
 		/*
-		trace("smoothAngle");
-		trace("angleType", angleType);
-		trace("prevPoint", prevPoint);
-		trace("pointToSmooth", pointToSmooth);
-		trace("nextPoint", nextPoint);
+		console.log("smoothAngle");
+		console.log("angleType", angleType);
+		console.log("prevPoint", prevPoint);
+		console.log("pointToSmooth", pointToSmooth);
+		console.log("nextPoint", nextPoint);
 		*/
 
-		var distanceSquared: number = (prevPoint.x - nextPoint.x) * (prevPoint.x - nextPoint.x) + (prevPoint.y - nextPoint.y) * (prevPoint.y - nextPoint.y);
+		let distanceSquared: number = (prevPoint.x - nextPoint.x) * (prevPoint.x - nextPoint.x) + (prevPoint.y - nextPoint.y) * (prevPoint.y - nextPoint.y);
 		if (distanceSquared <= this._sampleCircleDistanceSquared)
 			return;
 
-		var index: number = 0;
-		var side1: number;
-		var side2: number;
-		var pointInArea: boolean;
-		var xToCheck: number;
-		var yToCheck: number;
-		for (var i = 0; i < this._numSamplesCircle; i++) {
+		let index: number = 0;
+		let side1: number;
+		let side2: number;
+		let pointInArea: boolean;
+		let xToCheck: number;
+		let yToCheck: number;
+		for (let i = 0; i < this._numSamplesCircle; i++) {
 			pointInArea = false;
 			xToCheck = pointToSmooth.x + this._sampleCircle[i].x;
 			yToCheck = pointToSmooth.y + this._sampleCircle[i].y;
@@ -739,16 +739,16 @@ export class DDLSFunnel {
 
 			// if funnel left
 			if (side == 1) {
-				//trace("funnel side is 1");
+				//console.log("funnel side is 1");
 				// if angle is < 180
 				if (angleType == -1) {
-					//trace("angle type is -1");
+					//console.log("angle type is -1");
 					if (side1 == -1 && side2 == -1)
 						pointInArea = true;
 				}
 				// if angle is >= 180
 				else {
-					//trace("angle type is 1")
+					//console.log("angle type is 1")
 					if (side1 == -1 || side2 == -1)
 						pointInArea = true;
 				}

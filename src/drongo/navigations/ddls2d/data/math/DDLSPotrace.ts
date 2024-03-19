@@ -15,10 +15,10 @@ export class DDLSPotrace {
 		, debugBmp: RGBA8888Texture = null
 		, debugShape: Graphics = null): Array<Array<number>> {
 		// OUTLINES STEP-LIKE SHAPES GENERATION
-		var shapes: Array<Array<number>> = new Array<Array<number>>();
-		var dictPixelsDone: Map<string, boolean> = new Map<string, boolean>();
-		for (var row = 1; row < bmpData.height - 1; row++) {
-			for (var col = 0; col < bmpData.width - 1; col++) {
+		let shapes: Array<Array<number>> = new Array<Array<number>>();
+		let dictPixelsDone: Map<string, boolean> = new Map<string, boolean>();
+		for (let row = 1; row < bmpData.height - 1; row++) {
+			for (let col = 0; col < bmpData.width - 1; col++) {
 				if (bmpData.GetPixel(col, row) == 0xFFFFFF && bmpData.GetPixel(col + 1, row) < 0xFFFFFF) {
 					if (!dictPixelsDone.has((col + 1) + "_" + row))
 						shapes.push(this.BuildShape(bmpData, row, col + 1, dictPixelsDone, debugBmp, debugShape));
@@ -31,17 +31,17 @@ export class DDLSPotrace {
 
 	static BuildShape(bmpData: RGBA8888Texture, fromPixelRow: number, fromPixelCol: number, dictPixelsDone: Map<string, boolean>
 		, debugBmp: RGBA8888Texture = null, debugShape: Graphics = null): Array<number> {
-		var path: Array<number> = new Array<number>();
-		var newX: number = fromPixelCol;
-		var newY: number = fromPixelRow;
+		let path: Array<number> = new Array<number>();
+		let newX: number = fromPixelCol;
+		let newY: number = fromPixelRow;
 		path.push(newX, newY);
 		dictPixelsDone.set(newX + "_" + newY, true);
 
-		var curDir: Vec2 = new Vec2(0, 1);
-		var newDir: Vec2 = new Vec2();
-		var newPixelRow: number;
-		var newPixelCol: number;
-		var count: number = -1;
+		let curDir: Vec2 = new Vec2(0, 1);
+		let newDir: Vec2 = new Vec2();
+		let newPixelRow: number;
+		let newPixelCol: number;
+		let count: number = -1;
 		while (true) {
 			if (debugBmp) {
 				debugBmp.SetPixel32(fromPixelCol, fromPixelRow, 0xFFFF0000);
@@ -103,7 +103,7 @@ export class DDLSPotrace {
 			debugShape.lineWidth = 0.5;
 			debugShape.color = color("#00FF00");
 			debugShape.moveTo(path[0], path[1]);
-			for (var i = 2; i < path.length; i += 2) {
+			for (let i = 2; i < path.length; i += 2) {
 				debugShape.lineTo(path[i], path[i + 1]);
 			}
 			debugShape.lineTo(path[0], path[1]);
@@ -113,9 +113,9 @@ export class DDLSPotrace {
 	}
 
 	public static BuildGraph(shape: Array<number>): DDLSGraph {
-		var i: number;
-		var graph: DDLSGraph = new DDLSGraph();
-		var node: DDLSGraphNode;
+		let i: number;
+		let graph: DDLSGraph = new DDLSGraph();
+		let node: DDLSGraphNode;
 		for (i = 0; i < shape.length; i += 2) {
 			node = graph.InsertNode();
 			node.data = new NodeData();
@@ -123,15 +123,15 @@ export class DDLSPotrace {
 			node.data.point = new DDLSPoint2D(shape[i], shape[i + 1]);
 		}
 
-		var node1: DDLSGraphNode;
-		var node2: DDLSGraphNode;
-		var subNode: DDLSGraphNode;
-		var distSqrd: number;
-		var sumDistSqrd: number;
-		var count: number;
-		var isValid: boolean;
-		var edge: DDLSGraphEdge;
-		var edgeData: EdgeData;
+		let node1: DDLSGraphNode;
+		let node2: DDLSGraphNode;
+		let subNode: DDLSGraphNode;
+		let distSqrd: number;
+		let sumDistSqrd: number;
+		let count: number;
+		let isValid: boolean;
+		let edge: DDLSGraphEdge;
+		let edgeData: EdgeData;
 		node1 = graph.node;
 		while (node1) {
 			node2 = node1.next ? node1.next : graph.node;
@@ -179,14 +179,14 @@ export class DDLSPotrace {
 	}
 
 	static BuildPolygon(graph: DDLSGraph, debugShape: Graphics = null): Array<number> {
-		var polygon: Array<number> = new Array<number>();
+		let polygon: Array<number> = new Array<number>();
 
-		var currNode: DDLSGraphNode;
-		var minNodeIndex: number = Number.MAX_VALUE;
-		var edge: DDLSGraphEdge;
-		var score: number;
-		var higherScore: number;
-		var lowerScoreEdge: DDLSGraphEdge;
+		let currNode: DDLSGraphNode;
+		let minNodeIndex: number = Number.MAX_VALUE;
+		let edge: DDLSGraphEdge;
+		let score: number;
+		let higherScore: number;
+		let lowerScoreEdge: DDLSGraphEdge;
 		currNode = graph.node;
 		while (currNode.data.index < minNodeIndex) {
 			minNodeIndex = currNode.data.index;
@@ -217,7 +217,7 @@ export class DDLSPotrace {
 			debugShape.lineWidth = 0.5;
 			debugShape.color = color("#0000FF");
 			debugShape.moveTo(polygon[0], polygon[1]);
-			for (var i = 2; i < polygon.length; i += 2) {
+			for (let i = 2; i < polygon.length; i += 2) {
 				debugShape.lineTo(polygon[i], polygon[i + 1]);
 			}
 			debugShape.lineTo(polygon[0], polygon[1]);

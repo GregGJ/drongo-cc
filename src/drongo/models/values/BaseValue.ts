@@ -23,7 +23,7 @@ export class BaseValue extends EventDispatcher implements IValue {
     
     SetValue(value: any): void {
         if (this.CheckValue(value)) {
-            var oldValue: any = this.value;
+            let oldValue: any = this.value;
             this.value = value;
             this.SendEvent(this.value, oldValue);
         }

@@ -28,7 +28,7 @@ export class ESCWorld {
      * @param time 
      */
     public Tick(time: number): void {
-        for (var system of this.__systems) {
+        for (let system of this.__systems) {
             system.Tick(time);
         }
     }

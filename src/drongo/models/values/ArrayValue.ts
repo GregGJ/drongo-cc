@@ -254,7 +254,7 @@ export class ArrayValue extends BaseValue {
             case SerializationMode.JSON:
                 let result = [];
                 let item: IValue;
-                for (var i: number = 0; i < this.elements.length; i++) {
+                for (let i: number = 0; i < this.elements.length; i++) {
                     item = this.elements[i];
                     result.push(item.Encode(type, data));
                 }

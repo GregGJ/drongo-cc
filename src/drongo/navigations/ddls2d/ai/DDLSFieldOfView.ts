@@ -38,37 +38,37 @@ export class DDLSFieldOfView {
 		if (!this._fromEntity)
 			throw new Error("From entity missing");
 
-		var posX: number = this._fromEntity.x;
-		var posY: number = this._fromEntity.y;
-		var directionNormX: number = this._fromEntity.dirNormX;
-		var directionNormY: number = this._fromEntity.dirNormY;
-		var radius: number = this._fromEntity.radiusFOV;
-		var angle: number = this._fromEntity.angleFOV;
+		let posX: number = this._fromEntity.x;
+		let posY: number = this._fromEntity.y;
+		let directionNormX: number = this._fromEntity.dirNormX;
+		let directionNormY: number = this._fromEntity.dirNormY;
+		let radius: number = this._fromEntity.radiusFOV;
+		let angle: number = this._fromEntity.angleFOV;
 
-		var targetX: number = targetEntity.x;
-		var targetY: number = targetEntity.y;
-		var targetRadius: number = targetEntity.radius
+		let targetX: number = targetEntity.x;
+		let targetY: number = targetEntity.y;
+		let targetRadius: number = targetEntity.radius
 
-		var distSquared: number = (posX - targetX) * (posX - targetX) + (posY - targetY) * (posY - targetY);
+		let distSquared: number = (posX - targetX) * (posX - targetX) + (posY - targetY) * (posY - targetY);
 
 		// if target is completely outside field radius
 		if (distSquared >= (radius + targetRadius) * (radius + targetRadius)) {
-			//trace("target is completely outside field radius");
+			//console.log("target is completely outside field radius");
 			return false;
 		}
 
 		if (distSquared < targetRadius * targetRadius) {
-			//trace("degenerate case if the field center is inside the target");
+			//console.log("degenerate case if the field center is inside the target");
 			return true;
 		}
 
-		var result: Array<number>;
-		var leftTargetX: number;
-		var leftTargetY: number;
-		var rightTargetX: number;
-		var rightTargetY: number;
-		var leftTargetInField: Boolean;
-		var rightTargetInField: Boolean;
+		let result: Array<number>;
+		let leftTargetX: number;
+		let leftTargetY: number;
+		let rightTargetX: number;
+		let rightTargetY: number;
+		let leftTargetInField: Boolean;
+		let rightTargetInField: Boolean;
 
 		// we consider the 2 cicrles intersections
 		result = new Array<number>();
@@ -79,8 +79,8 @@ export class DDLSFieldOfView {
 			rightTargetY = result[3];
 		}
 
-		var midX: number = 0.5 * (posX + targetX);
-		var midY: number = 0.5 * (posY + targetY);
+		let midX: number = 0.5 * (posX + targetX);
+		let midY: number = 0.5 * (posY + targetY);
 		if (result.length == 0 || (midX - targetX) * (midX - targetX) + (midY - targetY) * (midY - targetY) < (midX - leftTargetX) * (midX - leftTargetX) + (midY - leftTargetY) * (midY - leftTargetY)) {
 			// we consider the 2 tangents from field center to target
 			result.splice(0, result.length);
@@ -100,15 +100,15 @@ export class DDLSFieldOfView {
 			this._debug.circle(rightTargetX, rightTargetY, 2);
 		}
 
-		var dotProdMin: number = Math.cos(this._fromEntity.angleFOV / 2);
+		let dotProdMin: number = Math.cos(this._fromEntity.angleFOV / 2);
 		// we compare the dots for the left point
-		var leftX: number = leftTargetX - posX;
-		var leftY: number = leftTargetY - posY;
-		var lengthLeft: number = Math.sqrt(leftX * leftX + leftY * leftY);
-		var dotLeft: number = (leftX / lengthLeft) * directionNormX + (leftY / lengthLeft) * directionNormY;
+		let leftX: number = leftTargetX - posX;
+		let leftY: number = leftTargetY - posY;
+		let lengthLeft: number = Math.sqrt(leftX * leftX + leftY * leftY);
+		let dotLeft: number = (leftX / lengthLeft) * directionNormX + (leftY / lengthLeft) * directionNormY;
 		// if the left point is in field
 		if (dotLeft > dotProdMin) {
-			//trace("the left point is in field");
+			//console.log("the left point is in field");
 			leftTargetInField = true;
 		}
 		else {
@@ -116,13 +116,13 @@ export class DDLSFieldOfView {
 		}
 
 		// we compare the dots for the right point
-		var rightX: number = rightTargetX - posX;
-		var rightY: number = rightTargetY - posY;
-		var lengthRight: number = Math.sqrt(rightX * rightX + rightY * rightY);
-		var dotRight: number = (rightX / lengthRight) * directionNormX + (rightY / lengthRight) * directionNormY;
+		let rightX: number = rightTargetX - posX;
+		let rightY: number = rightTargetY - posY;
+		let lengthRight: number = Math.sqrt(rightX * rightX + rightY * rightY);
+		let dotRight: number = (rightX / lengthRight) * directionNormX + (rightY / lengthRight) * directionNormY;
 		// if the right point is in field
 		if (dotRight > dotProdMin) {
-			//trace("the right point is in field");
+			//console.log("the right point is in field");
 			rightTargetInField = true;
 		}
 		else {
@@ -134,7 +134,7 @@ export class DDLSFieldOfView {
 			// we must check if the Left/right points are on 2 different sides
 			if (DDLSGeom2D.GetDirection(posX, posY, posX + directionNormX, posY + directionNormY, leftTargetX, leftTargetY) == 1
 				&& DDLSGeom2D.GetDirection(posX, posY, posX + directionNormX, posY + directionNormY, rightTargetX, rightTargetY) == -1) {
-				//trace("the Left/right points are on 2 different sides");
+				//console.log("the Left/right points are on 2 different sides");
 
 			}
 			else {
@@ -145,12 +145,12 @@ export class DDLSFieldOfView {
 
 		// we init the window
 		if (!leftTargetInField || !rightTargetInField) {
-			var p: DDLSPoint2D = new DDLSPoint2D();
-			var dirAngle: number;
+			let p: DDLSPoint2D = new DDLSPoint2D();
+			let dirAngle: number;
 			dirAngle = Math.atan2(directionNormY, directionNormX);
 			if (!leftTargetInField) {
-				var leftFieldX: number = Math.cos(dirAngle - angle / 2);
-				var leftFieldY: number = Math.sin(dirAngle - angle / 2);
+				let leftFieldX: number = Math.cos(dirAngle - angle / 2);
+				let leftFieldY: number = Math.sin(dirAngle - angle / 2);
 				DDLSGeom2D.Intersections2segments(posX, posY, posX + leftFieldX, posY + leftFieldY
 					, leftTargetX, leftTargetY, rightTargetX, rightTargetY
 					, p, null, true);
@@ -163,8 +163,8 @@ export class DDLSFieldOfView {
 				leftTargetY = p.y;
 			}
 			if (!rightTargetInField) {
-				var rightFieldX: number = Math.cos(dirAngle + angle / 2);
-				var rightFieldY: number = Math.sin(dirAngle + angle / 2);
+				let rightFieldX: number = Math.cos(dirAngle + angle / 2);
+				let rightFieldY: number = Math.sin(dirAngle + angle / 2);
 				DDLSGeom2D.Intersections2segments(posX, posY, posX + rightFieldX, posY + rightFieldY
 					, leftTargetX, leftTargetY, rightTargetX, rightTargetY
 					, p, null, true);
@@ -189,14 +189,14 @@ export class DDLSFieldOfView {
 		// now we have a triangle called the window defined by: posX, posY, rightTargetX, rightTargetY, leftTargetX, leftTargetY
 
 		// we set a dictionnary of faces done
-		var facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
+		let facesDone: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
 		// we set a dictionnary of edges done
-		var edgesDone: Map<DDLSEdge, boolean> = new Map<DDLSEdge, boolean>();
+		let edgesDone: Map<DDLSEdge, boolean> = new Map<DDLSEdge, boolean>();
 		// we set the window wall
-		var wall: Array<number> = new Array<number>();
+		let wall: Array<number> = new Array<number>();
 		// we localize the field center
-		var startObj: Object = DDLSGeom2D.LocatePosition(posX, posY, this._mesh);
-		var startFace: DDLSFace;
+		let startObj: Object = DDLSGeom2D.LocatePosition(posX, posY, this._mesh);
+		let startFace: DDLSFace;
 		if (startObj instanceof DDLSFace)
 			startFace = startObj as DDLSFace;
 		else if (startObj instanceof DDLSEdge)
@@ -206,24 +206,24 @@ export class DDLSFieldOfView {
 
 
 		// we put the face where the field center is lying in open list
-		var openFacesList: Array<DDLSFace> = new Array<DDLSFace>();
-		var openFaces: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
+		let openFacesList: Array<DDLSFace> = new Array<DDLSFace>();
+		let openFaces: Map<DDLSFace, boolean> = new Map<DDLSFace, boolean>();
 		openFacesList.push(startFace);
 		openFaces.set(startFace, true);
 
-		var currentFace: DDLSFace;
-		var currentEdge: DDLSEdge;
-		var s1: DDLSPoint2D;
-		var s2: DDLSPoint2D;
-		var p1: DDLSPoint2D = new DDLSPoint2D()
-		var p2: DDLSPoint2D = new DDLSPoint2D();
-		var params: Array<number> = new Array<number>();
-		var param1: number;
-		var param2: number;
-		var i: number;
-		var index1: number;
-		var index2: number;
-		var edges: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let currentFace: DDLSFace;
+		let currentEdge: DDLSEdge;
+		let s1: DDLSPoint2D;
+		let s2: DDLSPoint2D;
+		let p1: DDLSPoint2D = new DDLSPoint2D()
+		let p2: DDLSPoint2D = new DDLSPoint2D();
+		let params: Array<number> = new Array<number>();
+		let param1: number;
+		let param2: number;
+		let i: number;
+		let index1: number;
+		let index2: number;
+		let edges: Array<DDLSEdge> = new Array<DDLSEdge>();
 		// we iterate as long as we have new open facess
 		while (openFacesList.length > 0) {
 			// we pop the 1st open face: current face
@@ -339,7 +339,7 @@ export class DDLSFieldOfView {
 		{
 			return false;
 		}
-		trace(wall);*/
+		console.log(wall);*/
 
 		return true;
 	}

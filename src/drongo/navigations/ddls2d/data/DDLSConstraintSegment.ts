@@ -34,7 +34,7 @@ export class DDLSConstraintSegment {
 	}
 
 	RemoveEdge(edge: DDLSEdge): void {
-		var index: number;
+		let index: number;
 		index = this._edges.indexOf(edge);
 		if (index == -1)
 			index = this._edges.indexOf(edge.oppositeEdge);

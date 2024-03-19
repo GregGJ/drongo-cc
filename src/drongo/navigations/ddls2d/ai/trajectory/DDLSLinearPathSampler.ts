@@ -150,8 +150,8 @@ export class DDLSLinearPathSampler {
 		}
 
 
-		var remainingDist: number;
-		var dist: number;
+		let remainingDist: number;
+		let dist: number;
 
 		remainingDist = this._samplingDistance;
 		while (true) {
@@ -202,8 +202,8 @@ export class DDLSLinearPathSampler {
 		}
 
 
-		var remainingDist: number;
-		var dist: number;
+		let remainingDist: number;
+		let dist: number;
 
 		remainingDist = this._samplingDistance;
 		while (true) {

@@ -17503,8 +17503,8 @@ class StringUtils {
      *
      *  @example
      *
-     *  var str:string = "here is some info '{0}' and {1}";
-     *  trace(StringUtil.substitute(str, 15.4, true));
+     *  let str:string = "here is some info '{0}' and {1}";
+     *  console.log(StringUtil.substitute(str, 15.4, true));
      *
      *  // this will output the following string:
      *  // "here is some info '15.4' and true"
@@ -17513,8 +17513,8 @@ class StringUtils {
         if (str == null)
             return '';
         // Replace all of the parameters in the msg string.
-        var len = rest.length;
-        var args;
+        let len = rest.length;
+        let args;
         if (len == 1 && rest[0] instanceof Array) {
             args = rest[0];
             len = args.length;
@@ -17522,7 +17522,7 @@ class StringUtils {
         else {
             args = rest;
         }
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             str = str.replace(new RegExp("\\{" + i + "\\}", "g"), args[i]);
         }
         return str;
@@ -23107,8 +23107,6 @@ class GUIProxy {
     constructor(info) {
         /**关闭时间*/
         this.closeTime = 0;
-        /**UI层次*/
-        this.zIndex = 0;
         /**是否在显示中*/
         this.__showing = false;
         /**加载状态 */
@@ -23232,7 +23230,7 @@ class GUIProxy {
         }
     }
     __addToLayer() {
-        this.layer.AddChildAt(this.mediator.viewComponent, this.zIndex);
+        this.layer.AddChildAt(this.mediator.viewComponent, this.getLayerChildCount());
         this.mediator.viewComponent.visible = true;
     }
     Tick(dt) {
@@ -23244,7 +23242,6 @@ class GUIProxy {
     }
     Show(data) {
         this.__showing = true;
-        this.zIndex = this.getLayerChildCount();
         this.data = data;
         this.__show();
     }
@@ -24983,7 +24980,7 @@ class Handler {
      * @returns
      */
     static Create(caller, method, once = false) {
-        var h = new Handler();
+        let h = new Handler();
         h.caller = caller;
         h.method = method;
         h.once = once;
@@ -25066,7 +25063,7 @@ class BaseValue extends EventDispatcher {
     }
     SetValue(value) {
         if (this.CheckValue(value)) {
-            var oldValue = this.value;
+            let oldValue = this.value;
             this.value = value;
             this.SendEvent(this.value, oldValue);
         }
@@ -25343,7 +25340,7 @@ class ArrayValue extends BaseValue {
             case SerializationMode.JSON:
                 let result = [];
                 let item;
-                for (var i = 0; i < this.elements.length; i++) {
+                for (let i = 0; i < this.elements.length; i++) {
                     item = this.elements[i];
                     result.push(item.Encode(type, data));
                 }
@@ -25434,9 +25431,9 @@ class DictionaryValue extends BaseValue {
         if (keys.length != values.length) {
             throw new Error("keys.length!=values.length");
         }
-        var key;
-        var value;
-        for (var i = 0; i < keys.length; i++) {
+        let key;
+        let value;
+        for (let i = 0; i < keys.length; i++) {
             key = keys[i];
             value = values[i];
             this.Update(key, value);
@@ -25458,9 +25455,9 @@ class DictionaryValue extends BaseValue {
             if (this.elements.length != value.elements.length) {
                 return false;
             }
-            var a;
-            var b;
-            for (var i = 0; i < this.elements.length; i++) {
+            let a;
+            let b;
+            for (let i = 0; i < this.elements.length; i++) {
                 a = this.elements[i];
                 b = value.elements[i];
                 if (a.Equality(b) != false) {
@@ -25785,6 +25782,214 @@ class BaseModel {
     }
 }
 
+class DDLSEdge {
+    constructor() {
+        this.colorDebug = -1;
+        this._id = DDLSEdge.INC;
+        DDLSEdge.INC++;
+        this._fromConstraintSegments = new Array();
+    }
+    get id() {
+        return this._id;
+    }
+    get isReal() {
+        return this._isReal;
+    }
+    get isConstrained() {
+        return this._isConstrained;
+    }
+    SetDatas(originVertex, oppositeEdge, nextLeftEdge, leftFace, isReal = true, isConstrained = false) {
+        this._isConstrained = isConstrained;
+        this._isReal = isReal;
+        this._originVertex = originVertex;
+        this._oppositeEdge = oppositeEdge;
+        this._nextLeftEdge = nextLeftEdge;
+        this._leftFace = leftFace;
+    }
+    AddFromConstraintSegment(segment) {
+        if (this._fromConstraintSegments.indexOf(segment) == -1)
+            this._fromConstraintSegments.push(segment);
+    }
+    RemoveFromConstraintSegment(segment) {
+        let index = this._fromConstraintSegments.indexOf(segment);
+        if (index != -1)
+            this._fromConstraintSegments.splice(index, 1);
+    }
+    set originVertex(value) {
+        this._originVertex = value;
+    }
+    set nextLeftEdge(value) {
+        this._nextLeftEdge = value;
+    }
+    set leftFace(value) {
+        this._leftFace = value;
+    }
+    set isConstrained(value) {
+        this._isConstrained = value;
+    }
+    get fromConstraintSegments() {
+        return this._fromConstraintSegments;
+    }
+    set fromConstraintSegments(value) {
+        this._fromConstraintSegments = value;
+    }
+    Dispose() {
+        this._originVertex = null;
+        this._oppositeEdge = null;
+        this._nextLeftEdge = null;
+        this._leftFace = null;
+        this._fromConstraintSegments = null;
+    }
+    get originVertex() { return this._originVertex; }
+    get destinationVertex() { return this._oppositeEdge.originVertex; }
+    get oppositeEdge() { return this._oppositeEdge; }
+    get nextLeftEdge() { return this._nextLeftEdge; }
+    get prevLeftEdge() { return this._nextLeftEdge.nextLeftEdge; }
+    get nextRightEdge() { return this._oppositeEdge.nextLeftEdge.nextLeftEdge.oppositeEdge; }
+    get prevRightEdge() { return this._oppositeEdge.nextLeftEdge.oppositeEdge; }
+    get rotLeftEdge() { return this._nextLeftEdge.nextLeftEdge.oppositeEdge; }
+    get rotRightEdge() { return this._oppositeEdge.nextLeftEdge; }
+    get leftFace() { return this._leftFace; }
+    get rightFace() { return this._oppositeEdge.leftFace; }
+    toString() {
+        return "edge " + this.originVertex.id + " - " + this.destinationVertex.id;
+    }
+}
+DDLSEdge.INC = 0;
+
+class DDLSFace {
+    constructor() {
+        this.colorDebug = -1;
+        this._id = DDLSFace.INC;
+        DDLSFace.INC++;
+    }
+    get id() {
+        return this._id;
+    }
+    get isReal() {
+        return this._isReal;
+    }
+    SetDatas(edge, isReal = true) {
+        this._isReal = isReal;
+        this._edge = edge;
+    }
+    Dispose() {
+        this._edge = null;
+    }
+    get edge() {
+        return this._edge;
+    }
+}
+DDLSFace.INC = 0;
+
+class DDLSPoint2D {
+    constructor(x = 0, y = 0) {
+        this._x = x;
+        this._y = y;
+    }
+    Transform(matrix) {
+        matrix.Tranform(this);
+    }
+    Set(x, y) {
+        this._x = x;
+        this._y = y;
+    }
+    Clone() {
+        return new DDLSPoint2D(this._x, this._y);
+    }
+    Substract(p) {
+        this._x -= p.x;
+        this._y -= p.y;
+    }
+    get length() {
+        return Math.sqrt(this._x * this._x + this._y * this._y);
+    }
+    get x() {
+        return this._x;
+    }
+    set x(value) {
+        this._x = value;
+    }
+    get y() {
+        return this._y;
+    }
+    set y(value) {
+        this._y = value;
+    }
+    Normalize() {
+        let norm = length;
+        this.x = this.x / norm;
+        this.y = this.y / norm;
+    }
+    Scale(s) {
+        this.x = this.x * s;
+        this.y = this.y * s;
+    }
+    DistanceTo(p) {
+        let diffX = this.x - p.x;
+        let diffY = this.y - p.y;
+        return Math.sqrt(diffX * diffX + diffY * diffY);
+    }
+    DistanceSquaredTo(p) {
+        let diffX = this.x - p.x;
+        let diffY = this.y - p.y;
+        return diffX * diffX + diffY * diffY;
+    }
+}
+
+class DDLSVertex {
+    constructor() {
+        this.colorDebug = -1;
+        this._id = DDLSVertex.INC;
+        DDLSVertex.INC++;
+        this._pos = new DDLSPoint2D();
+        this._fromConstraintSegments = new Array();
+    }
+    get id() {
+        return this._id;
+    }
+    get isReal() {
+        return this._isReal;
+    }
+    get pos() {
+        return this._pos;
+    }
+    get fromConstraintSegments() {
+        return this._fromConstraintSegments;
+    }
+    set fromConstraintSegments(value) {
+        this._fromConstraintSegments = value;
+    }
+    SetDatas(edge, isReal = true) {
+        this._isReal = isReal;
+        this._edge = edge;
+    }
+    AddFromConstraintSegment(segment) {
+        if (this._fromConstraintSegments.indexOf(segment) == -1)
+            this._fromConstraintSegments.push(segment);
+    }
+    RemoveFromConstraintSegment(segment) {
+        let index = this._fromConstraintSegments.indexOf(segment);
+        if (index != -1)
+            this._fromConstraintSegments.splice(index, 1);
+    }
+    Dispose() {
+        this._pos = null;
+        this._edge = null;
+        this._fromConstraintSegments = null;
+    }
+    get edge() {
+        return this._edge;
+    }
+    set edge(value) {
+        this._edge = value;
+    }
+    toString() {
+        return "ver_id " + this._id;
+    }
+}
+DDLSVertex.INC = 0;
+
 class IteratorFromFaceToInnerEdges {
     constructor() {
     }
@@ -25838,189 +26043,6 @@ class DDLSConstants {
 DDLSConstants.EPSILON = 0.01;
 DDLSConstants.EPSILON_SQUARED = 0.0001;
 
-class DDLSEdge {
-    constructor() {
-        this.colorDebug = -1;
-        this._id = DDLSEdge.INC;
-        DDLSEdge.INC++;
-        this._fromConstraintSegments = new Array();
-    }
-    get id() {
-        return this._id;
-    }
-    get isReal() {
-        return this._isReal;
-    }
-    get isConstrained() {
-        return this._isConstrained;
-    }
-    SetDatas(originVertex, oppositeEdge, nextLeftEdge, leftFace, isReal = true, isConstrained = false) {
-        this._isConstrained = isConstrained;
-        this._isReal = isReal;
-        this._originVertex = originVertex;
-        this._oppositeEdge = oppositeEdge;
-        this._nextLeftEdge = nextLeftEdge;
-        this._leftFace = leftFace;
-    }
-    AddFromConstraintSegment(segment) {
-        if (this._fromConstraintSegments.indexOf(segment) == -1)
-            this._fromConstraintSegments.push(segment);
-    }
-    RemoveFromConstraintSegment(segment) {
-        var index = this._fromConstraintSegments.indexOf(segment);
-        if (index != -1)
-            this._fromConstraintSegments.splice(index, 1);
-    }
-    set originVertex(value) {
-        this._originVertex = value;
-    }
-    set nextLeftEdge(value) {
-        this._nextLeftEdge = value;
-    }
-    set leftFace(value) {
-        this._leftFace = value;
-    }
-    set isConstrained(value) {
-        this._isConstrained = value;
-    }
-    get fromConstraintSegments() {
-        return this._fromConstraintSegments;
-    }
-    set fromConstraintSegments(value) {
-        this._fromConstraintSegments = value;
-    }
-    Dispose() {
-        this._originVertex = null;
-        this._oppositeEdge = null;
-        this._nextLeftEdge = null;
-        this._leftFace = null;
-        this._fromConstraintSegments = null;
-    }
-    get originVertex() { return this._originVertex; }
-    get destinationVertex() { return this._oppositeEdge.originVertex; }
-    get oppositeEdge() { return this._oppositeEdge; }
-    get nextLeftEdge() { return this._nextLeftEdge; }
-    get prevLeftEdge() { return this._nextLeftEdge.nextLeftEdge; }
-    get nextRightEdge() { return this._oppositeEdge.nextLeftEdge.nextLeftEdge.oppositeEdge; }
-    get prevRightEdge() { return this._oppositeEdge.nextLeftEdge.oppositeEdge; }
-    get rotLeftEdge() { return this._nextLeftEdge.nextLeftEdge.oppositeEdge; }
-    get rotRightEdge() { return this._oppositeEdge.nextLeftEdge; }
-    get leftFace() { return this._leftFace; }
-    get rightFace() { return this._oppositeEdge.leftFace; }
-    toString() {
-        return "edge " + this.originVertex.id + " - " + this.destinationVertex.id;
-    }
-}
-DDLSEdge.INC = 0;
-
-class DDLSPoint2D {
-    constructor(x = 0, y = 0) {
-        this._x = x;
-        this._y = y;
-    }
-    Transform(matrix) {
-        matrix.Tranform(this);
-    }
-    Set(x, y) {
-        this._x = x;
-        this._y = y;
-    }
-    Clone() {
-        return new DDLSPoint2D(this._x, this._y);
-    }
-    Substract(p) {
-        this._x -= p.x;
-        this._y -= p.y;
-    }
-    get length() {
-        return Math.sqrt(this._x * this._x + this._y * this._y);
-    }
-    get x() {
-        return this._x;
-    }
-    set x(value) {
-        this._x = value;
-    }
-    get y() {
-        return this._y;
-    }
-    set y(value) {
-        this._y = value;
-    }
-    Normalize() {
-        var norm = length;
-        this.x = this.x / norm;
-        this.y = this.y / norm;
-    }
-    Scale(s) {
-        this.x = this.x * s;
-        this.y = this.y * s;
-    }
-    DistanceTo(p) {
-        var diffX = this.x - p.x;
-        var diffY = this.y - p.y;
-        return Math.sqrt(diffX * diffX + diffY * diffY);
-    }
-    DistanceSquaredTo(p) {
-        var diffX = this.x - p.x;
-        var diffY = this.y - p.y;
-        return diffX * diffX + diffY * diffY;
-    }
-}
-
-class DDLSVertex {
-    constructor() {
-        this.colorDebug = -1;
-        this._id = DDLSVertex.INC;
-        DDLSVertex.INC++;
-        this._pos = new DDLSPoint2D();
-        this._fromConstraintSegments = new Array();
-    }
-    get id() {
-        return this._id;
-    }
-    get isReal() {
-        return this._isReal;
-    }
-    get pos() {
-        return this._pos;
-    }
-    get fromConstraintSegments() {
-        return this._fromConstraintSegments;
-    }
-    set fromConstraintSegments(value) {
-        this._fromConstraintSegments = value;
-    }
-    SetDatas(edge, isReal = true) {
-        this._isReal = isReal;
-        this._edge = edge;
-    }
-    AddFromConstraintSegment(segment) {
-        if (this._fromConstraintSegments.indexOf(segment) == -1)
-            this._fromConstraintSegments.push(segment);
-    }
-    RemoveFromConstraintSegment(segment) {
-        var index = this._fromConstraintSegments.indexOf(segment);
-        if (index != -1)
-            this._fromConstraintSegments.splice(index, 1);
-    }
-    Dispose() {
-        this._pos = null;
-        this._edge = null;
-        this._fromConstraintSegments = null;
-    }
-    get edge() {
-        return this._edge;
-    }
-    set edge(value) {
-        this._edge = value;
-    }
-    toString() {
-        return "ver_id " + this._id;
-    }
-}
-DDLSVertex.INC = 0;
-
 class DDLSRandGenerator {
     constructor(seed = 1234, rangeMin = 0, rangeMax = 1) {
         this._originalSeed = this._currSeed = seed;
@@ -26043,8 +26065,8 @@ class DDLSRandGenerator {
         while (this._tempString.length < 8) {
             this._tempString = "0" + this._tempString;
         }
-        this._currSeed = Number(this._tempString.substring(1, 5));
-        var res = Math.round(this._rangeMin + (this._currSeed / 99999) * (this._rangeMax - this._rangeMin));
+        this._currSeed = Number(this._tempString.substring(1, 6));
+        let res = Math.round(this._rangeMin + (this._currSeed / 99999) * (this._rangeMax - this._rangeMin));
         if (this._currSeed == 0)
             this._currSeed = this._originalSeed + this._numIter;
         this._numIter++;
@@ -26061,18 +26083,18 @@ class DDLSGeom2D {
         if (!this._randGen)
             this._randGen = new DDLSRandGenerator();
         this._randGen.seed = x * 10 + 4 * y;
-        var i;
+        let i;
         this.__samples.splice(0, this.__samples.length);
-        var numSamples = Math.pow(mesh.__vertices.length, 1 / 3);
+        let numSamples = Math.floor(Math.pow(mesh.__vertices.length, 1 / 3));
         this._randGen.rangeMin = 0;
         this._randGen.rangeMax = mesh.__vertices.length - 1;
         for (i = 0; i < numSamples; i++)
             this.__samples.push(mesh.__vertices[this._randGen.Next()]);
-        var currVertex;
-        var currVertexPos;
-        var distSquared;
-        var minDistSquared = Number.MAX_VALUE;
-        var closedVertex;
+        let currVertex;
+        let currVertexPos;
+        let distSquared;
+        let minDistSquared = Number.MAX_VALUE;
+        let closedVertex;
         for (i = 0; i < numSamples; i++) {
             currVertex = this.__samples[i];
             currVertexPos = currVertex.pos;
@@ -26082,16 +26104,16 @@ class DDLSGeom2D {
                 closedVertex = currVertex;
             }
         }
-        var currFace;
-        var iterFace = new IteratorFromVertexToHoldingFaces();
+        let currFace;
+        let iterFace = new IteratorFromVertexToHoldingFaces();
         iterFace.fromVertex = closedVertex;
         currFace = iterFace.Next();
-        var faceVisited = new Map();
-        var currEdge;
-        var iterEdge = new IteratorFromFaceToInnerEdges();
-        var objectContainer;
-        var relativPos;
-        var numIter = 0;
+        let faceVisited = new Map();
+        let currEdge;
+        let iterEdge = new IteratorFromFaceToInnerEdges();
+        let objectContainer;
+        let relativPos;
+        let numIter = 0;
         while (faceVisited.has(currFace) || !(objectContainer = this.IsInFace(x, y, currFace))) {
             faceVisited.set(currFace, true);
             numIter++;
@@ -26131,8 +26153,8 @@ class DDLSGeom2D {
     static IsCircleIntersectingAnyConstraint(x, y, radius, mesh) {
         if (x <= 0 || x >= mesh.width || y <= 0 || y >= mesh.height)
             return true;
-        var loc = DDLSGeom2D.LocatePosition(x, y, mesh);
-        var face;
+        let loc = DDLSGeom2D.LocatePosition(x, y, mesh);
+        let face;
         if (loc instanceof DDLSVertex)
             face = loc.edge.leftFace;
         else if (loc instanceof DDLSEdge)
@@ -26141,9 +26163,9 @@ class DDLSGeom2D {
             face = loc;
         // if a vertex is in the circle, a contrainst must intersect the circle
         // because a vertex always belongs to a contrained edge
-        var radiusSquared = radius * radius;
-        var pos;
-        var distSquared;
+        let radiusSquared = radius * radius;
+        let pos;
+        let distSquared;
         pos = face.edge.originVertex.pos;
         distSquared = (pos.x - x) * (pos.x - x) + (pos.y - y) * (pos.y - y);
         if (distSquared <= radiusSquared) {
@@ -26160,15 +26182,15 @@ class DDLSGeom2D {
             return true;
         }
         // check if edge intersects
-        var edgesToCheck = new Array();
+        let edgesToCheck = new Array();
         edgesToCheck.push(face.edge);
         edgesToCheck.push(face.edge.nextLeftEdge);
         edgesToCheck.push(face.edge.nextLeftEdge.nextLeftEdge);
-        var edge;
-        var pos1;
-        var pos2;
-        var checkedEdges = new Map();
-        var intersecting;
+        let edge;
+        let pos1;
+        let pos2;
+        let checkedEdges = new Map();
+        let intersecting;
         while (edgesToCheck.length > 0) {
             edge = edgesToCheck.pop();
             checkedEdges.set(edge, true);
@@ -26201,7 +26223,7 @@ class DDLSGeom2D {
     // -1 if the path goes to the right
     static GetDirection(x1, y1, x2, y2, x3, y3) {
         // dot product with the orthogonal vector pointing left vector of eUp:
-        var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
+        let dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
         // check sign
         return (dot == 0) ? 0 : ((dot > 0) ? 1 : -1);
     }
@@ -26213,7 +26235,7 @@ class DDLSGeom2D {
     // -1 if the path goes to the right
     static GetDirection2(x1, y1, x2, y2, x3, y3) {
         // dot product with the orthogonal vector pointing left vector of eUp:
-        var dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
+        let dot = (x3 - x1) * (y2 - y1) + (y3 - y1) * (-x2 + x1);
         // check sign
         if (dot == 0) {
             return 0;
@@ -26255,12 +26277,12 @@ class DDLSGeom2D {
         */
         // set alias letters
         /*
-        var a:number = x;
-        var b:number = y;
-        var c:number = vOrigin.pos.x;
-        var d:number = vOrigin.pos.y;
-        var e:number = vDestination.pos.x;
-        var f:number = vDestination.pos.y;
+        let a:number = x;
+        let b:number = y;
+        let c:number = vOrigin.pos.x;
+        let d:number = vOrigin.pos.y;
+        let e:number = vDestination.pos.x;
+        let f:number = vDestination.pos.y;
         */
         /*
         system to solve:
@@ -26270,9 +26292,9 @@ class DDLSGeom2D {
         // giving to wolfram: Solve[{a = c + t2 (f - d) + t1 (e - c) , b = d + t1 (f - d) - t2 (e - c)}, {t1, t2}]
         // we get:
         /*
-        var t2:number = (-a*d + a*f + b*c - b*e - c*f + d*e) / (c*c - 2*c*e + d*d - 2*d*f + e*e + f*f);
+        let t2:number = (-a*d + a*f + b*c - b*e - c*f + d*e) / (c*c - 2*c*e + d*d - 2*d*f + e*e + f*f);
         
-        var result:int;
+        let result:int;
         if ( t2 == 0 )
             result = 0;
         else if ( t2 < 0 )
@@ -26294,35 +26316,35 @@ class DDLSGeom2D {
     static IsInFace(x, y, polygon) {
         // remember polygons are triangle only,
         // and we suppose we have not degenerated flat polygons !
-        var result;
-        var e1_2 = polygon.edge;
-        var e2_3 = e1_2.nextLeftEdge;
-        var e3_1 = e2_3.nextLeftEdge;
+        let result;
+        let e1_2 = polygon.edge;
+        let e2_3 = e1_2.nextLeftEdge;
+        let e3_1 = e2_3.nextLeftEdge;
         if (this.GetRelativePosition(x, y, e1_2) >= 0 && this.GetRelativePosition(x, y, e2_3) >= 0 && this.GetRelativePosition(x, y, e3_1) >= 0) {
-            var v1 = e1_2.originVertex;
-            var v2 = e2_3.originVertex;
-            var v3 = e3_1.originVertex;
-            var x1 = v1.pos.x;
-            var y1 = v1.pos.y;
-            var x2 = v2.pos.x;
-            var y2 = v2.pos.y;
-            var x3 = v3.pos.x;
-            var y3 = v3.pos.y;
-            var v_v1squaredLength = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
-            var v_v2squaredLength = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
-            var v_v3squaredLength = (x3 - x) * (x3 - x) + (y3 - y) * (y3 - y);
-            var v1_v2squaredLength = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-            var v2_v3squaredLength = (x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2);
-            var v3_v1squaredLength = (x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3);
-            var dot_v_v1v2 = (x - x1) * (x2 - x1) + (y - y1) * (y2 - y1);
-            var dot_v_v2v3 = (x - x2) * (x3 - x2) + (y - y2) * (y3 - y2);
-            var dot_v_v3v1 = (x - x3) * (x1 - x3) + (y - y3) * (y1 - y3);
-            var v_e1_2squaredLength = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
-            var v_e2_3squaredLength = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
-            var v_e3_1squaredLength = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
-            var closeTo_e1_2 = v_e1_2squaredLength <= DDLSConstants.EPSILON_SQUARED;
-            var closeTo_e2_3 = v_e2_3squaredLength <= DDLSConstants.EPSILON_SQUARED;
-            var closeTo_e3_1 = v_e3_1squaredLength <= DDLSConstants.EPSILON_SQUARED;
+            let v1 = e1_2.originVertex;
+            let v2 = e2_3.originVertex;
+            let v3 = e3_1.originVertex;
+            let x1 = v1.pos.x;
+            let y1 = v1.pos.y;
+            let x2 = v2.pos.x;
+            let y2 = v2.pos.y;
+            let x3 = v3.pos.x;
+            let y3 = v3.pos.y;
+            let v_v1squaredLength = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y);
+            let v_v2squaredLength = (x2 - x) * (x2 - x) + (y2 - y) * (y2 - y);
+            let v_v3squaredLength = (x3 - x) * (x3 - x) + (y3 - y) * (y3 - y);
+            let v1_v2squaredLength = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+            let v2_v3squaredLength = (x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2);
+            let v3_v1squaredLength = (x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3);
+            let dot_v_v1v2 = (x - x1) * (x2 - x1) + (y - y1) * (y2 - y1);
+            let dot_v_v2v3 = (x - x2) * (x3 - x2) + (y - y2) * (y3 - y2);
+            let dot_v_v3v1 = (x - x3) * (x1 - x3) + (y - y3) * (y1 - y3);
+            let v_e1_2squaredLength = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
+            let v_e2_3squaredLength = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
+            let v_e3_1squaredLength = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
+            let closeTo_e1_2 = v_e1_2squaredLength <= DDLSConstants.EPSILON_SQUARED;
+            let closeTo_e2_3 = v_e2_3squaredLength <= DDLSConstants.EPSILON_SQUARED;
+            let closeTo_e3_1 = v_e3_1squaredLength <= DDLSConstants.EPSILON_SQUARED;
             if (closeTo_e1_2) {
                 if (closeTo_e3_1)
                     result = v1;
@@ -26346,48 +26368,48 @@ class DDLSGeom2D {
         // we will use barycentric coordinates
         // see http://en.wikipedia.org/wiki/Barycentric_coordinate_system
         /*
-        var e1_2:QEEdge = polygon.edge;
-        var e2_3:QEEdge = e1_2.nextLeftEdge;
-        var e3_1:QEEdge = e2_3.nextLeftEdge;
+        let e1_2:QEEdge = polygon.edge;
+        let e2_3:QEEdge = e1_2.nextLeftEdge;
+        let e3_1:QEEdge = e2_3.nextLeftEdge;
         
-        var v1:QEVertex = e1_2.originVertex;
-        var v2:QEVertex = e2_3.originVertex;
-        var v3:QEVertex = e3_1.originVertex;
+        let v1:QEVertex = e1_2.originVertex;
+        let v2:QEVertex = e2_3.originVertex;
+        let v3:QEVertex = e3_1.originVertex;
         
-        var x1:number = v1.pos.x;
-        var y1:number = v1.pos.y;
-        var x2:number = v2.pos.x;
-        var y2:number = v2.pos.y;
-        var x3:number = v3.pos.x;
-        var y3:number = v3.pos.y;
+        let x1:number = v1.pos.x;
+        let y1:number = v1.pos.y;
+        let x2:number = v2.pos.x;
+        let y2:number = v2.pos.y;
+        let x3:number = v3.pos.x;
+        let y3:number = v3.pos.y;
         
-        var coef1:number = ((y2 - y3)*(x - x3) + (x3 - x2)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
-        var coef2:number = ((y3 - y1)*(x - x3) + (x1 - x3)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
-        var coef3:number = 1 - coef1 - coef2;
+        let coef1:number = ((y2 - y3)*(x - x3) + (x3 - x2)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
+        let coef2:number = ((y3 - y1)*(x - x3) + (x1 - x3)*(y - y3)) / ((y2 - y3)*(x1 - x3) + (x3 - x2)*(y1 - y3));
+        let coef3:number = 1 - coef1 - coef2;
         
-        trace("isInFace:", coef1, coef2, coef3);
+        console.log("isInFace:", coef1, coef2, coef3);
         
-        var result:Object;
+        let result:Object;
         if ( 0 <= coef1 && coef1 <= 1 && 0 <= coef2 && coef2 <= 1 && 0 <= coef3 && coef3 <= 1 )
         {
-            var v_v1squaredLength:number = (x1 - x)*(x1 - x) + (y1 - y)*(y1 - y);
-            var v_v2squaredLength:number = (x2 - x)*(x2 - x) + (y2 - y)*(y2 - y);
-            var v_v3squaredLength:number = (x3 - x)*(x3 - x) + (y3 - y)*(y3 - y);
-            var v1_v2squaredLength:number = (x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1);
-            var v2_v3squaredLength:number = (x3 - x2)*(x3 - x2) + (y3 - y2)*(y3 - y2);
-            var v3_v1squaredLength:number = (x1 - x3)*(x1 - x3) + (y1 - y3)*(y1 - y3);
+            let v_v1squaredLength:number = (x1 - x)*(x1 - x) + (y1 - y)*(y1 - y);
+            let v_v2squaredLength:number = (x2 - x)*(x2 - x) + (y2 - y)*(y2 - y);
+            let v_v3squaredLength:number = (x3 - x)*(x3 - x) + (y3 - y)*(y3 - y);
+            let v1_v2squaredLength:number = (x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1);
+            let v2_v3squaredLength:number = (x3 - x2)*(x3 - x2) + (y3 - y2)*(y3 - y2);
+            let v3_v1squaredLength:number = (x1 - x3)*(x1 - x3) + (y1 - y3)*(y1 - y3);
             
-            var dot_v_v1v2:number = (x - x1)*(x2 - x1) + (y - y1)*(y2 - y1);
-            var dot_v_v2v3:number = (x - x2)*(x3 - x2) + (y - y2)*(y3 - y2);
-            var dot_v_v3v1:number = (x - x3)*(x1 - x3) + (y - y3)*(y1 - y3);
+            let dot_v_v1v2:number = (x - x1)*(x2 - x1) + (y - y1)*(y2 - y1);
+            let dot_v_v2v3:number = (x - x2)*(x3 - x2) + (y - y2)*(y3 - y2);
+            let dot_v_v3v1:number = (x - x3)*(x1 - x3) + (y - y3)*(y1 - y3);
                 
-            var v_e1_2squaredLength:number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
-            var v_e2_3squaredLength:number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
-            var v_e3_1squaredLength:number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
+            let v_e1_2squaredLength:number = v_v1squaredLength - dot_v_v1v2 * dot_v_v1v2 / v1_v2squaredLength;
+            let v_e2_3squaredLength:number = v_v2squaredLength - dot_v_v2v3 * dot_v_v2v3 / v2_v3squaredLength;
+            let v_e3_1squaredLength:number = v_v3squaredLength - dot_v_v3v1 * dot_v_v3v1 / v3_v1squaredLength;
             
-            var closeTo_e1_2:boolean = v_e1_2squaredLength <= QEConstants.EPSILON_SQUARED;
-            var closeTo_e2_3:boolean = v_e2_3squaredLength <= QEConstants.EPSILON_SQUARED;
-            var closeTo_e3_1:boolean = v_e3_1squaredLength <= QEConstants.EPSILON_SQUARED;
+            let closeTo_e1_2:boolean = v_e1_2squaredLength <= QEConstants.EPSILON_SQUARED;
+            let closeTo_e2_3:boolean = v_e2_3squaredLength <= QEConstants.EPSILON_SQUARED;
+            let closeTo_e3_1:boolean = v_e3_1squaredLength <= QEConstants.EPSILON_SQUARED;
             
             if ( closeTo_e1_2 )
             {
@@ -26432,14 +26454,14 @@ class DDLSGeom2D {
         */
         /*
         // set alias letters
-        var a:number = x;
-        var b:number = y;
-        var c:number = vCorner.pos.x;
-        var d:number = vCorner.pos.y;
-        var e:number = vLeft.pos.x;
-        var f:number = vLeft.pos.y;
-        var g:number = vRight.pos.x;
-        var h:number = vRight.pos.y;
+        let a:number = x;
+        let b:number = y;
+        let c:number = vCorner.pos.x;
+        let d:number = vCorner.pos.y;
+        let e:number = vLeft.pos.x;
+        let f:number = vLeft.pos.y;
+        let g:number = vRight.pos.x;
+        let h:number = vRight.pos.y;
         
         /*
         system to solve:
@@ -26449,13 +26471,13 @@ class DDLSGeom2D {
         /*
         // giving to wolfram: Solve[{a = c + t1 (e - c) + t2 (g - c) , b = d + t1 (f - d) + t2 (h - d)}, {t1, t2}]
         // we get:
-        var denominator:number = (c*(f - h) + d*(g - e) + e*h - f*g);
-        var t1:number = (a*(h - d) + b*(c - g) - c*h + d*g) / denominator;
-        var t2:number = (a*(f - d) + b*(c - e) - c*f + d*e) / -denominator;
+        let denominator:number = (c*(f - h) + d*(g - e) + e*h - f*g);
+        let t1:number = (a*(h - d) + b*(c - g) - c*h + d*g) / denominator;
+        let t2:number = (a*(f - d) + b*(c - e) - c*f + d*e) / -denominator;
         // then we deduce:
-        var s:number = t1 + t2;
+        let s:number = t1 + t2;
         
-        var result:Object;
+        let result:Object;
         // if inside triangle:
         if (0 <= t1 && t1 <=1 && 0 <= t2 && t2 <=1 && 0 <= s && s <=1)
         {
@@ -26481,22 +26503,22 @@ class DDLSGeom2D {
     // - true if the segment is totally or partially in the triangle
     // - false if the segment is totally outside the triangle
     static ClipSegmentByTriangle(s1x, s1y, s2x, s2y, t1x, t1y, t2x, t2y, t3x, t3y, pResult1 = null, pResult2 = null) {
-        var side1_1;
-        var side1_2;
+        let side1_1;
+        let side1_2;
         side1_1 = this.GetDirection(t1x, t1y, t2x, t2y, s1x, s1y);
         side1_2 = this.GetDirection(t1x, t1y, t2x, t2y, s2x, s2y);
         // if both segment points are on right side
         if (side1_1 <= 0 && side1_2 <= 0)
             return false;
-        var side2_1;
-        var side2_2;
+        let side2_1;
+        let side2_2;
         side2_1 = this.GetDirection(t2x, t2y, t3x, t3y, s1x, s1y);
         side2_2 = this.GetDirection(t2x, t2y, t3x, t3y, s2x, s2y);
         // if both segment points are on right side
         if (side2_1 <= 0 && side2_2 <= 0)
             return false;
-        var side3_1;
-        var side3_2;
+        let side3_1;
+        let side3_2;
         side3_1 = this.GetDirection(t3x, t3y, t1x, t1y, s1x, s1y);
         side3_2 = this.GetDirection(t3x, t3y, t1x, t1y, s2x, s2y);
         // if both segment points are on right side
@@ -26510,7 +26532,7 @@ class DDLSGeom2D {
             pResult2.y = s2y;
             return true;
         }
-        var n = 0;
+        let n = 0;
         // check intersection between segment and 1st side triangle
         if (this.Intersections2segments(s1x, s1y, s2x, s2y, t1x, t1y, t2x, t2y, pResult1, null)) {
             n++;
@@ -26572,22 +26594,22 @@ class DDLSGeom2D {
     // test if the segment intersects or lies inside the triangle
     static IsSegmentIntersectingTriangle(s1x, s1y, s2x, s2y, t1x, t1y, t2x, t2y, t3x, t3y) {
         // check sides
-        var side1_1;
-        var side1_2;
+        let side1_1;
+        let side1_2;
         side1_1 = this.GetDirection(t1x, t1y, t2x, t2y, s1x, s1y);
         side1_2 = this.GetDirection(t1x, t1y, t2x, t2y, s2x, s2y);
         // if both segment points are on right side
         if (side1_1 <= 0 && side1_2 <= 0)
             return false;
-        var side2_1;
-        var side2_2;
+        let side2_1;
+        let side2_2;
         side2_1 = this.GetDirection(t2x, t2y, t3x, t3y, s1x, s1y);
         side2_2 = this.GetDirection(t2x, t2y, t3x, t3y, s2x, s2y);
         // if both segment points are on right side
         if (side2_1 <= 0 && side2_2 <= 0)
             return false;
-        var side3_1;
-        var side3_2;
+        let side3_1;
+        let side3_2;
         side3_1 = this.GetDirection(t3x, t3y, t1x, t1y, s1x, s1y);
         side3_2 = this.GetDirection(t3x, t3y, t1x, t1y, s2x, s2y);
         // if both segment points are on right side
@@ -26599,8 +26621,8 @@ class DDLSGeom2D {
         // if 2st segment point is inside triangle
         if (side1_1 == 1 && side2_1 == 1 && side3_1 == 1)
             return true;
-        var side1;
-        var side2;
+        let side1;
+        let side2;
         // if both segment points are on different sides of the 1st triangle side
         if ((side1_1 == 1 && side1_2 <= 0) || (side1_1 <= 0 && side1_2 == 1)) {
             side1 = this.GetDirection(s1x, s1y, s2x, s2y, t1x, t1y);
@@ -26628,17 +26650,17 @@ class DDLSGeom2D {
         return false;
     }
     static IsDelaunay(edge) {
-        var vLeft = edge.originVertex;
-        var vRight = edge.destinationVertex;
-        var vCorner = edge.nextLeftEdge.destinationVertex;
-        var vOpposite = edge.nextRightEdge.destinationVertex;
+        let vLeft = edge.originVertex;
+        let vRight = edge.destinationVertex;
+        let vCorner = edge.nextLeftEdge.destinationVertex;
+        let vOpposite = edge.nextRightEdge.destinationVertex;
         /*
         // middle points
-        var vMidLeft:Point = new Point();
+        let vMidLeft:Point = new Point();
         vMidLeft.x = (vCorner.pos.x + vLeft.pos.x) / 2;
         vMidLeft.y = (vCorner.pos.y + vLeft.pos.y) / 2;
         
-        var vMidRight:Point = new Point();
+        let vMidRight:Point = new Point();
         vMidRight.x = (vCorner.pos.x + vRight.pos.x) / 2;
         vMidRight.y = (vCorner.pos.y + vRight.pos.y) / 2;
         */
@@ -26656,18 +26678,18 @@ class DDLSGeom2D {
         */
         /*
         // set alias letters
-        var a:number = vMidLeft.x;
-        var b:number = vLeft.pos.y;
-        var c:number = vCorner.pos.y;
-        var d:number = vMidRight.x;
-        var e:number = vRight.pos.y;
-        var f:number = vCorner.pos.y;
-        var g:number = vMidLeft.y;
-        var h:number = vLeft.pos.x;
-        var i:number = vCorner.pos.x;
-        var j:number = vMidRight.y;
-        var k:number = vRight.pos.x;
-        var l:number = vCorner.pos.x;
+        let a:number = vMidLeft.x;
+        let b:number = vLeft.pos.y;
+        let c:number = vCorner.pos.y;
+        let d:number = vMidRight.x;
+        let e:number = vRight.pos.y;
+        let f:number = vCorner.pos.y;
+        let g:number = vMidLeft.y;
+        let h:number = vLeft.pos.x;
+        let i:number = vCorner.pos.x;
+        let j:number = vMidRight.y;
+        let k:number = vRight.pos.x;
+        let l:number = vCorner.pos.x;
         */
         /*
         system to solve:
@@ -26676,15 +26698,15 @@ class DDLSGeom2D {
         */
         //giving to wolfram: Solve[{a + t1 (b - c) = d + t2 (e - f) , g - t1 (h - i) = j - t2 (k - l)}, {t1, t2}]
         //we get:
-        //var t1:number = (-(a-d)*(k-l) + e*(j-g) + f*(g-j)) / ((b-c)*(k-l) + e*(i-h) + f*(h-i));
+        //let t1:number = (-(a-d)*(k-l) + e*(j-g) + f*(g-j)) / ((b-c)*(k-l) + e*(i-h) + f*(h-i));
         /*
         __barycenter.x = a + t1 * (b - c);
         __barycenter.y = g - t1 * (h - i);
         */
         this.GetCircumcenter(vCorner.pos.x, vCorner.pos.y, vLeft.pos.x, vLeft.pos.y, vRight.pos.x, vRight.pos.y, this.__circumcenter);
         // check if the opposite vertex lies outside the circle
-        var squaredRadius = (vCorner.pos.x - this.__circumcenter.x) * (vCorner.pos.x - this.__circumcenter.x) + (vCorner.pos.y - this.__circumcenter.y) * (vCorner.pos.y - this.__circumcenter.y);
-        var squaredDistance = (vOpposite.pos.x - this.__circumcenter.x) * (vOpposite.pos.x - this.__circumcenter.x) + (vOpposite.pos.y - this.__circumcenter.y) * (vOpposite.pos.y - this.__circumcenter.y);
+        let squaredRadius = (vCorner.pos.x - this.__circumcenter.x) * (vCorner.pos.x - this.__circumcenter.x) + (vCorner.pos.y - this.__circumcenter.y) * (vCorner.pos.y - this.__circumcenter.y);
+        let squaredDistance = (vOpposite.pos.x - this.__circumcenter.x) * (vOpposite.pos.x - this.__circumcenter.x) + (vOpposite.pos.y - this.__circumcenter.y) * (vOpposite.pos.y - this.__circumcenter.y);
         return squaredDistance >= squaredRadius;
     }
     static GetCircumcenter(x1, y1, x2, y2, x3, y3, result = null) {
@@ -26692,10 +26714,10 @@ class DDLSGeom2D {
             result = new DDLSPoint2D();
         }
         // middle points
-        var m1 = (x1 + x2) / 2;
-        var m2 = (y1 + y2) / 2;
-        var m3 = (x1 + x3) / 2;
-        var m4 = (y1 + y3) / 2;
+        let m1 = (x1 + x2) / 2;
+        let m2 = (y1 + y2) / 2;
+        let m3 = (x1 + x3) / 2;
+        let m4 = (y1 + y3) / 2;
         /*
         - parametric expression of orthogonal segments
         segOrtho1X(t1) = m1 + t1 * (y2 - y1)
@@ -26715,16 +26737,16 @@ class DDLSGeom2D {
         giving to wolfram: Solve[{m1 + t1 (y2 - y1) = m3 + t2 (y3 - y1) , m2 - t1 (x2 - x1) = m4 - t2 (x3 - x1)}, {t1, t2}]
         we get:
         */
-        var t1 = (m1 * (x1 - x3) + (m2 - m4) * (y1 - y3) + m3 * (x3 - x1)) / (x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1));
+        let t1 = (m1 * (x1 - x3) + (m2 - m4) * (y1 - y3) + m3 * (x3 - x1)) / (x1 * (y3 - y2) + x2 * (y1 - y3) + x3 * (y2 - y1));
         result.x = m1 + t1 * (y2 - y1);
         result.y = m2 - t1 * (x2 - x1);
         return result;
     }
     static Intersections2segments(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y, posIntersection = null, paramIntersection = null, infiniteLineMode = false) {
-        var t1;
-        var t2;
-        var result;
-        var divisor = (s1p1x - s1p2x) * (s2p1y - s2p2y) + (s1p2y - s1p1y) * (s2p1x - s2p2x);
+        let t1;
+        let t2;
+        let result;
+        let divisor = (s1p1x - s1p2x) * (s2p1y - s2p2y) + (s1p2y - s1p1y) * (s2p1x - s2p2x);
         if (divisor == 0) {
             result = false; // parallel case, no intersection
         }
@@ -26754,9 +26776,9 @@ class DDLSGeom2D {
     }
     // a edge is convex if the polygon formed by the 2 faces at left and right of this edge is convex
     static IsConvex(edge) {
-        var result = true;
-        var eLeft;
-        var vRight;
+        let result = true;
+        let eLeft;
+        let vRight;
         eLeft = edge.nextLeftEdge.oppositeEdge;
         vRight = edge.nextRightEdge.destinationVertex;
         if (this.GetRelativePosition(vRight.pos.x, vRight.pos.y, eLeft) != -1) {
@@ -26782,34 +26804,34 @@ class DDLSGeom2D {
         // x(t1) = x(t2)
         // y(t1) = y(t2)
         // set alias letters
-        var a = edge.originVertex.pos.x;
-        var b = edge.originVertex.pos.y;
-        var c = edge.destinationVertex.pos.x;
-        var d = edge.destinationVertex.pos.y;
-        var e = vertexPos.x;
-        var f = vertexPos.y;
+        let a = edge.originVertex.pos.x;
+        let b = edge.originVertex.pos.y;
+        let c = edge.destinationVertex.pos.x;
+        let d = edge.destinationVertex.pos.y;
+        let e = vertexPos.x;
+        let f = vertexPos.y;
         // system to solve:
         // a + t1 (c - a) = e + t2 (d - b)
         // b + t1 (d - b) = f - t2 (c - a)
         // solution:
-        var t1 = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
+        let t1 = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
         // set position:
         vertexPos.x = a + t1 * (c - a);
         vertexPos.y = b + t1 * (d - b);
     }
     static ProjectOrthogonalyOnSegment(px, py, sp1x, sp1y, sp2x, sp2y, result) {
         // set alias letters
-        var a = sp1x;
-        var b = sp1y;
-        var c = sp2x;
-        var d = sp2y;
-        var e = px;
-        var f = py;
+        let a = sp1x;
+        let b = sp1y;
+        let c = sp2x;
+        let d = sp2y;
+        let e = px;
+        let f = py;
         // system to solve:
         // a + t1 (c - a) = e + t2 (d - b)
         // b + t1 (d - b) = f - t2 (c - a)
         // solution:
-        var t1 = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
+        let t1 = (a * a - a * c - a * e + b * b - b * d - b * f + c * e + d * f) / (a * a - 2 * a * c + b * b - 2 * b * d + c * c + d * d);
         // set position:
         result.x = a + t1 * (c - a);
         result.y = b + t1 * (d - b);
@@ -26818,16 +26840,16 @@ class DDLSGeom2D {
     // [intersect0.x, intersect0.y, intersect1.x, intersect1.y]
     // empty if no intersection
     static Intersections2Circles(cx1, cy1, r1, cx2, cy2, r2, result = null) {
-        var distRadiusSQRD = ((cx2 - cx1) * (cx2 - cx1) + (cy2 - cy1) * (cy2 - cy1));
+        let distRadiusSQRD = ((cx2 - cx1) * (cx2 - cx1) + (cy2 - cy1) * (cy2 - cy1));
         if ((cx1 != cx2 || cy1 != cy2)
             && distRadiusSQRD <= ((r1 + r2) * (r1 + r2))
             && distRadiusSQRD >= ((r1 - r2) * (r1 - r2))) {
-            var transcendPart = Math.sqrt(((r1 + r2) * (r1 + r2) - distRadiusSQRD)
+            let transcendPart = Math.sqrt(((r1 + r2) * (r1 + r2) - distRadiusSQRD)
                 * (distRadiusSQRD - (r2 - r1) * (r2 - r1)));
-            var xFirstPart = (cx1 + cx2) / 2 + (cx2 - cx1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
-            var yFirstPart = (cy1 + cy2) / 2 + (cy2 - cy1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
-            var xFactor = (cy2 - cy1) / (2 * distRadiusSQRD);
-            var yFactor = (cx2 - cx1) / (2 * distRadiusSQRD);
+            let xFirstPart = (cx1 + cx2) / 2 + (cx2 - cx1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
+            let yFirstPart = (cy1 + cy2) / 2 + (cy2 - cy1) * (r1 * r1 - r2 * r2) / (2 * distRadiusSQRD);
+            let xFactor = (cy2 - cy1) / (2 * distRadiusSQRD);
+            let yFactor = (cx2 - cx1) / (2 * distRadiusSQRD);
             if (result) {
                 result.push(xFirstPart + xFactor * transcendPart, yFirstPart - yFactor * transcendPart, xFirstPart - xFactor * transcendPart, yFirstPart + yFactor * transcendPart);
             }
@@ -26837,15 +26859,15 @@ class DDLSGeom2D {
             return false;
     }
     static IntersectionsSegmentCircle(p0x, p0y, p1x, p1y, cx, cy, r, result = null) {
-        var p0xSQD = p0x * p0x;
-        var p0ySQD = p0y * p0y;
-        var a = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
-        var b = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
-        var c = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
-        var delta = b * b - 4 * a * c;
-        var deltaSQRT;
-        var t0;
-        var t1;
+        let p0xSQD = p0x * p0x;
+        let p0ySQD = p0y * p0y;
+        let a = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
+        let b = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
+        let c = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
+        let delta = b * b - 4 * a * c;
+        let deltaSQRT;
+        let t0;
+        let t1;
         if (delta < 0) {
             // no solution
             return false;
@@ -26869,7 +26891,7 @@ class DDLSGeom2D {
             // we return a n elements array, under the form:
             //  [intersect0.x, intersect0.y, t0
             //	, intersect1.x, intersect1.y, t1]
-            var intersecting = false;
+            let intersecting = false;
             if (0 <= t0 && t0 <= 1) {
                 if (result)
                     result.push(p0x + t0 * (p1x - p0x), p0y + t0 * (p1y - p0y), t0);
@@ -26884,15 +26906,15 @@ class DDLSGeom2D {
         }
     }
     static IntersectionsLineCircle(p0x, p0y, p1x, p1y, cx, cy, r, result) {
-        var p0xSQD = p0x * p0x;
-        var p0ySQD = p0y * p0y;
-        var a = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
-        var b = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
-        var c = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
-        var delta = b * b - 4 * a * c;
-        var deltaSQRT;
-        var t0;
-        var t1;
+        let p0xSQD = p0x * p0x;
+        let p0ySQD = p0y * p0y;
+        let a = p1y * p1y - 2 * p1y * p0y + p0ySQD + p1x * p1x - 2 * p1x * p0x + p0xSQD;
+        let b = 2 * p0y * cy - 2 * p0xSQD + 2 * p1y * p0y - 2 * p0ySQD + 2 * p1x * p0x - 2 * p1x * cx + 2 * p0x * cx - 2 * p1y * cy;
+        let c = p0ySQD + cy * cy + cx * cx - 2 * p0y * cy - 2 * p0x * cx + p0xSQD - r * r;
+        let delta = b * b - 4 * a * c;
+        let deltaSQRT;
+        let t0;
+        let t1;
         if (delta < 0) {
             // no solution
             return false;
@@ -26920,33 +26942,33 @@ class DDLSGeom2D {
     // [point_tangent1.x, point_tangent1.y, point_tangent2.x, point_tangent2.y]
     // empty if no tangent
     static TangentsPointToCircle(px, py, cx, cy, r, result) {
-        var c2x = (px + cx) / 2;
-        var c2y = (py + cy) / 2;
-        var r2 = 0.5 * Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+        let c2x = (px + cx) / 2;
+        let c2y = (py + cy) / 2;
+        let r2 = 0.5 * Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
         this.Intersections2Circles(c2x, c2y, r2, cx, cy, r, result);
     }
     // <!!!> CIRCLES MUST HAVE SAME RADIUS
     static TangentsCrossCircleToCircle(r, c1x, c1y, c2x, c2y, result) {
-        var distance = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
+        let distance = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
         // new circle
-        var radius = distance / 4;
-        var centerX = c1x + (c2x - c1x) / 4;
-        var centerY = c1y + (c2y - c1y) / 4;
+        let radius = distance / 4;
+        let centerX = c1x + (c2x - c1x) / 4;
+        let centerY = c1y + (c2y - c1y) / 4;
         if (this.Intersections2Circles(c1x, c1y, r, centerX, centerY, radius, result)) {
-            var t1x = result[0];
-            var t1y = result[1];
-            var t2x = result[2];
-            var t2y = result[3];
-            var midX = (c1x + c2x) / 2;
-            var midY = (c1y + c2y) / 2;
-            var dotProd = (t1x - midX) * (c2y - c1y) + (t1y - midY) * (-c2x + c1x);
-            var tproj = dotProd / (distance * distance);
-            var projx = midX + tproj * (c2y - c1y);
-            var projy = midY - tproj * (c2x - c1x);
-            var t4x = 2 * projx - t1x;
-            var t4y = 2 * projy - t1y;
-            var t3x = t4x + t2x - t1x;
-            var t3y = t2y + t4y - t1y;
+            let t1x = result[0];
+            let t1y = result[1];
+            let t2x = result[2];
+            let t2y = result[3];
+            let midX = (c1x + c2x) / 2;
+            let midY = (c1y + c2y) / 2;
+            let dotProd = (t1x - midX) * (c2y - c1y) + (t1y - midY) * (-c2x + c1x);
+            let tproj = dotProd / (distance * distance);
+            let projx = midX + tproj * (c2y - c1y);
+            let projy = midY - tproj * (c2x - c1x);
+            let t4x = 2 * projx - t1x;
+            let t4y = 2 * projy - t1y;
+            let t3x = t4x + t2x - t1x;
+            let t3y = t2y + t4y - t1y;
             result.push(t3x, t3y, t4x, t4y);
             return true;
         }
@@ -26957,33 +26979,33 @@ class DDLSGeom2D {
     }
     // <!!!> CIRCLES MUST HAVE SAME RADIUS
     static TangentsParalCircleToCircle(r, c1x, c1y, c2x, c2y, result) {
-        var distance = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
-        var t1x = c1x + r * (c2y - c1y) / distance;
-        var t1y = c1y + r * (-c2x + c1x) / distance;
-        var t2x = 2 * c1x - t1x;
-        var t2y = 2 * c1y - t1y;
-        var t3x = t2x + c2x - c1x;
-        var t3y = t2y + c2y - c1y;
-        var t4x = t1x + c2x - c1x;
-        var t4y = t1y + c2y - c1y;
+        let distance = Math.sqrt((c1x - c2x) * (c1x - c2x) + (c1y - c2y) * (c1y - c2y));
+        let t1x = c1x + r * (c2y - c1y) / distance;
+        let t1y = c1y + r * (-c2x + c1x) / distance;
+        let t2x = 2 * c1x - t1x;
+        let t2y = 2 * c1y - t1y;
+        let t3x = t2x + c2x - c1x;
+        let t3y = t2y + c2y - c1y;
+        let t4x = t1x + c2x - c1x;
+        let t4y = t1y + c2y - c1y;
         result.push(t1x, t1y, t2x, t2y, t3x, t3y, t4x, t4y);
     }
     // squared distance from point p to infinite line (a, b)
     static DistanceSquaredPointToLine(px, py, ax, ay, bx, by) {
-        var a_b_squaredLength = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
-        var dotProduct = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
-        var p_a_squaredLength = (ax - px) * (ax - px) + (ay - py) * (ay - py);
+        let a_b_squaredLength = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+        let dotProduct = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
+        let p_a_squaredLength = (ax - px) * (ax - px) + (ay - py) * (ay - py);
         return p_a_squaredLength - dotProduct * dotProduct / a_b_squaredLength;
     }
     // squared distance from point p to finite segment [a, b]
     static DistanceSquaredPointToSegment(px, py, ax, ay, bx, by) {
-        var a_b_squaredLength = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
-        var dotProduct = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / a_b_squaredLength;
+        let a_b_squaredLength = (bx - ax) * (bx - ax) + (by - ay) * (by - ay);
+        let dotProduct = ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / a_b_squaredLength;
         if (dotProduct < 0) {
             return (px - ax) * (px - ax) + (py - ay) * (py - ay);
         }
         else if (dotProduct <= 1) {
-            var p_a_squaredLength = (ax - px) * (ax - px) + (ay - py) * (ay - py);
+            let p_a_squaredLength = (ax - px) * (ax - px) + (ay - py) * (ay - py);
             return p_a_squaredLength - dotProduct * dotProduct * a_b_squaredLength;
         }
         else {
@@ -26994,15 +27016,15 @@ class DDLSGeom2D {
         return this.DistanceSquaredPointToSegment(vertex.pos.x, vertex.pos.y, edge.originVertex.pos.x, edge.originVertex.pos.y, edge.destinationVertex.pos.x, edge.destinationVertex.pos.y);
     }
     static PathLength(path) {
-        var sumDistance = 0;
-        var fromX = path[0];
-        var fromY = path[1];
-        var nextX;
-        var nextY;
-        var x;
-        var y;
-        var distance;
-        for (var i = 2; i < path.length; i += 2) {
+        let sumDistance = 0;
+        let fromX = path[0];
+        let fromY = path[1];
+        let nextX;
+        let nextY;
+        let x;
+        let y;
+        let distance;
+        for (let i = 2; i < path.length; i += 2) {
             nextX = path[i];
             nextY = path[i + 1];
             x = nextX - fromX;
@@ -27057,7 +27079,7 @@ class DDLSAStar {
         this._mesh = value;
     }
     FindPath(fromX, fromY, toX, toY, resultListFaces, resultListEdges) {
-        //trace("findPath");
+        //console.log("findPath");
         this.__closedFaces = new Map();
         this.__sortedOpenedFaces = new Array();
         this.__openedFaces = new Map();
@@ -27068,16 +27090,17 @@ class DDLSAStar {
         this.__scoreG = new Map();
         this.__scoreH = new Map();
         this.__predecessor = new Map();
-        var loc;
-        var locEdge;
-        var locVertex;
+        let loc;
+        let locEdge;
+        let locVertex;
         //
         loc = DDLSGeom2D.LocatePosition(fromX, fromY, this._mesh);
-        if ((locVertex = loc)) {
+        locVertex = loc instanceof DDLSVertex ? loc : null;
+        if (locVertex) {
             // vertex are always in constraint, so we abort
             return;
         }
-        else if ((locEdge = loc)) {
+        else if ((locEdge = loc instanceof DDLSEdge ? loc : null)) {
             // if the vertex lies on a constrained edge, we abort
             if (locEdge.isConstrained)
                 return;
@@ -27088,16 +27111,17 @@ class DDLSAStar {
         }
         //
         loc = DDLSGeom2D.LocatePosition(toX, toY, this._mesh);
-        if ((locVertex = loc))
+        locVertex = loc instanceof DDLSVertex ? loc : null;
+        if (locVertex)
             this.__toFace = locVertex.edge.leftFace;
-        else if ((locEdge = loc))
+        else if ((locEdge = loc instanceof DDLSEdge ? loc : null))
             this.__toFace = locEdge.leftFace;
         else
-            this.__toFace = loc;
+            this.__toFace = loc instanceof DDLSFace ? loc : null;
         /*this.__fromFace.colorDebug = 0xFF0000;
         this.__toFace.colorDebug = 0xFF0000;
-        trace( "from face:", this.__fromFace );
-        trace( "to face:", this.__toFace );*/
+        console.log( "from face:", this.__fromFace );
+        console.log( "to face:", this.__toFace );*/
         this.__sortedOpenedFaces.push(this.__fromFace);
         this.__entryEdges.set(this.__fromFace, null);
         this.__entryX.set(this.__fromFace, fromX);
@@ -27105,15 +27129,15 @@ class DDLSAStar {
         this.__scoreG.set(this.__fromFace, 0);
         this.__scoreH.set(this.__fromFace, Math.sqrt((toX - fromX) * (toX - fromX) + (toY - fromY) * (toY - fromY)));
         this.__scoreF.set(this.__fromFace, this.__scoreH.get(this.__fromFace) + this.__scoreG.get(this.__fromFace));
-        var innerEdge;
-        var neighbourFace;
-        var f;
-        var g;
-        var h;
-        var fromPoint = new DDLSPoint2D();
-        var entryPoint = new DDLSPoint2D();
-        var distancePoint = new DDLSPoint2D();
-        var fillDatas;
+        let innerEdge;
+        let neighbourFace;
+        let f;
+        let g;
+        let h;
+        let fromPoint = new DDLSPoint2D();
+        let entryPoint = new DDLSPoint2D();
+        let distancePoint = new DDLSPoint2D();
+        let fillDatas;
         while (true) {
             // no path found
             if (this.__sortedOpenedFaces.length == 0) {
@@ -27134,10 +27158,10 @@ class DDLSAStar {
                 neighbourFace = innerEdge.rightFace;
                 if (!this.__closedFaces.has(neighbourFace)) {
                     if (this.__curFace != this.__fromFace && this._radius > 0 && !this.isWalkableByRadius(this.__entryEdges.get(this.__curFace), this.__curFace, innerEdge)) {
-                        //							trace("- NOT WALKABLE -");
-                        //							trace( "from", DDLSEdge(this.__entryEdges[this.__curFace]).originVertex.id, DDLSEdge(this.__entryEdges[this.__curFace]).destinationVertex.id );
-                        //							trace( "to", innerEdge.originVertex.id, innerEdge.destinationVertex.id );
-                        //							trace("----------------");
+                        //							console.log("- NOT WALKABLE -");
+                        //							console.log( "from", DDLSEdge(this.__entryEdges[this.__curFace]).originVertex.id, DDLSEdge(this.__entryEdges[this.__curFace]).destinationVertex.id );
+                        //							console.log( "to", innerEdge.originVertex.id, innerEdge.destinationVertex.id );
+                        //							console.log("----------------");
                         continue;
                     }
                     fromPoint.x = this.__entryX.get(this.__curFace);
@@ -27201,9 +27225,9 @@ class DDLSAStar {
             return -1;
     }
     isWalkableByRadius(fromEdge, throughFace, toEdge) {
-        var vA; // the vertex on fromEdge not on toEdge
-        var vB; // the vertex on toEdge not on fromEdge
-        var vC; // the common vertex of the 2 edges (pivot)
+        let vA; // the vertex on fromEdge not on toEdge
+        let vB; // the vertex on toEdge not on fromEdge
+        let vC; // the common vertex of the 2 edges (pivot)
         // we identify the points
         if (fromEdge.originVertex == toEdge.originVertex) {
             vA = fromEdge.destinationVertex;
@@ -27225,8 +27249,8 @@ class DDLSAStar {
             vB = toEdge.destinationVertex;
             vC = fromEdge.destinationVertex;
         }
-        var dot;
-        var distSquared;
+        let dot;
+        let distSquared;
         // if we have a right or obtuse angle on CAB
         dot = (vC.pos.x - vA.pos.x) * (vB.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vB.pos.y - vA.pos.y);
         if (dot <= 0) {
@@ -27248,7 +27272,7 @@ class DDLSAStar {
                 return false;
         }
         // we identify the adjacent edge (facing pivot vertex)
-        var adjEdge;
+        let adjEdge;
         if (throughFace.edge != fromEdge && throughFace.edge.oppositeEdge != fromEdge
             && throughFace.edge != toEdge && throughFace.edge.oppositeEdge != toEdge)
             adjEdge = throughFace.edge;
@@ -27259,7 +27283,7 @@ class DDLSAStar {
             adjEdge = throughFace.edge.prevLeftEdge;
         // if the adjacent edge is constrained, we check the distance of orthognaly projected
         if (adjEdge.isConstrained) {
-            var proj = new DDLSPoint2D(vC.pos.x, vC.pos.y);
+            let proj = new DDLSPoint2D(vC.pos.x, vC.pos.y);
             DDLSGeom2D.ProjectOrthogonaly(proj, adjEdge);
             distSquared = (proj.x - vC.pos.x) * (proj.x - vC.pos.x) + (proj.y - vC.pos.y) * (proj.y - vC.pos.y);
             if (distSquared >= this._diameterSquared)
@@ -27269,15 +27293,15 @@ class DDLSAStar {
         }
         else // if the adjacent is not constrained
          {
-            var distSquaredA = (vC.pos.x - vA.pos.x) * (vC.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vC.pos.y - vA.pos.y);
-            var distSquaredB = (vC.pos.x - vB.pos.x) * (vC.pos.x - vB.pos.x) + (vC.pos.y - vB.pos.y) * (vC.pos.y - vB.pos.y);
+            let distSquaredA = (vC.pos.x - vA.pos.x) * (vC.pos.x - vA.pos.x) + (vC.pos.y - vA.pos.y) * (vC.pos.y - vA.pos.y);
+            let distSquaredB = (vC.pos.x - vB.pos.x) * (vC.pos.x - vB.pos.x) + (vC.pos.y - vB.pos.y) * (vC.pos.y - vB.pos.y);
             if (distSquaredA < this._diameterSquared || distSquaredB < this._diameterSquared) {
                 return false;
             }
             else {
-                var vFaceToCheck = new Array();
-                var vFaceIsFromEdge = new Array();
-                var facesDone = new Map();
+                let vFaceToCheck = new Array();
+                let vFaceIsFromEdge = new Array();
+                let facesDone = new Map();
                 vFaceIsFromEdge.push(adjEdge);
                 if (adjEdge.leftFace == throughFace) {
                     vFaceToCheck.push(adjEdge.rightFace);
@@ -27287,12 +27311,12 @@ class DDLSAStar {
                     vFaceToCheck.push(adjEdge.leftFace);
                     facesDone.set(adjEdge.leftFace, true);
                 }
-                var currFace;
-                var faceFromEdge;
-                var currEdgeA;
-                var nextFaceA;
-                var currEdgeB;
-                var nextFaceB;
+                let currFace;
+                let faceFromEdge;
+                let currEdgeA;
+                let nextFaceA;
+                let currEdgeB;
+                let nextFaceB;
                 while (vFaceToCheck.length > 0) {
                     currFace = vFaceToCheck.shift();
                     faceFromEdge = vFaceIsFromEdge.shift();
@@ -27411,14 +27435,14 @@ class DDLSMatrix2D {
         [c, d, 0]
         [e, f, 1]
         */
-        var cos = Math.cos(rad);
-        var sin = Math.sin(rad);
-        var a = this._a * cos + this._b * -sin;
-        var b = this._a * sin + this._b * cos;
-        var c = this._c * cos + this._d * -sin;
-        var d = this._c * sin + this._d * cos;
-        var e = this._e * cos + this._f * -sin;
-        var f = this._e * sin + this._f * cos;
+        let cos = Math.cos(rad);
+        let sin = Math.sin(rad);
+        let a = this._a * cos + this._b * -sin;
+        let b = this._a * sin + this._b * cos;
+        let c = this._c * cos + this._d * -sin;
+        let d = this._c * sin + this._d * cos;
+        let e = this._e * cos + this._f * -sin;
+        let f = this._e * sin + this._f * cos;
         this._a = a;
         this._b = b;
         this._c = c;
@@ -27436,8 +27460,8 @@ class DDLSMatrix2D {
                     [e, f, 1]
         [x, y, 1]
         */
-        var x = this._a * point.x + this._c * point.y + this.e;
-        var y = this._b * point.x + this._d * point.y + this.f;
+        let x = this._a * point.x + this._c * point.y + this.e;
+        let y = this._b * point.x + this._d * point.y + this.f;
         point.x = x;
         point.y = y;
     }
@@ -27448,12 +27472,12 @@ class DDLSMatrix2D {
         return this._b * x + this._d * y + this.f;
     }
     Concat(matrix) {
-        var a = this._a * matrix.a + this._b * matrix.c;
-        var b = this._a * matrix.b + this._b * matrix.d;
-        var c = this._c * matrix.a + this._d * matrix.c;
-        var d = this._c * matrix.b + this._d * matrix.d;
-        var e = this._e * matrix.a + this._f * matrix.c + matrix.e;
-        var f = this._e * matrix.b + this._f * matrix.d + matrix.f;
+        let a = this._a * matrix.a + this._b * matrix.c;
+        let b = this._a * matrix.b + this._b * matrix.d;
+        let c = this._c * matrix.a + this._d * matrix.c;
+        let d = this._c * matrix.b + this._d * matrix.d;
+        let e = this._e * matrix.a + this._f * matrix.c + matrix.e;
+        let f = this._e * matrix.b + this._f * matrix.d + matrix.f;
         this._a = a;
         this._b = b;
         this._c = c;
@@ -27618,9 +27642,9 @@ class DDLSObject {
         this._hasChanged = value;
     }
     get edges() {
-        var res = new Array();
-        for (var i = 0; i < this._constraintShape.segments.length; i++) {
-            for (var j = 0; j < this._constraintShape.segments[i].edges.length; j++)
+        let res = new Array();
+        for (let i = 0; i < this._constraintShape.segments.length; i++) {
+            for (let j = 0; j < this._constraintShape.segments[i].edges.length; j++)
                 res.push(this._constraintShape.segments[i].edges[j]);
         }
         return res;
@@ -27639,11 +27663,11 @@ class DDLSEntityAI {
     BuildApproximation() {
         this._approximateObject = new DDLSObject();
         this._approximateObject.matrix.Translate(this.x, this.y);
-        var coordinates = new Array();
+        let coordinates = new Array();
         this._approximateObject.coordinates = coordinates;
         if (this._radius == 0)
             return;
-        for (var i = 0; i < DDLSEntityAI.NUM_SEGMENTS; i++) {
+        for (let i = 0; i < DDLSEntityAI.NUM_SEGMENTS; i++) {
             coordinates.push(this._radius * Math.cos(2 * Math.PI * i / DDLSEntityAI.NUM_SEGMENTS));
             coordinates.push(this._radius * Math.sin(2 * Math.PI * i / DDLSEntityAI.NUM_SEGMENTS));
             coordinates.push(this._radius * Math.cos(2 * Math.PI * (i + 1) / DDLSEntityAI.NUM_SEGMENTS));
@@ -27705,31 +27729,6 @@ class DDLSEntityAI {
 }
 DDLSEntityAI.NUM_SEGMENTS = 6;
 
-class DDLSFace {
-    constructor() {
-        this.colorDebug = -1;
-        this._id = DDLSFace.INC;
-        DDLSFace.INC++;
-    }
-    get id() {
-        return this._id;
-    }
-    get isReal() {
-        return this._isReal;
-    }
-    SetDatas(edge, isReal = true) {
-        this._isReal = isReal;
-        this._edge = edge;
-    }
-    Dispose() {
-        this._edge = null;
-    }
-    get edge() {
-        return this._edge;
-    }
-}
-DDLSFace.INC = 0;
-
 class DDLSFieldOfView {
     constructor() {
     }
@@ -27747,32 +27746,32 @@ class DDLSFieldOfView {
             throw new Error("Mesh missing");
         if (!this._fromEntity)
             throw new Error("From entity missing");
-        var posX = this._fromEntity.x;
-        var posY = this._fromEntity.y;
-        var directionNormX = this._fromEntity.dirNormX;
-        var directionNormY = this._fromEntity.dirNormY;
-        var radius = this._fromEntity.radiusFOV;
-        var angle = this._fromEntity.angleFOV;
-        var targetX = targetEntity.x;
-        var targetY = targetEntity.y;
-        var targetRadius = targetEntity.radius;
-        var distSquared = (posX - targetX) * (posX - targetX) + (posY - targetY) * (posY - targetY);
+        let posX = this._fromEntity.x;
+        let posY = this._fromEntity.y;
+        let directionNormX = this._fromEntity.dirNormX;
+        let directionNormY = this._fromEntity.dirNormY;
+        let radius = this._fromEntity.radiusFOV;
+        let angle = this._fromEntity.angleFOV;
+        let targetX = targetEntity.x;
+        let targetY = targetEntity.y;
+        let targetRadius = targetEntity.radius;
+        let distSquared = (posX - targetX) * (posX - targetX) + (posY - targetY) * (posY - targetY);
         // if target is completely outside field radius
         if (distSquared >= (radius + targetRadius) * (radius + targetRadius)) {
-            //trace("target is completely outside field radius");
+            //console.log("target is completely outside field radius");
             return false;
         }
         if (distSquared < targetRadius * targetRadius) {
-            //trace("degenerate case if the field center is inside the target");
+            //console.log("degenerate case if the field center is inside the target");
             return true;
         }
-        var result;
-        var leftTargetX;
-        var leftTargetY;
-        var rightTargetX;
-        var rightTargetY;
-        var leftTargetInField;
-        var rightTargetInField;
+        let result;
+        let leftTargetX;
+        let leftTargetY;
+        let rightTargetX;
+        let rightTargetY;
+        let leftTargetInField;
+        let rightTargetInField;
         // we consider the 2 cicrles intersections
         result = new Array();
         if (DDLSGeom2D.Intersections2Circles(posX, posY, radius, targetX, targetY, targetRadius, result)) {
@@ -27781,8 +27780,8 @@ class DDLSFieldOfView {
             rightTargetX = result[2];
             rightTargetY = result[3];
         }
-        var midX = 0.5 * (posX + targetX);
-        var midY = 0.5 * (posY + targetY);
+        let midX = 0.5 * (posX + targetX);
+        let midY = 0.5 * (posY + targetY);
         if (result.length == 0 || (midX - targetX) * (midX - targetX) + (midY - targetY) * (midY - targetY) < (midX - leftTargetX) * (midX - leftTargetX) + (midY - leftTargetY) * (midY - leftTargetY)) {
             // we consider the 2 tangents from field center to target
             result.splice(0, result.length);
@@ -27800,28 +27799,28 @@ class DDLSFieldOfView {
             this._debug.color = color("#FF0000");
             this._debug.circle(rightTargetX, rightTargetY, 2);
         }
-        var dotProdMin = Math.cos(this._fromEntity.angleFOV / 2);
+        let dotProdMin = Math.cos(this._fromEntity.angleFOV / 2);
         // we compare the dots for the left point
-        var leftX = leftTargetX - posX;
-        var leftY = leftTargetY - posY;
-        var lengthLeft = Math.sqrt(leftX * leftX + leftY * leftY);
-        var dotLeft = (leftX / lengthLeft) * directionNormX + (leftY / lengthLeft) * directionNormY;
+        let leftX = leftTargetX - posX;
+        let leftY = leftTargetY - posY;
+        let lengthLeft = Math.sqrt(leftX * leftX + leftY * leftY);
+        let dotLeft = (leftX / lengthLeft) * directionNormX + (leftY / lengthLeft) * directionNormY;
         // if the left point is in field
         if (dotLeft > dotProdMin) {
-            //trace("the left point is in field");
+            //console.log("the left point is in field");
             leftTargetInField = true;
         }
         else {
             leftTargetInField = false;
         }
         // we compare the dots for the right point
-        var rightX = rightTargetX - posX;
-        var rightY = rightTargetY - posY;
-        var lengthRight = Math.sqrt(rightX * rightX + rightY * rightY);
-        var dotRight = (rightX / lengthRight) * directionNormX + (rightY / lengthRight) * directionNormY;
+        let rightX = rightTargetX - posX;
+        let rightY = rightTargetY - posY;
+        let lengthRight = Math.sqrt(rightX * rightX + rightY * rightY);
+        let dotRight = (rightX / lengthRight) * directionNormX + (rightY / lengthRight) * directionNormY;
         // if the right point is in field
         if (dotRight > dotProdMin) {
-            //trace("the right point is in field");
+            //console.log("the right point is in field");
             rightTargetInField = true;
         }
         else {
@@ -27839,12 +27838,12 @@ class DDLSFieldOfView {
         }
         // we init the window
         if (!leftTargetInField || !rightTargetInField) {
-            var p = new DDLSPoint2D();
-            var dirAngle;
+            let p = new DDLSPoint2D();
+            let dirAngle;
             dirAngle = Math.atan2(directionNormY, directionNormX);
             if (!leftTargetInField) {
-                var leftFieldX = Math.cos(dirAngle - angle / 2);
-                var leftFieldY = Math.sin(dirAngle - angle / 2);
+                let leftFieldX = Math.cos(dirAngle - angle / 2);
+                let leftFieldY = Math.sin(dirAngle - angle / 2);
                 DDLSGeom2D.Intersections2segments(posX, posY, posX + leftFieldX, posY + leftFieldY, leftTargetX, leftTargetY, rightTargetX, rightTargetY, p, null, true);
                 if (this._debug) {
                     this._debug.lineWidth = 1;
@@ -27855,8 +27854,8 @@ class DDLSFieldOfView {
                 leftTargetY = p.y;
             }
             if (!rightTargetInField) {
-                var rightFieldX = Math.cos(dirAngle + angle / 2);
-                var rightFieldY = Math.sin(dirAngle + angle / 2);
+                let rightFieldX = Math.cos(dirAngle + angle / 2);
+                let rightFieldY = Math.sin(dirAngle + angle / 2);
                 DDLSGeom2D.Intersections2segments(posX, posY, posX + rightFieldX, posY + rightFieldY, leftTargetX, leftTargetY, rightTargetX, rightTargetY, p, null, true);
                 if (this._debug) {
                     this._debug.lineWidth = 1;
@@ -27877,14 +27876,14 @@ class DDLSFieldOfView {
         }
         // now we have a triangle called the window defined by: posX, posY, rightTargetX, rightTargetY, leftTargetX, leftTargetY
         // we set a dictionnary of faces done
-        var facesDone = new Map();
+        let facesDone = new Map();
         // we set a dictionnary of edges done
-        var edgesDone = new Map();
+        let edgesDone = new Map();
         // we set the window wall
-        var wall = new Array();
+        let wall = new Array();
         // we localize the field center
-        var startObj = DDLSGeom2D.LocatePosition(posX, posY, this._mesh);
-        var startFace;
+        let startObj = DDLSGeom2D.LocatePosition(posX, posY, this._mesh);
+        let startFace;
         if (startObj instanceof DDLSFace)
             startFace = startObj;
         else if (startObj instanceof DDLSEdge)
@@ -27892,23 +27891,23 @@ class DDLSFieldOfView {
         else if (startObj instanceof DDLSVertex)
             startFace = startObj.edge.leftFace;
         // we put the face where the field center is lying in open list
-        var openFacesList = new Array();
-        var openFaces = new Map();
+        let openFacesList = new Array();
+        let openFaces = new Map();
         openFacesList.push(startFace);
         openFaces.set(startFace, true);
-        var currentFace;
-        var currentEdge;
-        var s1;
-        var s2;
-        var p1 = new DDLSPoint2D();
-        var p2 = new DDLSPoint2D();
-        var params = new Array();
-        var param1;
-        var param2;
-        var i;
-        var index1;
-        var index2;
-        var edges = new Array();
+        let currentFace;
+        let currentEdge;
+        let s1;
+        let s2;
+        let p1 = new DDLSPoint2D();
+        let p2 = new DDLSPoint2D();
+        let params = new Array();
+        let param1;
+        let param2;
+        let i;
+        let index1;
+        let index2;
+        let edges = new Array();
         // we iterate as long as we have new open facess
         while (openFacesList.length > 0) {
             // we pop the 1st open face: current face
@@ -28014,7 +28013,7 @@ class DDLSFieldOfView {
         {
             return false;
         }
-        trace(wall);*/
+        console.log(wall);*/
         return true;
     }
 }
@@ -28027,7 +28026,7 @@ class DDLSFunnel {
         this._poolPointsSize = 3000;
         this._currPoolPointsIndex = 0;
         this._poolPoints = new Array();
-        for (var i = 0; i < this._poolPointsSize; i++) {
+        for (let i = 0; i < this._poolPointsSize; i++) {
             this._poolPoints.push(new DDLSPoint2D());
         }
     }
@@ -28056,7 +28055,7 @@ class DDLSFunnel {
         this._sampleCircle = new Array();
         if (this.radius == 0)
             return;
-        for (var i = 0; i < this._numSamplesCircle; i++) {
+        for (let i = 0; i < this._numSamplesCircle; i++) {
             this._sampleCircle.push(new DDLSPoint2D(this._radius * Math.cos(-2 * Math.PI * i / this._numSamplesCircle), this._radius * Math.sin(-2 * Math.PI * i / this._numSamplesCircle)));
         }
         this._sampleCircleDistanceSquared = (this._sampleCircle[0].x - this._sampleCircle[1].x) * (this._sampleCircle[0].x - this._sampleCircle[1].x) + (this._sampleCircle[0].y - this._sampleCircle[1].y) * (this._sampleCircle[0].y - this._sampleCircle[1].y);
@@ -28065,12 +28064,12 @@ class DDLSFunnel {
         this._currPoolPointsIndex = 0;
         // we check the start and goal
         if (this._radius > 0) {
-            var checkFace = listFaces[0];
-            var distanceSquared;
-            var distance;
-            var p1;
-            var p2;
-            var p3;
+            let checkFace = listFaces[0];
+            let distanceSquared;
+            let distance;
+            let p1;
+            let p2;
+            let p3;
             p1 = checkFace.edge.originVertex.pos;
             p2 = checkFace.edge.destinationVertex.pos;
             p3 = checkFace.edge.nextLeftEdge.destinationVertex.pos;
@@ -28125,8 +28124,8 @@ class DDLSFunnel {
             }
         }
         // we build starting and ending points
-        var startPoint;
-        var endPoint;
+        let startPoint;
+        let endPoint;
         startPoint = new DDLSPoint2D(fromX, fromY);
         endPoint = new DDLSPoint2D(toX, toY);
         if (listFaces.length == 1) {
@@ -28137,12 +28136,12 @@ class DDLSFunnel {
             return;
         }
         // useful
-        var i;
-        var j;
-        var k;
-        var currEdge;
-        var currVertex;
-        var direction;
+        let i;
+        let j;
+        let k;
+        let currEdge;
+        let currVertex;
+        let direction;
         // first we skip the first face and first edge if the starting point lies on the first interior edge:
         if (listEdges[0] == DDLSGeom2D.IsInFace(fromX, fromY, listFaces[0])) {
             listEdges.shift();
@@ -28156,25 +28155,25 @@ class DDLSFunnel {
             return;
         }
         // our funnels, inited with starting point
-        var funnelLeft = new Array();
-        var funnelRight = new Array();
+        let funnelLeft = new Array();
+        let funnelRight = new Array();
         funnelLeft.push(startPoint);
         funnelRight.push(startPoint);
         // useful to keep track of done vertices and compare the sides
-        var verticesDoneSide = new Map();
+        let verticesDoneSide = new Map();
         // we extract the vertices positions and sides from the edges list
-        var pointsList = new Array();
-        var pointSides = new Map();
+        let pointsList = new Array();
+        let pointSides = new Map();
         // we keep the successor relation in a dictionnary
-        var pointSuccessor = new Map();
+        let pointSuccessor = new Map();
         //
         pointSides.set(startPoint, 0);
         // we begin with the vertices in first edge
         currEdge = listEdges[0];
-        var relativPos = DDLSGeom2D.GetRelativePosition2(fromX, fromY, currEdge);
-        var prevPoint;
-        var newPointA;
-        var newPointB;
+        let relativPos = DDLSGeom2D.GetRelativePosition2(fromX, fromY, currEdge);
+        let prevPoint;
+        let newPointA;
+        let newPointB;
         newPointA = this.GetCopyPoint(currEdge.destinationVertex.pos);
         newPointB = this.GetCopyPoint(currEdge.originVertex.pos);
         pointsList.push(newPointA);
@@ -28195,8 +28194,8 @@ class DDLSFunnel {
             verticesDoneSide.set(currEdge.originVertex, 1);
         }
         // then we iterate through the edges
-        var fromVertex = listEdges[0].originVertex;
-        var fromFromVertex = listEdges[0].destinationVertex;
+        let fromVertex = listEdges[0].originVertex;
+        let fromFromVertex = listEdges[0].destinationVertex;
         for (i = 1; i < listEdges.length; i++) {
             // we identify the current vertex and his origin vertex
             currEdge = listEdges[i];
@@ -28233,8 +28232,8 @@ class DDLSFunnel {
         /*
         debugSurface.graphics.clear();
         debugSurface.graphics.lineStyle(1, 0x0000FF);
-        var ppp1:Point = startPoint;
-        var ppp2:Point = pointSuccessor[ppp1];
+        let ppp1:Point = startPoint;
+        let ppp2:Point = pointSuccessor[ppp1];
         while (ppp2)
         {
         debugSurface.graphics.moveTo(ppp1.x, ppp1.y+2);
@@ -28252,22 +28251,22 @@ class DDLSFunnel {
         }
         */
         // we will keep the points and funnel sides of the optimized path
-        var pathPoints = new Array();
-        var pathSides = new Map();
+        let pathPoints = new Array();
+        let pathSides = new Map();
         pathPoints.push(startPoint);
         pathSides.set(startPoint, 0);
         // now we process the points by order
-        var currPos;
+        let currPos;
         for (i = 0; i < pointsList.length; i++) {
             currPos = pointsList[i];
             // we identify the current vertex funnel's position by the position of his origin vertex
             if (pointSides.get(currPos) == -1) {
                 // current vertex is at right
-                //trace("current vertex is at right");
+                //console.log("current vertex is at right");
                 for (j = funnelLeft.length - 2; j >= 0; j--) {
                     direction = DDLSGeom2D.GetDirection(funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j + 1].x, funnelLeft[j + 1].y, currPos.x, currPos.y);
                     if (direction != -1) {
-                        //trace("funnels are crossing");
+                        //console.log("funnels are crossing");
                         funnelLeft.shift();
                         for (k = 0; k <= j - 1; k++) {
                             pathPoints.push(funnelLeft[0]);
@@ -28321,13 +28320,13 @@ class DDLSFunnel {
             }
         }
         // check if the goal is blocked by one funnel's right vertex
-        var blocked = false;
-        //trace("check if the goal is blocked by one funnel right vertex");
+        let blocked = false;
+        //console.log("check if the goal is blocked by one funnel right vertex");
         for (j = funnelRight.length - 2; j >= 0; j--) {
             direction = DDLSGeom2D.GetDirection(funnelRight[j].x, funnelRight[j].y, funnelRight[j + 1].x, funnelRight[j + 1].y, toX, toY);
-            //trace("dir", funnelRight[j].x, funnelRight[j].y, funnelRight[j+1].x, funnelRight[j+1].y, toX, toY);
+            //console.log("dir", funnelRight[j].x, funnelRight[j].y, funnelRight[j+1].x, funnelRight[j+1].y, toX, toY);
             if (direction != 1) {
-                //trace("goal access right blocked");
+                //console.log("goal access right blocked");
                 // access blocked
                 funnelRight.shift();
                 for (k = 0; k <= j; k++) {
@@ -28343,12 +28342,12 @@ class DDLSFunnel {
         }
         if (!blocked) {
             // check if the goal is blocked by one funnel's left vertex
-            //trace("check if the goal is blocked by one funnel left vertex");
+            //console.log("check if the goal is blocked by one funnel left vertex");
             for (j = funnelLeft.length - 2; j >= 0; j--) {
                 direction = DDLSGeom2D.GetDirection(funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j + 1].x, funnelLeft[j + 1].y, toX, toY);
-                //trace("dir", funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j+1].x, funnelLeft[j+1].y, toX, toY);
+                //console.log("dir", funnelLeft[j].x, funnelLeft[j].y, funnelLeft[j+1].x, funnelLeft[j+1].y, toX, toY);
                 if (direction != -1) {
-                    //trace("goal access left blocked");
+                    //console.log("goal access left blocked");
                     // access blocked
                     funnelLeft.shift();
                     for (k = 0; k <= j; k++) {
@@ -28369,10 +28368,11 @@ class DDLSFunnel {
             pathSides.set(endPoint, 0);
             blocked = true;
         }
+        let adjustedPoints;
         // if radius is non zero
         if (this.radius > 0) {
-            var adjustedPoints = new Array();
-            var newPath = new Array();
+            adjustedPoints = new Array();
+            let newPath = new Array();
             if (pathPoints.length == 2) {
                 this.AdjustWithTangents(pathPoints[0], false, pathPoints[1], false, pointSides, pointSuccessor, newPath, adjustedPoints);
             }
@@ -28386,13 +28386,13 @@ class DDLSFunnel {
                     }
                 }
                 // tangent from last-1 point to end point
-                var pathLength = pathPoints.length;
+                let pathLength = pathPoints.length;
                 this.AdjustWithTangents(pathPoints[pathLength - 2], true, pathPoints[pathLength - 1], false, pointSides, pointSuccessor, newPath, adjustedPoints);
             }
             newPath.push(endPoint);
             // adjusted path can have useless tangents, we check it
             this.CheckAdjustedPath(newPath, adjustedPoints, pointSides);
-            var smoothPoints = new Array();
+            let smoothPoints = new Array();
             for (i = newPath.length - 2; i >= 1; i--) {
                 this.SmoothAngle(adjustedPoints[i * 2 - 1], newPath[i], adjustedPoints[i * 2], pointSides.get(newPath[i]), smoothPoints);
                 while (smoothPoints.length) {
@@ -28413,21 +28413,21 @@ class DDLSFunnel {
         // we find the tangent T between the points pathPoints[i] - pathPoints[i+1]
         // then we check the unused intermediate points between pathPoints[i] and pathPoints[i+1]
         // if a point P is too close from the segment, we replace T by 2 tangents T1, T2, between the points pathPoints[i] P and P - pathPoints[i+1]
-        //trace("adjustWithTangents");
-        var tangentsResult = new Array();
-        var side1 = pointSides.get(p1);
-        var side2 = pointSides.get(p2);
-        var pTangent1;
-        var pTangent2;
+        //console.log("adjustWithTangents");
+        let tangentsResult = new Array();
+        let side1 = pointSides.get(p1);
+        let side2 = pointSides.get(p2);
+        let pTangent1;
+        let pTangent2;
         // if no radius application
         if (!applyRadiusToP1 && !applyRadiusToP2) {
-            //trace("no radius applied");
+            //console.log("no radius applied");
             pTangent1 = p1;
             pTangent2 = p2;
         }
         // we apply radius to p2 only
         else if (!applyRadiusToP1) {
-            //trace("! applyRadiusToP1");
+            //console.log("! applyRadiusToP1");
             DDLSGeom2D.TangentsPointToCircle(p1.x, p1.y, p2.x, p2.y, this._radius, tangentsResult);
             // p2 lies on the left funnel
             if (side2 == 1) {
@@ -28442,7 +28442,7 @@ class DDLSFunnel {
         }
         // we apply radius to p1 only
         else if (!applyRadiusToP2) {
-            //trace("! applyRadiusToP2");
+            //console.log("! applyRadiusToP2");
             DDLSGeom2D.TangentsPointToCircle(p2.x, p2.y, p1.x, p1.y, this._radius, tangentsResult);
             // p1 lies on the left funnel
             if (side1 == 1) {
@@ -28457,7 +28457,7 @@ class DDLSFunnel {
         }
         // we apply radius to both points
         else {
-            //trace("we apply radius to both points");
+            //console.log("we apply radius to both points");
             // both points lie on left funnel
             if (side1 == 1 && side2 == 1) {
                 DDLSGeom2D.TangentsParalCircleToCircle(this._radius, p1.x, p1.y, p2.x, p2.y, tangentsResult);
@@ -28501,8 +28501,8 @@ class DDLSFunnel {
                 }
             }
         }
-        var successor = pointSuccessor.get(p1);
-        var distance;
+        let successor = pointSuccessor.get(p1);
+        let distance;
         while (successor != p2) {
             distance = DDLSGeom2D.DistanceSquaredPointToSegment(successor.x, successor.y, pTangent1.x, pTangent1.y, pTangent2.x, pTangent2.y);
             if (distance < this._radiusSquared) {
@@ -28517,8 +28517,8 @@ class DDLSFunnel {
         // we check distance in order to remove useless close points due to straight line subdivision
         /*if ( adjustedPoints.length > 0 )
         {
-        var distanceSquared:Number;
-        var lastPoint:Point = adjustedPoints[adjustedPoints.length-1];
+        let distanceSquared:Number;
+        let lastPoint:Point = adjustedPoints[adjustedPoints.length-1];
         distanceSquared = (lastPoint.x - pTangent1.x)*(lastPoint.x - pTangent1.x) + (lastPoint.y - pTangent1.y)*(lastPoint.y - pTangent1.y);
         if (distanceSquared <= QEConstants.EPSILON_SQUARED)
         {
@@ -28531,23 +28531,23 @@ class DDLSFunnel {
         newPath.push(p1);
     }
     CheckAdjustedPath(newPath, adjustedPoints, pointSides) {
-        var needCheck = true;
-        var point0;
-        var point0Side;
-        var point1;
-        var point1Side;
-        var point2;
-        var point2Side;
-        var pt1;
-        var pt2;
-        var pt3;
-        var dot;
-        var tangentsResult = new Array();
-        var pTangent1;
-        var pTangent2;
+        let needCheck = true;
+        let point0;
+        let point0Side;
+        let point1;
+        let point1Side;
+        let point2;
+        let point2Side;
+        let pt1;
+        let pt2;
+        let pt3;
+        let dot;
+        let tangentsResult = new Array();
+        let pTangent1;
+        let pTangent2;
         while (needCheck) {
             needCheck = false;
-            for (var i = 2; i < newPath.length; i++) {
+            for (let i = 2; i < newPath.length; i++) {
                 point2 = newPath[i];
                 point2Side = pointSides.get(point2);
                 point1 = newPath[i - 1];
@@ -28561,7 +28561,7 @@ class DDLSFunnel {
                     dot = (pt1.x - pt2.x) * (pt3.x - pt2.x) + (pt1.y - pt2.y) * (pt3.y - pt2.y);
                     if (dot > 0) {
                         //needCheck = true;
-                        //trace("dot > 0");
+                        //console.log("dot > 0");
                         // rework the tangent
                         if (i == 2) {
                             // tangent from start point
@@ -28593,7 +28593,7 @@ class DDLSFunnel {
                         else {
                             // 1st point lies on left funnel, 2nd on right funnel
                             if (point0Side == 1 && point2Side == -1) {
-                                //trace("point0Side == 1 && point2Side == -1");
+                                //console.log("point0Side == 1 && point2Side == -1");
                                 DDLSGeom2D.TangentsCrossCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
                                 // we keep the points of the right-left tangent
                                 pTangent1 = this.GetPoint(tangentsResult[2], tangentsResult[3]);
@@ -28601,7 +28601,7 @@ class DDLSFunnel {
                             }
                             // 1st point lies on right funnel, 2nd on left funnel
                             else if (point0Side == -1 && point2Side == 1) {
-                                //trace("point0Side == -1 && point2Side == 1");
+                                //console.log("point0Side == -1 && point2Side == 1");
                                 DDLSGeom2D.TangentsCrossCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
                                 // we keep the points of the right-left tangent
                                 pTangent1 = this.GetPoint(tangentsResult[0], tangentsResult[1]);
@@ -28609,7 +28609,7 @@ class DDLSFunnel {
                             }
                             // both points lie on left funnel
                             else if (point0Side == 1 && point2Side == 1) {
-                                //trace("point0Side == 1 && point2Side == 1");
+                                //console.log("point0Side == 1 && point2Side == 1");
                                 DDLSGeom2D.TangentsParalCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
                                 // we keep the points of the right tangent
                                 pTangent1 = this.GetPoint(tangentsResult[2], tangentsResult[3]);
@@ -28617,7 +28617,7 @@ class DDLSFunnel {
                             }
                             // both points lie on right funnel
                             else if (point0Side == -1 && point2Side == -1) {
-                                //trace("point0Side == -1 && point2Side == -1");
+                                //console.log("point0Side == -1 && point2Side == -1");
                                 DDLSGeom2D.TangentsParalCircleToCircle(this._radius, point0.x, point0.y, point2.x, point2.y, tangentsResult);
                                 // we keep the points of the right tangent
                                 pTangent1 = this.GetPoint(tangentsResult[0], tangentsResult[1]);
@@ -28637,24 +28637,24 @@ class DDLSFunnel {
         }
     }
     SmoothAngle(prevPoint, pointToSmooth, nextPoint, side, encirclePoints) {
-        var angleType = DDLSGeom2D.GetDirection(prevPoint.x, prevPoint.y, pointToSmooth.x, pointToSmooth.y, nextPoint.x, nextPoint.y);
+        let angleType = DDLSGeom2D.GetDirection(prevPoint.x, prevPoint.y, pointToSmooth.x, pointToSmooth.y, nextPoint.x, nextPoint.y);
         /*
-        trace("smoothAngle");
-        trace("angleType", angleType);
-        trace("prevPoint", prevPoint);
-        trace("pointToSmooth", pointToSmooth);
-        trace("nextPoint", nextPoint);
+        console.log("smoothAngle");
+        console.log("angleType", angleType);
+        console.log("prevPoint", prevPoint);
+        console.log("pointToSmooth", pointToSmooth);
+        console.log("nextPoint", nextPoint);
         */
-        var distanceSquared = (prevPoint.x - nextPoint.x) * (prevPoint.x - nextPoint.x) + (prevPoint.y - nextPoint.y) * (prevPoint.y - nextPoint.y);
+        let distanceSquared = (prevPoint.x - nextPoint.x) * (prevPoint.x - nextPoint.x) + (prevPoint.y - nextPoint.y) * (prevPoint.y - nextPoint.y);
         if (distanceSquared <= this._sampleCircleDistanceSquared)
             return;
-        var index = 0;
-        var side1;
-        var side2;
-        var pointInArea;
-        var xToCheck;
-        var yToCheck;
-        for (var i = 0; i < this._numSamplesCircle; i++) {
+        let index = 0;
+        let side1;
+        let side2;
+        let pointInArea;
+        let xToCheck;
+        let yToCheck;
+        for (let i = 0; i < this._numSamplesCircle; i++) {
             pointInArea = false;
             xToCheck = pointToSmooth.x + this._sampleCircle[i].x;
             yToCheck = pointToSmooth.y + this._sampleCircle[i].y;
@@ -28662,16 +28662,16 @@ class DDLSFunnel {
             side2 = DDLSGeom2D.GetDirection(pointToSmooth.x, pointToSmooth.y, nextPoint.x, nextPoint.y, xToCheck, yToCheck);
             // if funnel left
             if (side == 1) {
-                //trace("funnel side is 1");
+                //console.log("funnel side is 1");
                 // if angle is < 180
                 if (angleType == -1) {
-                    //trace("angle type is -1");
+                    //console.log("angle type is -1");
                     if (side1 == -1 && side2 == -1)
                         pointInArea = true;
                 }
                 // if angle is >= 180
                 else {
-                    //trace("angle type is 1")
+                    //console.log("angle type is 1")
                     if (side1 == -1 || side2 == -1)
                         pointInArea = true;
                 }
@@ -28895,7 +28895,7 @@ class DDLSGraph {
         return this._node;
     }
     InsertNode() {
-        var node = new DDLSGraphNode();
+        let node = new DDLSGraphNode();
         if (this._node) {
             node.next = this._node;
             this._node.prev = node;
@@ -28910,8 +28910,8 @@ class DDLSGraph {
             }
             this.DeleteEdge(node.outgoingEdge);
         }
-        var otherNode = this._node;
-        var incomingEdge;
+        let otherNode = this._node;
+        let incomingEdge;
         while (otherNode) {
             incomingEdge = otherNode.successorNodes.get(node);
             if (incomingEdge) {
@@ -28942,7 +28942,7 @@ class DDLSGraph {
     InsertEdge(fromNode, toNode) {
         if (fromNode.successorNodes.has(toNode))
             return null;
-        var edge = new DDLSGraphEdge();
+        let edge = new DDLSGraphEdge();
         if (this._edge) {
             this._edge.prev = edge;
             edge.next = this._edge;
@@ -28959,7 +28959,7 @@ class DDLSGraph {
         else {
             fromNode.outgoingEdge = edge;
         }
-        var oppositeEdge = toNode.successorNodes.get(fromNode);
+        let oppositeEdge = toNode.successorNodes.get(fromNode);
         if (oppositeEdge) {
             edge.oppositeEdge = oppositeEdge;
             oppositeEdge.oppositeEdge = edge;
@@ -29058,7 +29058,7 @@ class DDLSConstraintSegment {
             this._edges.push(edge);
     }
     RemoveEdge(edge) {
-        var index;
+        let index;
         index = this._edges.indexOf(edge);
         if (index == -1)
             index = this._edges.indexOf(edge.oppositeEdge);
@@ -29159,28 +29159,28 @@ class DDLSMesh {
         return this._constraintShapes;
     }
     BuildFromRecord(rec) {
-        var positions = rec.split(';');
-        for (var i = 0; i < positions.length; i += 4) {
+        let positions = rec.split(';');
+        for (let i = 0; i < positions.length; i += 4) {
             this.InsertConstraintSegment(Number(positions[i]), Number(positions[i + 1]), Number(positions[i + 2]), Number(positions[i + 3]));
         }
     }
     InsertObject(object) {
         if (object.constraintShape)
             this.DeleteObject(object);
-        var shape = new DDLSConstraintShape();
-        var segment;
-        var coordinates = object.coordinates;
-        var m = object.matrix;
+        let shape = new DDLSConstraintShape();
+        let segment;
+        let coordinates = object.coordinates;
+        let m = object.matrix;
         object.UpdateMatrixFromValues();
-        var x1;
-        var y1;
-        var x2;
-        var y2;
-        var transfx1;
-        var transfy1;
-        var transfx2;
-        var transfy2;
-        for (var i = 0; i < coordinates.length; i += 4) {
+        let x1;
+        let y1;
+        let x2;
+        let y2;
+        let transfx1;
+        let transfy1;
+        let transfx2;
+        let transfy2;
+        for (let i = 0; i < coordinates.length; i += 4) {
             x1 = coordinates[i];
             y1 = coordinates[i + 1];
             x2 = coordinates[i + 2];
@@ -29207,13 +29207,13 @@ class DDLSMesh {
         this.DeleteConstraintShape(object.constraintShape);
         object.constraintShape = null;
         if (!this.__objectsUpdateInProgress) {
-            var index = this._objects.indexOf(object);
+            let index = this._objects.indexOf(object);
             this._objects.splice(index, 1);
         }
     }
     UpdateObjects() {
         this.__objectsUpdateInProgress = true;
-        for (var i = 0; i < this._objects.length; i++) {
+        for (let i = 0; i < this._objects.length; i++) {
             if (this._objects[i].hasChanged) {
                 this.DeleteObject(this._objects[i]);
                 this.InsertObject(this._objects[i]);
@@ -29229,9 +29229,9 @@ class DDLSMesh {
     // Segments are not necessary connected.
     // Segments can overlap (then they will be automaticaly subdivided).
     InsertConstraintShape(coordinates) {
-        var shape = new DDLSConstraintShape();
-        var segment;
-        for (var i = 0; i < coordinates.length; i += 4) {
+        let shape = new DDLSConstraintShape();
+        let segment;
+        for (let i = 0; i < coordinates.length; i += 4) {
             segment = this.InsertConstraintSegment(coordinates[i], coordinates[i + 1], coordinates[i + 2], coordinates[i + 3]);
             if (segment) {
                 segment.fromShape = shape;
@@ -29242,7 +29242,7 @@ class DDLSMesh {
         return shape;
     }
     DeleteConstraintShape(shape) {
-        for (var i = 0; i < shape.segments.length; i++) {
+        for (let i = 0; i < shape.segments.length; i++) {
             this.DeleteConstraintSegment(shape.segments[i]);
         }
         shape.Dispose();
@@ -29250,10 +29250,10 @@ class DDLSMesh {
     }
     InsertConstraintSegment(x1, y1, x2, y2) {
         // we clip against AABB
-        var newX1 = x1;
-        var newY1 = y1;
-        var newX2 = x2;
-        var newY2 = y2;
+        let newX1 = x1;
+        let newY1 = y1;
+        let newX2 = x2;
+        let newY2 = y2;
         if ((x1 > this._width && x2 > this._width)
             || (x1 < 0 && x2 < 0)
             || (y1 > this._height && y2 > this._height)
@@ -29261,19 +29261,19 @@ class DDLSMesh {
             return null;
         }
         else {
-            var nx = x2 - x1;
-            var ny = y2 - y1;
-            var tmin = Number.NEGATIVE_INFINITY;
-            var tmax = Number.POSITIVE_INFINITY;
+            let nx = x2 - x1;
+            let ny = y2 - y1;
+            let tmin = Number.NEGATIVE_INFINITY;
+            let tmax = Number.POSITIVE_INFINITY;
             if (nx != 0.0) {
-                var tx1 = (0 - x1) / nx;
-                var tx2 = (this._width - x1) / nx;
+                let tx1 = (0 - x1) / nx;
+                let tx2 = (this._width - x1) / nx;
                 tmin = Math.max(tmin, Math.min(tx1, tx2));
                 tmax = Math.min(tmax, Math.max(tx1, tx2));
             }
             if (ny != 0.0) {
-                var ty1 = (0 - y1) / ny;
-                var ty2 = (this._height - y1) / ny;
+                let ty1 = (0 - y1) / ny;
+                let ty2 = (this._height - y1) / ny;
                 tmin = Math.max(tmin, Math.min(ty1, ty2));
                 tmax = Math.min(tmax, Math.max(ty1, ty2));
             }
@@ -29293,45 +29293,46 @@ class DDLSMesh {
                 return null;
         }
         // we check the vertices insertions
-        var vertexDown = this.InsertVertex(newX1, newY1);
+        let vertexDown = this.InsertVertex(newX1, newY1);
         if (!vertexDown)
             return null;
-        var vertexUp = this.InsertVertex(newX2, newY2);
+        let vertexUp = this.InsertVertex(newX2, newY2);
         if (!vertexUp)
             return null;
         if (vertexDown == vertexUp)
             return null;
-        //trace("vertices", vertexDown.id, vertexUp.id)
+        //console.log("vertices", vertexDown.id, vertexUp.id)
         // useful
-        var iterVertexToOutEdges = new IteratorFromVertexToOutgoingEdges();
-        var currVertex;
-        var currEdge;
+        let iterVertexToOutEdges = new IteratorFromVertexToOutgoingEdges();
+        let currVertex;
+        let currEdge;
         // the new constraint segment
-        var segment = new DDLSConstraintSegment();
-        var tempEdgeDownUp = new DDLSEdge();
-        var tempSdgeUpDown = new DDLSEdge();
+        let segment = new DDLSConstraintSegment();
+        let tempEdgeDownUp = new DDLSEdge();
+        let tempSdgeUpDown = new DDLSEdge();
         tempEdgeDownUp.SetDatas(vertexDown, tempSdgeUpDown, null, null, true, true);
         tempSdgeUpDown.SetDatas(vertexUp, tempEdgeDownUp, null, null, true, true);
-        var intersectedEdges = new Array();
-        var leftBoundingEdges = new Array();
-        var rightBoundingEdges = new Array();
-        var currObjet;
-        var pIntersect = new DDLSPoint2D();
-        var edgeLeft;
-        var newEdgeDownUp;
-        var newEdgeUpDown;
-        var done;
+        let intersectedEdges = new Array();
+        let leftBoundingEdges = new Array();
+        let rightBoundingEdges = new Array();
+        let currObjet;
+        let pIntersect = new DDLSPoint2D();
+        let edgeLeft;
+        let newEdgeDownUp;
+        let newEdgeUpDown;
+        let done;
         currVertex = vertexDown;
         currObjet = currVertex;
         while (true) {
             done = false;
-            if ((currVertex = currObjet)) {
-                //trace("case vertex");
+            currVertex = currObjet;
+            if ((currVertex instanceof DDLSVertex)) {
+                //console.log("case vertex");
                 iterVertexToOutEdges.fromVertex = currVertex;
                 while (currEdge = iterVertexToOutEdges.Next()) {
                     // if we meet directly the end vertex
                     if (currEdge.destinationVertex == vertexUp) {
-                        //trace("we met the end vertex");
+                        //console.log("we met the end vertex");
                         if (!currEdge.isConstrained) {
                             currEdge.isConstrained = true;
                             currEdge.oppositeEdge.isConstrained = true;
@@ -29345,9 +29346,9 @@ class DDLSMesh {
                     }
                     // if we meet a vertex
                     if (DDLSGeom2D.DistanceSquaredVertexToEdge(currEdge.destinationVertex, tempEdgeDownUp) <= DDLSConstants.EPSILON_SQUARED) {
-                        //trace("we met a vertex");
+                        //console.log("we met a vertex");
                         if (!currEdge.isConstrained) {
-                            //trace("edge is not constrained");
+                            //console.log("edge is not constrained");
                             currEdge.isConstrained = true;
                             currEdge.oppositeEdge.isConstrained = true;
                         }
@@ -29368,9 +29369,9 @@ class DDLSMesh {
                 while (currEdge = iterVertexToOutEdges.Next()) {
                     currEdge = currEdge.nextLeftEdge;
                     if (DDLSGeom2D.Intersections2edges(currEdge, tempEdgeDownUp, pIntersect)) {
-                        //trace("edge intersection");
+                        //console.log("edge intersection");
                         if (currEdge.isConstrained) {
-                            //trace("edge is constrained");
+                            //console.log("edge is constrained");
                             vertexDown = this.SplitEdge(currEdge, pIntersect.x, pIntersect.y);
                             iterVertexToOutEdges.fromVertex = currVertex;
                             while (currEdge = iterVertexToOutEdges.Next()) {
@@ -29388,7 +29389,7 @@ class DDLSMesh {
                             currObjet = vertexDown;
                         }
                         else {
-                            //trace("edge is not constrained");
+                            //console.log("edge is not constrained");
                             intersectedEdges.push(currEdge);
                             leftBoundingEdges.unshift(currEdge.nextLeftEdge);
                             rightBoundingEdges.push(currEdge.prevLeftEdge);
@@ -29399,11 +29400,11 @@ class DDLSMesh {
                     }
                 }
             }
-            else if ((currEdge = currObjet)) {
-                //trace("case edge");
+            else if (currObjet instanceof DDLSEdge && (currEdge = currObjet)) {
+                //console.log("case edge");
                 edgeLeft = currEdge.nextLeftEdge;
                 if (edgeLeft.destinationVertex == vertexUp) {
-                    //trace("end point reached");
+                    //console.log("end point reached");
                     leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
                     rightBoundingEdges.push(edgeLeft);
                     newEdgeDownUp = new DDLSEdge();
@@ -29416,7 +29417,7 @@ class DDLSMesh {
                     return segment;
                 }
                 else if (DDLSGeom2D.DistanceSquaredVertexToEdge(edgeLeft.destinationVertex, tempEdgeDownUp) <= DDLSConstants.EPSILON_SQUARED) {
-                    //trace("we met a vertex");
+                    //console.log("we met a vertex");
                     leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
                     rightBoundingEdges.push(edgeLeft);
                     newEdgeDownUp = new DDLSEdge();
@@ -29435,9 +29436,9 @@ class DDLSMesh {
                 }
                 else {
                     if (DDLSGeom2D.Intersections2edges(edgeLeft, tempEdgeDownUp, pIntersect)) {
-                        //trace("1st left edge intersected");
+                        //console.log("1st left edge intersected");
                         if (edgeLeft.isConstrained) {
-                            //trace("edge is constrained");
+                            //console.log("edge is constrained");
                             currVertex = this.SplitEdge(edgeLeft, pIntersect.x, pIntersect.y);
                             iterVertexToOutEdges.fromVertex = currVertex;
                             while (currEdge = iterVertexToOutEdges.Next()) {
@@ -29463,7 +29464,7 @@ class DDLSMesh {
                             currObjet = vertexDown;
                         }
                         else {
-                            //trace("edge is not constrained");
+                            //console.log("edge is not constrained");
                             intersectedEdges.push(edgeLeft);
                             leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
                             currEdge = edgeLeft.oppositeEdge; // we keep the edge from left to right
@@ -29471,11 +29472,11 @@ class DDLSMesh {
                         }
                     }
                     else {
-                        //trace("2nd left edge intersected");
+                        //console.log("2nd left edge intersected");
                         edgeLeft = edgeLeft.nextLeftEdge;
                         DDLSGeom2D.Intersections2edges(edgeLeft, tempEdgeDownUp, pIntersect);
                         if (edgeLeft.isConstrained) {
-                            //trace("edge is constrained");
+                            //console.log("edge is constrained");
                             currVertex = this.SplitEdge(edgeLeft, pIntersect.x, pIntersect.y);
                             iterVertexToOutEdges.fromVertex = currVertex;
                             while (currEdge = iterVertexToOutEdges.Next()) {
@@ -29501,7 +29502,7 @@ class DDLSMesh {
                             currObjet = vertexDown;
                         }
                         else {
-                            //trace("edge is not constrained");
+                            //console.log("edge is not constrained");
                             intersectedEdges.push(edgeLeft);
                             rightBoundingEdges.push(edgeLeft.prevLeftEdge);
                             currEdge = edgeLeft.oppositeEdge; // we keep the edge from left to right
@@ -29514,7 +29515,7 @@ class DDLSMesh {
         return segment;
     }
     InsertNewConstrainedEdge(fromSegment, edgeDownUp, intersectedEdges, leftBoundingEdges, rightBoundingEdges) {
-        //trace("insertNewConstrainedEdge");
+        //console.log("insertNewConstrainedEdge");
         this._edges.push(edgeDownUp);
         this._edges.push(edgeDownUp.oppositeEdge);
         edgeDownUp.AddFromConstraintSegment(fromSegment);
@@ -29527,14 +29528,14 @@ class DDLSMesh {
         this.Triangulate(rightBoundingEdges, true);
     }
     DeleteConstraintSegment(segment) {
-        //trace("deleteConstraintSegment id", segment.id);
-        var i;
-        var vertexToDelete = new Array();
-        var edge;
-        var vertex;
+        //console.log("deleteConstraintSegment id", segment.id);
+        let i;
+        let vertexToDelete = new Array();
+        let edge;
+        let vertex;
         for (i = 0; i < segment.edges.length; i++) {
             edge = segment.edges[i];
-            //trace("unconstrain edge ", edge);
+            //console.log("unconstrain edge ", edge);
             edge.RemoveFromConstraintSegment(segment);
             if (edge.fromConstraintSegments.length == 0) {
                 edge.isConstrained = false;
@@ -29547,15 +29548,15 @@ class DDLSMesh {
         vertex = edge.destinationVertex;
         vertex.RemoveFromConstraintSegment(segment);
         vertexToDelete.push(vertex);
-        //trace("clean the useless vertices");
+        //console.log("clean the useless vertices");
         for (i = 0; i < vertexToDelete.length; i++) {
             this.DeleteVertex(vertexToDelete[i]);
         }
-        //trace("clean done");
+        //console.log("clean done");
         segment.Dispose();
     }
     Check() {
-        for (var i = 0; i < this._edges.length; i++) {
+        for (let i = 0; i < this._edges.length; i++) {
             if (!this._edges[i].nextLeftEdge) {
                 console.log("!!! missing nextLeftEdge");
                 return;
@@ -29564,25 +29565,25 @@ class DDLSMesh {
         console.log("check OK");
     }
     InsertVertex(x, y) {
-        //trace("insertVertex", x, y);
+        //console.log("insertVertex", x, y);
         if (x < 0 || y < 0 || x > this._width || y > this._height)
             return null;
         this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
-        var inObject = DDLSGeom2D.LocatePosition(x, y, this);
-        var inVertex;
-        var inEdge;
-        var inFace;
-        var newVertex;
-        if ((inVertex = inObject)) {
-            //trace("inVertex", inVertex.id);
+        let inObject = DDLSGeom2D.LocatePosition(x, y, this);
+        let inVertex;
+        let inEdge;
+        let inFace;
+        let newVertex;
+        if (inObject instanceof DDLSVertex && (inVertex = inObject)) {
+            //console.log("inVertex", inVertex.id);
             newVertex = inVertex;
         }
-        else if ((inEdge = inObject)) {
-            //trace("inEdge", inEdge);
+        else if (inObject instanceof DDLSEdge && (inEdge = inObject)) {
+            //console.log("inEdge", inEdge);
             newVertex = this.SplitEdge(inEdge, x, y);
         }
-        else if ((inFace = inObject)) {
-            //trace("inFace");
+        else if (inObject instanceof DDLSFace && (inFace = inObject)) {
+            //console.log("inFace");
             newVertex = this.SplitFace(inFace, x, y);
         }
         this.RestoreAsDelaunay();
@@ -29590,22 +29591,22 @@ class DDLSMesh {
     }
     FlipEdge(edge) {
         // retrieve and create useful objets
-        var eBot_Top = edge;
-        var eTop_Bot = edge.oppositeEdge;
-        var eLeft_Right = new DDLSEdge();
-        var eRight_Left = new DDLSEdge();
-        var eTop_Left = eBot_Top.nextLeftEdge;
-        var eLeft_Bot = eTop_Left.nextLeftEdge;
-        var eBot_Right = eTop_Bot.nextLeftEdge;
-        var eRight_Top = eBot_Right.nextLeftEdge;
-        var vBot = eBot_Top.originVertex;
-        var vTop = eTop_Bot.originVertex;
-        var vLeft = eLeft_Bot.originVertex;
-        var vRight = eRight_Top.originVertex;
-        var fLeft = eBot_Top.leftFace;
-        var fRight = eTop_Bot.leftFace;
-        var fBot = new DDLSFace();
-        var fTop = new DDLSFace();
+        let eBot_Top = edge;
+        let eTop_Bot = edge.oppositeEdge;
+        let eLeft_Right = new DDLSEdge();
+        let eRight_Left = new DDLSEdge();
+        let eTop_Left = eBot_Top.nextLeftEdge;
+        let eLeft_Bot = eTop_Left.nextLeftEdge;
+        let eBot_Right = eTop_Bot.nextLeftEdge;
+        let eRight_Top = eBot_Right.nextLeftEdge;
+        let vBot = eBot_Top.originVertex;
+        let vTop = eTop_Bot.originVertex;
+        let vLeft = eLeft_Bot.originVertex;
+        let vRight = eRight_Top.originVertex;
+        let fLeft = eBot_Top.leftFace;
+        let fRight = eTop_Bot.leftFace;
+        let fBot = new DDLSFace();
+        let fTop = new DDLSFace();
         // add the new edges
         this._edges.push(eLeft_Right);
         this._edges.push(eRight_Left);
@@ -29648,37 +29649,37 @@ class DDLSMesh {
         // empty old references
         this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
         // retrieve useful objets
-        var eLeft_Right = edge;
-        var eRight_Left = eLeft_Right.oppositeEdge;
-        var eRight_Top = eLeft_Right.nextLeftEdge;
-        var eTop_Left = eRight_Top.nextLeftEdge;
-        var eLeft_Bot = eRight_Left.nextLeftEdge;
-        var eBot_Right = eLeft_Bot.nextLeftEdge;
-        var vTop = eTop_Left.originVertex;
-        var vLeft = eLeft_Right.originVertex;
-        var vBot = eBot_Right.originVertex;
-        var vRight = eRight_Left.originVertex;
-        var fTop = eLeft_Right.leftFace;
-        var fBot = eRight_Left.leftFace;
+        let eLeft_Right = edge;
+        let eRight_Left = eLeft_Right.oppositeEdge;
+        let eRight_Top = eLeft_Right.nextLeftEdge;
+        let eTop_Left = eRight_Top.nextLeftEdge;
+        let eLeft_Bot = eRight_Left.nextLeftEdge;
+        let eBot_Right = eLeft_Bot.nextLeftEdge;
+        let vTop = eTop_Left.originVertex;
+        let vLeft = eLeft_Right.originVertex;
+        let vBot = eBot_Right.originVertex;
+        let vRight = eRight_Left.originVertex;
+        let fTop = eLeft_Right.leftFace;
+        let fBot = eRight_Left.leftFace;
         // check distance from the position to edge end points
         if ((vLeft.pos.x - x) * (vLeft.pos.x - x) + (vLeft.pos.y - y) * (vLeft.pos.y - y) <= DDLSConstants.EPSILON_SQUARED)
             return vLeft;
         if ((vRight.pos.x - x) * (vRight.pos.x - x) + (vRight.pos.y - y) * (vRight.pos.y - y) <= DDLSConstants.EPSILON_SQUARED)
             return vRight;
         // create new objects
-        var vCenter = new DDLSVertex();
-        var eTop_Center = new DDLSEdge();
-        var eCenter_Top = new DDLSEdge();
-        var eBot_Center = new DDLSEdge();
-        var eCenter_Bot = new DDLSEdge();
-        var eLeft_Center = new DDLSEdge();
-        var eCenter_Left = new DDLSEdge();
-        var eRight_Center = new DDLSEdge();
-        var eCenter_Right = new DDLSEdge();
-        var fTopLeft = new DDLSFace();
-        var fBotLeft = new DDLSFace();
-        var fBotRight = new DDLSFace();
-        var fTopRight = new DDLSFace();
+        let vCenter = new DDLSVertex();
+        let eTop_Center = new DDLSEdge();
+        let eCenter_Top = new DDLSEdge();
+        let eBot_Center = new DDLSEdge();
+        let eCenter_Bot = new DDLSEdge();
+        let eLeft_Center = new DDLSEdge();
+        let eCenter_Left = new DDLSEdge();
+        let eRight_Center = new DDLSEdge();
+        let eCenter_Right = new DDLSEdge();
+        let fTopLeft = new DDLSFace();
+        let fBotLeft = new DDLSFace();
+        let fBotRight = new DDLSFace();
+        let fTopRight = new DDLSFace();
         // add the new vertex
         this._vertices.push(vCenter);
         // add the new edges
@@ -29733,14 +29734,14 @@ class DDLSMesh {
         // - update the segments the edge is from by deleting the old edge and inserting the 2 new
         // - add the segments the edge is from to the new vertex
         if (eLeft_Right.isConstrained) {
-            var fromSegments = eLeft_Right.fromConstraintSegments;
+            let fromSegments = eLeft_Right.fromConstraintSegments;
             eLeft_Center.fromConstraintSegments = fromSegments.slice(0);
             eCenter_Left.fromConstraintSegments = eLeft_Center.fromConstraintSegments;
             eCenter_Right.fromConstraintSegments = fromSegments.slice(0);
             eRight_Center.fromConstraintSegments = eCenter_Right.fromConstraintSegments;
-            var edges;
-            var index;
-            for (var i = 0; i < eLeft_Right.fromConstraintSegments.length; i++) {
+            let edges;
+            let index;
+            for (let i = 0; i < eLeft_Right.fromConstraintSegments.length; i++) {
                 edges = eLeft_Right.fromConstraintSegments[i].edges;
                 index = edges.indexOf(eLeft_Right);
                 if (index != -1)
@@ -29772,23 +29773,23 @@ class DDLSMesh {
         // empty old references
         this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
         // retrieve useful objects
-        var eTop_Left = face.edge;
-        var eLeft_Right = eTop_Left.nextLeftEdge;
-        var eRight_Top = eLeft_Right.nextLeftEdge;
-        var vTop = eTop_Left.originVertex;
-        var vLeft = eLeft_Right.originVertex;
-        var vRight = eRight_Top.originVertex;
+        let eTop_Left = face.edge;
+        let eLeft_Right = eTop_Left.nextLeftEdge;
+        let eRight_Top = eLeft_Right.nextLeftEdge;
+        let vTop = eTop_Left.originVertex;
+        let vLeft = eLeft_Right.originVertex;
+        let vRight = eRight_Top.originVertex;
         // create new objects
-        var vCenter = new DDLSVertex();
-        var eTop_Center = new DDLSEdge();
-        var eCenter_Top = new DDLSEdge();
-        var eLeft_Center = new DDLSEdge();
-        var eCenter_Left = new DDLSEdge();
-        var eRight_Center = new DDLSEdge();
-        var eCenter_Right = new DDLSEdge();
-        var fTopLeft = new DDLSFace();
-        var fBot = new DDLSFace();
-        var fTopRight = new DDLSFace();
+        let vCenter = new DDLSVertex();
+        let eTop_Center = new DDLSEdge();
+        let eCenter_Top = new DDLSEdge();
+        let eLeft_Center = new DDLSEdge();
+        let eCenter_Left = new DDLSEdge();
+        let eRight_Center = new DDLSEdge();
+        let eCenter_Right = new DDLSEdge();
+        let fTopLeft = new DDLSFace();
+        let fBot = new DDLSFace();
+        let fTopRight = new DDLSFace();
         // add the new vertex
         this._vertices.push(vCenter);
         // add the new edges
@@ -29835,7 +29836,7 @@ class DDLSMesh {
         return vCenter;
     }
     RestoreAsDelaunay() {
-        var edge;
+        let edge;
         while (this.__edgesToCheck.length) {
             edge = this.__edgesToCheck.shift();
             if (edge.isReal && !edge.isConstrained && !DDLSGeom2D.IsDelaunay(edge)) {
@@ -29856,17 +29857,21 @@ class DDLSMesh {
     // - it is free of constraint segment (no adjacency to any constrained edge)
     // - it is adjacent to exactly 2 contrained edges and is not an end point of any constraint segment
     DeleteVertex(vertex) {
-        //trace("tryToDeleteVertex id", vertex.id);
-        var i;
-        var freeOfConstraint;
-        var iterEdges = new IteratorFromVertexToOutgoingEdges();
+        //console.log("tryToDeleteVertex id", vertex.id);
+        let i;
+        let freeOfConstraint;
+        let iterEdges = new IteratorFromVertexToOutgoingEdges();
         iterEdges.fromVertex = vertex;
         iterEdges.realEdgesOnly = false;
-        var edge;
-        var outgoingEdges = new Array();
+        let edge;
+        let outgoingEdges = new Array();
+        let boundA = new Array();
+        let boundB = new Array();
+        let realA;
+        let realB;
         freeOfConstraint = vertex.fromConstraintSegments.length == 0;
-        //trace("  -> freeOfConstraint", freeOfConstraint);
-        var bound = new Array();
+        //console.log("  -> freeOfConstraint", freeOfConstraint);
+        let bound = new Array();
         if (freeOfConstraint) {
             while (edge = iterEdges.Next()) {
                 outgoingEdges.push(edge);
@@ -29875,37 +29880,33 @@ class DDLSMesh {
         }
         else {
             // we check if the vertex is an end point of a constraint segment
-            var edges;
+            let edges;
             for (i = 0; i < vertex.fromConstraintSegments.length; i++) {
                 edges = vertex.fromConstraintSegments[i].edges;
                 if (edges[0].originVertex == vertex
                     || edges[edges.length - 1].destinationVertex == vertex) {
-                    //trace("  -> is end point of a constraint segment");
+                    //console.log("  -> is end point of a constraint segment");
                     return false;
                 }
             }
             // we check the count of adjacent constrained edges
-            var count = 0;
+            let count = 0;
             while (edge = iterEdges.Next()) {
                 outgoingEdges.push(edge);
                 if (edge.isConstrained) {
                     count++;
                     if (count > 2) {
-                        //trace("  -> count of adjacent constrained edges", count);
+                        //console.log("  -> count of adjacent constrained edges", count);
                         return false;
                     }
                 }
             }
             // if not disqualified, then we can process
-            //trace("process vertex deletion");
-            var boundA = new Array();
-            var boundB = new Array();
-            var constrainedEdgeA;
-            var constrainedEdgeB;
-            var edgeA = new DDLSEdge();
-            var edgeB = new DDLSEdge();
-            var realA;
-            var realB;
+            //console.log("process vertex deletion");
+            let constrainedEdgeA;
+            let constrainedEdgeB;
+            let edgeA = new DDLSEdge();
+            let edgeB = new DDLSEdge();
             this._edges.push(edgeA);
             this._edges.push(edgeB);
             for (i = 0; i < outgoingEdges.length; i++) {
@@ -29938,7 +29939,7 @@ class DDLSMesh {
             // we update the segments infos
             edgeA.fromConstraintSegments = constrainedEdgeA.fromConstraintSegments.slice(0);
             edgeB.fromConstraintSegments = edgeA.fromConstraintSegments;
-            var index;
+            let index;
             for (i = 0; i < vertex.fromConstraintSegments.length; i++) {
                 edges = vertex.fromConstraintSegments[i].edges;
                 index = edges.indexOf(constrainedEdgeA);
@@ -29951,7 +29952,7 @@ class DDLSMesh {
             }
         }
         // Deletion of old faces and edges
-        var faceToDelete;
+        let faceToDelete;
         for (i = 0; i < outgoingEdges.length; i++) {
             edge = outgoingEdges[i];
             faceToDelete = edge.leftFace;
@@ -29967,11 +29968,11 @@ class DDLSMesh {
         vertex.Dispose();
         // finally we triangulate
         if (freeOfConstraint) {
-            //trace("trigger single hole triangulation");
+            //console.log("trigger single hole triangulation");
             this.Triangulate(bound, true);
         }
         else {
-            //trace("trigger dual holes triangulation");
+            //console.log("trigger dual holes triangulation");
             this.Triangulate(boundA, realA);
             this.Triangulate(boundB, realB);
         }
@@ -29983,9 +29984,9 @@ class DDLSMesh {
     // edgesList is a list of chained edges oriented from right to left
     untriangulate(edgesList) {
         // we clean useless faces and adjacent vertices
-        var i;
-        var verticesCleaned = new Map();
-        var currEdge;
+        let i;
+        let verticesCleaned = new Map();
+        let currEdge;
         for (i = 0; i < edgesList.length; i++) {
             currEdge = edgesList[i];
             //
@@ -30032,11 +30033,11 @@ class DDLSMesh {
         }
         // if the hole is a 3 edges polygon:
         else if (bound.length == 3) {
-            /*trace("the hole is a 3 edges polygon");
-            trace("  - edge0:", bound[0].originVertex.id, "->", bound[0].destinationVertex.id);
-            trace("  - edge1:", bound[1].originVertex.id, "->", bound[1].destinationVertex.id);
-            trace("  - edge2:", bound[2].originVertex.id, "->", bound[2].destinationVertex.id);*/
-            var f = new DDLSFace();
+            /*console.log("the hole is a 3 edges polygon");
+            console.log("  - edge0:", bound[0].originVertex.id, "->", bound[0].destinationVertex.id);
+            console.log("  - edge1:", bound[1].originVertex.id, "->", bound[1].destinationVertex.id);
+            console.log("  - edge2:", bound[2].originVertex.id, "->", bound[2].destinationVertex.id);*/
+            let f = new DDLSFace();
             f.SetDatas(bound[0], isReal);
             this._faces.push(f);
             bound[0].leftFace = f;
@@ -30048,21 +30049,21 @@ class DDLSMesh {
         }
         else // if more than 3 edges, we process recursively:
          {
-            //trace("the hole has", bound.length, "edges");
+            let i;
+            //console.log("the hole has", bound.length, "edges");
             for (i = 0; i < bound.length; i++) {
-                //trace("  - edge", i, ":", bound[i].originVertex.id, "->", bound[i].destinationVertex.id);
+                //console.log("  - edge", i, ":", bound[i].originVertex.id, "->", bound[i].destinationVertex.id);
             }
-            var baseEdge = bound[0];
-            var vertexA = baseEdge.originVertex;
-            var vertexB = baseEdge.destinationVertex;
-            var vertexC;
-            var vertexCheck;
-            var circumcenter = new DDLSPoint2D();
-            var radiusSquared;
-            var distanceSquared;
-            var isDelaunay;
-            var index;
-            var i;
+            let baseEdge = bound[0];
+            let vertexA = baseEdge.originVertex;
+            let vertexB = baseEdge.destinationVertex;
+            let vertexC;
+            let vertexCheck;
+            let circumcenter = new DDLSPoint2D();
+            let radiusSquared;
+            let distanceSquared;
+            let isDelaunay;
+            let index;
             for (i = 2; i < bound.length; i++) {
                 vertexC = bound[i].originVertex;
                 if (DDLSGeom2D.GetRelativePosition2(vertexC.pos.x, vertexC.pos.y, baseEdge) == 1) {
@@ -30072,7 +30073,7 @@ class DDLSMesh {
                     radiusSquared = (vertexA.pos.x - circumcenter.x) * (vertexA.pos.x - circumcenter.x) + (vertexA.pos.y - circumcenter.y) * (vertexA.pos.y - circumcenter.y);
                     // for perfect regular n-sides polygons, checking strict delaunay circumcircle condition is not possible, so we substract EPSILON to circumcircle radius:
                     radiusSquared -= DDLSConstants.EPSILON_SQUARED;
-                    for (var j = 2; j < bound.length; j++) {
+                    for (let j = 2; j < bound.length; j++) {
                         if (j != i) {
                             vertexCheck = bound[j].originVertex;
                             distanceSquared = (vertexCheck.pos.x - circumcenter.x) * (vertexCheck.pos.x - circumcenter.x) + (vertexCheck.pos.y - circumcenter.y) * (vertexCheck.pos.y - circumcenter.y);
@@ -30089,24 +30090,24 @@ class DDLSMesh {
             if (!isDelaunay) {
                 // for perfect regular n-sides polygons, checking delaunay circumcircle condition is not possible
                 console.log("NO DELAUNAY FOUND");
-                var s = "";
+                let s = "";
                 for (i = 0; i < bound.length; i++) {
                     s += bound[i].originVertex.pos.x + " , ";
                     s += bound[i].originVertex.pos.y + " , ";
                     s += bound[i].destinationVertex.pos.x + " , ";
                     s += bound[i].destinationVertex.pos.y + " , ";
                 }
-                //trace(s);
+                //console.log(s);
                 index = 2;
             }
-            //trace("index", index, "on", bound.length);
-            var edgeA;
-            var edgeAopp;
-            var edgeB;
-            var edgeBopp;
-            var boundA;
-            var boundM;
-            var boundB;
+            //console.log("index", index, "on", bound.length);
+            let edgeA;
+            let edgeAopp;
+            let edgeB;
+            let edgeBopp;
+            let boundA;
+            let boundM;
+            let boundB;
             if (index < (bound.length - 1)) {
                 edgeA = new DDLSEdge();
                 edgeAopp = new DDLSEdge();
@@ -30138,7 +30139,7 @@ class DDLSMesh {
         }
     }
     Debug() {
-        var i;
+        let i;
         for (i = 0; i < this.__vertices.length; i++) {
             console.log("-- vertex", this._vertices[i].id);
             console.log("  edge", this._vertices[i].edge.id, " - ", this._vertices[i].edge);
@@ -30168,34 +30169,34 @@ class DDLSRectMeshFactory {
         \  BL     \
         \----------
         */
-        var vTL = new DDLSVertex();
-        var vTR = new DDLSVertex();
-        var vBR = new DDLSVertex();
-        var vBL = new DDLSVertex();
-        var eTL_TR = new DDLSEdge();
-        var eTR_TL = new DDLSEdge();
-        var eTR_BR = new DDLSEdge();
-        var eBR_TR = new DDLSEdge();
-        var eBR_BL = new DDLSEdge();
-        var eBL_BR = new DDLSEdge();
-        var eBL_TL = new DDLSEdge();
-        var eTL_BL = new DDLSEdge();
-        var eTR_BL = new DDLSEdge();
-        var eBL_TR = new DDLSEdge();
-        var eTL_BR = new DDLSEdge();
-        var eBR_TL = new DDLSEdge();
-        var fTL_BL_TR = new DDLSFace();
-        var fTR_BL_BR = new DDLSFace();
-        var fTL_BR_BL = new DDLSFace();
-        var fTL_TR_BR = new DDLSFace();
-        var boundShape = new DDLSConstraintShape();
-        var segTop = new DDLSConstraintSegment();
-        var segRight = new DDLSConstraintSegment();
-        var segBot = new DDLSConstraintSegment();
-        var segLeft = new DDLSConstraintSegment();
-        var mesh = new DDLSMesh(width, height);
+        let vTL = new DDLSVertex();
+        let vTR = new DDLSVertex();
+        let vBR = new DDLSVertex();
+        let vBL = new DDLSVertex();
+        let eTL_TR = new DDLSEdge();
+        let eTR_TL = new DDLSEdge();
+        let eTR_BR = new DDLSEdge();
+        let eBR_TR = new DDLSEdge();
+        let eBR_BL = new DDLSEdge();
+        let eBL_BR = new DDLSEdge();
+        let eBL_TL = new DDLSEdge();
+        let eTL_BL = new DDLSEdge();
+        let eTR_BL = new DDLSEdge();
+        let eBL_TR = new DDLSEdge();
+        let eTL_BR = new DDLSEdge();
+        let eBR_TL = new DDLSEdge();
+        let fTL_BL_TR = new DDLSFace();
+        let fTR_BL_BR = new DDLSFace();
+        let fTL_BR_BL = new DDLSFace();
+        let fTL_TR_BR = new DDLSFace();
+        let boundShape = new DDLSConstraintShape();
+        let segTop = new DDLSConstraintSegment();
+        let segRight = new DDLSConstraintSegment();
+        let segBot = new DDLSConstraintSegment();
+        let segLeft = new DDLSConstraintSegment();
+        let mesh = new DDLSMesh(width, height);
         //
-        var offset = DDLSConstants.EPSILON * 1000;
+        let offset = DDLSConstants.EPSILON * 1000;
         vTL.pos.Set(0 - offset, 0 - offset);
         vTR.pos.Set(width + offset, 0 - offset);
         vBR.pos.Set(width + offset, height + offset);
@@ -30246,7 +30247,7 @@ class DDLSRectMeshFactory {
         mesh.__edges.push(eTL_TR, eTR_TL, eTR_BR, eBR_TR, eBR_BL, eBL_BR, eBL_TL, eTL_BL, eTR_BL, eBL_TR, eTL_BR, eBR_TL);
         mesh.__faces.push(fTL_BL_TR, fTR_BL_BR, fTL_BR_BL, fTL_TR_BR);
         mesh.__constraintShapes.push(boundShape);
-        var securityRect = new Array();
+        let securityRect = new Array();
         securityRect.push(0, 0, width, 0);
         securityRect.push(width, 0, width, height);
         securityRect.push(width, height, 0, height);
@@ -30261,10 +30262,10 @@ class DDLSRectMeshFactory {
 class DDLSPotrace {
     static BuildShapes(bmpData, debugBmp = null, debugShape = null) {
         // OUTLINES STEP-LIKE SHAPES GENERATION
-        var shapes = new Array();
-        var dictPixelsDone = new Map();
-        for (var row = 1; row < bmpData.height - 1; row++) {
-            for (var col = 0; col < bmpData.width - 1; col++) {
+        let shapes = new Array();
+        let dictPixelsDone = new Map();
+        for (let row = 1; row < bmpData.height - 1; row++) {
+            for (let col = 0; col < bmpData.width - 1; col++) {
                 if (bmpData.GetPixel(col, row) == 0xFFFFFF && bmpData.GetPixel(col + 1, row) < 0xFFFFFF) {
                     if (!dictPixelsDone.has((col + 1) + "_" + row))
                         shapes.push(this.BuildShape(bmpData, row, col + 1, dictPixelsDone, debugBmp, debugShape));
@@ -30274,16 +30275,16 @@ class DDLSPotrace {
         return shapes;
     }
     static BuildShape(bmpData, fromPixelRow, fromPixelCol, dictPixelsDone, debugBmp = null, debugShape = null) {
-        var path = new Array();
-        var newX = fromPixelCol;
-        var newY = fromPixelRow;
+        let path = new Array();
+        let newX = fromPixelCol;
+        let newY = fromPixelRow;
         path.push(newX, newY);
         dictPixelsDone.set(newX + "_" + newY, true);
-        var curDir = new Vec2(0, 1);
-        var newDir = new Vec2();
-        var newPixelRow;
-        var newPixelCol;
-        var count = -1;
+        let curDir = new Vec2(0, 1);
+        let newDir = new Vec2();
+        let newPixelRow;
+        let newPixelCol;
+        let count = -1;
         while (true) {
             if (debugBmp) {
                 debugBmp.SetPixel32(fromPixelCol, fromPixelRow, 0xFFFF0000);
@@ -30341,7 +30342,7 @@ class DDLSPotrace {
             debugShape.lineWidth = 0.5;
             debugShape.color = color("#00FF00");
             debugShape.moveTo(path[0], path[1]);
-            for (var i = 2; i < path.length; i += 2) {
+            for (let i = 2; i < path.length; i += 2) {
                 debugShape.lineTo(path[i], path[i + 1]);
             }
             debugShape.lineTo(path[0], path[1]);
@@ -30349,24 +30350,24 @@ class DDLSPotrace {
         return path;
     }
     static BuildGraph(shape) {
-        var i;
-        var graph = new DDLSGraph();
-        var node;
+        let i;
+        let graph = new DDLSGraph();
+        let node;
         for (i = 0; i < shape.length; i += 2) {
             node = graph.InsertNode();
             node.data = new NodeData();
             node.data.index = i;
             node.data.point = new DDLSPoint2D(shape[i], shape[i + 1]);
         }
-        var node1;
-        var node2;
-        var subNode;
-        var distSqrd;
-        var sumDistSqrd;
-        var count;
-        var isValid;
-        var edge;
-        var edgeData;
+        let node1;
+        let node2;
+        let subNode;
+        let distSqrd;
+        let sumDistSqrd;
+        let count;
+        let isValid;
+        let edge;
+        let edgeData;
         node1 = graph.node;
         while (node1) {
             node2 = node1.next ? node1.next : graph.node;
@@ -30405,13 +30406,13 @@ class DDLSPotrace {
         return graph;
     }
     static BuildPolygon(graph, debugShape = null) {
-        var polygon = new Array();
-        var currNode;
-        var minNodeIndex = Number.MAX_VALUE;
-        var edge;
-        var score;
-        var higherScore;
-        var lowerScoreEdge;
+        let polygon = new Array();
+        let currNode;
+        let minNodeIndex = Number.MAX_VALUE;
+        let edge;
+        let score;
+        let higherScore;
+        let lowerScoreEdge;
         currNode = graph.node;
         while (currNode.data.index < minNodeIndex) {
             minNodeIndex = currNode.data.index;
@@ -30436,7 +30437,7 @@ class DDLSPotrace {
             debugShape.lineWidth = 0.5;
             debugShape.color = color("#0000FF");
             debugShape.moveTo(polygon[0], polygon[1]);
-            for (var i = 2; i < polygon.length; i += 2) {
+            for (let i = 2; i < polygon.length; i += 2) {
                 debugShape.lineTo(polygon[i], polygon[i + 1]);
             }
             debugShape.lineTo(polygon[0], polygon[1]);
@@ -30454,26 +30455,26 @@ class NodeData {
 
 class DDLSBitmapObjectFactory {
     static buildFromBmpData(bmpData, scale = 1.0, debugBmp = null, debugShape = null) {
-        var i;
-        var j;
+        let i;
+        let j;
         // OUTLINES STEP-LIKE SHAPES GENERATION
-        var shapes = DDLSPotrace.BuildShapes(bmpData, debugBmp, debugShape);
+        let shapes = DDLSPotrace.BuildShapes(bmpData, debugBmp, debugShape);
         // GRAPHS OF POTENTIAL SEGMENTS GENERATION
-        var graphs = new Array();
+        let graphs = new Array();
         for (i = 0; i < shapes.length; i++) {
             graphs.push(DDLSPotrace.BuildGraph(shapes[i]));
         }
         // OPTIMIZED POLYGONS GENERATION
-        var polygons = new Array();
+        let polygons = new Array();
         for (i = 0; i < graphs.length; i++) {
             polygons.push(DDLSPotrace.BuildPolygon(graphs[i], debugShape));
         }
         //精确路径 但是生成的三角形多卡
         //			for (i=0 ; i<shapes.length ; i++)
         //			{
-        //				var sp:Vector.<Number> = shapes[i];
+        //				let sp:Vector.<Number> = shapes[i];
         //				polygons[i] = new Vector.<Number>();
-        //				var nowDir:int = 0;
+        //				let nowDir:int = 0;
         //				for(j = 0; j < sp.length - 2; j+=2)
         //				{
         //					if(nowDir == 0)
@@ -30524,14 +30525,14 @@ class DDLSBitmapObjectFactory {
         //				polygons[i].push(sp[j+1]);
         //			}
         // OBJECT GENERATION
-        var obj = new DDLSObject();
+        let obj = new DDLSObject();
         for (i = 0; i < polygons.length; i++) {
             for (j = 0; j < polygons[i].length - 2; j += 2) {
                 obj.coordinates.push(polygons[i][j] * scale, polygons[i][j + 1] * scale, polygons[i][j + 2] * scale, polygons[i][j + 3] * scale);
-                //trace(polygons[i][j], polygons[i][j+1], polygons[i][j+2], polygons[i][j+3]);
+                //console.log(polygons[i][j], polygons[i][j+1], polygons[i][j+2], polygons[i][j+3]);
             }
             obj.coordinates.push(polygons[i][0] * scale, polygons[i][1] * scale, polygons[i][j] * scale, polygons[i][j + 1] * scale);
-            //trace(polygons[i][0], polygons[i][1], polygons[i][j], polygons[i][j+1]);
+            //console.log(polygons[i][0], polygons[i][1], polygons[i][j], polygons[i][j+1]);
         }
         return obj;
     }
@@ -30539,22 +30540,22 @@ class DDLSBitmapObjectFactory {
 
 class DDLSBitmapMeshFactory {
     static buildFromBmpData(bmpData, debugBmp = null, debugShape = null) {
-        var i;
-        var j;
+        let i;
+        let j;
         // OUTLINES STEP-LIKE SHAPES GENERATION
-        var shapes = DDLSPotrace.BuildShapes(bmpData, debugBmp, debugShape);
+        let shapes = DDLSPotrace.BuildShapes(bmpData, debugBmp, debugShape);
         // GRAPHS OF POTENTIAL SEGMENTS GENERATION
-        var graphs = new Array();
+        let graphs = new Array();
         for (i = 0; i < shapes.length; i++) {
             graphs.push(DDLSPotrace.BuildGraph(shapes[i]));
         }
         // OPTIMIZED POLYGONS GENERATION
-        var polygons = new Array();
+        let polygons = new Array();
         for (i = 0; i < graphs.length; i++) {
             polygons.push(DDLSPotrace.BuildPolygon(graphs[i], debugShape));
         }
         // MESH GENERATION
-        var mesh = DDLSRectMeshFactory.BuildRectangle(bmpData.width, bmpData.height);
+        let mesh = DDLSRectMeshFactory.BuildRectangle(bmpData.width, bmpData.height);
         for (i = 0; i < polygons.length; i++) {
             for (j = 0; j < polygons[i].length - 2; j += 2)
                 mesh.InsertConstraintSegment(polygons[i][j], polygons[i][j + 1], polygons[i][j + 2], polygons[i][j + 3]);
@@ -30593,7 +30594,7 @@ class Polygon {
      *  require the vertices in clockwise order. */
     Reverse() {
         let numCoords = this._coords.length;
-        let numVertices = numCoords / 2;
+        let numVertices = Math.floor(numCoords / 2);
         let tmp;
         for (let i = 0; i < numVertices; i += 2) {
             tmp = this._coords[i];
@@ -30607,9 +30608,9 @@ class Polygon {
     /** Adds vertices to the polygon. Pass either a list of 'Point' instances or alternating
      *  'x' and 'y' coordinates. */
     AddVertices(...args) {
-        var i;
-        var numArgs = args.length;
-        var numCoords = this._coords.length;
+        let i;
+        let numArgs = args.length;
+        let numCoords = this._coords.length;
         if (numArgs > 0) {
             if (args[0] instanceof Vec2) {
                 for (i = 0; i < numArgs; i++) {
@@ -30651,13 +30652,13 @@ class Polygon {
     Contains(x, y) {
         // Algorithm & implementation thankfully taken from:
         // -> http://alienryderflex.com/polygon/
-        var i, j = this.numVertices - 1;
-        var oddNodes = 0;
+        let i, j = this.numVertices - 1;
+        let oddNodes = 0;
         for (i = 0; i < this.numVertices; ++i) {
-            var ix = this._coords[i * 2];
-            var iy = this._coords[i * 2 + 1];
-            var jx = this._coords[j * 2];
-            var jy = this._coords[j * 2 + 1];
+            let ix = this._coords[i * 2];
+            let iy = this._coords[i * 2 + 1];
+            let jx = this._coords[j * 2];
+            let jy = this._coords[j * 2 + 1];
             if ((iy < y && jy >= y || jy < y && iy >= y) && (ix <= x || jx <= x)) {
                 oddNodes ^= Number(ix + (y - iy) / (jy - iy) * (jx - ix) < x);
             }
@@ -30671,11 +30672,11 @@ class Polygon {
     }
     /** Creates a string that contains the values of all included points. */
     toString() {
-        var result = "[Polygon";
-        var numPoints = this.numVertices;
+        let result = "[Polygon";
+        let numPoints = this.numVertices;
         if (numPoints > 0)
             result += "\n";
-        for (var i = 0; i < numPoints; ++i) {
+        for (let i = 0; i < numPoints; ++i) {
             result += "  [Vertex " + i + ": " +
                 "x=" + this._coords[i * 2].toFixed(1) + ", " +
                 "y=" + this._coords[i * 2 + 1].toFixed(1) + "]" +
@@ -30693,17 +30694,17 @@ class Polygon {
     static AreVectorsIntersecting(ax, ay, bx, by, cx, cy, dx, dy) {
         if ((ax == bx && ay == by) || (cx == dx && cy == dy))
             return false; // length = 0
-        var abx = bx - ax;
-        var aby = by - ay;
-        var cdx = dx - cx;
-        var cdy = dy - cy;
-        var tDen = cdy * abx - cdx * aby;
+        let abx = bx - ax;
+        let aby = by - ay;
+        let cdx = dx - cx;
+        let cdy = dy - cy;
+        let tDen = cdy * abx - cdx * aby;
         if (tDen == 0.0)
             return false; // parallel or identical
-        var t = (aby * (cx - ax) - abx * (cy - ay)) / tDen;
+        let t = (aby * (cx - ax) - abx * (cy - ay)) / tDen;
         if (t < 0 || t > 1)
             return false; // outside c->d
-        var s = aby ? (cy - ay + t * cdy) / aby :
+        let s = aby ? (cy - ay + t * cdy) / aby :
             (cx - ax + t * cdx) / abx;
         return s >= 0.0 && s <= 1.0; // inside a->b
     }
@@ -30711,20 +30712,20 @@ class Polygon {
     /** Indicates if the polygon's line segments are not self-intersecting.
      *  Beware: this is a brute-force implementation with <code>O(n^2)</code>. */
     get isSimple() {
-        var numCoords = this._coords.length;
+        let numCoords = this._coords.length;
         if (numCoords <= 6)
             return true;
-        for (var i = 0; i < numCoords; i += 2) {
-            var ax = this._coords[i];
-            var ay = this._coords[i + 1];
-            var bx = this._coords[(i + 2) % numCoords];
-            var by = this._coords[(i + 3) % numCoords];
-            var endJ = i + numCoords - 2;
-            for (var j = i + 4; j < endJ; j += 2) {
-                var cx = this._coords[j % numCoords];
-                var cy = this._coords[(j + 1) % numCoords];
-                var dx = this._coords[(j + 2) % numCoords];
-                var dy = this._coords[(j + 3) % numCoords];
+        for (let i = 0; i < numCoords; i += 2) {
+            let ax = this._coords[i];
+            let ay = this._coords[i + 1];
+            let bx = this._coords[(i + 2) % numCoords];
+            let by = this._coords[(i + 3) % numCoords];
+            let endJ = i + numCoords - 2;
+            for (let j = i + 4; j < endJ; j += 2) {
+                let cx = this._coords[j % numCoords];
+                let cy = this._coords[(j + 1) % numCoords];
+                let dx = this._coords[(j + 2) % numCoords];
+                let dy = this._coords[(j + 3) % numCoords];
                 if (Polygon.AreVectorsIntersecting(ax, ay, bx, by, cx, cy, dx, dy))
                     return false;
             }
@@ -30734,11 +30735,11 @@ class Polygon {
     /** Indicates if the polygon is convex. In a convex polygon, the vector between any two
      *  points inside the polygon lies inside it, as well. */
     get isConvex() {
-        var numCoords = this._coords.length;
+        let numCoords = this._coords.length;
         if (numCoords < 6)
             return true;
         else {
-            for (var i = 0; i < numCoords; i += 2) {
+            for (let i = 0; i < numCoords; i += 2) {
                 if (!Polygon.IsConvexTriangle(this._coords[i], this._coords[i + 1], this._coords[(i + 2) % numCoords], this._coords[(i + 3) % numCoords], this._coords[(i + 4) % numCoords], this._coords[(i + 5) % numCoords])) {
                     return false;
                 }
@@ -30748,10 +30749,10 @@ class Polygon {
     }
     /** Calculates the total area of the polygon. */
     get area() {
-        var area = 0;
-        var numCoords = this._coords.length;
+        let area = 0;
+        let numCoords = this._coords.length;
         if (numCoords >= 6) {
-            for (var i = 0; i < numCoords; i += 2) {
+            for (let i = 0; i < numCoords; i += 2) {
                 area += this._coords[i] * this._coords[(i + 3) % numCoords];
                 area -= this._coords[i + 1] * this._coords[(i + 2) % numCoords];
             }
@@ -30765,16 +30766,16 @@ class Polygon {
         return this._coords.length / 2;
     }
     set numVertices(value) {
-        var oldLength = this.numVertices;
+        let oldLength = this.numVertices;
         this._coords.length = value * 2;
         if (oldLength < value) {
-            for (var i = oldLength; i < value; ++i)
+            for (let i = oldLength; i < value; ++i)
                 this._coords[i * 2] = this._coords[i * 2 + 1] = 0.0;
         }
     }
     /** Returns the number of triangles that will be required when triangulating the polygon. */
     get numTriangles() {
-        var numVertices = this.numVertices;
+        let numVertices = this.numVertices;
         return numVertices >= 3 ? numVertices - 2 : 0;
     }
 }
@@ -30833,29 +30834,40 @@ class IteratorFromVertexToIncomingEdges {
 
 class DDLSSimpleView {
     constructor() {
-        this.colorEdges = 0x999999;
-        this.colorConstraints = 0xFF0000;
-        this.colorVertices = 0x0000FF;
-        this.colorPaths = 0xFF00FF;
-        this.colorEntities = 0x00FF00;
+        this.colorEdges = 0x999999FF;
+        this.colorConstraints = 0xFF0000FF;
+        this.colorVertices = 0x0000FFFF;
+        this.colorPaths = 0xFF00FFFF;
+        this.colorEntities = 0x00FF00FF;
+        /**
+         * 反转Y轴坐标
+         */
+        this.mirrorY = true;
         this._showVerticesIndices = false;
-        this._edges = new Node("edges");
+        this._edges = this.__createNode("edges");
         this._edgesGraphics = this._edges.addComponent(Graphics);
-        this._constraints = new Node("constraints");
+        this._constraints = this.__createNode("constraints");
         this._constraintsGraphics = this._constraints.addComponent(Graphics);
-        this._vertices = new Node("vertices");
-        this._constraintsGraphics = this._vertices.addComponent(Graphics);
-        this._entities = new Node("entities");
-        this._pathsGraphics = this._vertices.addComponent(Graphics);
-        this._paths = new Node("paths");
-        this._pathsGraphics = this._vertices.addComponent(Graphics);
-        this._surface = new Node("surface");
-        this._surfaceGraphics = this._vertices.addComponent(Graphics);
+        this._vertices = this.__createNode("vertices");
+        this._verticesGraphics = this._vertices.addComponent(Graphics);
+        this._entities = this.__createNode("entities");
+        this._entitiesGraphics = this._entities.addComponent(Graphics);
+        this._paths = this.__createNode("paths");
+        this._pathsGraphics = this._paths.addComponent(Graphics);
+        this._surface = this.__createNode("surface");
+        this._surfaceGraphics = this._surface.addComponent(Graphics);
         this._surface.addChild(this._edges);
         this._surface.addChild(this._constraints);
         this._surface.addChild(this._vertices);
         this._surface.addChild(this._paths);
         this._surface.addChild(this._entities);
+    }
+    __createNode(name) {
+        let result = new Node(name);
+        let trans = result.addComponent(UITransform);
+        trans.anchorX = 0;
+        trans.anchorY = 1;
+        return result;
     }
     get surface() {
         return this._surface;
@@ -30869,65 +30881,84 @@ class DDLSSimpleView {
     }
     DrawMesh(mesh) {
         this.clean();
-        this._surfaceGraphics.lineWidth = 0;
-        this._surfaceGraphics.color = this.GetColor(0x000000);
-        this._surfaceGraphics.fill();
-        this._surfaceGraphics.fillColor = this.GetColor(0x000000);
         this._surfaceGraphics.lineWidth = 1;
-        this._surfaceGraphics.color = this.GetColor(0xFF0000);
-        this._surfaceGraphics.rect(0, 0, mesh.width, mesh.height);
+        this._surfaceGraphics.strokeColor.fromHEX('#FF0000FF');
+        this._surfaceGraphics.fillColor.fromHEX('#00000000');
+        this._surfaceGraphics.moveTo(0, 0);
+        this._surfaceGraphics.lineTo(0, this.mirrorY ? -mesh.height : mesh.height);
+        this._surfaceGraphics.lineTo(mesh.width, this.mirrorY ? -mesh.height : mesh.height);
+        this._surfaceGraphics.lineTo(mesh.width, 0);
+        this._surfaceGraphics.close();
+        this._surfaceGraphics.stroke();
         this._surfaceGraphics.fill();
-        var vertex;
-        var incomingEdge;
-        var iterVertices;
+        let vertex;
+        let incomingEdge;
+        let iterVertices;
         iterVertices = new IteratorFromMeshToVertices();
         iterVertices.fromMesh = mesh;
         //
-        var iterEdges;
+        let iterEdges;
         iterEdges = new IteratorFromVertexToIncomingEdges();
-        var dictVerticesDone = new Map();
+        let dictVerticesDone = new Map();
+        let constraintsFrist = true;
+        let edgesFrist = true;
         //
         while (vertex = iterVertices.Next()) {
             dictVerticesDone.set(vertex, true);
             if (!this.VertexIsInsideAABB(vertex, mesh))
                 continue;
             this._verticesGraphics.lineWidth = 1;
-            this._verticesGraphics.color = this.GetColor(this.colorVertices);
-            this._verticesGraphics.circle(vertex.pos.x, vertex.pos.y, 0.5);
+            this._verticesGraphics.fillColor = this.GetColor(this.colorVertices);
+            this._verticesGraphics.circle(vertex.pos.x, this.mirrorY ? -vertex.pos.y : vertex.pos.y, 3);
             this._verticesGraphics.fill();
             if (this._showVerticesIndices) {
                 let tfNode = new Node(vertex.id.toString());
-                var tf = tfNode.addComponent(Label);
+                let tf = tfNode.addComponent(Label);
                 let trans = tfNode.addComponent(UITransform);
                 tf.string = vertex.id.toString();
-                tfNode.setPosition(new Vec3(vertex.pos.x + 5, vertex.pos.y + 5));
+                tfNode.setPosition(new Vec3(vertex.pos.x + 5, this.mirrorY ? -vertex.pos.y : vertex.pos.y + 5));
                 trans.width = trans.height = 20;
                 this._vertices.addChild(tfNode);
             }
+            constraintsFrist = edgesFrist = true;
             iterEdges.fromVertex = vertex;
             while (incomingEdge = iterEdges.Next()) {
                 if (!dictVerticesDone.has(incomingEdge.originVertex)) {
                     if (incomingEdge.isConstrained) {
-                        this._constraintsGraphics.lineWidth = 2;
-                        this._constraintsGraphics.color = this.GetColor(this.colorConstraints);
-                        this._constraintsGraphics.moveTo(incomingEdge.originVertex.pos.x, incomingEdge.originVertex.pos.y);
-                        this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, incomingEdge.destinationVertex.pos.y);
+                        this._constraintsGraphics.lineWidth = 3;
+                        this._constraintsGraphics.strokeColor = this.GetColor(this.colorConstraints);
+                        if (constraintsFrist) {
+                            constraintsFrist = false;
+                            this._constraintsGraphics.moveTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        else {
+                            this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        this._constraintsGraphics.lineTo(incomingEdge.originVertex.pos.x, this.mirrorY ? -incomingEdge.originVertex.pos.y : incomingEdge.originVertex.pos.y);
                     }
                     else {
-                        this._constraintsGraphics.lineWidth = 1;
-                        this._constraintsGraphics.color = this.GetColor(this.colorEdges);
-                        this._constraintsGraphics.moveTo(incomingEdge.originVertex.pos.x, incomingEdge.originVertex.pos.y);
-                        this._constraintsGraphics.lineTo(incomingEdge.destinationVertex.pos.x, incomingEdge.destinationVertex.pos.y);
+                        this._edgesGraphics.lineWidth = 2;
+                        this._edgesGraphics.strokeColor = this.GetColor(this.colorEdges);
+                        if (edgesFrist) {
+                            edgesFrist = false;
+                            this._edgesGraphics.moveTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        else {
+                            this._edgesGraphics.lineTo(incomingEdge.destinationVertex.pos.x, this.mirrorY ? -incomingEdge.destinationVertex.pos.y : incomingEdge.destinationVertex.pos.y);
+                        }
+                        this._edgesGraphics.lineTo(incomingEdge.originVertex.pos.x, this.mirrorY ? -incomingEdge.originVertex.pos.y : incomingEdge.originVertex.pos.y);
                     }
                 }
             }
         }
+        this._constraintsGraphics.stroke();
+        this._edgesGraphics.stroke();
     }
     GetColor(value) {
-        let r = ((this.colorVertices >> 16) & 0xff);
-        let g = ((this.colorVertices >> 8) & 0xff);
-        let b = ((this.colorVertices) & 0xff);
-        let a = ((this.colorVertices >> 24) & 0xff);
+        let r = ((value >> 24) & 0xff);
+        let g = ((value >> 16) & 0xff);
+        let b = ((value >> 8) & 0xff);
+        let a = ((value) & 0xff);
         return color(r, g, b, a);
     }
     DrawEntity(entity, cleanBefore = true) {
@@ -30954,7 +30985,7 @@ class DDLSSimpleView {
     DrawEntities(vEntities, cleanBefore = true) {
         if (cleanBefore)
             this._entitiesGraphics.clear();
-        for (var i = 0; i < vEntities.length; i++) {
+        for (let i = 0; i < vEntities.length; i++) {
             this.DrawEntity(vEntities[i], false);
         }
     }
@@ -30964,10 +30995,12 @@ class DDLSSimpleView {
         if (path.length == 0)
             return;
         this._pathsGraphics.lineWidth = 1.5;
-        this._pathsGraphics.color = this.GetColor(this.colorPaths);
-        this._pathsGraphics.moveTo(path[0], path[1]);
-        for (var i = 2; i < path.length; i += 2)
-            this._pathsGraphics.lineTo(path[i], path[i + 1]);
+        this._pathsGraphics.strokeColor = this.GetColor(this.colorPaths);
+        this._pathsGraphics.moveTo(path[0], this.mirrorY ? -path[1] : path[1]);
+        for (let i = 2; i < path.length; i += 2) {
+            this._pathsGraphics.lineTo(path[i], this.mirrorY ? -path[i + 1] : path[i + 1]);
+        }
+        this._pathsGraphics.stroke();
     }
     VertexIsInsideAABB(vertex, mesh) {
         if (vertex.pos.x < 0 || vertex.pos.x > mesh.width || vertex.pos.y < 0 || vertex.pos.y > mesh.height)
@@ -31199,7 +31232,7 @@ class ESCWorld {
      * @param time
      */
     Tick(time) {
-        for (var system of this.__systems) {
+        for (let system of this.__systems) {
             system.Tick(time);
         }
     }

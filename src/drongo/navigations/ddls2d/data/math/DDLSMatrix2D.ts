@@ -78,14 +78,14 @@ export class DDLSMatrix2D {
 		[c, d, 0]
 		[e, f, 1]
 		*/
-		var cos: number = Math.cos(rad);
-		var sin: number = Math.sin(rad);
-		var a: number = this._a * cos + this._b * -sin;
-		var b: number = this._a * sin + this._b * cos;
-		var c: number = this._c * cos + this._d * -sin;
-		var d: number = this._c * sin + this._d * cos;
-		var e: number = this._e * cos + this._f * -sin;
-		var f: number = this._e * sin + this._f * cos;
+		let cos: number = Math.cos(rad);
+		let sin: number = Math.sin(rad);
+		let a: number = this._a * cos + this._b * -sin;
+		let b: number = this._a * sin + this._b * cos;
+		let c: number = this._c * cos + this._d * -sin;
+		let d: number = this._c * sin + this._d * cos;
+		let e: number = this._e * cos + this._f * -sin;
+		let f: number = this._e * sin + this._f * cos;
 		this._a = a;
 		this._b = b
 		this._c = c;
@@ -105,8 +105,8 @@ export class DDLSMatrix2D {
 					[e, f, 1]
 		[x, y, 1]
 		*/
-		var x: number = this._a * point.x + this._c * point.y + this.e;
-		var y: number = this._b * point.x + this._d * point.y + this.f;
+		let x: number = this._a * point.x + this._c * point.y + this.e;
+		let y: number = this._b * point.x + this._d * point.y + this.f;
 		point.x = x;
 		point.y = y;
 	}
@@ -119,12 +119,12 @@ export class DDLSMatrix2D {
 	}
 
 	Concat(matrix: DDLSMatrix2D): void {
-		var a: number = this._a * matrix.a + this._b * matrix.c;
-		var b: number = this._a * matrix.b + this._b * matrix.d;
-		var c: number = this._c * matrix.a + this._d * matrix.c;
-		var d: number = this._c * matrix.b + this._d * matrix.d;
-		var e: number = this._e * matrix.a + this._f * matrix.c + matrix.e;
-		var f: number = this._e * matrix.b + this._f * matrix.d + matrix.f;
+		let a: number = this._a * matrix.a + this._b * matrix.c;
+		let b: number = this._a * matrix.b + this._b * matrix.d;
+		let c: number = this._c * matrix.a + this._d * matrix.c;
+		let d: number = this._c * matrix.b + this._d * matrix.d;
+		let e: number = this._e * matrix.a + this._f * matrix.c + matrix.e;
+		let f: number = this._e * matrix.b + this._f * matrix.d + matrix.f;
 		this._a = a
 		this._b = b;
 		this._c = c;

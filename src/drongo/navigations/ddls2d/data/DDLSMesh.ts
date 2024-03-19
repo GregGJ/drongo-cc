@@ -104,8 +104,8 @@ export class DDLSMesh {
 	}
 
 	BuildFromRecord(rec: string): void {
-		var positions = rec.split(';');
-		for (var i: number = 0; i < positions.length; i += 4) {
+		let positions = rec.split(';');
+		for (let i: number = 0; i < positions.length; i += 4) {
 			this.InsertConstraintSegment(Number(positions[i]), Number(positions[i + 1]), Number(positions[i + 2]), Number(positions[i + 3]));
 		}
 	}
@@ -114,22 +114,22 @@ export class DDLSMesh {
 		if (object.constraintShape)
 			this.DeleteObject(object);
 
-		var shape: DDLSConstraintShape = new DDLSConstraintShape();
-		var segment: DDLSConstraintSegment;
-		var coordinates: Array<number> = object.coordinates;
-		var m: DDLSMatrix2D = object.matrix;
+		let shape: DDLSConstraintShape = new DDLSConstraintShape();
+		let segment: DDLSConstraintSegment;
+		let coordinates: Array<number> = object.coordinates;
+		let m: DDLSMatrix2D = object.matrix;
 
 		object.UpdateMatrixFromValues();
-		var x1: number;
-		var y1: number;
-		var x2: number;
-		var y2: number;
-		var transfx1: number;
-		var transfy1: number;
-		var transfx2: number;
-		var transfy2: number;
+		let x1: number;
+		let y1: number;
+		let x2: number;
+		let y2: number;
+		let transfx1: number;
+		let transfy1: number;
+		let transfx2: number;
+		let transfy2: number;
 
-		for (var i = 0; i < coordinates.length; i += 4) {
+		for (let i = 0; i < coordinates.length; i += 4) {
 			x1 = coordinates[i];
 			y1 = coordinates[i + 1];
 			x2 = coordinates[i + 2];
@@ -162,7 +162,7 @@ export class DDLSMesh {
 		object.constraintShape = null;
 
 		if (!this.__objectsUpdateInProgress) {
-			var index = this._objects.indexOf(object);
+			let index = this._objects.indexOf(object);
 			this._objects.splice(index, 1);
 		}
 	}
@@ -170,7 +170,7 @@ export class DDLSMesh {
 	private __objectsUpdateInProgress: Boolean;
 	UpdateObjects(): void {
 		this.__objectsUpdateInProgress = true;
-		for (var i = 0; i < this._objects.length; i++) {
+		for (let i = 0; i < this._objects.length; i++) {
 			if (this._objects[i].hasChanged) {
 				this.DeleteObject(this._objects[i]);
 				this.InsertObject(this._objects[i]);
@@ -187,10 +187,10 @@ export class DDLSMesh {
 	// Segments are not necessary connected.
 	// Segments can overlap (then they will be automaticaly subdivided).
 	InsertConstraintShape(coordinates: Array<number>): DDLSConstraintShape {
-		var shape: DDLSConstraintShape = new DDLSConstraintShape();
-		var segment: DDLSConstraintSegment;
+		let shape: DDLSConstraintShape = new DDLSConstraintShape();
+		let segment: DDLSConstraintSegment;
 
-		for (var i = 0; i < coordinates.length; i += 4) {
+		for (let i = 0; i < coordinates.length; i += 4) {
 			segment = this.InsertConstraintSegment(coordinates[i], coordinates[i + 1], coordinates[i + 2], coordinates[i + 3]);
 			if (segment) {
 				segment.fromShape = shape;
@@ -204,7 +204,7 @@ export class DDLSMesh {
 	}
 
 	DeleteConstraintShape(shape: DDLSConstraintShape): void {
-		for (var i = 0; i < shape.segments.length; i++) {
+		for (let i = 0; i < shape.segments.length; i++) {
 			this.DeleteConstraintSegment(shape.segments[i]);
 		}
 
@@ -215,10 +215,10 @@ export class DDLSMesh {
 
 	InsertConstraintSegment(x1: number, y1: number, x2: number, y2: number): DDLSConstraintSegment {
 		// we clip against AABB
-		var newX1: number = x1;
-		var newY1: number = y1;
-		var newX2: number = x2;
-		var newY2: number = y2;
+		let newX1: number = x1;
+		let newY1: number = y1;
+		let newX2: number = x2;
+		let newY2: number = y2;
 
 		if ((x1 > this._width && x2 > this._width)
 			|| (x1 < 0 && x2 < 0)
@@ -227,23 +227,23 @@ export class DDLSMesh {
 			return null;
 		}
 		else {
-			var nx: number = x2 - x1;
-			var ny: number = y2 - y1;
+			let nx: number = x2 - x1;
+			let ny: number = y2 - y1;
 
-			var tmin: number = Number.NEGATIVE_INFINITY;
-			var tmax: number = Number.POSITIVE_INFINITY;
+			let tmin: number = Number.NEGATIVE_INFINITY;
+			let tmax: number = Number.POSITIVE_INFINITY;
 
 			if (nx != 0.0) {
-				var tx1: number = (0 - x1) / nx;
-				var tx2: number = (this._width - x1) / nx;
+				let tx1: number = (0 - x1) / nx;
+				let tx2: number = (this._width - x1) / nx;
 
 				tmin = Math.max(tmin, Math.min(tx1, tx2));
 				tmax = Math.min(tmax, Math.max(tx1, tx2));
 			}
 
 			if (ny != 0.0) {
-				var ty1: number = (0 - y1) / ny;
-				var ty2: number = (this._height - y1) / ny;
+				let ty1: number = (0 - y1) / ny;
+				let ty2: number = (this._height - y1) / ny;
 
 				tmin = Math.max(tmin, Math.min(ty1, ty2));
 				tmax = Math.min(tmax, Math.max(ty1, ty2));
@@ -268,52 +268,53 @@ export class DDLSMesh {
 		}
 
 		// we check the vertices insertions
-		var vertexDown: DDLSVertex = this.InsertVertex(newX1, newY1);
+		let vertexDown: DDLSVertex = this.InsertVertex(newX1, newY1);
 		if (!vertexDown)
 			return null;
-		var vertexUp: DDLSVertex = this.InsertVertex(newX2, newY2);
+		let vertexUp: DDLSVertex = this.InsertVertex(newX2, newY2);
 		if (!vertexUp)
 			return null;
 		if (vertexDown == vertexUp)
 			return null;
 
-		//trace("vertices", vertexDown.id, vertexUp.id)
+		//console.log("vertices", vertexDown.id, vertexUp.id)
 
 		// useful
-		var iterVertexToOutEdges: IteratorFromVertexToOutgoingEdges = new IteratorFromVertexToOutgoingEdges();
-		var currVertex: DDLSVertex;
-		var currEdge: DDLSEdge;
-		var i: number;
+		let iterVertexToOutEdges: IteratorFromVertexToOutgoingEdges = new IteratorFromVertexToOutgoingEdges();
+		let currVertex: DDLSVertex;
+		let currEdge: DDLSEdge;
+		let i: number;
 
 		// the new constraint segment
-		var segment: DDLSConstraintSegment = new DDLSConstraintSegment();
+		let segment: DDLSConstraintSegment = new DDLSConstraintSegment();
 
-		var tempEdgeDownUp: DDLSEdge = new DDLSEdge();
-		var tempSdgeUpDown: DDLSEdge = new DDLSEdge();
+		let tempEdgeDownUp: DDLSEdge = new DDLSEdge();
+		let tempSdgeUpDown: DDLSEdge = new DDLSEdge();
 		tempEdgeDownUp.SetDatas(vertexDown, tempSdgeUpDown, null, null, true, true);
 		tempSdgeUpDown.SetDatas(vertexUp, tempEdgeDownUp, null, null, true, true);
 
-		var intersectedEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
-		var leftBoundingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
-		var rightBoundingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let intersectedEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let leftBoundingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let rightBoundingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
 
-		var currObjet: any;
-		var pIntersect: DDLSPoint2D = new DDLSPoint2D();
-		var edgeLeft: DDLSEdge;
-		var newEdgeDownUp: DDLSEdge;
-		var newEdgeUpDown: DDLSEdge;
-		var done: Boolean;
+		let currObjet: any;
+		let pIntersect: DDLSPoint2D = new DDLSPoint2D();
+		let edgeLeft: DDLSEdge;
+		let newEdgeDownUp: DDLSEdge;
+		let newEdgeUpDown: DDLSEdge;
+		let done: Boolean;
 		currVertex = vertexDown;
 		currObjet = currVertex;
 		while (true) {
 			done = false;
-			if ((currVertex = currObjet as DDLSVertex)) {
-				//trace("case vertex");
+			currVertex = <DDLSVertex>currObjet;
+			if ((currVertex instanceof DDLSVertex)) {
+				//console.log("case vertex");
 				iterVertexToOutEdges.fromVertex = currVertex;
 				while (currEdge = iterVertexToOutEdges.Next()) {
 					// if we meet directly the end vertex
 					if (currEdge.destinationVertex == vertexUp) {
-						//trace("we met the end vertex");
+						//console.log("we met the end vertex");
 						if (!currEdge.isConstrained) {
 							currEdge.isConstrained = true;
 							currEdge.oppositeEdge.isConstrained = true;
@@ -327,9 +328,9 @@ export class DDLSMesh {
 					}
 					// if we meet a vertex
 					if (DDLSGeom2D.DistanceSquaredVertexToEdge(currEdge.destinationVertex, tempEdgeDownUp) <= DDLSConstants.EPSILON_SQUARED) {
-						//trace("we met a vertex");
+						//console.log("we met a vertex");
 						if (!currEdge.isConstrained) {
-							//trace("edge is not constrained");
+							//console.log("edge is not constrained");
 							currEdge.isConstrained = true;
 							currEdge.oppositeEdge.isConstrained = true;
 						}
@@ -352,9 +353,9 @@ export class DDLSMesh {
 				while (currEdge = iterVertexToOutEdges.Next()) {
 					currEdge = currEdge.nextLeftEdge;
 					if (DDLSGeom2D.Intersections2edges(currEdge, tempEdgeDownUp, pIntersect)) {
-						//trace("edge intersection");
+						//console.log("edge intersection");
 						if (currEdge.isConstrained) {
-							//trace("edge is constrained");
+							//console.log("edge is constrained");
 							vertexDown = this.SplitEdge(currEdge, pIntersect.x, pIntersect.y);
 							iterVertexToOutEdges.fromVertex = currVertex;
 							while (currEdge = iterVertexToOutEdges.Next()) {
@@ -372,7 +373,7 @@ export class DDLSMesh {
 							currObjet = vertexDown;
 						}
 						else {
-							//trace("edge is not constrained");
+							//console.log("edge is not constrained");
 							intersectedEdges.push(currEdge);
 							leftBoundingEdges.unshift(currEdge.nextLeftEdge);
 							rightBoundingEdges.push(currEdge.prevLeftEdge);
@@ -383,11 +384,11 @@ export class DDLSMesh {
 					}
 				}
 			}
-			else if ((currEdge = currObjet as DDLSEdge)) {
-				//trace("case edge");
+			else if (currObjet instanceof DDLSEdge && (currEdge = <DDLSEdge>currObjet)) {
+				//console.log("case edge");
 				edgeLeft = currEdge.nextLeftEdge;
 				if (edgeLeft.destinationVertex == vertexUp) {
-					//trace("end point reached");
+					//console.log("end point reached");
 					leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
 					rightBoundingEdges.push(edgeLeft);
 
@@ -402,7 +403,7 @@ export class DDLSMesh {
 					return segment;
 				}
 				else if (DDLSGeom2D.DistanceSquaredVertexToEdge(edgeLeft.destinationVertex, tempEdgeDownUp) <= DDLSConstants.EPSILON_SQUARED) {
-					//trace("we met a vertex");
+					//console.log("we met a vertex");
 					leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
 					rightBoundingEdges.push(edgeLeft);
 
@@ -424,9 +425,9 @@ export class DDLSMesh {
 				}
 				else {
 					if (DDLSGeom2D.Intersections2edges(edgeLeft, tempEdgeDownUp, pIntersect)) {
-						//trace("1st left edge intersected");
+						//console.log("1st left edge intersected");
 						if (edgeLeft.isConstrained) {
-							//trace("edge is constrained");
+							//console.log("edge is constrained");
 							currVertex = this.SplitEdge(edgeLeft, pIntersect.x, pIntersect.y);
 
 							iterVertexToOutEdges.fromVertex = currVertex;
@@ -455,7 +456,7 @@ export class DDLSMesh {
 							currObjet = vertexDown;
 						}
 						else {
-							//trace("edge is not constrained");
+							//console.log("edge is not constrained");
 							intersectedEdges.push(edgeLeft);
 							leftBoundingEdges.unshift(edgeLeft.nextLeftEdge);
 							currEdge = edgeLeft.oppositeEdge; // we keep the edge from left to right
@@ -463,11 +464,11 @@ export class DDLSMesh {
 						}
 					}
 					else {
-						//trace("2nd left edge intersected");
+						//console.log("2nd left edge intersected");
 						edgeLeft = edgeLeft.nextLeftEdge;
 						DDLSGeom2D.Intersections2edges(edgeLeft, tempEdgeDownUp, pIntersect);
 						if (edgeLeft.isConstrained) {
-							//trace("edge is constrained");
+							//console.log("edge is constrained");
 							currVertex = this.SplitEdge(edgeLeft, pIntersect.x, pIntersect.y);
 
 							iterVertexToOutEdges.fromVertex = currVertex;
@@ -496,7 +497,7 @@ export class DDLSMesh {
 							currObjet = vertexDown;
 						}
 						else {
-							//trace("edge is not constrained");
+							//console.log("edge is not constrained");
 							intersectedEdges.push(edgeLeft);
 							rightBoundingEdges.push(edgeLeft.prevLeftEdge);
 							currEdge = edgeLeft.oppositeEdge; // we keep the edge from left to right
@@ -511,7 +512,7 @@ export class DDLSMesh {
 	}
 
 	private InsertNewConstrainedEdge(fromSegment: DDLSConstraintSegment, edgeDownUp: DDLSEdge, intersectedEdges: Array<DDLSEdge>, leftBoundingEdges: Array<DDLSEdge>, rightBoundingEdges: Array<DDLSEdge>): void {
-		//trace("insertNewConstrainedEdge");
+		//console.log("insertNewConstrainedEdge");
 		this._edges.push(edgeDownUp);
 		this._edges.push(edgeDownUp.oppositeEdge);
 
@@ -530,15 +531,15 @@ export class DDLSMesh {
 	}
 
 	DeleteConstraintSegment(segment: DDLSConstraintSegment): void {
-		//trace("deleteConstraintSegment id", segment.id);
-		var i: number;
-		var vertexToDelete: Array<DDLSVertex> = new Array<DDLSVertex>();
-		var edge: DDLSEdge;
-		var vertex: DDLSVertex;
-		var fromConstraintSegment: Array<DDLSConstraintSegment>;
+		//console.log("deleteConstraintSegment id", segment.id);
+		let i: number;
+		let vertexToDelete: Array<DDLSVertex> = new Array<DDLSVertex>();
+		let edge: DDLSEdge;
+		let vertex: DDLSVertex;
+		let fromConstraintSegment: Array<DDLSConstraintSegment>;
 		for (i = 0; i < segment.edges.length; i++) {
 			edge = segment.edges[i];
-			//trace("unconstrain edge ", edge);
+			//console.log("unconstrain edge ", edge);
 			edge.RemoveFromConstraintSegment(segment);
 			if (edge.fromConstraintSegments.length == 0) {
 				edge.isConstrained = false;
@@ -553,18 +554,18 @@ export class DDLSMesh {
 		vertex.RemoveFromConstraintSegment(segment);
 		vertexToDelete.push(vertex);
 
-		//trace("clean the useless vertices");
+		//console.log("clean the useless vertices");
 		for (i = 0; i < vertexToDelete.length; i++) {
 			this.DeleteVertex(vertexToDelete[i]);
 		}
-		//trace("clean done");
+		//console.log("clean done");
 
 
 		segment.Dispose();
 	}
 
 	private Check(): void {
-		for (var i = 0; i < this._edges.length; i++) {
+		for (let i = 0; i < this._edges.length; i++) {
 			if (!this._edges[i].nextLeftEdge) {
 				console.log("!!! missing nextLeftEdge");
 				return;
@@ -574,27 +575,28 @@ export class DDLSMesh {
 	}
 
 	InsertVertex(x: number, y: number): DDLSVertex {
-		//trace("insertVertex", x, y);
+		//console.log("insertVertex", x, y);
 		if (x < 0 || y < 0 || x > this._width || y > this._height)
 			return null;
 
 		this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
 
-		var inObject: any = DDLSGeom2D.LocatePosition(x, y, this);
-		var inVertex: DDLSVertex;
-		var inEdge: DDLSEdge;
-		var inFace: DDLSFace;
-		var newVertex: DDLSVertex;
-		if ((inVertex = inObject as DDLSVertex)) {
-			//trace("inVertex", inVertex.id);
+		let inObject: any = DDLSGeom2D.LocatePosition(x, y, this);
+		let inVertex: DDLSVertex;
+		let inEdge: DDLSEdge;
+		let inFace: DDLSFace;
+		let newVertex: DDLSVertex;
+
+		if (inObject instanceof DDLSVertex && (inVertex = <DDLSVertex>inObject)) {
+			//console.log("inVertex", inVertex.id);
 			newVertex = inVertex;
 		}
-		else if ((inEdge = inObject as DDLSEdge)) {
-			//trace("inEdge", inEdge);
+		else if (inObject instanceof DDLSEdge && (inEdge = <DDLSEdge>inObject)) {
+			//console.log("inEdge", inEdge);
 			newVertex = this.SplitEdge(inEdge, x, y);
 		}
-		else if ((inFace = inObject as DDLSFace)) {
-			//trace("inFace");
+		else if (inObject instanceof DDLSFace && (inFace = <DDLSFace>inObject)) {
+			//console.log("inFace");
 			newVertex = this.SplitFace(inFace, x, y);
 		}
 
@@ -605,24 +607,24 @@ export class DDLSMesh {
 
 	FlipEdge(edge: DDLSEdge): DDLSEdge {
 		// retrieve and create useful objets
-		var eBot_Top: DDLSEdge = edge;
-		var eTop_Bot: DDLSEdge = edge.oppositeEdge;
-		var eLeft_Right: DDLSEdge = new DDLSEdge();
-		var eRight_Left: DDLSEdge = new DDLSEdge();
-		var eTop_Left: DDLSEdge = eBot_Top.nextLeftEdge;
-		var eLeft_Bot: DDLSEdge = eTop_Left.nextLeftEdge;
-		var eBot_Right: DDLSEdge = eTop_Bot.nextLeftEdge;
-		var eRight_Top: DDLSEdge = eBot_Right.nextLeftEdge;
+		let eBot_Top: DDLSEdge = edge;
+		let eTop_Bot: DDLSEdge = edge.oppositeEdge;
+		let eLeft_Right: DDLSEdge = new DDLSEdge();
+		let eRight_Left: DDLSEdge = new DDLSEdge();
+		let eTop_Left: DDLSEdge = eBot_Top.nextLeftEdge;
+		let eLeft_Bot: DDLSEdge = eTop_Left.nextLeftEdge;
+		let eBot_Right: DDLSEdge = eTop_Bot.nextLeftEdge;
+		let eRight_Top: DDLSEdge = eBot_Right.nextLeftEdge;
 
-		var vBot: DDLSVertex = eBot_Top.originVertex;
-		var vTop: DDLSVertex = eTop_Bot.originVertex;
-		var vLeft: DDLSVertex = eLeft_Bot.originVertex;
-		var vRight: DDLSVertex = eRight_Top.originVertex;
+		let vBot: DDLSVertex = eBot_Top.originVertex;
+		let vTop: DDLSVertex = eTop_Bot.originVertex;
+		let vLeft: DDLSVertex = eLeft_Bot.originVertex;
+		let vRight: DDLSVertex = eRight_Top.originVertex;
 
-		var fLeft: DDLSFace = eBot_Top.leftFace;
-		var fRight: DDLSFace = eTop_Bot.leftFace;
-		var fBot: DDLSFace = new DDLSFace();
-		var fTop: DDLSFace = new DDLSFace();
+		let fLeft: DDLSFace = eBot_Top.leftFace;
+		let fRight: DDLSFace = eTop_Bot.leftFace;
+		let fBot: DDLSFace = new DDLSFace();
+		let fTop: DDLSFace = new DDLSFace();
 
 		// add the new edges
 		this._edges.push(eLeft_Right);
@@ -676,20 +678,20 @@ export class DDLSMesh {
 		this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
 
 		// retrieve useful objets
-		var eLeft_Right: DDLSEdge = edge;
-		var eRight_Left: DDLSEdge = eLeft_Right.oppositeEdge;
-		var eRight_Top: DDLSEdge = eLeft_Right.nextLeftEdge;
-		var eTop_Left: DDLSEdge = eRight_Top.nextLeftEdge;
-		var eLeft_Bot: DDLSEdge = eRight_Left.nextLeftEdge;
-		var eBot_Right: DDLSEdge = eLeft_Bot.nextLeftEdge;
+		let eLeft_Right: DDLSEdge = edge;
+		let eRight_Left: DDLSEdge = eLeft_Right.oppositeEdge;
+		let eRight_Top: DDLSEdge = eLeft_Right.nextLeftEdge;
+		let eTop_Left: DDLSEdge = eRight_Top.nextLeftEdge;
+		let eLeft_Bot: DDLSEdge = eRight_Left.nextLeftEdge;
+		let eBot_Right: DDLSEdge = eLeft_Bot.nextLeftEdge;
 
-		var vTop: DDLSVertex = eTop_Left.originVertex;
-		var vLeft: DDLSVertex = eLeft_Right.originVertex;
-		var vBot: DDLSVertex = eBot_Right.originVertex;
-		var vRight: DDLSVertex = eRight_Left.originVertex;
+		let vTop: DDLSVertex = eTop_Left.originVertex;
+		let vLeft: DDLSVertex = eLeft_Right.originVertex;
+		let vBot: DDLSVertex = eBot_Right.originVertex;
+		let vRight: DDLSVertex = eRight_Left.originVertex;
 
-		var fTop: DDLSFace = eLeft_Right.leftFace;
-		var fBot: DDLSFace = eRight_Left.leftFace;
+		let fTop: DDLSFace = eLeft_Right.leftFace;
+		let fBot: DDLSFace = eRight_Left.leftFace;
 
 		// check distance from the position to edge end points
 		if ((vLeft.pos.x - x) * (vLeft.pos.x - x) + (vLeft.pos.y - y) * (vLeft.pos.y - y) <= DDLSConstants.EPSILON_SQUARED)
@@ -698,22 +700,22 @@ export class DDLSMesh {
 			return vRight;
 
 		// create new objects
-		var vCenter: DDLSVertex = new DDLSVertex();
+		let vCenter: DDLSVertex = new DDLSVertex();
 
-		var eTop_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Top: DDLSEdge = new DDLSEdge();
-		var eBot_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Bot: DDLSEdge = new DDLSEdge();
+		let eTop_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Top: DDLSEdge = new DDLSEdge();
+		let eBot_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Bot: DDLSEdge = new DDLSEdge();
 
-		var eLeft_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Left: DDLSEdge = new DDLSEdge();
-		var eRight_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Right: DDLSEdge = new DDLSEdge();
+		let eLeft_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Left: DDLSEdge = new DDLSEdge();
+		let eRight_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Right: DDLSEdge = new DDLSEdge();
 
-		var fTopLeft: DDLSFace = new DDLSFace();
-		var fBotLeft: DDLSFace = new DDLSFace();
-		var fBotRight: DDLSFace = new DDLSFace();
-		var fTopRight: DDLSFace = new DDLSFace();
+		let fTopLeft: DDLSFace = new DDLSFace();
+		let fBotLeft: DDLSFace = new DDLSFace();
+		let fBotRight: DDLSFace = new DDLSFace();
+		let fTopRight: DDLSFace = new DDLSFace();
 
 		// add the new vertex
 		this._vertices.push(vCenter);
@@ -777,15 +779,15 @@ export class DDLSMesh {
 		// - update the segments the edge is from by deleting the old edge and inserting the 2 new
 		// - add the segments the edge is from to the new vertex
 		if (eLeft_Right.isConstrained) {
-			var fromSegments: Array<DDLSConstraintSegment> = eLeft_Right.fromConstraintSegments;
+			let fromSegments: Array<DDLSConstraintSegment> = eLeft_Right.fromConstraintSegments;
 			eLeft_Center.fromConstraintSegments = fromSegments.slice(0);
 			eCenter_Left.fromConstraintSegments = eLeft_Center.fromConstraintSegments;
 			eCenter_Right.fromConstraintSegments = fromSegments.slice(0);
 			eRight_Center.fromConstraintSegments = eCenter_Right.fromConstraintSegments;
 
-			var edges: Array<DDLSEdge>;
-			var index: number;
-			for (var i = 0; i < eLeft_Right.fromConstraintSegments.length; i++) {
+			let edges: Array<DDLSEdge>;
+			let index: number;
+			for (let i = 0; i < eLeft_Right.fromConstraintSegments.length; i++) {
 				edges = eLeft_Right.fromConstraintSegments[i].edges;
 				index = edges.indexOf(eLeft_Right);
 				if (index != -1)
@@ -824,27 +826,27 @@ export class DDLSMesh {
 		this.__edgesToCheck.splice(0, this.__edgesToCheck.length);
 
 		// retrieve useful objects
-		var eTop_Left: DDLSEdge = face.edge;
-		var eLeft_Right: DDLSEdge = eTop_Left.nextLeftEdge;
-		var eRight_Top: DDLSEdge = eLeft_Right.nextLeftEdge;
+		let eTop_Left: DDLSEdge = face.edge;
+		let eLeft_Right: DDLSEdge = eTop_Left.nextLeftEdge;
+		let eRight_Top: DDLSEdge = eLeft_Right.nextLeftEdge;
 
-		var vTop: DDLSVertex = eTop_Left.originVertex;
-		var vLeft: DDLSVertex = eLeft_Right.originVertex;
-		var vRight: DDLSVertex = eRight_Top.originVertex;
+		let vTop: DDLSVertex = eTop_Left.originVertex;
+		let vLeft: DDLSVertex = eLeft_Right.originVertex;
+		let vRight: DDLSVertex = eRight_Top.originVertex;
 
 		// create new objects
-		var vCenter: DDLSVertex = new DDLSVertex();
+		let vCenter: DDLSVertex = new DDLSVertex();
 
-		var eTop_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Top: DDLSEdge = new DDLSEdge();
-		var eLeft_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Left: DDLSEdge = new DDLSEdge();
-		var eRight_Center: DDLSEdge = new DDLSEdge();
-		var eCenter_Right: DDLSEdge = new DDLSEdge();
+		let eTop_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Top: DDLSEdge = new DDLSEdge();
+		let eLeft_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Left: DDLSEdge = new DDLSEdge();
+		let eRight_Center: DDLSEdge = new DDLSEdge();
+		let eCenter_Right: DDLSEdge = new DDLSEdge();
 
-		var fTopLeft: DDLSFace = new DDLSFace();
-		var fBot: DDLSFace = new DDLSFace();
-		var fTopRight: DDLSFace = new DDLSFace();
+		let fTopLeft: DDLSFace = new DDLSFace();
+		let fBot: DDLSFace = new DDLSFace();
+		let fTopRight: DDLSFace = new DDLSFace();
 
 		// add the new vertex
 		this._vertices.push(vCenter);
@@ -902,7 +904,7 @@ export class DDLSMesh {
 	}
 
 	RestoreAsDelaunay(): void {
-		var edge: DDLSEdge;
+		let edge: DDLSEdge;
 		while (this.__edgesToCheck.length) {
 			edge = this.__edgesToCheck.shift();
 			if (edge.isReal && !edge.isConstrained && !DDLSGeom2D.IsDelaunay(edge)) {
@@ -924,20 +926,25 @@ export class DDLSMesh {
 	// - it is free of constraint segment (no adjacency to any constrained edge)
 	// - it is adjacent to exactly 2 contrained edges and is not an end point of any constraint segment
 	DeleteVertex(vertex: DDLSVertex): Boolean {
-		//trace("tryToDeleteVertex id", vertex.id);
-		var i: number;
-		var freeOfConstraint: Boolean;
-		var iterEdges: IteratorFromVertexToOutgoingEdges = new IteratorFromVertexToOutgoingEdges();
+		//console.log("tryToDeleteVertex id", vertex.id);
+		let i: number;
+		let freeOfConstraint: Boolean;
+		let iterEdges: IteratorFromVertexToOutgoingEdges = new IteratorFromVertexToOutgoingEdges();
 		iterEdges.fromVertex = vertex;
 		iterEdges.realEdgesOnly = false;
-		var edge: DDLSEdge;
-		var outgoingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let edge: DDLSEdge;
+		let outgoingEdges: Array<DDLSEdge> = new Array<DDLSEdge>();
+
+		let boundA: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let boundB: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let realA: boolean;
+		let realB: boolean;
 
 		freeOfConstraint = vertex.fromConstraintSegments.length == 0;
 
-		//trace("  -> freeOfConstraint", freeOfConstraint);
+		//console.log("  -> freeOfConstraint", freeOfConstraint);
 
-		var bound: Array<DDLSEdge> = new Array<DDLSEdge>();
+		let bound: Array<DDLSEdge> = new Array<DDLSEdge>();
 		if (freeOfConstraint) {
 			while (edge = iterEdges.Next()) {
 				outgoingEdges.push(edge);
@@ -946,40 +953,36 @@ export class DDLSMesh {
 		}
 		else {
 			// we check if the vertex is an end point of a constraint segment
-			var edges: Array<DDLSEdge>;
+			let edges: Array<DDLSEdge>;
 			for (i = 0; i < vertex.fromConstraintSegments.length; i++) {
 				edges = vertex.fromConstraintSegments[i].edges;
 				if (edges[0].originVertex == vertex
 					|| edges[edges.length - 1].destinationVertex == vertex) {
-					//trace("  -> is end point of a constraint segment");
+					//console.log("  -> is end point of a constraint segment");
 					return false;
 				}
 			}
 
 			// we check the count of adjacent constrained edges
-			var count: number = 0;
+			let count: number = 0;
 			while (edge = iterEdges.Next()) {
 				outgoingEdges.push(edge);
 
 				if (edge.isConstrained) {
 					count++;
 					if (count > 2) {
-						//trace("  -> count of adjacent constrained edges", count);
+						//console.log("  -> count of adjacent constrained edges", count);
 						return false;
 					}
 				}
 			}
 
 			// if not disqualified, then we can process
-			//trace("process vertex deletion");
-			var boundA: Array<DDLSEdge> = new Array<DDLSEdge>();
-			var boundB: Array<DDLSEdge> = new Array<DDLSEdge>();
-			var constrainedEdgeA: DDLSEdge;
-			var constrainedEdgeB: DDLSEdge;
-			var edgeA: DDLSEdge = new DDLSEdge();
-			var edgeB: DDLSEdge = new DDLSEdge();
-			var realA: boolean;
-			var realB: boolean;
+			//console.log("process vertex deletion");
+			let constrainedEdgeA: DDLSEdge;
+			let constrainedEdgeB: DDLSEdge;
+			let edgeA: DDLSEdge = new DDLSEdge();
+			let edgeB: DDLSEdge = new DDLSEdge();
 			this._edges.push(edgeA);
 			this._edges.push(edgeB);
 			for (i = 0; i < outgoingEdges.length; i++) {
@@ -1014,7 +1017,7 @@ export class DDLSMesh {
 			// we update the segments infos
 			edgeA.fromConstraintSegments = constrainedEdgeA.fromConstraintSegments.slice(0);
 			edgeB.fromConstraintSegments = edgeA.fromConstraintSegments;
-			var index: number;
+			let index: number;
 			for (i = 0; i < vertex.fromConstraintSegments.length; i++) {
 				edges = vertex.fromConstraintSegments[i].edges;
 				index = edges.indexOf(constrainedEdgeA);
@@ -1028,7 +1031,7 @@ export class DDLSMesh {
 		}
 
 		// Deletion of old faces and edges
-		var faceToDelete: DDLSFace;
+		let faceToDelete: DDLSFace;
 		for (i = 0; i < outgoingEdges.length; i++) {
 			edge = outgoingEdges[i];
 
@@ -1049,11 +1052,11 @@ export class DDLSMesh {
 
 		// finally we triangulate
 		if (freeOfConstraint) {
-			//trace("trigger single hole triangulation");
+			//console.log("trigger single hole triangulation");
 			this.Triangulate(bound, true);
 		}
 		else {
-			//trace("trigger dual holes triangulation");
+			//console.log("trigger dual holes triangulation");
 			this.Triangulate(boundA, realA);
 			this.Triangulate(boundB, realB);
 		}
@@ -1070,10 +1073,10 @@ export class DDLSMesh {
 	// edgesList is a list of chained edges oriented from right to left
 	private untriangulate(edgesList: Array<DDLSEdge>): void {
 		// we clean useless faces and adjacent vertices
-		var i: number;
-		var verticesCleaned: Map<DDLSVertex, boolean> = new Map<DDLSVertex, boolean>();
-		var currEdge: DDLSEdge;
-		var outEdge: DDLSEdge;
+		let i: number;
+		let verticesCleaned: Map<DDLSVertex, boolean> = new Map<DDLSVertex, boolean>();
+		let currEdge: DDLSEdge;
+		let outEdge: DDLSEdge;
 		for (i = 0; i < edgesList.length; i++) {
 			currEdge = edgesList[i];
 			//
@@ -1122,11 +1125,11 @@ export class DDLSMesh {
 		}
 		// if the hole is a 3 edges polygon:
 		else if (bound.length == 3) {
-			/*trace("the hole is a 3 edges polygon");
-			trace("  - edge0:", bound[0].originVertex.id, "->", bound[0].destinationVertex.id);
-			trace("  - edge1:", bound[1].originVertex.id, "->", bound[1].destinationVertex.id);
-			trace("  - edge2:", bound[2].originVertex.id, "->", bound[2].destinationVertex.id);*/
-			var f: DDLSFace = new DDLSFace();
+			/*console.log("the hole is a 3 edges polygon");
+			console.log("  - edge0:", bound[0].originVertex.id, "->", bound[0].destinationVertex.id);
+			console.log("  - edge1:", bound[1].originVertex.id, "->", bound[1].destinationVertex.id);
+			console.log("  - edge2:", bound[2].originVertex.id, "->", bound[2].destinationVertex.id);*/
+			let f: DDLSFace = new DDLSFace();
 			f.SetDatas(bound[0], isReal);
 			this._faces.push(f);
 			bound[0].leftFace = f;
@@ -1138,22 +1141,22 @@ export class DDLSMesh {
 		}
 		else // if more than 3 edges, we process recursively:
 		{
-			//trace("the hole has", bound.length, "edges");
+			let i: number;
+			//console.log("the hole has", bound.length, "edges");
 			for (i = 0; i < bound.length; i++) {
-				//trace("  - edge", i, ":", bound[i].originVertex.id, "->", bound[i].destinationVertex.id);
+				//console.log("  - edge", i, ":", bound[i].originVertex.id, "->", bound[i].destinationVertex.id);
 			}
 
-			var baseEdge: DDLSEdge = bound[0];
-			var vertexA: DDLSVertex = baseEdge.originVertex;
-			var vertexB: DDLSVertex = baseEdge.destinationVertex;
-			var vertexC: DDLSVertex;
-			var vertexCheck: DDLSVertex;
-			var circumcenter: DDLSPoint2D = new DDLSPoint2D();
-			var radiusSquared: number;
-			var distanceSquared: number;
-			var isDelaunay: Boolean;
-			var index: number;
-			var i: number;
+			let baseEdge: DDLSEdge = bound[0];
+			let vertexA: DDLSVertex = baseEdge.originVertex;
+			let vertexB: DDLSVertex = baseEdge.destinationVertex;
+			let vertexC: DDLSVertex;
+			let vertexCheck: DDLSVertex;
+			let circumcenter: DDLSPoint2D = new DDLSPoint2D();
+			let radiusSquared: number;
+			let distanceSquared: number;
+			let isDelaunay: Boolean;
+			let index: number;
 			for (i = 2; i < bound.length; i++) {
 				vertexC = bound[i].originVertex;
 				if (DDLSGeom2D.GetRelativePosition2(vertexC.pos.x, vertexC.pos.y, baseEdge) == 1) {
@@ -1163,7 +1166,7 @@ export class DDLSMesh {
 					radiusSquared = (vertexA.pos.x - circumcenter.x) * (vertexA.pos.x - circumcenter.x) + (vertexA.pos.y - circumcenter.y) * (vertexA.pos.y - circumcenter.y);
 					// for perfect regular n-sides polygons, checking strict delaunay circumcircle condition is not possible, so we substract EPSILON to circumcircle radius:
 					radiusSquared -= DDLSConstants.EPSILON_SQUARED;
-					for (var j: number = 2; j < bound.length; j++) {
+					for (let j: number = 2; j < bound.length; j++) {
 						if (j != i) {
 							vertexCheck = bound[j].originVertex;
 							distanceSquared = (vertexCheck.pos.x - circumcenter.x) * (vertexCheck.pos.x - circumcenter.x) + (vertexCheck.pos.y - circumcenter.y) * (vertexCheck.pos.y - circumcenter.y);
@@ -1182,26 +1185,26 @@ export class DDLSMesh {
 			if (!isDelaunay) {
 				// for perfect regular n-sides polygons, checking delaunay circumcircle condition is not possible
 				console.log("NO DELAUNAY FOUND");
-				var s: String = "";
+				let s: String = "";
 				for (i = 0; i < bound.length; i++) {
 					s += bound[i].originVertex.pos.x + " , ";
 					s += bound[i].originVertex.pos.y + " , ";
 					s += bound[i].destinationVertex.pos.x + " , ";
 					s += bound[i].destinationVertex.pos.y + " , ";
 				}
-				//trace(s);
+				//console.log(s);
 
 				index = 2;
 			}
-			//trace("index", index, "on", bound.length);
+			//console.log("index", index, "on", bound.length);
 
-			var edgeA: DDLSEdge;
-			var edgeAopp: DDLSEdge;
-			var edgeB: DDLSEdge;
-			var edgeBopp: DDLSEdge;
-			var boundA: Array<DDLSEdge>;
-			var boundM: Array<DDLSEdge>;
-			var boundB: Array<DDLSEdge>;
+			let edgeA: DDLSEdge;
+			let edgeAopp: DDLSEdge;
+			let edgeB: DDLSEdge;
+			let edgeBopp: DDLSEdge;
+			let boundA: Array<DDLSEdge>;
+			let boundM: Array<DDLSEdge>;
+			let boundB: Array<DDLSEdge>;
 
 			if (index < (bound.length - 1)) {
 				edgeA = new DDLSEdge();
@@ -1237,7 +1240,7 @@ export class DDLSMesh {
 	}
 
 	Debug(): void {
-		var i: number;
+		let i: number;
 		for (i = 0; i < this.__vertices.length; i++) {
 			console.log("-- vertex", this._vertices[i].id);
 			console.log("  edge", this._vertices[i].edge.id, " - ", this._vertices[i].edge);
