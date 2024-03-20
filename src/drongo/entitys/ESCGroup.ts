@@ -23,11 +23,7 @@ export class ESCGroup {
 
     private __id: string;
 
-    constructor() {
-
-    }
-
-    Init(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): void {
+    constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf) {
         this.matcher = allOrAny;
         this.matcherNoneOf = none;
         if (none) {
@@ -37,29 +33,13 @@ export class ESCGroup {
         }
     }
 
+    Destroy(): void {
+        this.matcher = null;
+        this.matcherNoneOf = null;
+        this._entitys = null;
+    }
+    
     get id(): string {
         return this.__id;
-    }
-
-
-    private static __pool: Array<ESCGroup> = [];
-
-    static Create(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): ESCGroup {
-        let result: ESCGroup;
-        if (this.__pool.length) {
-            result = this.__pool.shift();
-        } else {
-            result = new ESCGroup();
-        }
-        result.Init(allOrAny, none);
-        return result;
-    }
-
-    static Recycle(value: ESCGroup): void {
-        let index: number = this.__pool.indexOf(value);
-        if (index >= 0) {
-            throw new Error("重复回收!");
-        }
-        this.__pool.push(value);
     }
 }

@@ -55,6 +55,7 @@ export class ResImpl implements IRes {
     }
 
     GetResRefList(urls: ResURL[], refKey: string, progress?: (progress: number) => void): Promise<ResRef[]> {
+        urls = this.RemoveDuplicates(urls);
         let result: Array<ResRef> = [];
         let promise = new Promise<Array<ResRef>>(
             (resolve, reject) => {
@@ -76,6 +77,7 @@ export class ResImpl implements IRes {
     }
 
     GetResRefMap(urls: ResURL[], refKey: string, result?: Map<string, ResRef>, progress?: (progress: number) => void): Promise<Map<string, ResRef>> {
+        urls = this.RemoveDuplicates(urls);
         result = result || new Map<string, ResRef>();
         let promise = new Promise<Map<string, ResRef>>(
             (resolve, reject) => {
@@ -94,5 +96,27 @@ export class ResImpl implements IRes {
             }
         );
         return promise;
+    }
+
+    private helpMap: Map<string, boolean> = new Map<string, boolean>();
+    /**
+     * 去重
+     * @param urls 
+     * @returns 
+     */
+    private RemoveDuplicates(urls: Array<ResURL>): Array<ResURL> {
+        this.helpMap.clear();
+        let result: Array<ResURL> = [];
+        for (let index = 0; index < urls.length; index++) {
+            const url = urls[index];
+            const urlKey = URL2Key(url);
+            if (this.helpMap.has(urlKey)) {
+                continue;
+            } else {
+                this.helpMap.set(urlKey, true);
+                result.push(url);
+            }
+        }
+        return result;
     }
 }

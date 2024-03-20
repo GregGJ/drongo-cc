@@ -75,6 +75,7 @@ export { BaseConfigAccessor } from "./drongo/configs/BaseConfigAccessor"
 export { ConfigManager } from "./drongo/configs/ConfigManager"
 export { IConfigAccessor } from "./drongo/configs/core/IConfigAccessor"
 export { MapConfigAccessor } from "./drongo/configs/MapConfigAccessor"
+export { OneKeyConfigAccessor } from "./drongo/configs/OneKeyConfigAccessor"
 // export { IConfigManager } from "./drongo/configs/core/IConfigManager"
 
 //containers
@@ -187,7 +188,7 @@ export { Handler } from "./drongo/utils/Handler"
 export { Injector } from "./drongo/utils/Injector"
 export { Tr } from "./drongo/utils/Tr"
 export { StringUtils } from "./drongo/utils/StringUtils"
-
+export { MathUtils } from "./drongo/utils/MathUtils"
 
 //model
 export { SerializationMode } from "./drongo/models/SerializationMode"

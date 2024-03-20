@@ -121,6 +121,7 @@ export class ESCEntity {
             for (let index = 0; index < comList.length; index++) {
                 com = comList[index];
                 this.__world._removeComponent(com);
+                com.Dispose();
             }
         }
         this.__world._removeEntity(this);

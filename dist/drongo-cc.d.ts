@@ -1,4 +1,4 @@
-import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, Texture2D, gfx } from 'cc';
+import { Color, Vec2, Component, Node, Mask, Constructor, EventTarget, Event as Event$1, Size, Sprite, Rect as Rect$1, SpriteFrame, AssetManager, Asset, dragonBones, UITransform, UIOpacity, Graphics, AudioClip, Label, Font, HorizontalTextAlignment, VerticalTextAlignment, RichText, EditBox, sp, Vec3, Texture2D, gfx } from 'cc';
 
 declare class ByteBuffer {
     stringTable: Array<string>;
@@ -3100,6 +3100,17 @@ declare class MapConfigAccessor extends BaseConfigAccessor implements IConfigAcc
 }
 
 /**
+ * 单key存储器默认key="id"
+ */
+declare class OneKeyConfigAccessor extends BaseConfigAccessor {
+    private __map;
+    private __key;
+    constructor(key?: string);
+    Save(value: any): boolean;
+    Get<T>(key: any): T | null;
+}
+
+/**
  * 事件分发器
  */
 interface IEventDispatcher {
@@ -5519,6 +5530,100 @@ declare class StringUtils {
     static GetClassName(value: any): string;
 }
 
+declare class MathUtils {
+    /**
+     * 环形映射
+     * @param value
+     * @param min
+     * @param max
+     */
+    static CircularMapping(value: number, max: number, min?: number): number;
+    /**
+     * 绕点旋转
+     * @param angle
+     * @param point
+     * @param origin
+     * @param out
+     */
+    static RotationFormOrigin(angle: number, point: Vec3, origin: Vec3, out: Vec3): void;
+    /**
+     * 求圆内多边形的中心点的高度
+     * @param l     边长
+     * @param n     内角
+     */
+    static InCirclePolygonCentre(l: number, n: number): number;
+    /**
+     * 随机范围值
+     * @param min
+     * @param max
+     */
+    static RandomRange(min: number, max: number): number;
+    /**
+     * 获取速度分量 从2个点及速度计算
+     * @param currentPoint
+     * @param targetPoint
+     * @param speed
+     * @param result
+     */
+    static getSpeed2dByPoint(currentPoint: Vec2, targetPoint: Vec2, speed: number, result?: Vec2): Vec2;
+    /**
+     * 速度转2维速度
+     * @param angle         角度
+     * @param speed         速度
+     * @param result        结果
+     */
+    static getSpeed2D(angle: number, speed: number, result?: Vec2): Vec2;
+    static getSpeed2DR(radian: number, speed: number, result?: Vec2): Vec2;
+    /**
+     * 根据角度和X轴计算Y轴速度
+     * @param angle
+     * @param speedX
+     * @param result
+     */
+    static getSpeed2DByX(angle: number, speedX: number, result?: Vec2): Vec2;
+    /**
+     * 求旋转后的点坐标
+     * @param angle         角度
+     * @param point         旋转前的坐标点
+     * @param result
+     */
+    static rotationPoint(angle: number, point: {
+        x: number;
+        y: number;
+    }, result: {
+        x: number;
+        y: number;
+    }): void;
+    static getAngle(a: Vec2, b: Vec2): number;
+    static getRadianByPoint(a: Vec2, b: Vec2): number;
+    static getRadian(ax: number, ay: number, bx: number, by: number): number;
+    static angle2Radian(angle: number): number;
+    static radian2Angle(radian: number): number;
+    /**
+     * 计算两线段相交点坐标
+     * @param line1Point1
+     * @param line1Point2
+     * @param line2Point1
+     * @param line2Point2
+     * @return 返回该点
+     */
+    static getIntersectionPoint(line1Point1: Vec2, line1Point2: Vec2, line2Point1: Vec2, line2Point2: Vec2, result?: Vec2): Vec2;
+    /**
+     * 判断点是否在线段内
+     * @param Pi
+     * @param Pj
+     * @param Q
+     */
+    static onSegment(Pi: Vec2, Pj: Vec2, Q: Vec2): boolean;
+    /**
+     * 求两个向量之间的夹角
+     * @param av        单位向量
+     * @param bv        单位向量
+     */
+    static calculateAngle(av: Vec3, bv: Vec3): number;
+    static calculateAngleByPoints(a: Vec3, b: Vec3, c: Vec3): number;
+}
+
 declare enum SerializationMode {
     JSON = 0
 }
@@ -6508,15 +6613,17 @@ declare class ESCGroup {
      */
     _entitys: Dictionary<string, ESCEntity>;
     private __id;
-    constructor();
-    Init(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): void;
+    constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
+    Destroy(): void;
     get id(): string;
-    private static __pool;
-    static Create(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf): ESCGroup;
-    static Recycle(value: ESCGroup): void;
 }
 
 declare class ESCSystem {
+    /**
+     * 所属世界
+     */
+    world: ESCWorld;
+    key: string;
     /**
      * 内部接口
      */
@@ -6526,8 +6633,9 @@ declare class ESCSystem {
      * @param allOrAny  所有或任意一个包含
      * @param none      不能包含
      */
-    constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
+    constructor(key: string, allOrAny?: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
     Tick(time: number): void;
+    Destory(): void;
 }
 
 declare class ESCWorld {
@@ -6537,6 +6645,7 @@ declare class ESCWorld {
     private __entitys;
     /**系统*/
     private __systems;
+    private __time;
     constructor();
     /**
      * 心跳驱动
@@ -6557,6 +6666,12 @@ declare class ESCWorld {
      */
     AddSystem(value: ESCSystem): void;
     /**
+     * 获取系统
+     * @param key
+     * @returns
+     */
+    GetSystem(key: string): ESCSystem | undefined;
+    /**
      * 删除系统
      * @param value
      */
@@ -6566,6 +6681,11 @@ declare class ESCWorld {
      * @param type
      */
     GetComponent(type: number): ESCComponent[];
+    /**
+     * 销毁
+     */
+    Destory(): void;
+    get time(): number;
     _matcherGroup(group: ESCGroup): void;
     /**
      * 内部接口，请勿调用
@@ -6636,7 +6756,7 @@ declare class ESCComponent {
      * 类型
      */
     get type(): number;
-    dispose(): void;
+    Dispose(): void;
 }
 
 declare class Drongo {
@@ -6671,4 +6791,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

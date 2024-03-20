@@ -1,4 +1,4 @@
-import { gfx, UIRenderer, Event, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, screen, view, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, assetManager, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, isValid, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset, color } from 'cc';
+import { gfx, UIRenderer, Event, Vec2, Node, game, director, macro, Color, Layers, Font, resources, Vec3, Rect as Rect$1, UITransform, UIOpacity, Component, Graphics, misc, Sprite, Size, screen, view, ImageAsset, AudioClip, BufferAsset, AssetManager, Asset, assetManager, Texture2D, SpriteFrame, BitmapFont, sp, dragonBones, path, Label, SpriteAtlas, RichText, sys, EventMouse, EventTarget, Mask, math, isValid, View, AudioSourceComponent, EditBox, Overflow, Prefab, instantiate, AudioSource, find, JsonAsset, Quat, Mat4, color } from 'cc';
 import { EDITOR } from 'cc/env';
 
 var ButtonMode;
@@ -19058,6 +19058,7 @@ class CCLoaderImpl extends EventDispatcher {
 
 class ResImpl {
     constructor() {
+        this.helpMap = new Map();
         this.loaderClass = new Map();
     }
     SetResLoader(key, loader) {
@@ -19094,6 +19095,7 @@ class ResImpl {
         return promise;
     }
     GetResRefList(urls, refKey, progress) {
+        urls = this.RemoveDuplicates(urls);
         let result = [];
         let promise = new Promise((resolve, reject) => {
             Loader.single.Load(urls, (err) => {
@@ -19113,6 +19115,7 @@ class ResImpl {
         return promise;
     }
     GetResRefMap(urls, refKey, result, progress) {
+        urls = this.RemoveDuplicates(urls);
         result = result || new Map();
         let promise = new Promise((resolve, reject) => {
             Loader.single.Load(urls, (err) => {
@@ -19130,6 +19133,27 @@ class ResImpl {
             }, progress);
         });
         return promise;
+    }
+    /**
+     * 去重
+     * @param urls
+     * @returns
+     */
+    RemoveDuplicates(urls) {
+        this.helpMap.clear();
+        let result = [];
+        for (let index = 0; index < urls.length; index++) {
+            const url = urls[index];
+            const urlKey = URL2Key(url);
+            if (this.helpMap.has(urlKey)) {
+                continue;
+            }
+            else {
+                this.helpMap.set(urlKey, true);
+                result.push(url);
+            }
+        }
+        return result;
     }
 }
 
@@ -20719,6 +20743,33 @@ class MapConfigAccessor extends BaseConfigAccessor {
         }
         this.$storages.clear();
         this.$storages = null;
+    }
+}
+
+/**
+ * 单key存储器默认key="id"
+ */
+class OneKeyConfigAccessor extends BaseConfigAccessor {
+    constructor(key) {
+        super();
+        if (key == undefined) {
+            key = "id";
+        }
+        this.__key = key;
+        this.__map = new Map();
+    }
+    Save(value) {
+        if (this.__map.has(value[this.__key])) {
+            return false;
+        }
+        this.__map.set(value[this.__key], value);
+        return super.Save(value);
+    }
+    Get(key) {
+        if (!this.__map.has(key)) {
+            return null;
+        }
+        return this.__map.get(key);
     }
 }
 
@@ -25033,6 +25084,198 @@ Tr.lang = "zh-Hans";
  * 语言数据
  */
 Tr.langPacks = {};
+
+class MathUtils {
+    /**
+     * 环形映射
+     * @param value
+     * @param min
+     * @param max
+     */
+    static CircularMapping(value, max, min = 0) {
+        value = value - min;
+        let dis = max - min;
+        if (value < 0) {
+            return dis + value % dis;
+        }
+        return value % dis;
+    }
+    /**
+     * 绕点旋转
+     * @param angle
+     * @param point
+     * @param origin
+     * @param out
+     */
+    static RotationFormOrigin(angle, point, origin, out) {
+        //旋转
+        let q = new Quat();
+        Quat.fromEuler(q, 0, 0, angle);
+        let m = new Mat4();
+        Mat4.fromRTSOrigin(m, q, Vec3.ZERO, new Vec3(1, 1, 1), origin);
+        //应用矩阵
+        Vec3.transformMat4(out, point, m);
+    }
+    /**
+     * 求圆内多边形的中心点的高度
+     * @param l     边长
+     * @param n     内角
+     */
+    static InCirclePolygonCentre(l, n) {
+        let hl = l * 0.5;
+        let angle = n * 0.5;
+        //角度转弧度
+        let radian = this.angle2Radian(angle);
+        let value = hl / Math.tanh(radian);
+        return value;
+    }
+    /**
+     * 随机范围值
+     * @param min
+     * @param max
+     */
+    static RandomRange(min, max) {
+        return min + Math.random() * (max - min);
+    }
+    /**
+     * 获取速度分量 从2个点及速度计算
+     * @param currentPoint
+     * @param targetPoint
+     * @param speed
+     * @param result
+     */
+    static getSpeed2dByPoint(currentPoint, targetPoint, speed, result) {
+        if (result == null) {
+            result = new Vec2();
+        }
+        let angle = this.getRadian(targetPoint.x, targetPoint.y, currentPoint.x, currentPoint.y);
+        this.getSpeed2DR(angle, speed, result);
+        return result;
+    }
+    /**
+     * 速度转2维速度
+     * @param angle         角度
+     * @param speed         速度
+     * @param result        结果
+     */
+    static getSpeed2D(angle, speed, result = null) {
+        //角度转弧度
+        let radian = angle * (Math.PI / 180);
+        return this.getSpeed2DR(radian, speed, result);
+    }
+    static getSpeed2DR(radian, speed, result = null) {
+        if (result == null) {
+            result = new Vec2();
+        }
+        result.x = Math.cos(radian) * speed;
+        result.y = Math.sin(radian) * speed;
+        return result;
+    }
+    /**
+     * 根据角度和X轴计算Y轴速度
+     * @param angle
+     * @param speedX
+     * @param result
+     */
+    static getSpeed2DByX(angle, speedX, result = null) {
+        if (result == null) {
+            result = new Vec2();
+        }
+        //角度转弧度
+        let radian = angle * (Math.PI / 180);
+        //求出斜边的长度
+        let leg = speedX / Math.cos(radian);
+        result.x = speedX;
+        result.y = Math.sin(radian) * leg;
+        return result;
+    }
+    /**
+     * 求旋转后的点坐标
+     * @param angle         角度
+     * @param point         旋转前的坐标点
+     * @param result
+     */
+    static rotationPoint(angle, point, result) {
+        //角度转弧度
+        angle = angle * (Math.PI / 180);
+        result.x = Math.cos(angle) * point.x - Math.sin(angle) * point.y;
+        result.y = Math.cos(angle) * point.y + Math.sin(angle) * point.x;
+    }
+    static getAngle(a, b) {
+        return this.getRadianByPoint(a, b) * (180 / Math.PI);
+    }
+    static getRadianByPoint(a, b) {
+        return Math.atan2((a.y - b.y), (a.x - b.x));
+    }
+    static getRadian(ax, ay, bx, by) {
+        return Math.atan2(ay - by, ax - bx);
+    }
+    static angle2Radian(angle) {
+        return angle * (Math.PI / 180);
+    }
+    static radian2Angle(radian) {
+        return radian * (180 / Math.PI);
+    }
+    /**
+     * 计算两线段相交点坐标
+     * @param line1Point1
+     * @param line1Point2
+     * @param line2Point1
+     * @param line2Point2
+     * @return 返回该点
+     */
+    static getIntersectionPoint(line1Point1, line1Point2, line2Point1, line2Point2, result) {
+        if (!result) {
+            result = new Vec2();
+        }
+        let x1, y1, x2, y2, x3, y3, x4, y4;
+        x1 = line1Point1.x;
+        y1 = line1Point1.y;
+        x2 = line1Point2.x;
+        y2 = line1Point2.y;
+        x3 = line2Point1.x;
+        y3 = line2Point1.y;
+        x4 = line2Point2.x;
+        y4 = line2Point2.y;
+        result.x = Math.ceil((x1 - x2) * (x3 * y4 - x4 * y3) - (x3 - x4) * (x1 * y2 - x2 * y1)) / ((x3 - x4) * (y1 - y2) - (x1 - x2) * (y3 - y4));
+        result.y = Math.ceil((y1 - y2) * (x3 * y4 - x4 * y3) - (x1 * y2 - x2 * y1) * (y3 - y4)) / ((y1 - y2) * (x3 - x4) - (x1 - x2) * (y3 - y4));
+        return result;
+    }
+    /**
+     * 判断点是否在线段内
+     * @param Pi
+     * @param Pj
+     * @param Q
+     */
+    static onSegment(Pi, Pj, Q) {
+        Q.x = Math.round(Q.x);
+        Q.y = Math.round(Q.y);
+        let xValue = (Q.x - Pi.x) * (Pj.y - Pi.y) - (Pj.x - Pi.x) * (Q.y - Pi.y);
+        if (Math.floor(xValue) == 0
+            //保证Q点坐标在pi,pj之间 
+            && Math.min(Pi.x, Pj.x) <= Q.x && Q.x <= Math.max(Pi.x, Pj.x)
+            && Math.min(Pi.y, Pj.y) <= Q.y && Q.y <= Math.max(Pi.y, Pj.y)) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 求两个向量之间的夹角
+     * @param av        单位向量
+     * @param bv        单位向量
+     */
+    static calculateAngle(av, bv) {
+        //cos=a.b/(|a||b|);
+        return Math.acos(Vec3.dot(av, bv) / (av.length() * bv.length()));
+    }
+    static calculateAngleByPoints(a, b, c) {
+        let av = new Vec3();
+        let bv = new Vec3();
+        Vec3.subtract(b, a, av);
+        Vec3.subtract(b, c, bv);
+        return this.calculateAngle(av, bv);
+    }
+}
 
 var SerializationMode;
 (function (SerializationMode) {
@@ -31044,7 +31287,7 @@ class ESCComponent {
     get type() {
         return 0;
     }
-    dispose() {
+    Dispose() {
     }
 }
 
@@ -31146,6 +31389,7 @@ class ESCEntity {
             for (let index = 0; index < comList.length; index++) {
                 com = comList[index];
                 this.__world._removeComponent(com);
+                com.Dispose();
             }
         }
         this.__world._removeEntity(this);
@@ -31181,13 +31425,11 @@ class ESCEntity {
 }
 
 class ESCGroup {
-    constructor() {
+    constructor(allOrAny, none) {
         /**
          * 编组所匹配的元素(内部接口)
          */
         this._entitys = new Dictionary();
-    }
-    Init(allOrAny, none) {
         this.matcher = allOrAny;
         this.matcherNoneOf = none;
         if (none) {
@@ -31197,43 +31439,33 @@ class ESCGroup {
             this.__id = "id:" + this.matcher.flags;
         }
     }
+    Destroy() {
+        this.matcher = null;
+        this.matcherNoneOf = null;
+        this._entitys = null;
+    }
     get id() {
         return this.__id;
     }
-    static Create(allOrAny, none) {
-        let result;
-        if (this.__pool.length) {
-            result = this.__pool.shift();
-        }
-        else {
-            result = new ESCGroup();
-        }
-        result.Init(allOrAny, none);
-        return result;
-    }
-    static Recycle(value) {
-        let index = this.__pool.indexOf(value);
-        if (index >= 0) {
-            throw new Error("重复回收!");
-        }
-        this.__pool.push(value);
-    }
 }
-ESCGroup.__pool = [];
 
 class ESCWorld {
     constructor() {
+        this.__time = 0;
         this.__components = new Dictionary();
         this.__entitys = new Dictionary();
-        this.__systems = [];
+        this.__systems = new Dictionary();
     }
     /**
      * 心跳驱动
      * @param time
      */
     Tick(time) {
-        for (let system of this.__systems) {
-            system.Tick(time);
+        this.__time += time;
+        let list = this.__systems.elements;
+        for (let index = 0; index < list.length; index++) {
+            const sys = list[index];
+            sys.Tick(time);
         }
     }
     /**
@@ -31255,26 +31487,36 @@ class ESCWorld {
      * 添加系统
      */
     AddSystem(value) {
-        let index = this.__systems.indexOf(value);
-        if (index >= 0) {
+        if (this.__systems.Has(value.key)) {
             throw new Error("重复添加系统");
         }
-        this.__systems.push(value);
+        value.world = this;
+        this.__systems.Set(value.key, value);
+        if (!value._group) {
+            return;
+        }
         //按照编组规则匹配
         this._matcherGroup(value._group);
+    }
+    /**
+     * 获取系统
+     * @param key
+     * @returns
+     */
+    GetSystem(key) {
+        return this.__systems.Get(key);
     }
     /**
      * 删除系统
      * @param value
      */
     RemoveSystem(value) {
-        let index = this.__systems.indexOf(value);
-        if (index < 0) {
+        if (!this.__systems.Has(value.key)) {
             throw new Error("找不到要删除的系统");
         }
-        this.__systems.splice(index, 1);
-        //回收
-        ESCGroup.Recycle(value._group);
+        this.__systems.Delete(value.key);
+        value.world = null;
+        value.Destory();
     }
     /**
      * 根据类型获取组件列表
@@ -31282,6 +31524,28 @@ class ESCWorld {
      */
     GetComponent(type) {
         return this.__components.Get(type);
+    }
+    /**
+     * 销毁
+     */
+    Destory() {
+        let list = this.__entitys.elements;
+        for (let index = 0; index < list.length; index++) {
+            const entity = list[index];
+            entity.Dispose();
+        }
+        this.__entitys.Clear();
+        this.__entitys = null;
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const sys = systems[index];
+            sys.Destory();
+        }
+        this.__systems.Clear();
+        this.__systems = null;
+    }
+    get time() {
+        return this.__time;
     }
     //=====================================内部接口=======================================================//
     _matcherGroup(group) {
@@ -31311,8 +31575,12 @@ class ESCWorld {
             throw new Error("重复添加组件！");
         }
         list.push(com);
-        for (let index = 0; index < this.__systems.length; index++) {
-            const system = this.__systems[index];
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const system = systems[index];
+            if (!system._group) {
+                continue;
+            }
             //已经在里面了，就不管这个组了
             if (system._group._entitys.Has(com.entity.id)) {
                 continue;
@@ -31335,9 +31603,13 @@ class ESCWorld {
         if (index < 0) {
             throw new Error("找不到要删除的组件");
         }
-        list.splice(index, 0);
-        for (let index = 0; index < this.__systems.length; index++) {
-            const system = this.__systems[index];
+        list.splice(index, 1);
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const system = systems[index];
+            if (!system._group) {
+                continue;
+            }
             if (system._group._entitys.Has(com.entity.id)) {
                 system._group._entitys.Delete(com.entity.id);
             }
@@ -31361,11 +31633,19 @@ class ESCSystem {
      * @param allOrAny  所有或任意一个包含
      * @param none      不能包含
      */
-    constructor(allOrAny, none) {
-        this._group = ESCGroup.Create(allOrAny, none);
+    constructor(key, allOrAny, none) {
+        this.key = key;
+        if (allOrAny != undefined || none != undefined) {
+            this._group = new ESCGroup(allOrAny, none);
+        }
     }
     Tick(time) {
     }
+    Destory() {
+        this._group.Destroy();
+        this._group = null;
+        this.world = null;
+    }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

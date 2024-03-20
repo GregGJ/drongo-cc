@@ -15,12 +15,13 @@ export class ESCWorld {
     private __entitys: Dictionary<string, ESCEntity>;
 
     /**系统*/
-    private __systems: ESCSystem[];
+    private __systems: Dictionary<string, ESCSystem>;
 
+    private __time: number = 0;
     constructor() {
         this.__components = new Dictionary<number, Array<ESCComponent>>();
         this.__entitys = new Dictionary<string, ESCEntity>();
-        this.__systems = [];
+        this.__systems = new Dictionary<string, ESCSystem>();
     }
 
     /**
@@ -28,8 +29,11 @@ export class ESCWorld {
      * @param time 
      */
     public Tick(time: number): void {
-        for (let system of this.__systems) {
-            system.Tick(time);
+        this.__time += time;
+        let list = this.__systems.elements;
+        for (let index = 0; index < list.length; index++) {
+            const sys = list[index];
+            sys.Tick(time);
         }
     }
 
@@ -54,28 +58,38 @@ export class ESCWorld {
      * 添加系统 
      */
     AddSystem(value: ESCSystem): void {
-        let index: number = this.__systems.indexOf(value);
-        if (index >= 0) {
+        if (this.__systems.Has(value.key)) {
             throw new Error("重复添加系统");
         }
-        this.__systems.push(value);
+        value.world = this;
+        this.__systems.Set(value.key, value);
+        if (!value._group) {
+            return;
+        }
         //按照编组规则匹配
         this._matcherGroup(value._group);
     }
 
+    /**
+     * 获取系统
+     * @param key 
+     * @returns 
+     */
+    GetSystem(key: string): ESCSystem | undefined {
+        return this.__systems.Get(key);
+    }
 
     /**
      * 删除系统
      * @param value 
      */
     RemoveSystem(value: ESCSystem): void {
-        let index: number = this.__systems.indexOf(value);
-        if (index < 0) {
+        if (!this.__systems.Has(value.key)) {
             throw new Error("找不到要删除的系统");
         }
-        this.__systems.splice(index, 1);
-        //回收
-        ESCGroup.Recycle(value._group);
+        this.__systems.Delete(value.key);
+        value.world = null;
+        value.Destory();
     }
 
     /**
@@ -86,6 +100,30 @@ export class ESCWorld {
         return this.__components.Get(type);
     }
 
+    /**
+     * 销毁
+     */
+    Destory(): void {
+        let list = this.__entitys.elements;
+        for (let index = 0; index < list.length; index++) {
+            const entity = list[index];
+            entity.Dispose();
+        }
+        this.__entitys.Clear();
+        this.__entitys = null;
+
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const sys = systems[index];
+            sys.Destory();
+        }
+        this.__systems.Clear();
+        this.__systems = null;
+    }
+
+    get time(): number {
+        return this.__time;
+    }
     //=====================================内部接口=======================================================//
 
 
@@ -135,8 +173,12 @@ export class ESCWorld {
             throw new Error("重复添加组件！");
         }
         list.push(com);
-        for (let index = 0; index < this.__systems.length; index++) {
-            const system = this.__systems[index];
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const system = systems[index];
+            if (!system._group) {
+                continue;
+            }
             //已经在里面了，就不管这个组了
             if (system._group._entitys.Has(com.entity.id)) {
                 continue;
@@ -160,9 +202,13 @@ export class ESCWorld {
         if (index < 0) {
             throw new Error("找不到要删除的组件");
         }
-        list.splice(index, 0);
-        for (let index = 0; index < this.__systems.length; index++) {
-            const system = this.__systems[index];
+        list.splice(index, 1);
+        let systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const system = systems[index];
+            if (!system._group) {
+                continue;
+            }
             if (system._group._entitys.Has(com.entity.id)) {
                 system._group._entitys.Delete(com.entity.id);
             }

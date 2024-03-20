@@ -3,7 +3,6 @@ import { ESCEntity } from "./ESCEntity";
 
 
 export class ESCComponent {
-
     /**
      * 所属实体
      */
@@ -16,7 +15,7 @@ export class ESCComponent {
         return 0;
     }
 
-    public dispose(): void {
+    public Dispose(): void {
         
     }
 }
