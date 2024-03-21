@@ -18301,6 +18301,13 @@ class Dictionary extends EventDispatcher {
         this.__map.clear();
         this.__list.length = 0;
     }
+    getKeys() {
+        let result = [];
+        for (const iterator of this.__map.keys()) {
+            result.push(iterator);
+        }
+        return result;
+    }
     /**
     * 元素列表
     */
@@ -31253,11 +31260,31 @@ class DDLSSimpleView {
     }
 }
 
+class ESCComponent {
+    static GetType(value) {
+        if (this.TYPES.has(value)) {
+            return this.TYPES.get(value);
+        }
+        this.TYPE_IDX++;
+        let result = Math.pow(2, this.TYPE_IDX);
+        this.TYPES.set(value, result);
+        return result;
+    }
+    constructor() {
+    }
+    Dispose() {
+    }
+}
+ESCComponent.TYPES = new Map();
+ESCComponent.TYPE_IDX = 0;
+
 class Matcher extends BitFlag {
-    constructor(flags) {
+    constructor(types) {
         super();
-        for (let index = 0; index < flags.length; index++) {
-            this.Add(flags[index]);
+        this.types = types;
+        for (let index = 0; index < types.length; index++) {
+            const flag = ESCComponent.GetType(types[index]);
+            this.Add(flag);
         }
     }
 }
@@ -31280,95 +31307,57 @@ class MatcherAnyOf extends Matcher {
 class MatcherNoneOf extends Matcher {
 }
 
-class ESCComponent {
-    /**
-     * 类型
-     */
-    get type() {
-        return 0;
-    }
-    Dispose() {
-    }
-}
-
 class ESCEntity {
     constructor(id, world) {
         this.__id = id;
         this.__world = world;
-        this.__components = new Dictionary();
+        this.__components = new Dictionary;
         this.__componentFlags = new BitFlag();
     }
     /**
      * 添加组件
      * @param value
      */
-    AddComponent(value) {
-        let list = this.__components.Get(value.type);
-        if (list) {
-            let index = list.indexOf(value);
-            if (index >= 0) {
-                throw new Error("重复添加Component到Entity");
-            }
+    AddComponent(type) {
+        if (this.__components.Has(type)) {
+            throw new Error("重复添加Component到Entity");
         }
-        else {
-            list = [];
-            this.__components.Set(value.type, list);
-        }
-        let world = true;
-        //如果已经在实体上
-        if (value.entity) {
-            value.entity.__removeComponent(value, false);
-            world = false;
-        }
+        let value = new type();
+        this.__components.Set(type, value);
         value.entity = this;
-        list.push(value);
-        this.__componentFlags.Add(value.type);
-        if (world) {
-            this.__world._addComponent(value);
-        }
+        const flag = ESCComponent.GetType(type);
+        this.__componentFlags.Add(flag);
+        this.__world._addComponent(type, value);
         return value;
     }
     /**
      * 删除组件
      * @param id
      */
-    RemoveComponent(value) {
-        this.__removeComponent(value, true);
+    RemoveComponent(type) {
+        let result = this.__components.Get(type);
+        if (!result) {
+            return;
+        }
+        const flag = ESCComponent.GetType(type);
+        this.__componentFlags.Remove(flag);
+        this.__components.Delete(type);
+        this.__world._removeComponent(type, result);
+        return result;
     }
     /**
      * 获取组件
      * @param type
      */
     GetComponent(type) {
-        let list = this.__components.Get(type);
-        if (list && list.length > 0) {
-            return list[0];
-        }
-        return null;
-    }
-    /**
-     * 获取组件列表
-     * @param type
-     * @returns
-     */
-    GetComponents(type) {
         return this.__components.Get(type);
     }
-    __removeComponent(value, world) {
-        let list = this.__components.Get(value.type);
-        if (list == null && list.length == 0) {
-            throw new Error("该组件不是属于Entity:" + this.__id);
-        }
-        let index = list.indexOf(value);
-        if (index < 0) {
-            throw new Error("该组件不是属于Entity:" + this.__id);
-        }
-        this.__componentFlags.Remove(value.type);
-        if (world) {
-            this.__world._removeComponent(value);
-        }
-        list.splice(index, 1);
-        value.entity = null;
+    /**
+     * 是否包含某类型的组件
+     * @param type
+     */
+    HasComponent(type) {
+        return this.__components.Has(type);
     }
     /**
      * 唯一ID
@@ -31381,16 +31370,11 @@ class ESCEntity {
      */
     Dispose() {
         //从世界中删除组件记录
-        let components = this.__components.elements;
-        let comList;
-        let com;
-        for (let index = 0; index < components.length; index++) {
-            comList = components[index];
-            for (let index = 0; index < comList.length; index++) {
-                com = comList[index];
-                this.__world._removeComponent(com);
-                com.Dispose();
-            }
+        let keys = this.__components.getKeys();
+        for (let index = 0; index < keys.length; index++) {
+            const key = keys[index];
+            const com = this.RemoveComponent(key);
+            com.Dispose();
         }
         this.__world._removeEntity(this);
         this.__components = null;
@@ -31484,6 +31468,13 @@ class ESCWorld {
         return this.__entitys.Get(id);
     }
     /**
+     * 获取所有元素
+     * @returns
+     */
+    GetEntitys() {
+        return this.__entitys.elements;
+    }
+    /**
      * 添加系统
      */
     AddSystem(value) {
@@ -31551,7 +31542,7 @@ class ESCWorld {
     _matcherGroup(group) {
         //通过主匹配规则筛选出最短的
         for (let index = 0; index < group.matcher.elements.length; index++) {
-            group.matcher.elements[index];
+            group.matcher.types[index];
             {
                 continue;
             }
@@ -31564,11 +31555,11 @@ class ESCWorld {
      * 内部接口，请勿调用
      * @param com
      */
-    _addComponent(com) {
-        let list = this.__components.Get(com.type);
+    _addComponent(type, com) {
+        let list = this.__components.Get(type);
         if (list == null) {
             list = [];
-            this.__components.Set(com.type, list);
+            this.__components.Set(type, list);
         }
         let index = list.indexOf(com);
         if (index >= 0) {
@@ -31594,8 +31585,8 @@ class ESCWorld {
      * 内部接口，请勿调用
      * @param com
      */
-    _removeComponent(com) {
-        let list = this.__components.Get(com.type);
+    _removeComponent(type, com) {
+        let list = this.__components.Get(type);
         if (list == null) {
             return;
         }
@@ -31610,7 +31601,8 @@ class ESCWorld {
             if (!system._group) {
                 continue;
             }
-            if (system._group._entitys.Has(com.entity.id)) {
+            //如果该元素在系统匹配中，且当前状态无法匹配则删除。
+            if (system._group._entitys.Has(com.entity.id) && !com.entity._matcherGroup(system._group)) {
                 system._group._entitys.Delete(com.entity.id);
             }
         }

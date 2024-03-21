@@ -1,16 +1,16 @@
 import { Dictionary } from "../containers/Dictionary";
-import { MatcherAllOf } from "./matchers/MatcherAllOf";
 import { BitFlag } from "../utils/BitFlag";
 import { ESCComponent } from "./ESCComponent";
 import { ESCGroup } from "./ESCGroup";
 import { ESCWorld } from "./ESCWorld";
+import { MatcherAllOf } from "./matchers/MatcherAllOf";
 
 
 
 
 export class ESCEntity {
 
-    private __components: Dictionary<number, Array<ESCComponent>>;
+    private __components: Dictionary<new () => ESCComponent, ESCComponent>;
 
     private __world: ESCWorld;
 
@@ -21,37 +21,24 @@ export class ESCEntity {
     constructor(id: string, world: ESCWorld) {
         this.__id = id;
         this.__world = world;
-        this.__components = new Dictionary<number, Array<ESCComponent>>();
+        this.__components = new Dictionary<new () => ESCComponent, ESCComponent>;
         this.__componentFlags = new BitFlag();
     }
-    
+
     /**
      * 添加组件
      * @param value
      */
-    AddComponent(value: ESCComponent): ESCComponent {
-        let list: Array<ESCComponent> = this.__components.Get(value.type);
-        if (list) {
-            let index: number = list.indexOf(value);
-            if (index >= 0) {
-                throw new Error("重复添加Component到Entity");
-            }
-        } else {
-            list = [];
-            this.__components.Set(value.type, list);
+    AddComponent<T extends ESCComponent>(type: new () => T): T {
+        if (this.__components.Has(type)) {
+            throw new Error("重复添加Component到Entity");
         }
-        let world: boolean = true;
-        //如果已经在实体上
-        if (value.entity) {
-            value.entity.__removeComponent(value, false);
-            world = false;
-        }
+        let value = new type();
+        this.__components.Set(type, value);
         value.entity = this;
-        list.push(value);
-        this.__componentFlags.Add(value.type);
-        if (world) {
-            this.__world._addComponent(value);
-        }
+        const flag = ESCComponent.GetType(type);
+        this.__componentFlags.Add(flag);
+        this.__world._addComponent(type, value);
         return value;
     }
 
@@ -59,46 +46,32 @@ export class ESCEntity {
      * 删除组件
      * @param id 
      */
-    RemoveComponent(value: ESCComponent): void {
-        this.__removeComponent(value, true);
+    RemoveComponent<T extends ESCComponent>(type: new () => T): T {
+        let result: T = this.__components.Get(type) as T;
+        if (!result) {
+            return;
+        }
+        const flag = ESCComponent.GetType(type);
+        this.__componentFlags.Remove(flag);
+        this.__components.Delete(type);
+        this.__world._removeComponent(type, result);
+        return result;
     }
 
     /**
      * 获取组件
      * @param type 
      */
-    GetComponent(type: number): ESCComponent {
-        let list: Array<ESCComponent> = this.__components.Get(type);
-        if (list && list.length > 0) {
-            return list[0];
-        }
-        return null;
+    GetComponent<T extends ESCComponent>(type: new () => T): T {
+        return this.__components.Get(type) as T;
     }
 
     /**
-     * 获取组件列表
+     * 是否包含某类型的组件
      * @param type 
-     * @returns 
      */
-    GetComponents(type: number): Array<ESCComponent> {
-        return this.__components.Get(type);
-    }
-
-    private __removeComponent(value: ESCComponent, world: boolean): void {
-        let list: Array<ESCComponent> = this.__components.Get(value.type);
-        if (list == null && list.length == 0) {
-            throw new Error("该组件不是属于Entity:" + this.__id);
-        }
-        let index: number = list.indexOf(value);
-        if (index < 0) {
-            throw new Error("该组件不是属于Entity:" + this.__id);
-        }
-        this.__componentFlags.Remove(value.type);
-        if (world) {
-            this.__world._removeComponent(value);
-        }
-        list.splice(index, 1);
-        value.entity = null;
+    HasComponent<T extends ESCComponent>(type: new () => T): boolean {
+        return this.__components.Has(type);
     }
 
     /**
@@ -113,16 +86,11 @@ export class ESCEntity {
      */
     Dispose(): void {
         //从世界中删除组件记录
-        let components: Array<Array<ESCComponent>> = this.__components.elements;
-        let comList: Array<ESCComponent>;
-        let com: ESCComponent;
-        for (let index = 0; index < components.length; index++) {
-            comList = components[index];
-            for (let index = 0; index < comList.length; index++) {
-                com = comList[index];
-                this.__world._removeComponent(com);
-                com.Dispose();
-            }
+        let keys = this.__components.getKeys();
+        for (let index = 0; index < keys.length; index++) {
+            const key = keys[index];
+            const com = this.RemoveComponent(key);
+            com.Dispose();
         }
         this.__world._removeEntity(this);
         this.__components = null;

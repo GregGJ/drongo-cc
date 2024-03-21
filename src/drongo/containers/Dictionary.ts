@@ -28,12 +28,12 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
                 throw new Error("Dictionary内部逻辑错误！");
             }
             this.__map.delete(key);
-            this.__list.splice(index,1);
-            this.Emit(DEvent.REMOVE,old);
+            this.__list.splice(index, 1);
+            this.Emit(DEvent.REMOVE, old);
         }
-        this.__map.set(key,value);
+        this.__map.set(key, value);
         this.__list.push(value);
-        this.Emit(DEvent.ADD,value);
+        this.Emit(DEvent.ADD, value);
     }
 
     /**
@@ -97,6 +97,14 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
         this.__list.length = 0;
     }
 
+    getKeys(): Array<TKey> {
+        let result: Array<TKey> = [];
+        for (const iterator of this.__map.keys()) {
+            result.push(iterator);
+        }
+        return result;
+    }
+
     /**
     * 元素列表
     */
@@ -107,7 +115,7 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
     public get size(): number {
         return this.__map.size;
     }
-    
+
     Destroy(): void {
         super.Destroy();
         this.__map.clear();

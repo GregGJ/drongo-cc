@@ -3338,6 +3338,7 @@ declare class Dictionary<TKey, TValue> extends EventDispatcher {
      * 清除所有元素
      */
     Clear(): void;
+    getKeys(): Array<TKey>;
     /**
     * 元素列表
     */
@@ -6577,10 +6578,6 @@ interface IMatcher {
     readonly elements: Array<number>;
 }
 
-declare class Matcher extends BitFlag implements IMatcher {
-    constructor(flags: Array<number>);
-}
-
 /**
  * 必须所有成立
  */
@@ -6662,6 +6659,11 @@ declare class ESCWorld {
      */
     GetEntity(id: string): ESCEntity;
     /**
+     * 获取所有元素
+     * @returns
+     */
+    GetEntitys(): Array<ESCEntity>;
+    /**
      * 添加系统
      */
     AddSystem(value: ESCSystem): void;
@@ -6680,7 +6682,7 @@ declare class ESCWorld {
      * 根据类型获取组件列表
      * @param type
      */
-    GetComponent(type: number): ESCComponent[];
+    GetComponent(type: new () => ESCComponent): ESCComponent[];
     /**
      * 销毁
      */
@@ -6691,12 +6693,12 @@ declare class ESCWorld {
      * 内部接口，请勿调用
      * @param com
      */
-    _addComponent(com: ESCComponent): void;
+    _addComponent(type: new () => ESCComponent, com: ESCComponent): void;
     /**
      * 内部接口，请勿调用
      * @param com
      */
-    _removeComponent(com: ESCComponent): void;
+    _removeComponent(type: new () => ESCComponent, com: ESCComponent): void;
     /**
      * 内部接口，请勿调用
      * @param value
@@ -6714,24 +6716,22 @@ declare class ESCEntity {
      * 添加组件
      * @param value
      */
-    AddComponent(value: ESCComponent): ESCComponent;
+    AddComponent<T extends ESCComponent>(type: new () => T): T;
     /**
      * 删除组件
      * @param id
      */
-    RemoveComponent(value: ESCComponent): void;
+    RemoveComponent<T extends ESCComponent>(type: new () => T): T;
     /**
      * 获取组件
      * @param type
      */
-    GetComponent(type: number): ESCComponent;
+    GetComponent<T extends ESCComponent>(type: new () => T): T;
     /**
-     * 获取组件列表
+     * 是否包含某类型的组件
      * @param type
-     * @returns
      */
-    GetComponents(type: number): Array<ESCComponent>;
-    private __removeComponent;
+    HasComponent<T extends ESCComponent>(type: new () => T): boolean;
     /**
      * 唯一ID
      */
@@ -6748,15 +6748,20 @@ declare class ESCEntity {
 }
 
 declare class ESCComponent {
+    static TYPES: Map<new () => ESCComponent, number>;
+    static TYPE_IDX: number;
+    static GetType(value: new () => ESCComponent): number;
     /**
      * 所属实体
      */
     entity: ESCEntity;
-    /**
-     * 类型
-     */
-    get type(): number;
+    constructor();
     Dispose(): void;
+}
+
+declare class Matcher extends BitFlag implements IMatcher {
+    types: Array<new () => ESCComponent>;
+    constructor(types: Array<new () => ESCComponent>);
 }
 
 declare class Drongo {

@@ -9,7 +9,7 @@ import { ESCSystem } from "./ESCSystem";
 export class ESCWorld {
 
     /**组件 */
-    private __components: Dictionary<number, Array<ESCComponent>>;
+    private __components: Dictionary<new () => ESCComponent, Array<ESCComponent>>;
 
     /**实体*/
     private __entitys: Dictionary<string, ESCEntity>;
@@ -19,7 +19,7 @@ export class ESCWorld {
 
     private __time: number = 0;
     constructor() {
-        this.__components = new Dictionary<number, Array<ESCComponent>>();
+        this.__components = new Dictionary<new () => ESCComponent, Array<ESCComponent>>();
         this.__entitys = new Dictionary<string, ESCEntity>();
         this.__systems = new Dictionary<string, ESCSystem>();
     }
@@ -52,6 +52,14 @@ export class ESCWorld {
      */
     GetEntity(id: string): ESCEntity {
         return this.__entitys.Get(id);
+    }
+
+    /**
+     * 获取所有元素
+     * @returns 
+     */
+    GetEntitys(): Array<ESCEntity> {
+        return this.__entitys.elements;
     }
 
     /**
@@ -96,7 +104,7 @@ export class ESCWorld {
      * 根据类型获取组件列表
      * @param type 
      */
-    GetComponent(type: number): ESCComponent[] {
+    GetComponent(type: new () => ESCComponent): ESCComponent[] {
         return this.__components.Get(type);
     }
 
@@ -132,7 +140,7 @@ export class ESCWorld {
         let minList: Array<ESCComponent>;
         //通过主匹配规则筛选出最短的
         for (let index = 0; index < group.matcher.elements.length; index++) {
-            const type = group.matcher.elements[index];
+            const type = group.matcher.types[index];
             if (!comList) {
                 continue;
             }
@@ -162,11 +170,11 @@ export class ESCWorld {
      * 内部接口，请勿调用
      * @param com 
      */
-    _addComponent(com: ESCComponent): void {
-        let list: ESCComponent[] = this.__components.Get(com.type);
+    _addComponent(type: new () => ESCComponent, com: ESCComponent): void {
+        let list: ESCComponent[] = this.__components.Get(type);
         if (list == null) {
             list = [];
-            this.__components.Set(com.type, list);
+            this.__components.Set(type, list);
         }
         let index: number = list.indexOf(com);
         if (index >= 0) {
@@ -193,8 +201,8 @@ export class ESCWorld {
      * 内部接口，请勿调用
      * @param com 
      */
-    _removeComponent(com: ESCComponent): void {
-        let list: ESCComponent[] = this.__components.Get(com.type);
+    _removeComponent(type: new () => ESCComponent, com: ESCComponent): void {
+        let list: ESCComponent[] = this.__components.Get(type);
         if (list == null) {
             return;
         }
@@ -209,7 +217,8 @@ export class ESCWorld {
             if (!system._group) {
                 continue;
             }
-            if (system._group._entitys.Has(com.entity.id)) {
+            //如果该元素在系统匹配中，且当前状态无法匹配则删除。
+            if (system._group._entitys.Has(com.entity.id) && !com.entity._matcherGroup(system._group)) {
                 system._group._entitys.Delete(com.entity.id);
             }
         }

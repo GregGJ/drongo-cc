@@ -1,4 +1,5 @@
 import { BitFlag } from "../../utils/BitFlag";
+import { ESCComponent } from "../ESCComponent";
 import { IMatcher } from "./IMatcher";
 
 
@@ -6,10 +7,14 @@ import { IMatcher } from "./IMatcher";
 
 export class Matcher extends BitFlag implements IMatcher {
 
-    constructor(flags: Array<number>) {
+    types: Array<new () => ESCComponent>;
+
+    constructor(types: Array<new () => ESCComponent>) {
         super();
-        for (let index = 0; index < flags.length; index++) {
-            this.Add(flags[index]);
+        this.types = types;
+        for (let index = 0; index < types.length; index++) {
+            const flag = ESCComponent.GetType(types[index]);
+            this.Add(flag);
         }
     }
 }
