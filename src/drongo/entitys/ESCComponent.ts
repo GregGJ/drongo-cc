@@ -27,7 +27,7 @@ export class ESCComponent {
 
     }
 
-    public Dispose(): void {
+    public Destroy(): void {
         
     }
 }

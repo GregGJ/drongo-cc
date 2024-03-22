@@ -84,13 +84,13 @@ export class ESCEntity {
     /**
      * 销毁
      */
-    Dispose(): void {
+    Destroy(): void {
         //从世界中删除组件记录
         let keys = this.__components.getKeys();
         for (let index = 0; index < keys.length; index++) {
             const key = keys[index];
             const com = this.RemoveComponent(key);
-            com.Dispose();
+            com.Destroy();
         }
         this.__world._removeEntity(this);
         this.__components = null;

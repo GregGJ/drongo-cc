@@ -3,10 +3,12 @@ import { MatcherAnyOf } from "./matchers/MatcherAnyOf";
 import { MatcherNoneOf } from "./matchers/MatcherNoneOf";
 import { ESCGroup } from "./ESCGroup";
 import { ESCWorld } from "./ESCWorld";
+import { ESCEntity } from "./ESCEntity";
 
 
 export class ESCSystem {
 
+    static HELP_LIST: Array<ESCEntity> = [];
     /**
      * 所属世界
      */
@@ -30,13 +32,29 @@ export class ESCSystem {
         }
     }
 
+    /**
+     * 获取当前状态下匹配到的副本
+     * @returns 
+     */
+    GetEntitys(): Array<ESCEntity> {
+        ESCSystem.HELP_LIST.length = 0;
+        let list = this._group._entitys.elements;
+        for (let index = 0; index < list.length; index++) {
+            const entity = list[index];
+            ESCSystem.HELP_LIST[index] = entity;
+        }
+        return ESCSystem.HELP_LIST;
+    }
+
     Tick(time: number): void {
 
     }
 
     Destory(): void {
-        this._group.Destroy();
-        this._group = null;
+        if (this._group) {
+            this._group.Destroy();
+            this._group = null;
+        }
         this.world = null;
     }
 }

@@ -88,6 +88,14 @@ export class ESCWorld {
     }
 
     /**
+     * 获取系统列表
+     * @returns 
+     */
+    GetSystems(): Array<ESCSystem> {
+        return this.__systems.elements;
+    }
+
+    /**
      * 删除系统
      * @param value 
      */
@@ -112,14 +120,8 @@ export class ESCWorld {
      * 销毁
      */
     Destory(): void {
-        let list = this.__entitys.elements;
-        for (let index = 0; index < list.length; index++) {
-            const entity = list[index];
-            entity.Dispose();
-        }
-        this.__entitys.Clear();
+        this.ClearAll();
         this.__entitys = null;
-
         let systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
             const sys = systems[index];
@@ -127,6 +129,18 @@ export class ESCWorld {
         }
         this.__systems.Clear();
         this.__systems = null;
+    }
+
+    /**
+     * 清理所有元素
+     */
+    ClearAll(): void {
+        let list = this.__entitys.elements;
+        while (list.length) {
+            const entity = list[0];
+            entity.Destroy();
+        }
+        this.__entitys.Clear();
     }
 
     get time(): number {
@@ -217,9 +231,14 @@ export class ESCWorld {
             if (!system._group) {
                 continue;
             }
-            //如果该元素在系统匹配中，且当前状态无法匹配则删除。
-            if (system._group._entitys.Has(com.entity.id) && !com.entity._matcherGroup(system._group)) {
-                system._group._entitys.Delete(com.entity.id);
+            if (com.entity._matcherGroup(system._group)) {
+                if (!system._group._entitys.Has(com.entity.id)) {
+                    system._group._entitys.Set(com.entity.id, com.entity);
+                }
+            } else {
+                if (system._group._entitys.Has(com.entity.id)) {
+                    system._group._entitys.Delete(com.entity.id);
+                }
             }
         }
     }

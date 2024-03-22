@@ -6616,6 +6616,7 @@ declare class ESCGroup {
 }
 
 declare class ESCSystem {
+    static HELP_LIST: Array<ESCEntity>;
     /**
      * 所属世界
      */
@@ -6631,6 +6632,11 @@ declare class ESCSystem {
      * @param none      不能包含
      */
     constructor(key: string, allOrAny?: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
+    /**
+     * 获取当前状态下匹配到的副本
+     * @returns
+     */
+    GetEntitys(): Array<ESCEntity>;
     Tick(time: number): void;
     Destory(): void;
 }
@@ -6674,6 +6680,11 @@ declare class ESCWorld {
      */
     GetSystem(key: string): ESCSystem | undefined;
     /**
+     * 获取系统列表
+     * @returns
+     */
+    GetSystems(): Array<ESCSystem>;
+    /**
      * 删除系统
      * @param value
      */
@@ -6687,6 +6698,10 @@ declare class ESCWorld {
      * 销毁
      */
     Destory(): void;
+    /**
+     * 清理所有元素
+     */
+    ClearAll(): void;
     get time(): number;
     _matcherGroup(group: ESCGroup): void;
     /**
@@ -6739,7 +6754,7 @@ declare class ESCEntity {
     /**
      * 销毁
      */
-    Dispose(): void;
+    Destroy(): void;
     /**
      * 是否符合匹配规则
      * @param group
@@ -6756,7 +6771,7 @@ declare class ESCComponent {
      */
     entity: ESCEntity;
     constructor();
-    Dispose(): void;
+    Destroy(): void;
 }
 
 declare class Matcher extends BitFlag implements IMatcher {
