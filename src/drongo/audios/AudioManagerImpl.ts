@@ -215,7 +215,7 @@ export class AudioManagerImpl implements IAudioManager {
         }
     }
 
-    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void {
+    PlaySound(url: ResURL, playedCallBack: ()=>void, volume: number, speed: number, loop: boolean): void {
         let playVolume: number;
         if (this.muteSound || this.mute) {
             playVolume = 0;

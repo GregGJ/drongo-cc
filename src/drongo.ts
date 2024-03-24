@@ -21,6 +21,8 @@ export class Drongo {
 
     /**UI遮罩颜色值 */
     public static MaskColor: Color = new Color(0, 0, 0, 255 * 0.5);
+    /**透明遮罩颜色 */
+    public static AlphaMaskColor: Color = new Color(0, 0, 0, 0);
 
     /**初始化完成回调 */
     private static __callback: (err?: Error) => void;

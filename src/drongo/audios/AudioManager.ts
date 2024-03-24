@@ -120,7 +120,7 @@ export class AudioManager {
      * 播放声音
      * @param value
      */
-    static PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void {
+    static PlaySound(url: ResURL, playedCallBack?: ()=>void, volume: number=1, speed: number=1, loop: boolean=false): void {
         this.impl.PlaySound(url, playedCallBack, volume, speed, loop);
     }
 

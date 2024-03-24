@@ -252,6 +252,9 @@ export { ESCWorld } from "./drongo/entitys/ESCWorld"
 export { ESCSystem } from "./drongo/entitys/ESCSystem"
 
 
+//cmd
+export { CommandManager } from "./drongo/cmd/CommandManager"
+export { ICommand } from "./drongo/cmd/ICommand"
 
 //框架对外接口
 export { Drongo } from "./drongo"

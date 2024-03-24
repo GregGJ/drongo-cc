@@ -2579,7 +2579,7 @@ interface IAudioChannel {
      * @param loop
      * @param speed
      */
-    Play(url: ResURL, playedComplete: Function, volume: number, fade: {
+    Play(url: ResURL, playedComplete: () => void, volume: number, fade: {
         time: number;
         startVolume: number;
         complete?: Function;
@@ -2675,7 +2675,7 @@ declare class AudioManager {
      * 播放声音
      * @param value
      */
-    static PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    static PlaySound(url: ResURL, playedCallBack?: () => void, volume?: number, speed?: number, loop?: boolean): void;
     /**
      * 获取正在播放指定音频的轨道
      * @param url
@@ -2740,7 +2740,7 @@ interface IAudioManager {
      * 播放声音
      * @param value
      */
-    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    PlaySound(url: ResURL, playedCallBack: () => void, volume: number, speed: number, loop: boolean): void;
     /**
      * 获取正在播放指定音频的轨道
      * @param url
@@ -4053,6 +4053,10 @@ interface IGUIInfo {
     comName: string;
     /**UI所属状态 */
     state: GUIState;
+    /**
+     * 遮罩是否全透明
+     */
+    maskAlpha: boolean;
 }
 
 /**
@@ -6779,11 +6783,53 @@ declare class Matcher extends BitFlag implements IMatcher {
     constructor(types: Array<new () => ESCComponent>);
 }
 
+interface ICommand {
+    /**
+     * 执行
+     */
+    Execute(data: any): void;
+    /**
+     * 心跳
+     * @param dt
+     */
+    Tick(dt: number): void;
+}
+
+/**
+ * 命令管理器
+ */
+declare class CommandManager implements ITicker {
+    private __map;
+    private __running;
+    constructor();
+    Tick(dt: number): void;
+    /**
+     * 注册
+     * @param key
+     * @param cmd
+     */
+    Register(key: string, cmd: new () => ICommand): void;
+    /**
+     * 执行
+     * @param key
+     * @param data
+     */
+    Execute(key: string, data: any): void;
+    /**
+     * 删除
+     * @param cmd
+     */
+    Delete(cmd: ICommand): void;
+    Destroy(): void;
+}
+
 declare class Drongo {
     /**UI资源AssetBundle */
     static UIBundle: string;
     /**UI遮罩颜色值 */
     static MaskColor: Color;
+    /**透明遮罩颜色 */
+    static AlphaMaskColor: Color;
     /**初始化完成回调 */
     private static __callback;
     private static __progress;
@@ -6811,4 +6857,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, ICommand, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

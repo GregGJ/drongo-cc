@@ -26,7 +26,7 @@ export class AudioChannelImpl implements IAudioChannel {
 
     private __paused: boolean;
     private __pauseTime: number;
-    private __playedComplete: Function;
+    private __playedComplete: () => void;
 
     private __ref: ResRef;
 
@@ -65,7 +65,7 @@ export class AudioChannelImpl implements IAudioChannel {
         }
     }
 
-    Play(url: ResURL, playedComplete: Function, volume: number, fade?: { time: number, startVolume?: number, complete?: Function, completeStop?: boolean }, loop: boolean = false, speed: number = 1): void {
+    Play(url: ResURL, playedComplete: () => void, volume: number, fade?: { time: number, startVolume?: number, complete?: Function, completeStop?: boolean }, loop: boolean = false, speed: number = 1): void {
         this.__reset();
         this.__url = url;
         this.__playedComplete = playedComplete;

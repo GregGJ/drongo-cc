@@ -19830,7 +19830,7 @@ class AudioManager {
      * 播放声音
      * @param value
      */
-    static PlaySound(url, playedCallBack, volume, speed, loop) {
+    static PlaySound(url, playedCallBack, volume = 1, speed = 1, loop = false) {
         this.impl.PlaySound(url, playedCallBack, volume, speed, loop);
     }
     /**
@@ -22830,6 +22830,8 @@ class Drongo {
 Drongo.UIBundle = "UI";
 /**UI遮罩颜色值 */
 Drongo.MaskColor = new Color(0, 0, 0, 255 * 0.5);
+/**透明遮罩颜色 */
+Drongo.AlphaMaskColor = new Color(0, 0, 0, 0);
 
 class ServiceProxy {
     constructor(service, refs) {
@@ -23982,7 +23984,7 @@ class GUIMediator extends BaseMediator {
             this.__mask = new GGraph();
             this.__mask.touchable = true;
             this.__mask.makeFullScreen();
-            this.__mask.drawRect(0, Color.BLACK, Drongo.MaskColor);
+            this.__mask.drawRect(0, Color.BLACK, this.info.maskAlpha ? Drongo.AlphaMaskColor : Drongo.MaskColor);
             this.viewComponent.addChild(this.__mask);
             if (this.info.modalClose) {
                 this.__mask.onClick(this._maskClickHandler, this);
@@ -31675,4 +31677,57 @@ class ESCSystem {
 }
 ESCSystem.HELP_LIST = [];
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+/**
+ * 命令管理器
+ */
+class CommandManager {
+    constructor() {
+        this.__map = new Map();
+        this.__running = [];
+        TickerManager.AddTicker(this);
+    }
+    Tick(dt) {
+        this.__running.forEach(value => {
+            value.Tick(dt);
+        });
+    }
+    /**
+     * 注册
+     * @param key
+     * @param cmd
+     */
+    Register(key, cmd) {
+        if (this.__map.has(key)) {
+            throw new Error("重复注册：" + key);
+        }
+        this.__map.set(key, cmd);
+    }
+    /**
+     * 执行
+     * @param key
+     * @param data
+     */
+    Execute(key, data) {
+        let CMDClass = this.__map.get(key);
+        let cmd = new CMDClass();
+        cmd.Execute(data);
+        this.__running.push(cmd);
+    }
+    /**
+     * 删除
+     * @param cmd
+     */
+    Delete(cmd) {
+        let index = this.__running.indexOf(cmd);
+        if (index < 0) {
+            throw new Error("找不到要删除的命令" + cmd);
+        }
+        this.__running.splice(index, 1);
+    }
+    Destroy() {
+        this.__map.clear();
+        this.__map = null;
+    }
+}
+
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

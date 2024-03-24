@@ -27,7 +27,7 @@ export interface IAudioChannel {
      * @param loop 
      * @param speed 
      */
-    Play(url: ResURL, playedComplete: Function, volume: number, fade: { time: number, startVolume: number, complete?: Function }, loop: boolean, speed: number): void;
+    Play(url: ResURL, playedComplete: ()=>void, volume: number, fade: { time: number, startVolume: number, complete?: Function }, loop: boolean, speed: number): void;
 
     /**
      * 停止

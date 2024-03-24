@@ -2,7 +2,7 @@ import { GUIState } from "../core/GUIState";
 
 
 
-export interface IGUIInfo{
+export interface IGUIInfo {
     /**
      * UI 全局唯一KEY
      */
@@ -38,4 +38,8 @@ export interface IGUIInfo{
 
     /**UI所属状态 */
     state: GUIState;
+    /**
+     * 遮罩是否全透明
+     */
+    maskAlpha: boolean;
 }

@@ -52,7 +52,7 @@ export interface IAudioManager {
      * 播放声音
      * @param value
      */
-    PlaySound(url: ResURL, playedCallBack: Function, volume: number, speed: number, loop: boolean): void;
+    PlaySound(url: ResURL, playedCallBack: ()=>void, volume: number, speed: number, loop: boolean): void;
 
     /**
      * 获取正在播放指定音频的轨道
