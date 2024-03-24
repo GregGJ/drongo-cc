@@ -31708,6 +31708,9 @@ class CommandManager {
      * @param data
      */
     Execute(key, data) {
+        if (!this.__map.has(key)) {
+            throw new Error("未注册的命令:" + key);
+        }
         let CMDClass = this.__map.get(key);
         let cmd = new CMDClass();
         cmd.Execute(data);

@@ -41,6 +41,9 @@ export class CommandManager implements ITicker {
      * @param data 
      */
     Execute(key: string, data: any): void {
+        if (!this.__map.has(key)) {
+            throw new Error("未注册的命令:" + key);
+        }
         let CMDClass = this.__map.get(key);
         let cmd = new CMDClass();
         cmd.Execute(data);
