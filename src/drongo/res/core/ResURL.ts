@@ -5,7 +5,7 @@ import { StringUtils } from "../../utils/StringUtils";
 /**
  * 资源地址
  */
-export type ResURL = string | { url: string, bundle: string, type: string | any, data?: string };
+export type ResURL = string | { url: string, bundle: string, type: string | any, isChild?: boolean, data?: number | string };
 
 /**
  * 资源地址转唯一KEY
@@ -103,7 +103,7 @@ class ResURLUtils {
     static Key2URL(key: string): ResURL {
         if (key.indexOf("|")) {
             let arr: Array<string> = key.split("|");
-            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]), data: arr.length > 2 ? arr[3] : undefined };
+            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
         }
         return key;
     }
@@ -120,13 +120,15 @@ class ResURLUtils {
         if (typeof url == "string") {
             return url;
         }
+        let ul: string;
         if (url.type == SpriteFrame) {
-            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
+            ul = url.url + "/spriteFrame";
+        } else if (url.type == Texture2D) {
+            ul = url.url + "/texture";
+        } else {
+            ul = url.url;
         }
-        if (url.type == Texture2D) {
-            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
-        }
-        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
+        return ul + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
     }
 
     private static getAndSaveClassName(clazz: any): string {

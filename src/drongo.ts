@@ -86,7 +86,7 @@ export class Drongo {
                         if (typeof url != "string") {
                             //字体
                             if (url.type == Font && url.data != undefined) {
-                                registerFont(url.data, ref.content);
+                                registerFont(url.data.toString(), ref.content);
                             }
                         }
                     }

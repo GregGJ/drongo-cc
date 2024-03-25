@@ -2531,7 +2531,8 @@ type ResURL = string | {
     url: string;
     bundle: string;
     type: string | any;
-    data?: string;
+    isChild?: boolean;
+    data?: number | string;
 };
 /**
  * 资源地址转唯一KEY

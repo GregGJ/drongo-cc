@@ -37,35 +37,38 @@ export class LoaderQueue implements ITicker {
             const url = this.waiting.elements[0];
             const urlKey = URL2Key(url);
             this.waiting.Delete(urlKey);
+            this.__load(url, urlKey);
+        }
+    }
 
-            let loader: ILoader;
-            let loaderClass: new () => ILoader;
-            let type: any;
+    private __load(url: ResURL, urlKey: string): void {
+        let loader: ILoader;
+        let loaderClass: new () => ILoader;
+        let type: any;
+        if (typeof url == "string") {
+            type = "string";
+        } else {
+            type = url.type;
+        }
+        let list = this.pool.get(type);
+        if (list == null) {
+            list = [];
+            this.pool.set(type, list);
+        }
+        if (list.length > 0) {
+            loader = list.shift();
+        } else {
             if (typeof url == "string") {
-                type = "string";
+                loaderClass = Res.GetResLoader("string");
             } else {
-                type = url.type;
+                loaderClass = Res.GetResLoader(url.type);
             }
-            let list = this.pool.get(type);
-            if (list == null) {
-                list = [];
-                this.pool.set(type, list);
-            }
-            if (list.length > 0) {
-                loader = list.shift();
-            } else {
-                if (typeof url == "string") {
-                    loaderClass = Res.GetResLoader("string");
-                } else {
-                    loaderClass = Res.GetResLoader(url.type);
-                }
-                loader = new loaderClass();
-            }
-            if (loader != null) {
-                this.running.Set(urlKey, loader);
-                this.__addEvent(loader);
-                loader.Load(url);
-            }
+            loader = new loaderClass();
+        }
+        if (loader != null) {
+            this.running.Set(urlKey, loader);
+            this.__addEvent(loader);
+            loader.Load(url);
         }
     }
 
@@ -110,6 +113,15 @@ export class LoaderQueue implements ITicker {
 
     Load(url: ResURL): void {
         const urlKey = URL2Key(url);
+        if (typeof url != "string" && url.isChild) {
+            if (this.waiting.Has(urlKey)) {
+                this.waiting.Delete(urlKey);
+            }
+            if (!this.running.Has(urlKey)) {
+                this.__load(url, urlKey);
+            }
+            return;
+        }
         //已经在等待列表中
         if (this.waiting.Has(urlKey)) {
             return;

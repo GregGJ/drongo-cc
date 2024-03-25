@@ -17741,7 +17741,7 @@ class ResURLUtils {
     static Key2URL(key) {
         if (key.indexOf("|")) {
             let arr = key.split("|");
-            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]), data: arr.length > 2 ? arr[3] : undefined };
+            return { url: this._getURL(arr[0]), bundle: arr[1], type: this.getAssetType(arr[2]) };
         }
         return key;
     }
@@ -17757,13 +17757,17 @@ class ResURLUtils {
         if (typeof url == "string") {
             return url;
         }
+        let ul;
         if (url.type == SpriteFrame) {
-            return url.url + "/spriteFrame" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
+            ul = url.url + "/spriteFrame";
         }
-        if (url.type == Texture2D) {
-            return url.url + "/texture" + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
+        else if (url.type == Texture2D) {
+            ul = url.url + "/texture";
         }
-        return url.url + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type) + "|" + (url.data == undefined ? "" : url.data);
+        else {
+            ul = url.url;
+        }
+        return ul + "|" + url.bundle + "|" + this.getAndSaveClassName(url.type);
     }
     static getAndSaveClassName(clazz) {
         let className = StringUtils.GetClassName(clazz);
@@ -18609,37 +18613,40 @@ class LoaderQueue {
             const url = this.waiting.elements[0];
             const urlKey = URL2Key(url);
             this.waiting.Delete(urlKey);
-            let loader;
-            let loaderClass;
-            let type;
+            this.__load(url, urlKey);
+        }
+    }
+    __load(url, urlKey) {
+        let loader;
+        let loaderClass;
+        let type;
+        if (typeof url == "string") {
+            type = "string";
+        }
+        else {
+            type = url.type;
+        }
+        let list = this.pool.get(type);
+        if (list == null) {
+            list = [];
+            this.pool.set(type, list);
+        }
+        if (list.length > 0) {
+            loader = list.shift();
+        }
+        else {
             if (typeof url == "string") {
-                type = "string";
+                loaderClass = Res.GetResLoader("string");
             }
             else {
-                type = url.type;
+                loaderClass = Res.GetResLoader(url.type);
             }
-            let list = this.pool.get(type);
-            if (list == null) {
-                list = [];
-                this.pool.set(type, list);
-            }
-            if (list.length > 0) {
-                loader = list.shift();
-            }
-            else {
-                if (typeof url == "string") {
-                    loaderClass = Res.GetResLoader("string");
-                }
-                else {
-                    loaderClass = Res.GetResLoader(url.type);
-                }
-                loader = new loaderClass();
-            }
-            if (loader != null) {
-                this.running.Set(urlKey, loader);
-                this.__addEvent(loader);
-                loader.Load(url);
-            }
+            loader = new loaderClass();
+        }
+        if (loader != null) {
+            this.running.Set(urlKey, loader);
+            this.__addEvent(loader);
+            loader.Load(url);
         }
     }
     __addEvent(target) {
@@ -18682,6 +18689,15 @@ class LoaderQueue {
     }
     Load(url) {
         const urlKey = URL2Key(url);
+        if (typeof url != "string" && url.isChild) {
+            if (this.waiting.Has(urlKey)) {
+                this.waiting.Delete(urlKey);
+            }
+            if (!this.running.Has(urlKey)) {
+                this.__load(url, urlKey);
+            }
+            return;
+        }
         //已经在等待列表中
         if (this.waiting.Has(urlKey)) {
             return;
@@ -22755,7 +22771,7 @@ class Drongo {
                 if (typeof url != "string") {
                     //字体
                     if (url.type == Font && url.data != undefined) {
-                        registerFont(url.data, ref.content);
+                        registerFont(url.data.toString(), ref.content);
                     }
                 }
             }
