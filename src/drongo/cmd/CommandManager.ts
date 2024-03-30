@@ -46,8 +46,8 @@ export class CommandManager implements ITicker {
         }
         let CMDClass = this.__map.get(key);
         let cmd = new CMDClass();
-        cmd.Execute(data);
         this.__running.push(cmd);
+        cmd.Execute(data);
     }
 
     /**
