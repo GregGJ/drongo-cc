@@ -18305,8 +18305,8 @@ class Dictionary extends EventDispatcher {
         this.__map.clear();
         this.__list.length = 0;
     }
-    getKeys() {
-        let result = [];
+    getKeys(result) {
+        result = result || [];
         for (const iterator of this.__map.keys()) {
             result.push(iterator);
         }
@@ -24692,145 +24692,73 @@ class MaxRectBinPack {
  * 对象池
  */
 class Pool {
-    /**
-     * 分配
-     * @param clazz
-     * @param maxCount
-     * @returns
-     */
-    static allocate(clazz, maxCount) {
-        let className = StringUtils.GetClassName(clazz);
-        let pool;
-        if (this.__pools.has(className)) {
-            pool = this.__pools.get(className);
+    constructor(type, maxCount) {
+        this.__countIndex = 0;
+        this.__class = type;
+        this.__using = [];
+        this.__pool = [];
+        this.__maxCount = maxCount;
+    }
+    Alloc() {
+        let result;
+        if (this.__pool.length > 0) {
+            result = this.__pool.pop();
+            this.__using.push(result);
         }
         else {
-            pool = new PoolImpl(clazz, maxCount);
-            this.__pools.set(className, pool);
+            result = new this.__class();
+            this.__using.push(result);
+            if (this.__maxCount != undefined) {
+                this.__countIndex++;
+                if (this.__countIndex > this.__maxCount) {
+                    throw new Error("池内数量超出规定范围:" + this.__maxCount);
+                }
+            }
         }
-        return pool.allocate();
+        return result;
     }
-    /**
-     * 回收
-     * @param value
-     */
-    static recycle(value) {
-        let className = StringUtils.GetClassName(value);
-        if (!this.__pools.has(className)) {
-            throw new Error("对象池不存在:" + className);
+    RecycleAll() {
+        for (let index = 0; index < this.__using.length; index++) {
+            const element = this.__using[index];
+            if (element["Reset"]) {
+                element.Reset();
+            }
+            this.__pool.push(element);
         }
-        let pool = this.__pools.get(className);
-        pool.recycle(value);
+        this.__using.length = 0;
     }
-    /**
-     * 回收多个对象
-     * @param list
-     */
-    static recycleList(list) {
-        for (let index = 0; index < list.length; index++) {
-            const element = list[index];
-            this.recycle(element);
-        }
-    }
-    /**
-     * 回收该类型的所有对象
-     * @param clazz
-     */
-    static recycleAll(clazz) {
-        let className = StringUtils.GetClassName(clazz);
-        if (!this.__pools.has(className)) {
-            throw new Error("对象池不存在:" + className);
-        }
-        let pool = this.__pools.get(className);
-        pool.recycleAll();
-    }
-}
-Pool.__pools = new Map();
-class PoolImpl {
-    constructor(clazz, maxCount) {
-        /**池中闲置对象 */
-        this.__cacheStack = new Array();
-        /**正在使用的对象 */
-        this.__usingArray = new Array();
-        /**池中对象最大数 */
-        this.__maxCount = 0;
-        this.__class = clazz;
-        if (!this.__class) {
-            throw new Error("构造函数不能为空！");
-        }
-        this.__maxCount = maxCount == undefined ? Number.MAX_SAFE_INTEGER : maxCount;
-    }
-    /**
-    * 在池中的对象
-    */
-    get count() {
-        return this.__cacheStack.length;
-    }
-    /**
-     * 使用中的数量
-     */
-    get usingCount() {
-        return this.__usingArray.length;
-    }
-    /**
-     * 分配
-     * @returns
-     */
-    allocate() {
-        if (this.count + this.usingCount < this.__maxCount) {
-            let element = this.__cacheStack.length > 0 ? this.__cacheStack.pop() : new this.__class();
-            this.__usingArray.push(element);
-            return element;
-        }
-        throw new Error("对象池最大数量超出：" + this.__maxCount);
-    }
-    /**
-     * 回收到池中
-     * @param value
-     * @returns
-     */
-    recycle(value) {
-        if (this.__cacheStack.indexOf(value) > -1) {
-            throw new Error("重复回收！");
-        }
-        let index = this.__usingArray.indexOf(value);
+    Recycle(v) {
+        const index = this.__using.indexOf(v);
         if (index < 0) {
-            throw new Error("对象不属于该对象池！");
+            throw new Error("组件不属于该对象池!");
         }
-        //重置
-        value.Reset();
-        this.__usingArray.splice(index, 1);
-        this.__cacheStack.push(value);
+        this.__using.splice(index, 1);
+        const obj = v;
+        if (obj["Reset"]) {
+            obj.Reset();
+        }
+        this.__pool.push(v);
     }
-    /**
-     * 批量回收
-     * @param list
-     */
-    recycleList(list) {
-        for (let index = 0; index < list.length; index++) {
-            const element = list[index];
-            this.recycle(element);
+    Destroy() {
+        for (let index = 0; index < this.__using.length; index++) {
+            const element = this.__using[index];
+            if (element["Reset"]) {
+                element.Reset();
+            }
+            if (element["Destroy"]) {
+                element.Destroy();
+            }
         }
-    }
-    /**
-     * 将所有使用中的对象都回收到池中
-     */
-    recycleAll() {
-        for (let index = 0; index < this.__usingArray.length; index++) {
-            const element = this.__usingArray[index];
-            this.recycle(element);
+        for (let index = 0; index < this.__pool.length; index++) {
+            const element = this.__pool[index];
+            if (element["Destroy"]) {
+                element.Destroy();
+            }
         }
-    }
-    destroy() {
-        this.recycleAll();
-        for (let index = 0; index < this.__cacheStack.length; index++) {
-            const element = this.__cacheStack[index];
-            element.Destroy();
-        }
-        this.__cacheStack.length = 0;
-        this.__cacheStack = null;
-        this.__usingArray.length = 0;
-        this.__usingArray = null;
+        this.__using.length = 0;
+        this.__using = null;
+        this.__pool.length = 0;
+        this.__pool = null;
     }
 }
 
@@ -31278,32 +31206,9 @@ class DDLSSimpleView {
     }
 }
 
-class ESCComponent {
-    static GetType(value) {
-        if (this.TYPES.has(value)) {
-            return this.TYPES.get(value);
-        }
-        this.TYPE_IDX++;
-        let result = Math.pow(2, this.TYPE_IDX);
-        this.TYPES.set(value, result);
-        return result;
-    }
-    constructor() {
-    }
-    Destroy() {
-    }
-}
-ESCComponent.TYPES = new Map();
-ESCComponent.TYPE_IDX = 0;
-
-class Matcher extends BitFlag {
+class Matcher {
     constructor(types) {
-        super();
         this.types = types;
-        for (let index = 0; index < types.length; index++) {
-            const flag = ESCComponent.GetType(types[index]);
-            this.Add(flag);
-        }
     }
 }
 
@@ -31325,187 +31230,509 @@ class MatcherAnyOf extends Matcher {
 class MatcherNoneOf extends Matcher {
 }
 
-class ESCEntity {
-    constructor(id, world) {
-        this.__id = id;
-        this.__world = world;
-        this.__components = new Dictionary;
-        this.__componentFlags = new BitFlag();
+class ECSComponent {
+    constructor() {
+        /**所属entity*/
+        this.entity = -1;
+        /**脏数据标记回调*/
+        this.dirtySignal = null;
+    }
+    /**获取组件依赖的系统列表*/
+    GetDependencies() {
+        return null;
+    }
+    /**标记该组件数据为脏*/
+    MarkDirtied() {
+        if (this.dirtySignal)
+            this.dirtySignal();
+    }
+    /**重置*/
+    Reset() {
+        this.entity = -1;
+        this.dirtySignal = null;
+    }
+}
+
+/**
+ * 稀疏集合
+ */
+class SparseSet {
+    constructor(maxCount = 2048, sparsePage = 4) {
+        /**无效值 */
+        this.invalid = 0;
+        this.__maxCount = 0;
+        this.__index = 0;
+        this.__sparse = [];
+        this.__sparsePage = 0;
+        if (maxCount % sparsePage != 0) {
+            throw new Error("数量必须是page的倍数");
+        }
+        this.__maxCount = this.invalid = maxCount;
+        this.__sparsePage = sparsePage;
+        this.__packed = new Uint32Array(this.__maxCount);
+        this.__packed.fill(this.invalid);
+        const count = maxCount / 4;
+        this.__sparse = new Array(count);
+        for (let index = 0; index < count; index++) {
+            this.__sparse[index] = new Uint32Array(sparsePage);
+        }
+    }
+    /**
+     * 添加
+     * @param id
+     */
+    Add(id) {
+        if (id >= this.invalid) {
+            throw new Error("超出最大索引:" + id + "/" + this.invalid);
+        }
+        this.__packed[this.__index] = id;
+        this.__addToSparse(id, this.__index);
+        this.__index++;
+    }
+    /**
+     * 是否包含
+     * @param id
+     * @returns
+     */
+    Contains(id) {
+        const x = Math.floor(id / this.__sparsePage);
+        const y = id % this.__sparsePage;
+        if (this.__sparse[x] == null) {
+            return false;
+        }
+        if (this.__sparse[x][y] == this.invalid) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * 删除
+     * @param id
+     */
+    Remove(id) {
+        //删除并返回在packed中的索引位置
+        const pIdx = this.__removeSparse(id);
+        //要删除的数据
+        let sIdx = this.invalid;
+        if (this.__index == 1) { //最后一个
+            this.__packed[pIdx] = this.invalid;
+            this.__index--;
+            return -1;
+        }
+        else {
+            sIdx = this.__packed[this.__index - 1];
+            this.__packed[pIdx] = sIdx;
+            this.__packed[this.__index - 1] = this.invalid;
+            this.__addToSparse(sIdx, pIdx);
+            this.__index--;
+            return pIdx;
+        }
+    }
+    /**
+     * 清除所有
+     */
+    Clear() {
+        this.__packed.fill(this.invalid);
+        for (let index = 0; index < this.__sparse.length; index++) {
+            const list = this.__sparse[index];
+            if (list) {
+                list.fill(this.invalid);
+            }
+        }
+        this.__index = 0;
+    }
+    Destroy() {
+        this.__sparse.length = 0;
+    }
+    __addToSparse(idx, v) {
+        const x = Math.floor(idx / this.__sparsePage);
+        const y = idx % this.__sparsePage;
+        let list;
+        if (this.__sparse[x] == null) {
+            list = new Uint32Array(this.__sparsePage);
+            this.__sparse[x] = list;
+            list.fill(this.invalid);
+        }
+        else {
+            list = this.__sparse[x];
+        }
+        list[y] = v;
+    }
+    /**
+     * 删除并返回内容
+     * @param idx
+     * @returns
+     */
+    __removeSparse(idx) {
+        const x = Math.floor(idx / this.__sparsePage);
+        const y = idx % this.__sparsePage;
+        if (!this.__sparse[x]) {
+            throw new Error("找不到要删除的元素：" + idx);
+        }
+        //找到在packed中的索引位置
+        const pIdx = this.__sparse[x][y];
+        if (pIdx == this.invalid) {
+            throw new Error("找不到要删除的元素：" + idx);
+        }
+        this.__sparse[x][y] = this.invalid;
+        return pIdx;
+    }
+    /**
+     * 获取packed的索引值
+     * @param id
+     * @returns
+     */
+    GetPackedIdx(id) {
+        const x = Math.floor(id / this.__sparsePage);
+        const y = id % this.__sparsePage;
+        if (!this.__sparse[x]) {
+            return this.invalid;
+        }
+        //找到在packed中的索引位置
+        const pIdx = this.__sparse[x][y];
+        return pIdx;
+    }
+    get packed() {
+        return this.__packed;
+    }
+    get length() {
+        return this.__index;
+    }
+    get maxCount() {
+        return this.__maxCount;
+    }
+}
+
+/**
+ * 存储器
+ */
+class ECSStorage {
+    constructor(maxCount, sparsePage) {
+        this.__sparseSet = new SparseSet(maxCount, sparsePage);
+        this.__valuePool = new Map;
+        this.__values = new Map();
+    }
+    /**
+     * 添加key
+     * @param key
+     */
+    Add(key) {
+        this.__sparseSet.Add(key);
+    }
+    /**
+     * 是否包含Key
+     * @param key
+     * @returns
+     */
+    Has(key) {
+        return this.__sparseSet.Contains(key);
+    }
+    /**
+     * 删除Key
+     * @param key
+     * @returns
+     */
+    Remove(key) {
+        const deleteIdx = this.__sparseSet.GetPackedIdx(key);
+        const lastIdx = this.__sparseSet.length - 1;
+        //删除关联值
+        let types = this.__values.keys();
+        for (const type of types) {
+            this.RemoveValue(key, type);
+        }
+        if (lastIdx >= 0) {
+            for (let [type, _] of this.__values) {
+                const list = this.__values.get(type);
+                if (list == null)
+                    continue;
+                list[deleteIdx] = list[lastIdx];
+                list[lastIdx] = null;
+            }
+        }
+        this.__sparseSet.Remove(key);
+    }
+    /**
+     * 获取
+     * @param key
+     * @param type
+     * @returns
+     */
+    GetValue(key, type) {
+        let pIdx = this.__sparseSet.GetPackedIdx(key);
+        if (pIdx == this.__sparseSet.invalid) {
+            return null;
+        }
+        let list = this.__values.get(type);
+        if (list == null || list.length == 0 || pIdx >= list.length) {
+            return null;
+        }
+        return list[pIdx];
+    }
+    /**
+     * 添加
+     * @param key
+     * @param type
+     * @returns
+     */
+    AddValue(key, type) {
+        if (!this.__sparseSet.Contains(key))
+            throw new Error("不存在:" + key);
+        const pIdx = this.__sparseSet.GetPackedIdx(key);
+        let list = this.__values.get(type);
+        if (list == null) {
+            list = new Array(this.__sparseSet.maxCount);
+            this.__values.set(type, list);
+        }
+        if (list[pIdx] != null) {
+            throw new Error(key + "=>重复添加:" + type);
+        }
+        //对象池
+        let pool = this.__valuePool.get(type);
+        if (!pool) {
+            pool = new Pool(type);
+            this.__valuePool.set(type, pool);
+        }
+        list[pIdx] = pool.Alloc();
+        return list[pIdx];
+    }
+    /**
+     * 是否包含Value
+     * @param entityID
+     * @param type
+     */
+    HasValue(entityID, type) {
+        if (!this.__sparseSet.Contains(entityID)) {
+            throw new Error("entity不存在:" + entityID);
+        }
+        let pIdx = this.__sparseSet.GetPackedIdx(entityID);
+        let list = this.__values.get(type);
+        if (list == null) {
+            return false;
+        }
+        if (list[pIdx] == null) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * 删除
+     * @param key
+     * @param type
+     * @returns
+     */
+    RemoveValue(key, type) {
+        if (!this.__sparseSet.Contains(key))
+            throw new Error("entity不存在:" + key);
+        let pIdx = this.__sparseSet.GetPackedIdx(key);
+        let list = this.__values.get(type);
+        if (list == null || list.length == 0) {
+            throw new Error(key + "=>上找不到要删除的组件:" + type);
+        }
+        let result = list[pIdx];
+        list[pIdx] = null;
+        let pool = this.__valuePool.get(type);
+        if (!pool) {
+            throw new Error("对象池不存在！");
+        }
+        pool.Recycle(result);
+        return result;
+    }
+    /**
+     * 清理
+     */
+    Clear() {
+        while (this.__sparseSet.length > 0) {
+            this.Remove(this.elements[0]);
+        }
+    }
+    /**销毁 */
+    Destroy() {
+        this.__sparseSet.Destroy();
+        this.__sparseSet = null;
+        this.__valuePool.clear();
+        this.__valuePool = null;
+        this.__values.clear();
+        this.__values = null;
+    }
+    /**无效值 */
+    get invalid() {
+        return this.__sparseSet.invalid;
+    }
+    get elements() {
+        return this.__sparseSet.packed;
+    }
+}
+
+class ECSWorld {
+    /**
+     * 初始化
+     * @param maxCount
+     * @param sparsePage
+     */
+    constructor(maxCount, sparsePage = 4) {
+        this.__freeEntitys = [];
+        this.__countIndex = -1;
+        /**等待删除的entity*/
+        this.__waitFree = [];
+        this.__time = 0;
+        this.__maxCount = maxCount;
+        this.__storage = new ECSStorage(this.__maxCount, sparsePage);
+        this.__systems = new Dictionary();
+    }
+    /**
+     * 心跳
+     * @param dt
+     */
+    Tick(dt) {
+        this.__time += dt;
+        //系统
+        const systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const sys = systems[index];
+            sys.Tick(this.__time);
+        }
+        if (this.__waitFree.length == 0)
+            return;
+        //删除
+        for (let index = 0; index < this.__waitFree.length; index++) {
+            const entity = this.__waitFree[index];
+            this.__storage.Remove(entity);
+            this.__freeEntitys.push(entity);
+            //从所有系统匹配纪律中删除
+            for (let index = 0; index < systems.length; index++) {
+                const sys = systems[index];
+                sys._matcher._entitys.delete(entity);
+            }
+        }
+        this.__waitFree.length = 0;
+    }
+    /**
+     * 创建
+     */
+    Create() {
+        let result;
+        if (this.__freeEntitys.length > 0) {
+            result = this.__freeEntitys.pop();
+        }
+        else {
+            this.__countIndex++;
+            if (this.__countIndex >= this.__maxCount) {
+                throw new Error("超出最大数量:" + (this.__countIndex + 1) + "/" + this.__maxCount);
+            }
+            result = this.__countIndex;
+        }
+        this.__storage.Add(result);
+        return result;
+    }
+    /**
+     * 查询是否包含entity
+     * @param entity
+     * @returns
+     */
+    Has(entity) {
+        return this.__storage.Has(entity);
+    }
+    /**
+     * 删除entity
+     * @param entity
+     * @returns
+     */
+    Remove(entity) {
+        const index = this.__waitFree.indexOf(entity);
+        if (index >= 0) {
+            return;
+        }
+        this.__waitFree.push(entity);
     }
     /**
      * 添加组件
-     * @param value
+     * @param entity
+     * @param type
+     * @returns
      */
-    AddComponent(type) {
-        if (this.__components.Has(type)) {
-            throw new Error("重复添加Component到Entity");
+    AddComponent(entity, type) {
+        let result = this.__storage.AddValue(entity, type);
+        result.dirtySignal = () => {
+            this.__componentDirty(result);
+        };
+        //检测组件依赖的系统，如果没有则添加
+        const dependencies = result.GetDependencies();
+        if (dependencies && dependencies.length > 0) {
+            for (let index = 0; index < dependencies.length; index++) {
+                const sysClass = dependencies[index];
+                if (!this.HasSystem(sysClass)) {
+                    this.AddSystem(sysClass);
+                }
+            }
         }
-        let value = new type();
-        this.__components.Set(type, value);
-        value.entity = this;
-        const flag = ESCComponent.GetType(type);
-        this.__componentFlags.Add(flag);
-        this.__world._addComponent(type, value);
-        return value;
+        //记录所属
+        result.entity = entity;
+        //匹配
+        this.__matcher(result.entity, false, true);
+        return result;
+    }
+    /**
+     * 查询entity是否包含组件
+     * @param entity
+     * @param type
+     * @returns
+     */
+    HasComponent(entity, type) {
+        return this.__storage.HasValue(entity, type);
     }
     /**
      * 删除组件
-     * @param id
+     * @param entity
+     * @param type
+     * @returns
      */
-    RemoveComponent(type) {
-        let result = this.__components.Get(type);
-        if (!result) {
-            return;
-        }
-        const flag = ESCComponent.GetType(type);
-        this.__componentFlags.Remove(flag);
-        this.__components.Delete(type);
-        this.__world._removeComponent(type, result);
+    RemoveComponent(entity, type) {
+        let result = this.__storage.RemoveValue(entity, type);
+        this.__matcher(result.entity, false, true);
+        return result;
+    }
+    /**
+     * 通过组件实例进行删除
+     * @param entity
+     * @param com
+     * @returns
+     */
+    RemoveComponentBy(entity, com) {
+        let result = this.__storage.RemoveValue(entity, com["constructor"]);
+        this.__matcher(result.entity, false, true);
         return result;
     }
     /**
      * 获取组件
+     * @param entity
      * @param type
-     */
-    GetComponent(type) {
-        return this.__components.Get(type);
-    }
-    /**
-     * 是否包含某类型的组件
-     * @param type
-     */
-    HasComponent(type) {
-        return this.__components.Has(type);
-    }
-    /**
-     * 唯一ID
-     */
-    get id() {
-        return this.__id;
-    }
-    /**
-     * 销毁
-     */
-    Destroy() {
-        //从世界中删除组件记录
-        let keys = this.__components.getKeys();
-        for (let index = 0; index < keys.length; index++) {
-            const key = keys[index];
-            const com = this.RemoveComponent(key);
-            com.Destroy();
-        }
-        this.__world._removeEntity(this);
-        this.__components = null;
-        this.__world = null;
-        this.__componentFlags.Destroy();
-        this.__componentFlags = null;
-    }
-    /**
-     * 是否符合匹配规则
-     * @param group
-     */
-    _matcherGroup(group) {
-        let mainMatcher = false;
-        if (group.matcher instanceof MatcherAllOf) {
-            if (this.__componentFlags.Has(group.matcher.flags)) {
-                mainMatcher = true;
-            }
-        }
-        else {
-            if (this.__componentFlags.flags & group.matcher.flags) {
-                mainMatcher = true;
-            }
-        }
-        let noneMatcher = true;
-        if (group.matcherNoneOf) {
-            if (this.__componentFlags.flags & group.matcherNoneOf.flags) {
-                noneMatcher = false;
-            }
-        }
-        return mainMatcher && noneMatcher;
-    }
-}
-
-class ESCGroup {
-    constructor(allOrAny, none) {
-        /**
-         * 编组所匹配的元素(内部接口)
-         */
-        this._entitys = new Dictionary();
-        this.matcher = allOrAny;
-        this.matcherNoneOf = none;
-        if (none) {
-            this.__id = "id:" + this.matcher.flags + "|" + none.flags;
-        }
-        else {
-            this.__id = "id:" + this.matcher.flags;
-        }
-    }
-    Destroy() {
-        this.matcher = null;
-        this.matcherNoneOf = null;
-        this._entitys = null;
-    }
-    get id() {
-        return this.__id;
-    }
-}
-
-class ESCWorld {
-    constructor() {
-        this.__time = 0;
-        this.__components = new Dictionary();
-        this.__entitys = new Dictionary();
-        this.__systems = new Dictionary();
-    }
-    /**
-     * 心跳驱动
-     * @param time
-     */
-    Tick(time) {
-        this.__time += time;
-        let list = this.__systems.elements;
-        for (let index = 0; index < list.length; index++) {
-            const sys = list[index];
-            sys.Tick(time);
-        }
-    }
-    /**
-     * 创建一个实体
-     */
-    CreateEntity(id) {
-        let entity = new ESCEntity(id, this);
-        this.__entitys.Set(entity.id, entity);
-        return entity;
-    }
-    /**
-     * 通过ID获取实体
-     * @param id
-     */
-    GetEntity(id) {
-        return this.__entitys.Get(id);
-    }
-    /**
-     * 获取所有元素
      * @returns
      */
-    GetEntitys() {
-        return this.__entitys.elements;
+    GetComponent(entity, type) {
+        return this.__storage.GetValue(entity, type);
     }
     /**
      * 添加系统
      */
-    AddSystem(value) {
-        if (this.__systems.Has(value.key)) {
+    AddSystem(sysClass) {
+        if (this.__systems.Has(sysClass)) {
             throw new Error("重复添加系统");
         }
-        value.world = this;
-        this.__systems.Set(value.key, value);
-        if (!value._group) {
-            return;
-        }
+        const sys = new sysClass();
+        sys.SetWorld(this);
+        this.__systems.Set(sysClass, sys);
+        //根据系统优先级排序
+        this.__systems.elements.sort((a, b) => a.priority - b.priority);
         //按照编组规则匹配
-        this._matcherGroup(value._group);
+        this.__matcherAll(sys);
+    }
+    /**
+     * 是否包含该系统
+     * @param key
+     * @returns
+     */
+    HasSystem(key) {
+        return this.__systems.Has(key);
     }
     /**
      * 获取系统
@@ -31516,182 +31743,182 @@ class ESCWorld {
         return this.__systems.Get(key);
     }
     /**
-     * 获取系统列表
-     * @returns
-     */
-    GetSystems() {
-        return this.__systems.elements;
-    }
-    /**
      * 删除系统
      * @param value
      */
     RemoveSystem(value) {
-        if (!this.__systems.Has(value.key)) {
+        const sysClass = value.constructor;
+        if (!this.__systems.Has(sysClass)) {
             throw new Error("找不到要删除的系统");
         }
-        this.__systems.Delete(value.key);
-        value.world = null;
+        this.__systems.Delete(sysClass);
+        value.SetWorld(null);
         value.Destory();
-    }
-    /**
-     * 根据类型获取组件列表
-     * @param type
-     */
-    GetComponent(type) {
-        return this.__components.Get(type);
-    }
-    /**
-     * 销毁
-     */
-    Destory() {
-        this.ClearAll();
-        this.__entitys = null;
-        let systems = this.__systems.elements;
-        for (let index = 0; index < systems.length; index++) {
-            const sys = systems[index];
-            sys.Destory();
-        }
-        this.__systems.Clear();
-        this.__systems = null;
+        //根据系统优先级排序
+        this.__systems.elements.sort((a, b) => a.priority - b.priority);
     }
     /**
      * 清理所有元素
      */
     ClearAll() {
-        let list = this.__entitys.elements;
-        while (list.length) {
-            const entity = list[0];
-            entity.Destroy();
+        this.__countIndex = -1;
+        this.__time = 0;
+        this.__storage.Clear();
+        const systems = this.__systems.elements;
+        for (let index = 0; index < systems.length; index++) {
+            const sys = systems[index];
+            sys.Destory();
         }
-        this.__entitys.Clear();
+        this.__systems.Clear();
     }
+    Destroy() {
+        this.ClearAll();
+        this.__freeEntitys.length = 0;
+        this.__freeEntitys = null;
+        this.__waitFree.length = 0;
+        this.__waitFree = null;
+        this.__storage.Destroy();
+        this.__storage = null;
+        this.__systems = null;
+    }
+    /**当前时间 */
     get time() {
         return this.__time;
     }
-    //=====================================内部接口=======================================================//
-    _matcherGroup(group) {
-        //通过主匹配规则筛选出最短的
-        for (let index = 0; index < group.matcher.elements.length; index++) {
-            group.matcher.types[index];
-            {
-                continue;
+    /**标记组件脏了 */
+    __componentDirty(component) {
+        this.__matcher(component.entity, true);
+    }
+    /**将所有entity跟系统进行匹配 */
+    __matcherAll(sys) {
+        let list = this.__storage.elements;
+        for (let index = 0; index < list.length; index++) {
+            const entity = list[index];
+            if (entity == this.__storage.invalid) {
+                break;
             }
-        }
-        {
-            return;
+            this.__matcherEntity(sys._matcher, entity);
         }
     }
-    /**
-     * 内部接口，请勿调用
-     * @param com
-     */
-    _addComponent(type, com) {
-        let list = this.__components.Get(type);
-        if (list == null) {
-            list = [];
-            this.__components.Set(type, list);
-        }
-        let index = list.indexOf(com);
-        if (index >= 0) {
-            throw new Error("重复添加组件！");
-        }
-        list.push(com);
-        let systems = this.__systems.elements;
+    __matcher(entity, useDirty, all = false) {
+        const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
-            const system = systems[index];
-            if (!system._group) {
-                continue;
-            }
-            //已经在里面了，就不管这个组了
-            if (system._group._entitys.Has(com.entity.id)) {
-                continue;
-            }
-            if (com.entity._matcherGroup(system._group)) {
-                system._group._entitys.Set(com.entity.id, com.entity);
-            }
-        }
-    }
-    /**
-     * 内部接口，请勿调用
-     * @param com
-     */
-    _removeComponent(type, com) {
-        let list = this.__components.Get(type);
-        if (list == null) {
-            return;
-        }
-        let index = list.indexOf(com);
-        if (index < 0) {
-            throw new Error("找不到要删除的组件");
-        }
-        list.splice(index, 1);
-        let systems = this.__systems.elements;
-        for (let index = 0; index < systems.length; index++) {
-            const system = systems[index];
-            if (!system._group) {
-                continue;
-            }
-            if (com.entity._matcherGroup(system._group)) {
-                if (!system._group._entitys.Has(com.entity.id)) {
-                    system._group._entitys.Set(com.entity.id, com.entity);
+            const sys = systems[index];
+            if (sys.useDirty == useDirty || all) {
+                if (this.__matcherEntity(sys._matcher, entity)) {
+                    sys._matcher._entitys.add(entity);
                 }
-            }
-            else {
-                if (system._group._entitys.Has(com.entity.id)) {
-                    system._group._entitys.Delete(com.entity.id);
+                else {
+                    sys._matcher._entitys.delete(entity);
                 }
             }
         }
     }
-    /**
-     * 内部接口，请勿调用
-     * @param value
-     */
-    _removeEntity(value) {
-        if (!this.__entitys.Has(value.id)) {
-            throw new Error("找不到要删除的entity:" + value.id);
+    __matcherEntity(matcher, entity) {
+        let mainMatcher = this.__matcherComponents(matcher.matcher, entity);
+        let noneMatcher = matcher.matcherNoneOf == undefined ? true : this.__matcherComponents(matcher.matcherNoneOf, entity);
+        return mainMatcher && noneMatcher;
+    }
+    __matcherComponents(matcher, entity) {
+        if (matcher instanceof MatcherAllOf) {
+            for (let index = 0; index < matcher.types.length; index++) {
+                const comType = matcher.types[index];
+                if (!this.__storage.HasValue(entity, comType)) {
+                    return false;
+                }
+            }
+            return true;
         }
-        this.__entitys.Delete(value.id);
+        else if (matcher instanceof MatcherAnyOf) {
+            for (let index = 0; index < matcher.types.length; index++) {
+                const comType = matcher.types[index];
+                if (this.__storage.HasValue(entity, comType)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        //排除
+        for (let index = 0; index < matcher.types.length; index++) {
+            const comType = matcher.types[index];
+            if (this.__storage.HasValue(entity, comType)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
-class ESCSystem {
-    /**
-     * 系统
-     * @param allOrAny  所有或任意一个包含
-     * @param none      不能包含
-     */
-    constructor(key, allOrAny, none) {
-        this.key = key;
-        if (allOrAny != undefined || none != undefined) {
-            this._group = new ESCGroup(allOrAny, none);
-        }
+class ECSMatcher {
+    constructor(allOrAny, none) {
+        /**
+         * 全部包含或任意包含
+         */
+        this.matcher = undefined;
+        /**
+         * 不能包含的
+         */
+        this.matcherNoneOf = undefined;
+        /**
+         * 编组所匹配的元素(内部接口)
+         */
+        this._entitys = new Set();
+        this.matcher = allOrAny;
+        this.matcherNoneOf = none;
     }
-    /**
-     * 获取当前状态下匹配到的副本
-     * @returns
-     */
-    GetEntitys() {
-        ESCSystem.HELP_LIST.length = 0;
-        let list = this._group._entitys.elements;
-        for (let index = 0; index < list.length; index++) {
-            const entity = list[index];
-            ESCSystem.HELP_LIST[index] = entity;
-        }
-        return ESCSystem.HELP_LIST;
-    }
-    Tick(time) {
-    }
-    Destory() {
-        if (this._group) {
-            this._group.Destroy();
-            this._group = null;
-        }
-        this.world = null;
+    Destroy() {
+        this.matcher = undefined;
+        this.matcherNoneOf = undefined;
+        this._entitys.clear();
     }
 }
-ESCSystem.HELP_LIST = [];
+
+class ECSSystem {
+    /**
+     * 系统
+     * @param allOrAny  匹配所有或任意一个
+     * @param none      不能包含
+     * @param useDirty  是否使用脏数据机制
+     */
+    constructor(allOrAny, none, useDirty = false) {
+        /**优先级 */
+        this.priority = 0;
+        /**是否使用脏数据*/
+        this.useDirty = false;
+        /**所属世界 */
+        this.__world = null;
+        this._matcher = new ECSMatcher(allOrAny, none);
+        this.useDirty = useDirty;
+    }
+    /**设置所属世界 */
+    SetWorld(v) {
+        this.__world = v;
+    }
+    /**心跳 */
+    Tick(time) {
+        if (this._matcher._entitys.size == 0)
+            return;
+        this.$tick(time);
+        if (this.useDirty) {
+            this._matcher._entitys.clear();
+        }
+    }
+    /**匹配结果 */
+    get entitys() {
+        return this._matcher._entitys;
+    }
+    /**所属世界 */
+    get world() {
+        return this.__world;
+    }
+    $tick(time) {
+    }
+    /**销毁 */
+    Destory() {
+        this.__world = null;
+        this._matcher = null;
+    }
+}
 
 /**
  * 命令管理器
@@ -31749,4 +31976,4 @@ class CommandManager {
     }
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ECSComponent, ECSSystem, ECSWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, Image$1 as Image, Injector, Key2URL, Layer, LayerManager, List, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };

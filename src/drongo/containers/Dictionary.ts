@@ -97,8 +97,8 @@ export class Dictionary<TKey, TValue> extends EventDispatcher {
         this.__list.length = 0;
     }
 
-    getKeys(): Array<TKey> {
-        let result: Array<TKey> = [];
+    getKeys(result?: Array<TKey>): Array<TKey> {
+        result = result || [];
         for (const iterator of this.__map.keys()) {
             result.push(iterator);
         }

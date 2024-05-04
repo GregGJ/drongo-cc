@@ -134,8 +134,7 @@ export { MaxRectBinPack } from "./drongo/maxRects/MaxRectsBinPack"
 export { Rect } from "./drongo/maxRects/Rect"
 
 //pools
-export { IRecyclable } from "./drongo/pools/IRecyclable"
-export { Pool } from "./drongo/pools/Pool"
+export { Pool } from "./drongo/utils/Pool"
 
 //res
 export { Res } from "./drongo/res/Res"
@@ -238,18 +237,16 @@ export { DDLSBitmapMeshFactory } from "./drongo/navigations/ddls2d/factories/DDL
 export { Polygon } from "./drongo/navigations/ddls2d/utils/Polygon"
 export { DDLSSimpleView } from "./drongo/navigations/ddls2d/view/DDLSSimpleView"
 
-//esc系统
-export { IMatcher } from "./drongo/entitys/matchers/IMatcher"
-export { Matcher } from "./drongo/entitys/matchers/Matcher"
-export { MatcherAllOf } from "./drongo/entitys/matchers/MatcherAllOf"
-export { MatcherAnyOf } from "./drongo/entitys/matchers/MatcherAnyOf"
-export { MatcherNoneOf } from "./drongo/entitys/matchers/MatcherNoneOf"
+//ecs系统
+export { Matcher } from "./drongo/ecs/matchers/Matcher"
+export { MatcherAllOf } from "./drongo/ecs/matchers/MatcherAllOf"
+export { MatcherAnyOf } from "./drongo/ecs/matchers/MatcherAnyOf"
+export { MatcherNoneOf } from "./drongo/ecs/matchers/MatcherNoneOf"
 
-export { ESCComponent } from "./drongo/entitys/ESCComponent"
-export { ESCEntity } from "./drongo/entitys/ESCEntity"
-export { ESCGroup } from "./drongo/entitys/ESCGroup"
-export { ESCWorld } from "./drongo/entitys/ESCWorld"
-export { ESCSystem } from "./drongo/entitys/ESCSystem"
+export { ECSComponent } from "./drongo/ecs/ECSComponent"
+export { ECSEntity } from "./drongo/ecs/ECSEntity"
+export { ECSWorld } from "./drongo/ecs/ECSWorld"
+export { ECSSystem } from "./drongo/ecs/ECSSystem"
 
 
 //cmd

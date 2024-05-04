@@ -3339,7 +3339,7 @@ declare class Dictionary<TKey, TValue> extends EventDispatcher {
      * 清除所有元素
      */
     Clear(): void;
-    getKeys(): Array<TKey>;
+    getKeys(result?: Array<TKey>): Array<TKey>;
     /**
     * 元素列表
     */
@@ -4331,50 +4331,19 @@ declare class MaxRectBinPack {
 }
 
 /**
- * 可重复利用对象接口
- */
-interface IRecyclable {
-    /**
-     * 重置到可复用状态
-     */
-    Reset(): void;
-    /**
-     * 销毁
-     */
-    Destroy(): void;
-}
-
-/**
  * 对象池
  */
-declare class Pool {
-    private static __pools;
-    /**
-     * 分配
-     * @param clazz
-     * @param maxCount
-     * @returns
-     */
-    static allocate<T extends IRecyclable>(clazz: {
-        new (): T;
-    }, maxCount?: number): T;
-    /**
-     * 回收
-     * @param value
-     */
-    static recycle(value: IRecyclable): void;
-    /**
-     * 回收多个对象
-     * @param list
-     */
-    static recycleList(list: Array<IRecyclable>): void;
-    /**
-     * 回收该类型的所有对象
-     * @param clazz
-     */
-    static recycleAll<T extends IRecyclable>(clazz: {
-        new (): T;
-    }): void;
+declare class Pool<T> {
+    private __using;
+    private __pool;
+    private __class;
+    private __maxCount;
+    private __countIndex;
+    constructor(type: new () => T, maxCount?: number);
+    Alloc(): T;
+    RecycleAll(): void;
+    Recycle(v: T): void;
+    Destroy(): void;
 }
 
 interface ILoader extends IEventDispatcher {
@@ -6578,10 +6547,10 @@ declare class DDLSSimpleView {
     private VertexIsInsideAABB;
 }
 
-interface IMatcher {
-    readonly flags: number;
-    readonly elements: Array<number>;
-}
+/**
+ * ECS 系统中的 Entity只是一个ID
+ */
+type ECSEntity = number;
 
 /**
  * 必须所有成立
@@ -6601,187 +6570,178 @@ declare class MatcherAnyOf extends Matcher {
 declare class MatcherNoneOf extends Matcher {
 }
 
-declare class ESCGroup {
+declare class ECSMatcher {
     /**
      * 全部包含或任意包含
      */
-    matcher: MatcherAllOf | MatcherAnyOf;
+    matcher: MatcherAllOf | MatcherAnyOf | undefined;
     /**
      * 不能包含的
      */
-    matcherNoneOf: MatcherNoneOf;
+    matcherNoneOf: MatcherNoneOf | undefined;
     /**
      * 编组所匹配的元素(内部接口)
      */
-    _entitys: Dictionary<string, ESCEntity>;
-    private __id;
+    _entitys: Set<ECSEntity>;
     constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
     Destroy(): void;
-    get id(): string;
 }
 
-declare class ESCSystem {
-    static HELP_LIST: Array<ESCEntity>;
-    /**
-     * 所属世界
-     */
-    world: ESCWorld;
-    key: string;
-    /**
-     * 内部接口
-     */
-    _group: ESCGroup;
-    /**
-     * 系统
-     * @param allOrAny  所有或任意一个包含
-     * @param none      不能包含
-     */
-    constructor(key: string, allOrAny?: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
-    /**
-     * 获取当前状态下匹配到的副本
-     * @returns
-     */
-    GetEntitys(): Array<ESCEntity>;
-    Tick(time: number): void;
-    Destory(): void;
-}
-
-declare class ESCWorld {
-    /**组件 */
-    private __components;
-    /**实体*/
-    private __entitys;
-    /**系统*/
+declare class ECSWorld {
+    private __freeEntitys;
+    private __maxCount;
+    private __countIndex;
+    private __storage;
     private __systems;
+    /**等待删除的entity*/
+    private __waitFree;
     private __time;
-    constructor();
     /**
-     * 心跳驱动
-     * @param time
+     * 初始化
+     * @param maxCount
+     * @param sparsePage
      */
-    Tick(time: number): void;
+    constructor(maxCount: number, sparsePage?: number);
     /**
-     * 创建一个实体
+     * 心跳
+     * @param dt
      */
-    CreateEntity(id: string): ESCEntity;
+    Tick(dt: number): void;
     /**
-     * 通过ID获取实体
-     * @param id
+     * 创建
      */
-    GetEntity(id: string): ESCEntity;
+    Create(): ECSEntity;
     /**
-     * 获取所有元素
+     * 查询是否包含entity
+     * @param entity
      * @returns
      */
-    GetEntitys(): Array<ESCEntity>;
+    Has(entity: ECSEntity): boolean;
+    /**
+     * 删除entity
+     * @param entity
+     * @returns
+     */
+    Remove(entity: ECSEntity): void;
+    /**
+     * 添加组件
+     * @param entity
+     * @param type
+     * @returns
+     */
+    AddComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T;
+    /**
+     * 查询entity是否包含组件
+     * @param entity
+     * @param type
+     * @returns
+     */
+    HasComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): boolean;
+    /**
+     * 删除组件
+     * @param entity
+     * @param type
+     * @returns
+     */
+    RemoveComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T;
+    /**
+     * 通过组件实例进行删除
+     * @param entity
+     * @param com
+     * @returns
+     */
+    RemoveComponentBy<T extends ECSComponent>(entity: ECSEntity, com: ECSComponent): T;
+    /**
+     * 获取组件
+     * @param entity
+     * @param type
+     * @returns
+     */
+    GetComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T | null;
     /**
      * 添加系统
      */
-    AddSystem(value: ESCSystem): void;
+    AddSystem(sysClass: new () => ECSSystem): void;
+    /**
+     * 是否包含该系统
+     * @param key
+     * @returns
+     */
+    HasSystem(key: new () => ECSSystem): boolean;
     /**
      * 获取系统
      * @param key
      * @returns
      */
-    GetSystem(key: string): ESCSystem | undefined;
-    /**
-     * 获取系统列表
-     * @returns
-     */
-    GetSystems(): Array<ESCSystem>;
+    GetSystem(key: new () => ECSSystem): ECSSystem | undefined;
     /**
      * 删除系统
      * @param value
      */
-    RemoveSystem(value: ESCSystem): void;
-    /**
-     * 根据类型获取组件列表
-     * @param type
-     */
-    GetComponent(type: new () => ESCComponent): ESCComponent[];
-    /**
-     * 销毁
-     */
-    Destory(): void;
+    RemoveSystem(value: ECSSystem): void;
     /**
      * 清理所有元素
      */
     ClearAll(): void;
+    Destroy(): void;
+    /**当前时间 */
     get time(): number;
-    _matcherGroup(group: ESCGroup): void;
-    /**
-     * 内部接口，请勿调用
-     * @param com
-     */
-    _addComponent(type: new () => ESCComponent, com: ESCComponent): void;
-    /**
-     * 内部接口，请勿调用
-     * @param com
-     */
-    _removeComponent(type: new () => ESCComponent, com: ESCComponent): void;
-    /**
-     * 内部接口，请勿调用
-     * @param value
-     */
-    _removeEntity(value: ESCEntity): void;
+    /**标记组件脏了 */
+    private __componentDirty;
+    /**将所有entity跟系统进行匹配 */
+    private __matcherAll;
+    private __matcher;
+    private __matcherEntity;
+    private __matcherComponents;
 }
 
-declare class ESCEntity {
-    private __components;
+declare abstract class ECSSystem {
+    /**优先级 */
+    priority: number;
+    /**是否使用脏数据*/
+    useDirty: boolean;
+    /**匹配器 */
+    _matcher: ECSMatcher;
+    /**所属世界 */
     private __world;
-    private __id;
-    private __componentFlags;
-    constructor(id: string, world: ESCWorld);
     /**
-     * 添加组件
-     * @param value
+     * 系统
+     * @param allOrAny  匹配所有或任意一个
+     * @param none      不能包含
+     * @param useDirty  是否使用脏数据机制
      */
-    AddComponent<T extends ESCComponent>(type: new () => T): T;
-    /**
-     * 删除组件
-     * @param id
-     */
-    RemoveComponent<T extends ESCComponent>(type: new () => T): T;
-    /**
-     * 获取组件
-     * @param type
-     */
-    GetComponent<T extends ESCComponent>(type: new () => T): T;
-    /**
-     * 是否包含某类型的组件
-     * @param type
-     */
-    HasComponent<T extends ESCComponent>(type: new () => T): boolean;
-    /**
-     * 唯一ID
-     */
-    get id(): string;
-    /**
-     * 销毁
-     */
-    Destroy(): void;
-    /**
-     * 是否符合匹配规则
-     * @param group
-     */
-    _matcherGroup(group: ESCGroup): boolean;
+    constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf, useDirty?: boolean);
+    /**设置所属世界 */
+    SetWorld(v: ECSWorld): void;
+    /**心跳 */
+    Tick(time: number): void;
+    /**匹配结果 */
+    get entitys(): Set<ECSEntity>;
+    /**所属世界 */
+    get world(): ECSWorld;
+    protected $tick(time: number): void;
+    /**销毁 */
+    Destory(): void;
 }
 
-declare class ESCComponent {
-    static TYPES: Map<new () => ESCComponent, number>;
-    static TYPE_IDX: number;
-    static GetType(value: new () => ESCComponent): number;
-    /**
-     * 所属实体
-     */
-    entity: ESCEntity;
+declare abstract class ECSComponent {
+    /**所属entity*/
+    entity: ECSEntity;
+    /**脏数据标记回调*/
+    dirtySignal: (() => void) | null;
     constructor();
-    Destroy(): void;
+    /**获取组件依赖的系统列表*/
+    GetDependencies(): Array<new () => ECSSystem>;
+    /**标记该组件数据为脏*/
+    MarkDirtied(): void;
+    /**重置*/
+    Reset(): void;
+    abstract Destroy(): void;
 }
 
-declare class Matcher extends BitFlag implements IMatcher {
-    types: Array<new () => ESCComponent>;
-    constructor(types: Array<new () => ESCComponent>);
+declare class Matcher {
+    types: Array<new () => ECSComponent>;
+    constructor(types: Array<new () => ECSComponent>);
 }
 
 interface ICommand {
@@ -6858,4 +6818,4 @@ declare class Drongo {
     static Tick(dt: number): void;
 }
 
-export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ESCComponent, ESCEntity, ESCGroup, ESCSystem, ESCWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, ICommand, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IMatcher, IProperty, IRecyclable, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
+export { ArrayProperty, ArrayValue, AsyncOperation, AudioManager, BaseConfigAccessor, BaseMediator, BaseModel, BaseService, BaseValue, BinderUtils, BindingUtils, BitFlag, BlendMode, ByteArray, ByteBuffer, CommandManager, ConfigManager, Controller, DDLSAStar, DDLSBitmapMeshFactory, DDLSBitmapObjectFactory, DDLSEdge, DDLSEntityAI, DDLSFace, DDLSFieldOfView, DDLSFunnel, DDLSGraph, DDLSGraphEdge, DDLSGraphNode, DDLSMesh, DDLSObject, DDLSPathFinder, DDLSRectMeshFactory, DDLSSimpleView, DDLSVertex, DEvent, Debuger, Dictionary, DictionaryProperty, DictionaryValue, DragDropManager, Drongo, ECSComponent, ECSEntity, ECSSystem, ECSWorld, EaseType, EventDispatcher, FGUIEvent, FSM, FindPosition, Frame, FullURL, FunctionHook, GButton, GComboBox, GComponent, GGraph, GGroup, GImage, GLabel, GList, GLoader, GLoader3D, GMovieClip, GObject, GObjectPool, GProgressBar, GRichTextField, GRoot, GScrollBar, GSlider, GTextField, GTextInput, GTree, GTreeNode, GTween, GTweener, GUIManager, GUIMediator, GUIProxy, GUIState, GearAnimation, GearBase, GearColor, GearDisplay, GearDisplay2, GearFontSize, GearIcon, GearLook, GearSize, GearText, GearXY, Handler, IAudioChannel, IAudioGroup, IAudioManager, ICommand, IConfigAccessor, IEventDispatcher, IGUIInfo, IGUIManager, IGUIMediator, ILayer, ILoader, ILoadingView, IProperty, IRelationInfo, IRelationList, IResource, ISerialization, IService, IState, ITask, ITicker, IValue, IViewComponent, IViewCreator, Image, Injector, Key2URL, Layer, LayerManager, List, ListItemRenderer, LoadingView, MapConfigAccessor, Matcher, MatcherAllOf, MatcherAnyOf, MatcherNoneOf, MathUtils, MaxRectBinPack, ChangedData as ModelEvent, ModelFactory, MovieClip, NumberProperty, NumberValue, OneKeyConfigAccessor, PackageItem, Polygon, Pool, PopupMenu, PropertyBinder, Rect, RelationManager, RelationType, Res, ResManager, ResRef, ResURL, Resource, ScrollPane, SerializationMode, ServiceManager, StringProperty, StringUtils, StringValue, SubGUIMediator, TaskQueue, TaskSequence, TickerManager, Timer, Tr, Transition, TranslationHelper, UBBParser, UIConfig, UIObjectFactory, UIPackage, URL2Key, URLEqual, Window, registerFont };
