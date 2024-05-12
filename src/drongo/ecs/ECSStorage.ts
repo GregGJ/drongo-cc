@@ -1,8 +1,7 @@
+import { Dictionary } from "../containers/Dictionary";
 import { Pool } from "../utils/Pool";
 import { ECSEntity } from "./ECSEntity";
 import { SparseSet } from "./SparseSet";
-import { UidMapping } from "./UidMapping";
-
 
 
 /**
@@ -10,7 +9,7 @@ import { UidMapping } from "./UidMapping";
  */
 export class ECSStorage<T> {
 
-    private __uidMapping: UidMapping<ECSEntity, number>;
+    private __uidMapping: Dictionary<ECSEntity, number>;
     private __valuePool: Map<new () => T, Pool<T>>;
     private __values: Map<new () => T, Array<T | null>>;
     private __sparseSet: SparseSet;
@@ -18,7 +17,7 @@ export class ECSStorage<T> {
     private __entityIndex: number = 0;
 
     constructor(maxCount: number) {
-        this.__uidMapping = new UidMapping<number, number>();
+        this.__uidMapping = new Dictionary<number, number>();
         this.__sparseSet = new SparseSet(maxCount);
         this.__valuePool = new Map<new () => T, Pool<T>>
         this.__values = new Map<new () => T, Array<T | null>>();
@@ -30,6 +29,9 @@ export class ECSStorage<T> {
      * @param id 
      */
     Add(id: ECSEntity): void {
+        if (this.__uidMapping.Has(id)) {
+            throw new Error("重复添加:" + id)
+        }
         let entity: number;
         if (this.__freeEntitys.length > 0) {
             entity = this.__freeEntitys.pop();
@@ -37,7 +39,7 @@ export class ECSStorage<T> {
             entity = this.__entityIndex;
             this.__entityIndex++;
         }
-        this.__uidMapping.Mapping(id, entity);
+        this.__uidMapping.Set(id, entity);
         this.__sparseSet.Add(entity);
     }
 
@@ -56,7 +58,7 @@ export class ECSStorage<T> {
      * @returns 
      */
     Remove(id: ECSEntity): void {
-        let entity = this.__uidMapping.GetValue(id);
+        let entity = this.__uidMapping.Get(id);
         const deleteIdx = this.__sparseSet.GetPackedIdx(entity);
         const lastIdx = this.__sparseSet.length - 1;
         //删除关联值
@@ -72,8 +74,9 @@ export class ECSStorage<T> {
                 list[lastIdx] = null;
             }
         }
-        this.__uidMapping.Remove(id);
+        this.__uidMapping.Delete(id);
         this.__sparseSet.Remove(entity);
+        this.__freeEntitys.push(entity);
     }
 
     /**
@@ -83,7 +86,7 @@ export class ECSStorage<T> {
      * @returns 
      */
     GetValue(id: ECSEntity, type: new () => T): T | null {
-        let entity = this.__uidMapping.GetValue(id);
+        let entity = this.__uidMapping.Get(id);
         let pIdx = this.__sparseSet.GetPackedIdx(entity);
         if (pIdx == this.__sparseSet.invalid) {
             return null;
@@ -102,7 +105,7 @@ export class ECSStorage<T> {
      * @returns 
      */
     AddValue(id: ECSEntity, type: new () => T): T {
-        let entity = this.__uidMapping.GetValue(id);
+        let entity = this.__uidMapping.Get(id);
         if (!this.__sparseSet.Contains(entity)) throw new Error("不存在:" + id);
         const pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
@@ -129,7 +132,7 @@ export class ECSStorage<T> {
      * @param type 
      */
     HasValue(id: ECSEntity, type: new () => T): boolean {
-        let entity = this.__uidMapping.GetValue(id);
+        let entity = this.__uidMapping.Get(id);
         if (!this.__sparseSet.Contains(entity)) {
             throw new Error("entity不存在:" + id);
         }
@@ -151,8 +154,10 @@ export class ECSStorage<T> {
      * @returns 
      */
     RemoveValue(id: ECSEntity, type: new () => T): T {
-        let entity = this.__uidMapping.GetValue(id);
-        if (!this.__sparseSet.Contains(entity)) throw new Error("entity不存在:" + id);
+        let entity = this.__uidMapping.Get(id);
+        if (!this.__sparseSet.Contains(entity)) {
+            throw new Error("entity不存在:" + id);
+        }
         let pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null || list.length == 0) {
@@ -172,18 +177,18 @@ export class ECSStorage<T> {
      * 清理
      */
     Clear(): void {
-        this.__uidMapping.Clear();
         this.__freeEntitys.length = 0;
         this.__entityIndex = 0;
-        let elements = this.__uidMapping.elements;
-        while (elements.length > 0) {
-            this.Remove(elements[0]);
+        let ids = this.__uidMapping.elements;
+        while (ids.length > 0) {
+            this.Remove(ids[0]);
         }
     }
 
     /**销毁 */
     Destroy(): void {
-        this.__uidMapping.Destroy();
+        this.__uidMapping.Clear();
+        this.__uidMapping = null;
         this.__sparseSet.Destroy();
         this.__sparseSet = null;
         this.__valuePool.clear();
