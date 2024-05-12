@@ -1,4 +1,3 @@
-import { ECSEntity } from "./ECSEntity";
 import { ECSMatcher } from "./ECSMatcher";
 import { ECSWorld } from "./ECSWorld";
 import { MatcherAllOf } from "./matchers/MatcherAllOf";
@@ -37,17 +36,17 @@ export abstract class ECSSystem {
     }
 
     /**心跳 */
-    Tick(time: number): void {
+    Tick(dt: number): void {
         if (this._matcher._entitys.size == 0) return;
-        this.$tick(time);
+        this.$tick(dt);
         if (this.useDirty) {
-            this._matcher._entitys.clear();
+            this._matcher._entitys.Clear();
         }
     }
 
     /**匹配结果 */
-    get entitys(): Set<ECSEntity> {
-        return this._matcher._entitys;
+    get entitys(): Array<number|string> {
+        return this._matcher._entitys.elements;
     }
 
     /**所属世界 */
@@ -55,7 +54,7 @@ export abstract class ECSSystem {
         return this.__world!;
     }
 
-    protected $tick(time: number): void {
+    protected $tick(dt: number): void {
 
     }
 

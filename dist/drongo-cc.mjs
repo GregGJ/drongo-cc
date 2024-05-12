@@ -24718,12 +24718,8 @@ class Pool {
         return result;
     }
     RecycleAll() {
-        for (let index = 0; index < this.__using.length; index++) {
-            const element = this.__using[index];
-            if (element["Reset"]) {
-                element.Reset();
-            }
-            this.__pool.push(element);
+        while (this.__using.length > 0) {
+            this.Recycle(this.__using[0]);
         }
         this.__using.length = 0;
     }
@@ -31028,8 +31024,9 @@ class IteratorFromVertexToIncomingEdges {
     }
 }
 
-class DDLSSimpleView {
+class DDLSSimpleView extends Node {
     constructor() {
+        super("DebugView");
         this.colorEdges = 0x999999FF;
         this.colorConstraints = 0xFF0000FF;
         this.colorVertices = 0x0000FFFF;
@@ -31050,13 +31047,15 @@ class DDLSSimpleView {
         this._entitiesGraphics = this._entities.addComponent(Graphics);
         this._paths = this.__createNode("paths");
         this._pathsGraphics = this._paths.addComponent(Graphics);
-        this._surface = this.__createNode("surface");
-        this._surfaceGraphics = this._surface.addComponent(Graphics);
-        this._surface.addChild(this._edges);
-        this._surface.addChild(this._constraints);
-        this._surface.addChild(this._vertices);
-        this._surface.addChild(this._paths);
-        this._surface.addChild(this._entities);
+        this._surfaceGraphics = this.addComponent(Graphics);
+        let trans = this.getComponent(UITransform);
+        trans.anchorX = 0;
+        trans.anchorY = 1;
+        this.addChild(this._edges);
+        this.addChild(this._constraints);
+        this.addChild(this._vertices);
+        this.addChild(this._paths);
+        this.addChild(this._entities);
     }
     __createNode(name) {
         let result = new Node(name);
@@ -31065,10 +31064,7 @@ class DDLSSimpleView {
         trans.anchorY = 1;
         return result;
     }
-    get surface() {
-        return this._surface;
-    }
-    clean() {
+    Clear() {
         this._surfaceGraphics.clear();
         this._edgesGraphics.clear();
         this._constraintsGraphics.clear();
@@ -31076,7 +31072,7 @@ class DDLSSimpleView {
         this._vertices.removeAllChildren();
     }
     DrawMesh(mesh) {
-        this.clean();
+        this.Clear();
         this._surfaceGraphics.lineWidth = 1;
         this._surfaceGraphics.strokeColor.fromHEX('#FF0000FF');
         this._surfaceGraphics.fillColor.fromHEX('#00000000');
@@ -31232,8 +31228,6 @@ class MatcherNoneOf extends Matcher {
 
 class ECSComponent {
     constructor() {
-        /**所属entity*/
-        this.entity = -1;
         /**脏数据标记回调*/
         this.dirtySignal = null;
     }
@@ -31257,25 +31251,16 @@ class ECSComponent {
  * 稀疏集合
  */
 class SparseSet {
-    constructor(maxCount = 2048, sparsePage = 4) {
+    constructor(maxCount = 2048) {
         /**无效值 */
         this.invalid = 0;
         this.__maxCount = 0;
         this.__index = 0;
-        this.__sparse = [];
-        this.__sparsePage = 0;
-        if (maxCount % sparsePage != 0) {
-            throw new Error("数量必须是page的倍数");
-        }
         this.__maxCount = this.invalid = maxCount;
-        this.__sparsePage = sparsePage;
         this.__packed = new Uint32Array(this.__maxCount);
         this.__packed.fill(this.invalid);
-        const count = maxCount / 4;
-        this.__sparse = new Array(count);
-        for (let index = 0; index < count; index++) {
-            this.__sparse[index] = new Uint32Array(sparsePage);
-        }
+        this.__sparse = new Uint32Array(this.__maxCount);
+        this.__sparse.fill(this.invalid);
     }
     /**
      * 添加
@@ -31286,7 +31271,7 @@ class SparseSet {
             throw new Error("超出最大索引:" + id + "/" + this.invalid);
         }
         this.__packed[this.__index] = id;
-        this.__addToSparse(id, this.__index);
+        this.__sparse[id] = this.__index;
         this.__index++;
     }
     /**
@@ -31295,12 +31280,7 @@ class SparseSet {
      * @returns
      */
     Contains(id) {
-        const x = Math.floor(id / this.__sparsePage);
-        const y = id % this.__sparsePage;
-        if (this.__sparse[x] == null) {
-            return false;
-        }
-        if (this.__sparse[x][y] == this.invalid) {
+        if (this.__sparse[id] == this.invalid) {
             return false;
         }
         return true;
@@ -31310,22 +31290,17 @@ class SparseSet {
      * @param id
      */
     Remove(id) {
-        //删除并返回在packed中的索引位置
-        const pIdx = this.__removeSparse(id);
-        //要删除的数据
-        let sIdx = this.invalid;
-        if (this.__index == 1) { //最后一个
-            this.__packed[pIdx] = this.invalid;
-            this.__index--;
-            return -1;
+        if (this.length == 1) {
+            this.__packed[0] = this.invalid;
+            this.__sparse[id] = this.invalid;
         }
         else {
-            sIdx = this.__packed[this.__index - 1];
-            this.__packed[pIdx] = sIdx;
-            this.__packed[this.__index - 1] = this.invalid;
-            this.__addToSparse(sIdx, pIdx);
+            let delete_packIdx = this.__sparse[id];
+            let swap_id = this.__packed[this.__index - 1];
+            this.__packed[delete_packIdx] = swap_id;
+            this.__sparse[id] = this.invalid;
+            this.__sparse[swap_id] = delete_packIdx;
             this.__index--;
-            return pIdx;
         }
     }
     /**
@@ -31333,49 +31308,12 @@ class SparseSet {
      */
     Clear() {
         this.__packed.fill(this.invalid);
-        for (let index = 0; index < this.__sparse.length; index++) {
-            const list = this.__sparse[index];
-            if (list) {
-                list.fill(this.invalid);
-            }
-        }
+        this.__sparse.fill(this.invalid);
         this.__index = 0;
     }
     Destroy() {
-        this.__sparse.length = 0;
-    }
-    __addToSparse(idx, v) {
-        const x = Math.floor(idx / this.__sparsePage);
-        const y = idx % this.__sparsePage;
-        let list;
-        if (this.__sparse[x] == null) {
-            list = new Uint32Array(this.__sparsePage);
-            this.__sparse[x] = list;
-            list.fill(this.invalid);
-        }
-        else {
-            list = this.__sparse[x];
-        }
-        list[y] = v;
-    }
-    /**
-     * 删除并返回内容
-     * @param idx
-     * @returns
-     */
-    __removeSparse(idx) {
-        const x = Math.floor(idx / this.__sparsePage);
-        const y = idx % this.__sparsePage;
-        if (!this.__sparse[x]) {
-            throw new Error("找不到要删除的元素：" + idx);
-        }
-        //找到在packed中的索引位置
-        const pIdx = this.__sparse[x][y];
-        if (pIdx == this.invalid) {
-            throw new Error("找不到要删除的元素：" + idx);
-        }
-        this.__sparse[x][y] = this.invalid;
-        return pIdx;
+        this.__packed = null;
+        this.__sparse = null;
     }
     /**
      * 获取packed的索引值
@@ -31383,14 +31321,11 @@ class SparseSet {
      * @returns
      */
     GetPackedIdx(id) {
-        const x = Math.floor(id / this.__sparsePage);
-        const y = id % this.__sparsePage;
-        if (!this.__sparse[x]) {
-            return this.invalid;
+        let pidx = this.__sparse[id];
+        if (pidx != this.invalid) {
+            return this.__sparse[id];
         }
-        //找到在packed中的索引位置
-        const pIdx = this.__sparse[x][y];
-        return pIdx;
+        return this.invalid;
     }
     get packed() {
         return this.__packed;
@@ -31403,42 +31338,97 @@ class SparseSet {
     }
 }
 
+class UidMapping {
+    constructor() {
+        this.__keys = new Dictionary();
+        this.__values = new Dictionary();
+    }
+    Mapping(key, value) {
+        if (this.__keys.Has(key)) {
+            throw new Error("重复映射:" + key + "|" + value);
+        }
+        this.__keys.Set(key, value);
+        this.__values.Set(value, key);
+    }
+    Has(key) {
+        return this.__keys.Has(key);
+    }
+    Remove(key) {
+        if (!this.__keys.Has(key)) {
+            throw new Error("数据不存在:" + key);
+        }
+        let v = this.__keys.Get(key);
+        this.__keys.Delete(key);
+        this.__values.Delete(v);
+    }
+    Clear() {
+        this.__keys.Clear();
+        this.__values.Clear();
+    }
+    GetValue(key) {
+        return this.__keys.Get(key);
+    }
+    GetKey(value) {
+        return this.__values.Get(value);
+    }
+    get elements() {
+        return this.__keys.elements;
+    }
+    Destroy() {
+        this.__keys = null;
+        this.__values = null;
+    }
+}
+
 /**
  * 存储器
  */
 class ECSStorage {
-    constructor(maxCount, sparsePage) {
-        this.__sparseSet = new SparseSet(maxCount, sparsePage);
+    constructor(maxCount) {
+        this.__entityIndex = 0;
+        this.__uidMapping = new UidMapping();
+        this.__sparseSet = new SparseSet(maxCount);
         this.__valuePool = new Map;
         this.__values = new Map();
+        this.__freeEntitys = [];
     }
     /**
-     * 添加key
-     * @param key
+     * 添加
+     * @param id
      */
-    Add(key) {
-        this.__sparseSet.Add(key);
+    Add(id) {
+        let entity;
+        if (this.__freeEntitys.length > 0) {
+            entity = this.__freeEntitys.pop();
+        }
+        else {
+            entity = this.__entityIndex;
+            this.__entityIndex++;
+        }
+        this.__uidMapping.Mapping(id, entity);
+        this.__sparseSet.Add(entity);
     }
     /**
-     * 是否包含Key
-     * @param key
+     * 是否包含
+     * @param id
      * @returns
      */
-    Has(key) {
-        return this.__sparseSet.Contains(key);
+    Has(id) {
+        return this.__uidMapping.Has(id);
     }
     /**
-     * 删除Key
-     * @param key
+     * 删除
+     * @param id
      * @returns
      */
-    Remove(key) {
-        const deleteIdx = this.__sparseSet.GetPackedIdx(key);
+    Remove(id) {
+        let entity = this.__uidMapping.GetValue(id);
+        const deleteIdx = this.__sparseSet.GetPackedIdx(entity);
         const lastIdx = this.__sparseSet.length - 1;
         //删除关联值
         let types = this.__values.keys();
         for (const type of types) {
-            this.RemoveValue(key, type);
+            this.RemoveValue(id, type);
         }
         if (lastIdx >= 0) {
             for (let [type, _] of this.__values) {
@@ -31449,16 +31439,18 @@ class ECSStorage {
                 list[lastIdx] = null;
             }
         }
-        this.__sparseSet.Remove(key);
+        this.__uidMapping.Remove(id);
+        this.__sparseSet.Remove(entity);
     }
     /**
      * 获取
-     * @param key
+     * @param id
      * @param type
      * @returns
      */
-    GetValue(key, type) {
-        let pIdx = this.__sparseSet.GetPackedIdx(key);
+    GetValue(id, type) {
+        let entity = this.__uidMapping.GetValue(id);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         if (pIdx == this.__sparseSet.invalid) {
             return null;
         }
@@ -31470,21 +31462,22 @@ class ECSStorage {
     }
     /**
      * 添加
-     * @param key
+     * @param id
      * @param type
      * @returns
      */
-    AddValue(key, type) {
-        if (!this.__sparseSet.Contains(key))
-            throw new Error("不存在:" + key);
-        const pIdx = this.__sparseSet.GetPackedIdx(key);
+    AddValue(id, type) {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity))
+            throw new Error("不存在:" + id);
+        const pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null) {
             list = new Array(this.__sparseSet.maxCount);
             this.__values.set(type, list);
         }
         if (list[pIdx] != null) {
-            throw new Error(key + "=>重复添加:" + type);
+            throw new Error(id + "=>重复添加:" + type);
         }
         //对象池
         let pool = this.__valuePool.get(type);
@@ -31497,14 +31490,15 @@ class ECSStorage {
     }
     /**
      * 是否包含Value
-     * @param entityID
+     * @param id
      * @param type
      */
-    HasValue(entityID, type) {
-        if (!this.__sparseSet.Contains(entityID)) {
-            throw new Error("entity不存在:" + entityID);
+    HasValue(id, type) {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity)) {
+            throw new Error("entity不存在:" + id);
         }
-        let pIdx = this.__sparseSet.GetPackedIdx(entityID);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null) {
             return false;
@@ -31516,17 +31510,18 @@ class ECSStorage {
     }
     /**
      * 删除
-     * @param key
+     * @param id
      * @param type
      * @returns
      */
-    RemoveValue(key, type) {
-        if (!this.__sparseSet.Contains(key))
-            throw new Error("entity不存在:" + key);
-        let pIdx = this.__sparseSet.GetPackedIdx(key);
+    RemoveValue(id, type) {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity))
+            throw new Error("entity不存在:" + id);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null || list.length == 0) {
-            throw new Error(key + "=>上找不到要删除的组件:" + type);
+            throw new Error(id + "=>上找不到要删除的组件:" + type);
         }
         let result = list[pIdx];
         list[pIdx] = null;
@@ -31541,12 +31536,17 @@ class ECSStorage {
      * 清理
      */
     Clear() {
-        while (this.__sparseSet.length > 0) {
-            this.Remove(this.elements[0]);
+        this.__uidMapping.Clear();
+        this.__freeEntitys.length = 0;
+        this.__entityIndex = 0;
+        let elements = this.__uidMapping.elements;
+        while (elements.length > 0) {
+            this.Remove(elements[0]);
         }
     }
     /**销毁 */
     Destroy() {
+        this.__uidMapping.Destroy();
         this.__sparseSet.Destroy();
         this.__sparseSet = null;
         this.__valuePool.clear();
@@ -31558,8 +31558,8 @@ class ECSStorage {
     get invalid() {
         return this.__sparseSet.invalid;
     }
-    get elements() {
-        return this.__sparseSet.packed;
+    get ids() {
+        return this.__uidMapping.elements;
     }
 }
 
@@ -31569,14 +31569,11 @@ class ECSWorld {
      * @param maxCount
      * @param sparsePage
      */
-    constructor(maxCount, sparsePage = 4) {
-        this.__freeEntitys = [];
-        this.__countIndex = -1;
+    constructor(maxCount) {
         /**等待删除的entity*/
         this.__waitFree = [];
-        this.__time = 0;
         this.__maxCount = maxCount;
-        this.__storage = new ECSStorage(this.__maxCount, sparsePage);
+        this.__storage = new ECSStorage(this.__maxCount);
         this.__systems = new Dictionary();
     }
     /**
@@ -31584,24 +31581,22 @@ class ECSWorld {
      * @param dt
      */
     Tick(dt) {
-        this.__time += dt;
         //系统
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
             const sys = systems[index];
-            sys.Tick(this.__time);
+            sys.Tick(dt);
         }
         if (this.__waitFree.length == 0)
             return;
         //删除
         for (let index = 0; index < this.__waitFree.length; index++) {
-            const entity = this.__waitFree[index];
-            this.__storage.Remove(entity);
-            this.__freeEntitys.push(entity);
+            const id = this.__waitFree[index];
+            this.__storage.Remove(id);
             //从所有系统匹配纪律中删除
             for (let index = 0; index < systems.length; index++) {
                 const sys = systems[index];
-                sys._matcher._entitys.delete(entity);
+                sys._matcher._entitys.Delete(id);
             }
         }
         this.__waitFree.length = 0;
@@ -31609,49 +31604,37 @@ class ECSWorld {
     /**
      * 创建
      */
-    Create() {
-        let result;
-        if (this.__freeEntitys.length > 0) {
-            result = this.__freeEntitys.pop();
-        }
-        else {
-            this.__countIndex++;
-            if (this.__countIndex >= this.__maxCount) {
-                throw new Error("超出最大数量:" + (this.__countIndex + 1) + "/" + this.__maxCount);
-            }
-            result = this.__countIndex;
-        }
-        this.__storage.Add(result);
-        return result;
+    Create(id) {
+        this.__storage.Add(id);
     }
     /**
-     * 查询是否包含entity
-     * @param entity
+     * 查询是否包含
+     * @param id
      * @returns
      */
-    Has(entity) {
-        return this.__storage.Has(entity);
+    Has(id) {
+        return this.__storage.Has(id);
     }
     /**
-     * 删除entity
-     * @param entity
+     * 删除
+     * @param id
      * @returns
      */
-    Remove(entity) {
-        const index = this.__waitFree.indexOf(entity);
+    Remove(id) {
+        const index = this.__waitFree.indexOf(id);
         if (index >= 0) {
             return;
         }
-        this.__waitFree.push(entity);
+        this.__waitFree.push(id);
     }
     /**
      * 添加组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    AddComponent(entity, type) {
-        let result = this.__storage.AddValue(entity, type);
+    AddComponent(id, type) {
+        let result = this.__storage.AddValue(id, type);
         result.dirtySignal = () => {
             this.__componentDirty(result);
         };
@@ -31666,50 +31649,50 @@ class ECSWorld {
             }
         }
         //记录所属
-        result.entity = entity;
+        result.entity = id;
         //匹配
-        this.__matcher(result.entity, false, true);
+        this.__matcher(id, false, true);
         return result;
     }
     /**
      * 查询entity是否包含组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    HasComponent(entity, type) {
-        return this.__storage.HasValue(entity, type);
+    HasComponent(id, type) {
+        return this.__storage.HasValue(id, type);
     }
     /**
      * 删除组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    RemoveComponent(entity, type) {
-        let result = this.__storage.RemoveValue(entity, type);
+    RemoveComponent(id, type) {
+        let result = this.__storage.RemoveValue(id, type);
         this.__matcher(result.entity, false, true);
         return result;
     }
     /**
      * 通过组件实例进行删除
-     * @param entity
+     * @param id
      * @param com
      * @returns
      */
-    RemoveComponentBy(entity, com) {
-        let result = this.__storage.RemoveValue(entity, com["constructor"]);
+    RemoveComponentBy(id, com) {
+        let result = this.__storage.RemoveValue(id, com["constructor"]);
         this.__matcher(result.entity, false, true);
         return result;
     }
     /**
      * 获取组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    GetComponent(entity, type) {
-        return this.__storage.GetValue(entity, type);
+    GetComponent(id, type) {
+        return this.__storage.GetValue(id, type);
     }
     /**
      * 添加系统
@@ -31761,8 +31744,6 @@ class ECSWorld {
      * 清理所有元素
      */
     ClearAll() {
-        this.__countIndex = -1;
-        this.__time = 0;
         this.__storage.Clear();
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
@@ -31773,17 +31754,11 @@ class ECSWorld {
     }
     Destroy() {
         this.ClearAll();
-        this.__freeEntitys.length = 0;
-        this.__freeEntitys = null;
         this.__waitFree.length = 0;
         this.__waitFree = null;
         this.__storage.Destroy();
         this.__storage = null;
         this.__systems = null;
-    }
-    /**当前时间 */
-    get time() {
-        return this.__time;
     }
     /**标记组件脏了 */
     __componentDirty(component) {
@@ -31791,39 +31766,39 @@ class ECSWorld {
     }
     /**将所有entity跟系统进行匹配 */
     __matcherAll(sys) {
-        let list = this.__storage.elements;
+        let list = this.__storage.ids;
         for (let index = 0; index < list.length; index++) {
-            const entity = list[index];
-            if (entity == this.__storage.invalid) {
+            const id = list[index];
+            if (id == this.__storage.invalid) {
                 break;
             }
-            this.__matcherEntity(sys._matcher, entity);
+            this.__matcherEntity(sys._matcher, id);
         }
     }
-    __matcher(entity, useDirty, all = false) {
+    __matcher(id, useDirty, all = false) {
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
             const sys = systems[index];
             if (sys.useDirty == useDirty || all) {
-                if (this.__matcherEntity(sys._matcher, entity)) {
-                    sys._matcher._entitys.add(entity);
+                if (this.__matcherEntity(sys._matcher, id)) {
+                    sys._matcher._entitys.Set(id, id);
                 }
                 else {
-                    sys._matcher._entitys.delete(entity);
+                    sys._matcher._entitys.Delete(id);
                 }
             }
         }
     }
-    __matcherEntity(matcher, entity) {
-        let mainMatcher = this.__matcherComponents(matcher.matcher, entity);
-        let noneMatcher = matcher.matcherNoneOf == undefined ? true : this.__matcherComponents(matcher.matcherNoneOf, entity);
+    __matcherEntity(matcher, id) {
+        let mainMatcher = this.__matcherComponents(matcher.matcher, id);
+        let noneMatcher = matcher.matcherNoneOf == undefined ? true : this.__matcherComponents(matcher.matcherNoneOf, id);
         return mainMatcher && noneMatcher;
     }
-    __matcherComponents(matcher, entity) {
+    __matcherComponents(matcher, id) {
         if (matcher instanceof MatcherAllOf) {
             for (let index = 0; index < matcher.types.length; index++) {
                 const comType = matcher.types[index];
-                if (!this.__storage.HasValue(entity, comType)) {
+                if (!this.__storage.HasValue(id, comType)) {
                     return false;
                 }
             }
@@ -31832,7 +31807,7 @@ class ECSWorld {
         else if (matcher instanceof MatcherAnyOf) {
             for (let index = 0; index < matcher.types.length; index++) {
                 const comType = matcher.types[index];
-                if (this.__storage.HasValue(entity, comType)) {
+                if (this.__storage.HasValue(id, comType)) {
                     return true;
                 }
             }
@@ -31841,7 +31816,7 @@ class ECSWorld {
         //排除
         for (let index = 0; index < matcher.types.length; index++) {
             const comType = matcher.types[index];
-            if (this.__storage.HasValue(entity, comType)) {
+            if (this.__storage.HasValue(id, comType)) {
                 return false;
             }
         }
@@ -31862,14 +31837,14 @@ class ECSMatcher {
         /**
          * 编组所匹配的元素(内部接口)
          */
-        this._entitys = new Set();
+        this._entitys = new Dictionary();
         this.matcher = allOrAny;
         this.matcherNoneOf = none;
     }
     Destroy() {
         this.matcher = undefined;
         this.matcherNoneOf = undefined;
-        this._entitys.clear();
+        this._entitys.Clear();
     }
 }
 
@@ -31895,23 +31870,23 @@ class ECSSystem {
         this.__world = v;
     }
     /**心跳 */
-    Tick(time) {
+    Tick(dt) {
         if (this._matcher._entitys.size == 0)
             return;
-        this.$tick(time);
+        this.$tick(dt);
         if (this.useDirty) {
-            this._matcher._entitys.clear();
+            this._matcher._entitys.Clear();
         }
     }
     /**匹配结果 */
     get entitys() {
-        return this._matcher._entitys;
+        return this._matcher._entitys.elements;
     }
     /**所属世界 */
     get world() {
         return this.__world;
     }
-    $tick(time) {
+    $tick(dt) {
     }
     /**销毁 */
     Destory() {

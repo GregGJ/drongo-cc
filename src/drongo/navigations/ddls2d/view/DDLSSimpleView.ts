@@ -7,7 +7,7 @@ import { DDLSVertex } from "../data/DDLSVertex";
 import { IteratorFromMeshToVertices } from "../iterators/IteratorFromMeshToVertices";
 import { IteratorFromVertexToIncomingEdges } from "../iterators/IteratorFromVertexToIncomingEdges";
 
-export class DDLSSimpleView {
+export class DDLSSimpleView extends Node {
 
     public colorEdges: number = 0x999999FF;
     public colorConstraints: number = 0xFF0000FF;
@@ -33,12 +33,12 @@ export class DDLSSimpleView {
     private _entities: Node;
     private _entitiesGraphics: Graphics;
 
-    private _surface: Node;
     private _surfaceGraphics: Graphics;
 
     private _showVerticesIndices: boolean = false;
 
     constructor() {
+        super("DebugView");
         this._edges = this.__createNode("edges");
         this._edgesGraphics = this._edges.addComponent(Graphics);
 
@@ -55,14 +55,16 @@ export class DDLSSimpleView {
         this._paths = this.__createNode("paths");
         this._pathsGraphics = this._paths.addComponent(Graphics);
 
-        this._surface = this.__createNode("surface");
-        this._surfaceGraphics = this._surface.addComponent(Graphics);
+        this._surfaceGraphics = this.addComponent(Graphics);
+        let trans = this.getComponent(UITransform);
+        trans.anchorX = 0;
+        trans.anchorY = 1;
 
-        this._surface.addChild(this._edges);
-        this._surface.addChild(this._constraints);
-        this._surface.addChild(this._vertices);
-        this._surface.addChild(this._paths);
-        this._surface.addChild(this._entities);
+        this.addChild(this._edges);
+        this.addChild(this._constraints);
+        this.addChild(this._vertices);
+        this.addChild(this._paths);
+        this.addChild(this._entities);
     }
 
     private __createNode(name: string): Node {
@@ -73,11 +75,7 @@ export class DDLSSimpleView {
         return result;
     }
 
-    get surface(): Node {
-        return this._surface;
-    }
-
-    clean(): void {
+    Clear(): void {
         this._surfaceGraphics.clear();
         this._edgesGraphics.clear();
         this._constraintsGraphics.clear();
@@ -88,7 +86,7 @@ export class DDLSSimpleView {
     }
 
     DrawMesh(mesh: DDLSMesh): void {
-        this.clean();
+        this.Clear();
 
         this._surfaceGraphics.lineWidth = 1;
         this._surfaceGraphics.strokeColor.fromHEX('#FF0000FF');

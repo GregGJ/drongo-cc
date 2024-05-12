@@ -1,52 +1,68 @@
 import { Pool } from "../utils/Pool";
+import { ECSEntity } from "./ECSEntity";
 import { SparseSet } from "./SparseSet";
+import { UidMapping } from "./UidMapping";
 
 
 
 /**
  * 存储器
  */
-export class ECSStorage<TKey extends number, TValue> {
+export class ECSStorage<T> {
 
-    private __valuePool: Map<new () => TValue, Pool<TValue>>;
-    private __values: Map<new () => TValue, Array<TValue | null>>;
+    private __uidMapping: UidMapping<ECSEntity, number>;
+    private __valuePool: Map<new () => T, Pool<T>>;
+    private __values: Map<new () => T, Array<T | null>>;
     private __sparseSet: SparseSet;
+    private __freeEntitys: Array<number>;
+    private __entityIndex: number = 0;
 
-    constructor(maxCount: number, sparsePage: number) {
-        this.__sparseSet = new SparseSet(maxCount, sparsePage);
-        this.__valuePool = new Map<new () => TValue, Pool<TValue>>
-        this.__values = new Map<new () => TValue, Array<TValue | null>>();
+    constructor(maxCount: number) {
+        this.__uidMapping = new UidMapping<number, number>();
+        this.__sparseSet = new SparseSet(maxCount);
+        this.__valuePool = new Map<new () => T, Pool<T>>
+        this.__values = new Map<new () => T, Array<T | null>>();
+        this.__freeEntitys = [];
     }
 
     /**
-     * 添加key
-     * @param key 
+     * 添加
+     * @param id 
      */
-    Add(key: TKey): void {
-        this.__sparseSet.Add(key);
+    Add(id: ECSEntity): void {
+        let entity: number;
+        if (this.__freeEntitys.length > 0) {
+            entity = this.__freeEntitys.pop();
+        } else {
+            entity = this.__entityIndex;
+            this.__entityIndex++;
+        }
+        this.__uidMapping.Mapping(id, entity);
+        this.__sparseSet.Add(entity);
     }
 
     /**
-     * 是否包含Key
-     * @param key 
+     * 是否包含
+     * @param id 
      * @returns 
      */
-    Has(key: TKey): boolean {
-        return this.__sparseSet.Contains(key);
+    Has(id: ECSEntity): boolean {
+        return this.__uidMapping.Has(id);
     }
 
     /**
-     * 删除Key
-     * @param key 
+     * 删除
+     * @param id 
      * @returns 
      */
-    Remove(key: TKey): void {
-        const deleteIdx = this.__sparseSet.GetPackedIdx(key);
+    Remove(id: ECSEntity): void {
+        let entity = this.__uidMapping.GetValue(id);
+        const deleteIdx = this.__sparseSet.GetPackedIdx(entity);
         const lastIdx = this.__sparseSet.length - 1;
         //删除关联值
         let types = this.__values.keys();
         for (const type of types) {
-            this.RemoveValue(key, type);
+            this.RemoveValue(id, type);
         }
         if (lastIdx >= 0) {
             for (let [type, _] of this.__values) {
@@ -56,17 +72,19 @@ export class ECSStorage<TKey extends number, TValue> {
                 list[lastIdx] = null;
             }
         }
-        this.__sparseSet.Remove(key);
+        this.__uidMapping.Remove(id);
+        this.__sparseSet.Remove(entity);
     }
 
     /**
      * 获取
-     * @param key 
+     * @param id 
      * @param type 
      * @returns 
      */
-    GetValue<T extends TValue>(key: TKey, type: new () => T): T | null {
-        let pIdx = this.__sparseSet.GetPackedIdx(key);
+    GetValue(id: ECSEntity, type: new () => T): T | null {
+        let entity = this.__uidMapping.GetValue(id);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         if (pIdx == this.__sparseSet.invalid) {
             return null;
         }
@@ -79,20 +97,21 @@ export class ECSStorage<TKey extends number, TValue> {
 
     /**
      * 添加
-     * @param key 
+     * @param id 
      * @param type 
      * @returns 
      */
-    AddValue<T extends TValue>(key: TKey, type: new () => T): T {
-        if (!this.__sparseSet.Contains(key)) throw new Error("不存在:" + key);
-        const pIdx = this.__sparseSet.GetPackedIdx(key);
+    AddValue(id: ECSEntity, type: new () => T): T {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity)) throw new Error("不存在:" + id);
+        const pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null) {
-            list = new Array<TValue>(this.__sparseSet.maxCount);
+            list = new Array<T>(this.__sparseSet.maxCount);
             this.__values.set(type, list);
         }
         if (list[pIdx] != null) {
-            throw new Error(key + "=>重复添加:" + type);
+            throw new Error(id + "=>重复添加:" + type);
         }
         //对象池
         let pool = this.__valuePool.get(type);
@@ -106,14 +125,15 @@ export class ECSStorage<TKey extends number, TValue> {
 
     /**
      * 是否包含Value
-     * @param entityID 
+     * @param id 
      * @param type 
      */
-    HasValue<T extends TValue>(entityID: TKey, type: new () => T): boolean {
-        if (!this.__sparseSet.Contains(entityID)) {
-            throw new Error("entity不存在:" + entityID);
+    HasValue(id: ECSEntity, type: new () => T): boolean {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity)) {
+            throw new Error("entity不存在:" + id);
         }
-        let pIdx = this.__sparseSet.GetPackedIdx(entityID);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null) {
             return false;
@@ -126,16 +146,17 @@ export class ECSStorage<TKey extends number, TValue> {
 
     /**
      * 删除
-     * @param key 
+     * @param id 
      * @param type 
      * @returns 
      */
-    RemoveValue<T extends TValue>(key: TKey, type: new () => T): T {
-        if (!this.__sparseSet.Contains(key)) throw new Error("entity不存在:" + key);
-        let pIdx = this.__sparseSet.GetPackedIdx(key);
+    RemoveValue(id: ECSEntity, type: new () => T): T {
+        let entity = this.__uidMapping.GetValue(id);
+        if (!this.__sparseSet.Contains(entity)) throw new Error("entity不存在:" + id);
+        let pIdx = this.__sparseSet.GetPackedIdx(entity);
         let list = this.__values.get(type);
         if (list == null || list.length == 0) {
-            throw new Error(key + "=>上找不到要删除的组件:" + type);
+            throw new Error(id + "=>上找不到要删除的组件:" + type);
         }
         let result = list[pIdx] as T;
         list[pIdx] = null;
@@ -151,13 +172,18 @@ export class ECSStorage<TKey extends number, TValue> {
      * 清理
      */
     Clear(): void {
-        while (this.__sparseSet.length > 0) {
-            this.Remove(this.elements[0] as TKey);
+        this.__uidMapping.Clear();
+        this.__freeEntitys.length = 0;
+        this.__entityIndex = 0;
+        let elements = this.__uidMapping.elements;
+        while (elements.length > 0) {
+            this.Remove(elements[0]);
         }
     }
 
     /**销毁 */
     Destroy(): void {
+        this.__uidMapping.Destroy();
         this.__sparseSet.Destroy();
         this.__sparseSet = null;
         this.__valuePool.clear();
@@ -171,7 +197,7 @@ export class ECSStorage<TKey extends number, TValue> {
         return this.__sparseSet.invalid;
     }
 
-    get elements(): Uint32Array {
-        return this.__sparseSet.packed;
+    get ids(): Array<ECSEntity> {
+        return this.__uidMapping.elements;
     }
 }

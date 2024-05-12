@@ -37,12 +37,8 @@ export class Pool<T> {
 
 
     RecycleAll(): void {
-        for (let index = 0; index < this.__using.length; index++) {
-            const element = <any>this.__using[index];
-            if (element["Reset"]) {
-                element.Reset();
-            }
-            this.__pool.push(element);
+        while(this.__using.length>0){
+            this.Recycle(this.__using[0]);
         }
         this.__using.length = 0;
     }

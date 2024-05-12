@@ -1,3 +1,4 @@
+import { Dictionary } from "../containers/Dictionary";
 import { ECSEntity } from "./ECSEntity";
 import { MatcherAllOf } from "./matchers/MatcherAllOf";
 import { MatcherAnyOf } from "./matchers/MatcherAnyOf";
@@ -19,8 +20,8 @@ export class ECSMatcher {
     /**
      * 编组所匹配的元素(内部接口)
      */
-    _entitys: Set<ECSEntity> = new Set<ECSEntity>();
-    
+    _entitys: Dictionary<ECSEntity, ECSEntity> = new Dictionary<ECSEntity, ECSEntity>();
+
     
     constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf) {
         this.matcher = allOrAny;
@@ -30,6 +31,6 @@ export class ECSMatcher {
     Destroy(): void {
         this.matcher = undefined;
         this.matcherNoneOf = undefined;
-        this._entitys.clear();
+        this._entitys.Clear();
     }
 }

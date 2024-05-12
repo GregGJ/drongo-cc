@@ -1,7 +1,8 @@
 
 
 
+
 /**
- * ECS 系统中的 Entity只是一个ID
+ * entity 只是个id
  */
-export type ECSEntity = number;
+export type ECSEntity = number | string;

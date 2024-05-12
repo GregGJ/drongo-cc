@@ -9,31 +9,25 @@ import { MatcherAnyOf } from "./matchers/MatcherAnyOf";
 import { ECSEntity } from "./ECSEntity";
 
 
-
 export class ECSWorld {
 
-    private __freeEntitys: Array<ECSEntity> = [];
-
     private __maxCount: number;
-    private __countIndex: number = -1;
 
-    private __storage: ECSStorage<ECSEntity, ECSComponent>;
+    private __storage: ECSStorage<ECSComponent>;
 
     private __systems: Dictionary<new () => ECSSystem, ECSSystem>;
 
     /**等待删除的entity*/
     private __waitFree: Array<ECSEntity> = [];
 
-    private __time: number = 0;
-
     /**
      * 初始化
      * @param maxCount 
      * @param sparsePage 
      */
-    constructor(maxCount: number, sparsePage: number = 4) {
+    constructor(maxCount: number) {
         this.__maxCount = maxCount;
-        this.__storage = new ECSStorage<ECSEntity, ECSComponent>(this.__maxCount, sparsePage);
+        this.__storage = new ECSStorage<ECSComponent>(this.__maxCount);
         this.__systems = new Dictionary<new () => ECSSystem, ECSSystem>();
     }
 
@@ -42,23 +36,21 @@ export class ECSWorld {
      * @param dt 
      */
     Tick(dt: number): void {
-        this.__time += dt;
         //系统
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
             const sys = systems[index];
-            sys.Tick(this.__time);
+            sys.Tick(dt);
         }
         if (this.__waitFree.length == 0) return;
         //删除
         for (let index = 0; index < this.__waitFree.length; index++) {
-            const entity = this.__waitFree[index];
-            this.__storage.Remove(entity);
-            this.__freeEntitys.push(entity);
+            const id = this.__waitFree[index];
+            this.__storage.Remove(id);
             //从所有系统匹配纪律中删除
             for (let index = 0; index < systems.length; index++) {
                 const sys = systems[index];
-                sys._matcher._entitys.delete(entity);
+                sys._matcher._entitys.Delete(id);
             }
         }
         this.__waitFree.length = 0;
@@ -67,52 +59,41 @@ export class ECSWorld {
     /**
      * 创建
      */
-    Create(): ECSEntity {
-        let result: ECSEntity;
-        if (this.__freeEntitys.length > 0) {
-            result = this.__freeEntitys.pop()!;
-        } else {
-            this.__countIndex++;
-            if (this.__countIndex >= this.__maxCount) {
-                throw new Error("超出最大数量:" + (this.__countIndex + 1) + "/" + this.__maxCount);
-            }
-            result = this.__countIndex;
-        }
-        this.__storage.Add(result);
-        return result;
+    Create(id: ECSEntity): void {
+        this.__storage.Add(id);
     }
 
     /**
-     * 查询是否包含entity
-     * @param entity 
+     * 查询是否包含
+     * @param id 
      * @returns 
      */
-    Has(entity: ECSEntity): boolean {
-        return this.__storage.Has(entity);
+    Has(id: ECSEntity): boolean {
+        return this.__storage.Has(id);
     }
 
     /**
-     * 删除entity
-     * @param entity 
+     * 删除
+     * @param id 
      * @returns 
      */
-    Remove(entity: ECSEntity): void {
-        const index = this.__waitFree.indexOf(entity);
+    Remove(id: ECSEntity): void {
+        const index = this.__waitFree.indexOf(id);
         if (index >= 0) {
             return;
         }
-        this.__waitFree.push(entity);
+        this.__waitFree.push(id);
     }
 
 
     /**
      * 添加组件
-     * @param entity 
+     * @param id 
      * @param type 
      * @returns 
      */
-    AddComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T {
-        let result = this.__storage.AddValue(entity, type);
+    AddComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T {
+        let result = this.__storage.AddValue(id, type);
         result.dirtySignal = () => {
             this.__componentDirty(result);
         }
@@ -127,54 +108,54 @@ export class ECSWorld {
             }
         }
         //记录所属
-        result.entity = entity;
+        result.entity = id;
         //匹配
-        this.__matcher(result.entity, false, true);
-        return result;
+        this.__matcher(id, false, true);
+        return result as T;
     }
 
     /**
      * 查询entity是否包含组件 
-     * @param entity 
+     * @param id 
      * @param type 
      * @returns 
      */
-    HasComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): boolean {
-        return this.__storage.HasValue(entity, type);
+    HasComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): boolean {
+        return this.__storage.HasValue(id, type);
     }
 
     /**
      * 删除组件
-     * @param entity 
+     * @param id 
      * @param type 
      * @returns 
      */
-    RemoveComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T {
-        let result = this.__storage.RemoveValue(entity, type);
+    RemoveComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T {
+        let result = this.__storage.RemoveValue(id, type);
         this.__matcher(result.entity, false, true);
-        return result;
+        return result as T;
     }
 
     /**
      * 通过组件实例进行删除
-     * @param entity 
+     * @param id 
      * @param com 
      * @returns 
      */
-    RemoveComponentBy<T extends ECSComponent>(entity: ECSEntity, com: ECSComponent): T {
-        let result = this.__storage.RemoveValue(entity, com["constructor"] as new () => T);
+    RemoveComponentBy<T extends ECSComponent>(id: ECSEntity, com: ECSComponent): T {
+        let result = this.__storage.RemoveValue(id, com["constructor"] as new () => T);
         this.__matcher(result.entity, false, true);
-        return result;
+        return result as T;
     }
 
     /**
      * 获取组件
-     * @param entity 
+     * @param id 
      * @param type 
      * @returns 
      */
-    GetComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T | null {
-        return this.__storage.GetValue(entity, type);
+    GetComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T | null {
+        return this.__storage.GetValue(id, type) as T;
     }
 
     /**
@@ -232,8 +213,6 @@ export class ECSWorld {
      * 清理所有元素
      */
     ClearAll(): void {
-        this.__countIndex = -1;
-        this.__time = 0;
         this.__storage.Clear();
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
@@ -242,21 +221,14 @@ export class ECSWorld {
         }
         this.__systems.Clear();
     }
-    
+
     Destroy(): void {
         this.ClearAll();
-        this.__freeEntitys.length = 0;
-        this.__freeEntitys = null;
         this.__waitFree.length = 0;
         this.__waitFree = null;
         this.__storage.Destroy();
         this.__storage = null;
         this.__systems = null;
-    }
-
-    /**当前时间 */
-    get time(): number {
-        return this.__time;
     }
 
     /**标记组件脏了 */
@@ -267,41 +239,41 @@ export class ECSWorld {
 
     /**将所有entity跟系统进行匹配 */
     private __matcherAll(sys: ECSSystem): void {
-        let list = this.__storage.elements;
+        let list = this.__storage.ids;
         for (let index = 0; index < list.length; index++) {
-            const entity = list[index];
-            if (entity == this.__storage.invalid) {
+            const id = list[index];
+            if (id == this.__storage.invalid) {
                 break;
             }
-            this.__matcherEntity(sys._matcher, entity);
+            this.__matcherEntity(sys._matcher, id);
         }
     }
 
-    private __matcher(entity: ECSEntity, useDirty: boolean, all: boolean = false): void {
+    private __matcher(id: ECSEntity, useDirty: boolean, all: boolean = false): void {
         const systems = this.__systems.elements;
         for (let index = 0; index < systems.length; index++) {
             const sys = systems[index];
             if (sys.useDirty == useDirty || all) {
-                if (this.__matcherEntity(sys._matcher, entity)) {
-                    sys._matcher._entitys.add(entity);
+                if (this.__matcherEntity(sys._matcher, id)) {
+                    sys._matcher._entitys.Set(id, id);
                 } else {
-                    sys._matcher._entitys.delete(entity);
+                    sys._matcher._entitys.Delete(id);
                 }
             }
         }
     }
 
-    private __matcherEntity(matcher: ECSMatcher, entity: ECSEntity): boolean {
-        let mainMatcher: boolean = this.__matcherComponents(matcher.matcher!, entity);
-        let noneMatcher = matcher.matcherNoneOf == undefined ? true : this.__matcherComponents(matcher.matcherNoneOf, entity);
+    private __matcherEntity(matcher: ECSMatcher, id: ECSEntity): boolean {
+        let mainMatcher: boolean = this.__matcherComponents(matcher.matcher!, id);
+        let noneMatcher = matcher.matcherNoneOf == undefined ? true : this.__matcherComponents(matcher.matcherNoneOf, id);
         return mainMatcher && noneMatcher;
     }
 
-    private __matcherComponents(matcher: Matcher, entity: ECSEntity): boolean {
+    private __matcherComponents(matcher: Matcher, id: ECSEntity): boolean {
         if (matcher instanceof MatcherAllOf) {
             for (let index = 0; index < matcher.types.length; index++) {
                 const comType = matcher.types[index];
-                if (!this.__storage.HasValue(entity, comType)) {
+                if (!this.__storage.HasValue(id, comType)) {
                     return false;
                 }
             }
@@ -309,7 +281,7 @@ export class ECSWorld {
         } else if (matcher instanceof MatcherAnyOf) {
             for (let index = 0; index < matcher.types.length; index++) {
                 const comType = matcher.types[index];
-                if (this.__storage.HasValue(entity, comType)) {
+                if (this.__storage.HasValue(id, comType)) {
                     return true;
                 }
             }
@@ -318,7 +290,7 @@ export class ECSWorld {
         //排除
         for (let index = 0; index < matcher.types.length; index++) {
             const comType = matcher.types[index];
-            if (this.__storage.HasValue(entity, comType)) {
+            if (this.__storage.HasValue(id, comType)) {
                 return false;
             }
         }

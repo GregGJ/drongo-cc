@@ -1,4 +1,3 @@
-import { ECSEntity } from "./ECSEntity";
 import { ECSSystem } from "./ECSSystem";
 
 
@@ -6,7 +5,7 @@ import { ECSSystem } from "./ECSSystem";
 export abstract class ECSComponent {
 
     /**所属entity*/
-    entity: ECSEntity = -1;
+    entity: number|string;
 
     /**脏数据标记回调*/
     dirtySignal: (() => void) | null = null;

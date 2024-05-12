@@ -6512,7 +6512,7 @@ declare class Polygon {
     get numTriangles(): number;
 }
 
-declare class DDLSSimpleView {
+declare class DDLSSimpleView extends Node {
     colorEdges: number;
     colorConstraints: number;
     colorVertices: number;
@@ -6532,13 +6532,11 @@ declare class DDLSSimpleView {
     private _pathsGraphics;
     private _entities;
     private _entitiesGraphics;
-    private _surface;
     private _surfaceGraphics;
     private _showVerticesIndices;
     constructor();
     private __createNode;
-    get surface(): Node;
-    clean(): void;
+    Clear(): void;
     DrawMesh(mesh: DDLSMesh): void;
     private GetColor;
     DrawEntity(entity: DDLSEntityAI, cleanBefore?: boolean): void;
@@ -6548,9 +6546,9 @@ declare class DDLSSimpleView {
 }
 
 /**
- * ECS 系统中的 Entity只是一个ID
+ * entity 只是个id
  */
-type ECSEntity = number;
+type ECSEntity = number | string;
 
 /**
  * 必须所有成立
@@ -6582,26 +6580,23 @@ declare class ECSMatcher {
     /**
      * 编组所匹配的元素(内部接口)
      */
-    _entitys: Set<ECSEntity>;
+    _entitys: Dictionary<ECSEntity, ECSEntity>;
     constructor(allOrAny: MatcherAllOf | MatcherAnyOf, none?: MatcherNoneOf);
     Destroy(): void;
 }
 
 declare class ECSWorld {
-    private __freeEntitys;
     private __maxCount;
-    private __countIndex;
     private __storage;
     private __systems;
     /**等待删除的entity*/
     private __waitFree;
-    private __time;
     /**
      * 初始化
      * @param maxCount
      * @param sparsePage
      */
-    constructor(maxCount: number, sparsePage?: number);
+    constructor(maxCount: number);
     /**
      * 心跳
      * @param dt
@@ -6610,54 +6605,54 @@ declare class ECSWorld {
     /**
      * 创建
      */
-    Create(): ECSEntity;
+    Create(id: ECSEntity): void;
     /**
-     * 查询是否包含entity
-     * @param entity
+     * 查询是否包含
+     * @param id
      * @returns
      */
-    Has(entity: ECSEntity): boolean;
+    Has(id: ECSEntity): boolean;
     /**
-     * 删除entity
-     * @param entity
+     * 删除
+     * @param id
      * @returns
      */
-    Remove(entity: ECSEntity): void;
+    Remove(id: ECSEntity): void;
     /**
      * 添加组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    AddComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T;
+    AddComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T;
     /**
      * 查询entity是否包含组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    HasComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): boolean;
+    HasComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): boolean;
     /**
      * 删除组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    RemoveComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T;
+    RemoveComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T;
     /**
      * 通过组件实例进行删除
-     * @param entity
+     * @param id
      * @param com
      * @returns
      */
-    RemoveComponentBy<T extends ECSComponent>(entity: ECSEntity, com: ECSComponent): T;
+    RemoveComponentBy<T extends ECSComponent>(id: ECSEntity, com: ECSComponent): T;
     /**
      * 获取组件
-     * @param entity
+     * @param id
      * @param type
      * @returns
      */
-    GetComponent<T extends ECSComponent>(entity: ECSEntity, type: new () => T): T | null;
+    GetComponent<T extends ECSComponent>(id: ECSEntity, type: new () => T): T | null;
     /**
      * 添加系统
      */
@@ -6684,8 +6679,6 @@ declare class ECSWorld {
      */
     ClearAll(): void;
     Destroy(): void;
-    /**当前时间 */
-    get time(): number;
     /**标记组件脏了 */
     private __componentDirty;
     /**将所有entity跟系统进行匹配 */
@@ -6714,19 +6707,19 @@ declare abstract class ECSSystem {
     /**设置所属世界 */
     SetWorld(v: ECSWorld): void;
     /**心跳 */
-    Tick(time: number): void;
+    Tick(dt: number): void;
     /**匹配结果 */
-    get entitys(): Set<ECSEntity>;
+    get entitys(): Array<number | string>;
     /**所属世界 */
     get world(): ECSWorld;
-    protected $tick(time: number): void;
+    protected $tick(dt: number): void;
     /**销毁 */
     Destory(): void;
 }
 
 declare abstract class ECSComponent {
     /**所属entity*/
-    entity: ECSEntity;
+    entity: number | string;
     /**脏数据标记回调*/
     dirtySignal: (() => void) | null;
     constructor();
