@@ -8,7 +8,6 @@ import { MatcherAllOf } from "./matchers/MatcherAllOf";
 import { MatcherAnyOf } from "./matchers/MatcherAnyOf";
 import { ECSEntity } from "./ECSEntity";
 
-
 export class ECSWorld {
 
     private __maxCount: number;
